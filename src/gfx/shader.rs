@@ -28,6 +28,7 @@ pub enum ShaderError {
     LinkingError
 }
 
+#[derive(Debug)]
 pub struct Shader {
     pub id: gl::types::GLuint,
 

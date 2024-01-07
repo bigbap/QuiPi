@@ -12,7 +12,7 @@ pub struct VersionedIndex {
     version: u64
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 enum AllocatorEntry {
     Occupied { version: u64 },
     Free { next: Option<usize> }

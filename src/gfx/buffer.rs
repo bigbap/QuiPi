@@ -55,18 +55,15 @@ impl<B> Buffer<B> where B: BufferType {
     }
 }
 
-pub struct BufferTypeArray;
-impl BufferType for BufferTypeArray {
+pub struct VBO;
+impl BufferType for VBO {
     const BUFFER_TYPE: gl::types::GLuint = gl::ARRAY_BUFFER;
 }
 
-pub struct BufferTypeElementArray;
-impl BufferType for BufferTypeElementArray {
+pub struct EBO;
+impl BufferType for EBO {
     const BUFFER_TYPE: gl::types::GLuint = gl::ELEMENT_ARRAY_BUFFER;
 }
-
-// pub type ArrayBuffer = Buffer<BufferTypeArray>;
-// pub type ElementArrayBuffer = Buffer<BufferTypeElementArray>;
 
 pub struct VertexArray {
     id: gl::types::GLuint,
@@ -110,34 +107,16 @@ impl VertexArray {
     pub fn count(&self) -> i32 { self.count }
 }
 
-pub fn create_buffer<T: BufferType>(
-    data: &[f32]
-) -> Result<Buffer<T>, Box<dyn std::error::Error>> {
-    let buffer = Buffer::<T>::new();
-    buffer.bind();
-    buffer.static_buffer_data(data);
-    buffer.unbind();
-
-    Ok(buffer)
-}
-
-pub fn create_ebo(
-    indices: &[u32]
-) -> Result<Buffer<BufferTypeElementArray>, Box<dyn std::error::Error>> {
-    let index_buffer = Buffer::<BufferTypeElementArray>::new();
-    index_buffer.bind();
-    index_buffer.static_buffer_data(indices);
-    index_buffer.unbind();
-
-    Ok(index_buffer)
-}
-
-pub fn vertex_attribute_pointer(
+pub fn create_vbo(
+    data: &[f32],
     location: usize,
     size: usize,
-    stride: usize,
-    offset: usize
-) {
+    stride: usize
+) -> Result<Buffer<VBO>, Box<dyn std::error::Error>> {
+    let buffer = Buffer::<VBO>::new();
+    buffer.bind();
+    buffer.static_buffer_data(data);
+
     unsafe {
         gl::VertexAttribPointer(
             location as gl::types::GLuint,
@@ -145,8 +124,23 @@ pub fn vertex_attribute_pointer(
             gl::FLOAT,
             gl::FALSE,
             stride as gl::types::GLint,
-            offset as *const gl::types::GLvoid
+            std::ptr::null()
         );
         gl::EnableVertexAttribArray(location as gl::types::GLuint);
     }
+
+    buffer.unbind();
+
+    Ok(buffer)
+}
+
+pub fn create_ebo(
+    indices: &[u32]
+) -> Result<Buffer<EBO>, Box<dyn std::error::Error>> {
+    let index_buffer = Buffer::<EBO>::new();
+    index_buffer.bind();
+    index_buffer.static_buffer_data(indices);
+    index_buffer.unbind();
+
+    Ok(index_buffer)
 }

@@ -1,6 +1,14 @@
 use sdl2::video::GLProfile;
 
 pub trait Game {
+    /// game.init() is called by the engine, after all the Sdl and
+    /// openGl setup is done.
+    /// 
+    /// Use this method to set up your game. If you do anything
+    /// that uses the 'gl::' crate before this method gets called
+    /// by the engine, you will get a 'function not loaded error'
+    fn init(&mut self) -> Result<(), Box<dyn std::error::Error>>;
+
     fn handle_frame(
         &mut self,
         event_pump: &mut sdl2::EventPump
@@ -33,6 +41,8 @@ pub fn run<G: Game>(
 
     debug_assert_eq!(gl_attr.context_profile(), GLProfile::Core);
     debug_assert_eq!(gl_attr.context_version(), (4, 5));
+    
+    game.init()?;
 
     unsafe {
         gl::Enable(gl::DEPTH_TEST);

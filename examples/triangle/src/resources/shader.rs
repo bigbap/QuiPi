@@ -1,6 +1,17 @@
 use engine::Component;
+use engine::gfx::Shader as ShaderProgram;
 
 #[derive(Debug, Component)]
-pub struct Shader {
-    vao: String
+pub struct Shader (pub ShaderProgram);
+
+impl Shader {
+    pub fn new(file_name: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        Ok(
+            Self(ShaderProgram::new(file_name)?)
+        )
+    }
+
+    pub fn program(&mut self) -> &mut ShaderProgram {
+        &mut self.0
+    }
 }

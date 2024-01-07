@@ -51,13 +51,13 @@ impl ComponentRegistry {
         }
     }
 
-    pub fn get_component<C: Component + 'static>(
+    pub fn get_component<C: 'static>(
         &mut self,
         entity: &VersionedIndex
     ) -> Option<&mut C> {
         match self.component_maps.get_mut::<EntityMap<C>>() {
             None => None,
-            Some(cmp_map) => match cmp_map.get_mut(&entity) {
+            Some(cmp_map) => match cmp_map.get_mut(entity) {
                 None => None,
                 Some(cmp) => Some(cmp)
             }
@@ -71,12 +71,13 @@ impl ComponentRegistry {
 
 #[cfg(test)]
 mod tests {
-    use crate::components::{
-        DrawComponent,
-        TransformComponent
-    };
-
     use super::*;
+   
+    #[derive(Component)]
+    struct DrawComponent {}
+
+    #[derive(Component)]
+    struct TransformComponent {}
 
     #[test]
     fn ecs_register_component() {
