@@ -1,15 +1,14 @@
-use crate::engine::{
-    VersionedIndex,
-    ComponentRegistry
-};
+use engine::Registry;
+
+use crate::engine::VersionedIndex;
 use crate::components::ColorComponent;
 
 pub fn get_color(
     ticks: f32,
     entity: &VersionedIndex,
-    ecs: &mut ComponentRegistry
+    registry: &mut Registry
 ) -> (f32, f32, f32, f32) {
-    match ecs.get_component::<ColorComponent>(entity) {
+    match registry.get_component::<ColorComponent>(entity) {
         Some(color) => {
             color.0 = ticks.sin();
             color.1 = ticks.cos();

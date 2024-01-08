@@ -70,7 +70,7 @@ impl Game for MyGame {
         let bg_color = systems::get_color(
             _ticks,
             &self.scene,
-            &mut self.registry.components
+            &mut self.registry
         );
         unsafe {
             gl::ClearColor(bg_color.0, bg_color.1, bg_color.2, bg_color.3);
@@ -91,13 +91,9 @@ fn create_registry() -> Result<Registry, Box<dyn std::error::Error>> {
 }
 
 fn create_scene(registry: &mut Registry) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
-    let scene = registry.components
-        .create_entity()?;
-    registry.components
-        .add_component(
-            &scene,
-            components::ColorComponent(0.3, 0.3, 0.3, 1.0)
-        );
+    let scene = registry.create_entity()
+        .with(components::ColorComponent(0.3, 0.3, 0.3, 1.0))
+        .done()?;
 
     Ok(scene)
 }
