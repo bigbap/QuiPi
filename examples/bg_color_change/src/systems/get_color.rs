@@ -1,5 +1,3 @@
-use std::rc::Rc;
-use std::cell::RefCell;
 use crate::engine::{
     VersionedIndex,
     ComponentRegistry
@@ -9,9 +7,9 @@ use crate::components::ColorComponent;
 pub fn get_color(
     ticks: f32,
     entity: &VersionedIndex,
-    ecs: &Rc<RefCell<ComponentRegistry>>
+    ecs: &mut ComponentRegistry
 ) -> (f32, f32, f32, f32) {
-    match ecs.borrow_mut().get_component::<ColorComponent>(entity) {
+    match ecs.get_component::<ColorComponent>(entity) {
         Some(color) => {
             color.0 = ticks.sin();
             color.1 = ticks.cos();

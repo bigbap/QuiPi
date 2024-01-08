@@ -2,6 +2,8 @@ extern crate engine;
 extern crate gl;
 extern crate nalgebra_glm as glm;
 
+use std::vec;
+
 use sdl2::{
     EventPump,
     keyboard::Keycode,
@@ -46,7 +48,7 @@ impl MyGame {
 
 impl engine::Game for MyGame {
     fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let scene = create_scene(&self.registry)?;
+        let scene = create_scene(&mut self.registry)?;
         
         self.scenes.push(scene);
         self.active_scene = Some(0);
@@ -84,10 +86,10 @@ impl engine::Game for MyGame {
             bg_color = systems::get_color(
                 _ticks,
                 scene,
-                &self.registry
+                &mut self.registry
             );
 
-            systems::draw(scene, &self.registry).expect("there was a problem drawing the scene");
+            systems::draw(scene, &mut self.registry).expect("there was a problem drawing the scene");
         }
 
         unsafe {
@@ -100,44 +102,41 @@ impl engine::Game for MyGame {
 }
 
 fn create_registry() -> Result<engine::Registry, Box<dyn std::error::Error>> {
-    let registry = engine::Registry::init()?;
+    let mut registry = engine::Registry::init()?;
 
-    resources::register_resources(&registry);
-    components::register_components(&registry);
+    resources::register_resources(&mut registry);
+    components::register_components(&mut registry);
 
     Ok(registry)
 }
 
 fn create_scene(
-    registry: &engine::Registry
+    registry: &mut engine::Registry
 ) -> Result<engine::VersionedIndex, Box<dyn std::error::Error>> {
     type ObjConfig = engine::gfx::object_loader::ObjectConfig;
-
-    let mut reg_res = registry.resources.borrow_mut();
-    let mut reg_cmp = registry.components.borrow_mut();
-
-    let shader = reg_res.create_entity()?;
-    let res_shader = resources::Shader::new("simple")?;
-    reg_res.add_component(&shader, res_shader);
+    
+    let shader = registry.create_resource(resources::Shader::new("simple")?)?;
 
     let config = ObjConfig {
         positions: vec![
-            0.0, 1.0, 0.0,
-            -1.0, -1.0, 0.0,
-            1.0, -1.0, 0.0
+            -0.5, -0.5, 0.0,
+            0.5, -0.5, 0.0,
+            0.0,  0.5, 0.0
+        ],
+        // colors: vec![
+        //     1.0, 0.0, 0.0,
+        //     0.0, 1.0, 0.0,
+        //     0.0, 0.0, 1.0
+        // ],
+        indices: vec![
+            0, 1, 2
         ],
         ..ObjConfig::default()
     };
 
-    let cmp_color = components::ColorComponent(0.0, 0.0, 0.0, 1.0);
-    let cmp_draw = components::DrawComponent { shader_id: shader };
-    let cmp_mesh = engine::gfx::MeshComponent::new(&config)?;
-
-    let scene = reg_cmp.create_entity()?;
-    
-    reg_cmp.add_component(&scene, cmp_draw);
-    reg_cmp.add_component(&scene, cmp_color);
-    reg_cmp.add_component(&scene, cmp_mesh);
-
-    Ok(scene)
+    registry.create_entity()
+        .with(components::DrawComponent { shader_id: shader })
+        .with(components::ColorComponent(0.0, 0.0, 0.0, 1.0))
+        .with(engine::gfx::MeshComponent::new(&config)?)
+        .done()
 }

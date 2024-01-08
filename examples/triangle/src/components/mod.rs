@@ -9,13 +9,11 @@ pub use draw::DrawComponent;
 pub use transform::TransformComponent;
 
 use engine::Registry;
-pub fn register_components(registry: &Registry) {
-    let mut reg_cmp = registry.components.borrow_mut();
-
-    reg_cmp.register_component::<ChildrenComponent>(); 
-    reg_cmp.register_component::<ColorComponent>(); 
-    reg_cmp.register_component::<DrawComponent>(); 
-    reg_cmp.register_component::<TransformComponent>();
-
-    reg_cmp.register_component::<engine::gfx::components::MeshComponent>()
+pub fn register_components(registry: &mut Registry) {
+    registry
+        .register_component::<ChildrenComponent>()
+        .register_component::<ColorComponent>()
+        .register_component::<DrawComponent>()
+        .register_component::<TransformComponent>()
+        .register_component::<engine::gfx::components::MeshComponent>();
 }

@@ -26,8 +26,8 @@ struct MyGame {
 
 impl MyGame {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let registry = create_registry()?;
-        let scene = create_scene(&registry)?;
+        let mut registry = create_registry()?;
+        let scene = create_scene(&mut registry)?;
         let timer = std::time::Instant::now();
 
         Ok(Self {
@@ -70,7 +70,7 @@ impl Game for MyGame {
         let bg_color = systems::get_color(
             _ticks,
             &self.scene,
-            &self.registry.components
+            &mut self.registry.components
         );
         unsafe {
             gl::ClearColor(bg_color.0, bg_color.1, bg_color.2, bg_color.3);
@@ -82,21 +82,18 @@ impl Game for MyGame {
 }
 
 fn create_registry() -> Result<Registry, Box<dyn std::error::Error>> {
-    let registry = Registry::init()?;
+    let mut registry = Registry::init()?;
 
-    registry.components
-        .borrow_mut()
+    registry
         .register_component::<components::ColorComponent>();
 
     Ok(registry)
 }
 
-fn create_scene(registry: &Registry) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
+fn create_scene(registry: &mut Registry) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
     let scene = registry.components
-        .borrow_mut()
         .create_entity()?;
     registry.components
-        .borrow_mut()
         .add_component(
             &scene,
             components::ColorComponent(0.3, 0.3, 0.3, 1.0)
