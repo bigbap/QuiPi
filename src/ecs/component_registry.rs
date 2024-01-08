@@ -52,6 +52,19 @@ impl ComponentRegistry {
     }
 
     pub fn get_component<C: 'static>(
+        &self,
+        entity: &VersionedIndex
+    ) -> Option<&C> {
+        match self.component_maps.get::<EntityMap<C>>() {
+            None => None,
+            Some(cmp_map) => match cmp_map.get(entity) {
+                None => None,
+                Some(cmp) => Some(cmp)
+            }
+        }
+    }
+
+    pub fn get_component_mut<C: 'static>(
         &mut self,
         entity: &VersionedIndex
     ) -> Option<&mut C> {

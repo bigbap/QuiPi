@@ -6,7 +6,6 @@ use std::{
 
 use crate::core::{
     macros,
-    resources,
     strings
 };
 
@@ -153,7 +152,7 @@ fn compile_shader(
     file_name: &str,
     kind: gl::types::GLenum
 ) -> Result<gl::types::GLuint, ShaderError> {
-    let source = shader_as_cstring(file_name)?;
+    let source = shader_to_cstring(file_name)?;
     let id = unsafe { gl::CreateShader(kind) };
 
     unsafe {
@@ -187,8 +186,8 @@ fn compile_shader(
     Ok(id)
 }
 
-fn shader_as_cstring(shader_name: &str) -> Result<ffi::CString, ShaderError> {
-    let mut file = fs::File::open(shader_name_to_path(shader_name))?;
+fn shader_to_cstring(shader_path: &str) -> Result<ffi::CString, ShaderError> {
+    let mut file = fs::File::open(shader_path)?;
 
     // allocate buffer of the same size as file
     let mut buffer: Vec<u8> = Vec::with_capacity(
@@ -204,6 +203,3 @@ fn shader_as_cstring(shader_name: &str) -> Result<ffi::CString, ShaderError> {
     Ok(unsafe { ffi::CString::from_vec_unchecked(buffer) })
 }
 
-fn shader_name_to_path(name: &str) -> String {
-    format!("{}{name}", resources::shader_path())
-}

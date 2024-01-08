@@ -11,7 +11,7 @@ impl Shader {
         )
     }
 
-    pub fn program(&mut self) -> &mut ShaderProgram {
-        &mut self.0
+    pub fn program(&self) -> &ShaderProgram {
+        &self.0
     }
 }

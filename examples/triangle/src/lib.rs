@@ -87,7 +87,7 @@ impl engine::Game for MyGame {
 
             systems::update_entities(scene, &self.registry);
 
-            systems::draw(scene, &mut self.registry).expect("there was a problem drawing the scene");
+            systems::draw_ebo(scene, &mut self.registry).expect("there was a problem drawing the scene");
         }
 
         Some(())
@@ -108,7 +108,9 @@ fn create_scene(
 ) -> Result<engine::VersionedIndex, Box<dyn std::error::Error>> {
     type ObjConfig = engine::gfx::object_loader::ObjectConfig;
     
-    let shader = registry.create_resource(resources::Shader::new("simple")?)?;
+    let shader = registry.create_resource(
+        resources::Shader::new(&format!("{}/shaders/simple", CONFIG.asset_path))?
+    )?;
 
     let config = ObjConfig {
         positions: vec![

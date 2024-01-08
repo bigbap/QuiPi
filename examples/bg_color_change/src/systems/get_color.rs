@@ -8,7 +8,7 @@ pub fn get_color(
     entity: &VersionedIndex,
     registry: &mut Registry
 ) -> (f32, f32, f32, f32) {
-    match registry.get_component::<ColorComponent>(entity) {
+    match registry.get_component_mut::<ColorComponent>(entity) {
         Some(color) => {
             color.0 = ticks.sin();
             color.1 = ticks.cos();

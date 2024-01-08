@@ -42,10 +42,10 @@ impl MeshComponent {
         ebo.bind();
 
         // if the vbo isn't assigned to a variable, opengl crashes with STATUS_ACCESS_VIOLATION
-        let _vbo = create_vbo(&config.positions, SHADER_POSITION_LOCATION, 3, SIZE_OF_F32_3)?;
-        let _vbo = create_vbo(&config.normals, SHADER_NORMALS_LOCATION, 3, SIZE_OF_F32_3)?;
-        let _vbo = create_vbo(&config.colors, SHADER_COLOR_LOCATION, 3, SIZE_OF_F32_3)?;
-        let _vbo = create_vbo(&config.texture_coords, SHADER_TEXCOORD_LOCATION, 2, SIZE_OF_F32_2)?;
+        let _vbo_pos = create_vbo(&config.positions, SHADER_POSITION_LOCATION, 3, SIZE_OF_F32_3)?;
+        let _vbo_norm = create_vbo(&config.normals, SHADER_NORMALS_LOCATION, 3, SIZE_OF_F32_3)?;
+        let _vbo_clr =  create_vbo(&config.colors, SHADER_COLOR_LOCATION, 3, SIZE_OF_F32_3)?;
+        let _vbo_tex = create_vbo(&config.texture_coords, SHADER_TEXCOORD_LOCATION, 2, SIZE_OF_F32_2)?;
 
         vao.unbind();
         ebo.unbind();
@@ -53,7 +53,7 @@ impl MeshComponent {
         Ok(vao)
     }
 
-    pub fn vao(&mut self) -> &mut buffer::VertexArray {
-        &mut self.vao
+    pub fn vao(&self) -> &buffer::VertexArray {
+        &self.vao
     }
 }

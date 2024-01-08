@@ -17,6 +17,7 @@ pub enum RegistryError {
 pub struct Registry {
     components: ecs::ComponentRegistry,
     resources: ecs::ComponentRegistry,
+
     currently_building: Option<VersionedIndex>,
 }
 
@@ -44,11 +45,19 @@ impl Registry {
         self
     }
 
-    pub fn get_component<C: Component + 'static>(&mut self, entity: &VersionedIndex) -> Option<&mut C> {
+    pub fn get_component_mut<C: Component + 'static>(&mut self, entity: &VersionedIndex) -> Option<&mut C> {
+        self.components.get_component_mut::<C>(entity)
+    }
+
+    pub fn get_resource_mut<C: Component + 'static>(&mut self, entity: &VersionedIndex) -> Option<&mut C> {
+        self.resources.get_component_mut::<C>(entity)
+    }
+
+    pub fn get_component<C: Component + 'static>(&self, entity: &VersionedIndex) -> Option<&C> {
         self.components.get_component::<C>(entity)
     }
 
-    pub fn get_resource<C: Component + 'static>(&mut self, entity: &VersionedIndex) -> Option<&mut C> {
+    pub fn get_resource<C: Component + 'static>(&self, entity: &VersionedIndex) -> Option<&C> {
         self.resources.get_component::<C>(entity)
     }
 

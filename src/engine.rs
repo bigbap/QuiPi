@@ -8,7 +8,9 @@ pub trait Game {
     /// that uses the 'gl::' crate before this method gets called
     /// by the engine, you will get a 'function not loaded error'
     fn init(&mut self) -> Result<(), Box<dyn std::error::Error>>;
-
+    
+    /// This method is called by the engine every frame.
+    /// This is where you will do all your game specific logic.
     fn handle_frame(
         &mut self,
         event_pump: &mut sdl2::EventPump
