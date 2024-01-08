@@ -75,26 +75,19 @@ impl engine::Game for MyGame {
                 _event => ()
             };
         }
-        
-        let mut bg_color = (0.0, 0.0, 0.0, 1.0);
 
         if let Some(index) = self.active_scene {
             let scene = &self.scenes[index];
 
-            systems::update_entities(scene, &self.registry);
-
-            bg_color = systems::get_color(
+            engine::gfx::buffer::clear_buffer(systems::get_color(
                 _ticks,
                 scene,
                 &mut self.registry
-            );
+            ));
+
+            systems::update_entities(scene, &self.registry);
 
             systems::draw(scene, &mut self.registry).expect("there was a problem drawing the scene");
-        }
-
-        unsafe {
-            gl::ClearColor(bg_color.0, bg_color.1, bg_color.2, bg_color.3);
-            gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
         }
 
         Some(())
@@ -123,11 +116,11 @@ fn create_scene(
             0.5, -0.5, 0.0,
             0.0,  0.5, 0.0
         ],
-        // colors: vec![
-        //     1.0, 0.0, 0.0,
-        //     0.0, 1.0, 0.0,
-        //     0.0, 0.0, 1.0
-        // ],
+        colors: vec![
+            1.0, 0.0, 0.0,
+            0.0, 1.0, 0.0,
+            0.0, 0.0, 1.0
+        ],
         indices: vec![
             0, 1, 2
         ],

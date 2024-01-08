@@ -144,3 +144,10 @@ pub fn create_ebo(
 
     Ok(index_buffer)
 }
+
+pub fn clear_buffer(clr: (f32, f32, f32, f32)) {
+    unsafe {
+        gl::ClearColor(clr.0, clr.1, clr.2, clr.3);
+        gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+    }
+}
