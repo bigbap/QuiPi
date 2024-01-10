@@ -5,7 +5,7 @@ use crate::core::{
     VersionedIndexAllocator,
     IndexedArray
 };
-pub use crate::ecs::{
+pub use crate::core::ecs::{
     Component,
     ECSError
 };

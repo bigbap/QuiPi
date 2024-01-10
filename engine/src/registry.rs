@@ -1,5 +1,5 @@
 use crate::{
-    ecs,
+    core::ecs,
     Component,
     VersionedIndex
 };

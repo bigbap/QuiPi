@@ -1,7 +1,12 @@
-pub mod indexed_array;
-pub mod macros;
-pub mod strings;
+pub mod utils;
+pub mod gfx;
+pub mod ecs;
 
-pub use indexed_array::VersionedIndex;
-pub use indexed_array::VersionedIndexAllocator;
-pub use indexed_array::IndexedArray;
+pub use ecs::ECSError;
+pub use ecs::ComponentRegistry;
+pub use ecs::Component;
+pub use ecs::VersionedIndex;
+pub use ecs::VersionedIndexAllocator;
+pub use ecs::IndexedArray;
+pub use gfx::ShaderProgram;
+pub use gfx::Texture;

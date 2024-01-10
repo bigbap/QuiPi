@@ -1,5 +1,5 @@
 use crate::Component;
-use crate::gfx::{
+use crate::core::gfx::{
     object_loader::ObjectConfig,    
     buffer::{
         self,

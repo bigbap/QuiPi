@@ -4,13 +4,11 @@ extern crate nalgebra_glm as glm;
 
 use std::vec;
 
-use engine::{
-    gfx::object_loader::{
-        load_obj_file,
-        ObjectConfig
-    },
-    components::texture::TextureType
+use engine::gfx::object_loader::{
+    load_obj_file,
+    ObjectConfig
 };
+use engine::components::texture::TextureType;
 use sdl2::{
     EventPump,
     keyboard::Keycode,

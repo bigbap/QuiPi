@@ -1,5 +1,5 @@
 use crate::Component;
-use crate::gfx::ShaderProgram;
+use crate::core::ShaderProgram;
 
 #[derive(Debug, Component)]
 pub struct Shader (pub ShaderProgram);
