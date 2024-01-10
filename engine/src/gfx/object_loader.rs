@@ -49,15 +49,15 @@ pub enum ObjectError {
     ),
 
     #[error("there was a problem loading wavefront file")]
-    ProblemLoadingWavefrontObj(
+    ProblemLoadingWavefrontObji {
         #[from]
         #[source]
-        tobj::LoadError
-    )
+        from: tobj::LoadError,
+    }
 }
 
 pub fn load_obj_file(
-    full_path: &str
+    full_path: String
 ) -> Result<(Vec<tobj::Model>, Vec<tobj::Material>), ObjectError> {
     let (models, materials) = tobj::load_obj(
         full_path,

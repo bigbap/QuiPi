@@ -1,11 +1,13 @@
 use engine::{
     VersionedIndex,
     Registry,
-    components::MeshComponent
 };
 
 use crate::{
-    components::DrawComponent,
+    components::{
+        DrawComponent,
+        MeshComponent
+    },
     resources::Shader
 };
 

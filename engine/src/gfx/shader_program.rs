@@ -28,13 +28,13 @@ pub enum ShaderError {
 }
 
 #[derive(Debug)]
-pub struct Shader {
+pub struct ShaderProgram {
     pub id: gl::types::GLuint,
 
     _shaders: Vec<gl::types::GLuint>
 }
 
-impl Drop for Shader {
+impl Drop for ShaderProgram {
     fn drop(&mut self) {
         unsafe {
             gl::DeleteProgram(self.id);
@@ -42,7 +42,7 @@ impl Drop for Shader {
     }
 }
 
-impl Shader {
+impl ShaderProgram {
     pub fn new (name: &str) -> Result<Self, ShaderError> {
         let shaders = vec![
             compile_shader(&format!("{name}.vert"), gl::VERTEX_SHADER)?,
@@ -84,7 +84,7 @@ impl Shader {
             }
         }
 
-        Ok(Shader {
+        Ok(ShaderProgram {
             id,
             _shaders: shaders
         })

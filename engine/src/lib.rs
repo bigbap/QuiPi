@@ -8,6 +8,8 @@ pub mod ecs;
 pub mod engine;
 pub mod registry;
 pub mod gfx;
+pub mod components;
+pub mod resources;
 
 pub use core::VersionedIndex;
 pub use engine::Game;

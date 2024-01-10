@@ -5,6 +5,7 @@ pub use engine::components::ChildrenComponent;
 pub use engine::components::ColorComponent;
 pub use engine::components::TransformComponent;
 pub use engine::components::MeshComponent;
+pub use engine::components::TextureComponent;
 
 use engine::Registry;
 pub fn register_components(registry: &mut Registry) {
@@ -13,5 +14,6 @@ pub fn register_components(registry: &mut Registry) {
         .register_component::<ColorComponent>()
         .register_component::<DrawComponent>()
         .register_component::<TransformComponent>()
-        .register_component::<MeshComponent>();
+        .register_component::<MeshComponent>()
+        .register_component::<TextureComponent>();
 }

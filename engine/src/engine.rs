@@ -32,6 +32,9 @@ pub fn run<G: Game>(
     let gl_attr = video_subsystem.gl_attr();
     gl_attr.set_context_profile(GLProfile::Core);
     gl_attr.set_context_version(4, 5);
+    
+    #[cfg(debug_assertions)]
+    gl_attr.set_context_flags().debug().set();
 
     let window = video_subsystem.window(title, width, height)
         .opengl()

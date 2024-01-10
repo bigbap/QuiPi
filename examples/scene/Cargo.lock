@@ -49,15 +49,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
 
 [[package]]
-name = "bg_color_change"
-version = "0.1.0"
-dependencies = [
- "engine",
- "gl",
- "sdl2",
-]
-
-[[package]]
 name = "bit_field"
 version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -730,20 +721,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b450e3ba06251ec4fc76917dafeaf55805ffb26dbf7d5500bfb9511ce63a0d1f"
 dependencies = [
  "ahash",
-]
-
-[[package]]
-name = "triangle"
-version = "0.1.0"
-dependencies = [
- "engine",
- "gl",
- "gltf",
- "image",
- "nalgebra-glm",
- "sdl2",
- "thiserror",
- "tobj",
 ]
 
 [[package]]

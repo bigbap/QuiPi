@@ -4,6 +4,13 @@ extern crate nalgebra_glm as glm;
 
 use std::vec;
 
+use engine::{
+    gfx::object_loader::{
+        load_obj_file,
+        ObjectConfig
+    },
+    components::texture::TextureType
+};
 use sdl2::{
     EventPump,
     keyboard::Keycode,
@@ -24,8 +31,8 @@ pub struct MyGame {
     registry: engine::Registry,
     timer: std::time::Instant,
 
-    scenes: Vec<engine::VersionedIndex>,
-    active_scene: Option<usize>
+    entities: Vec<engine::VersionedIndex>,
+    // active_scene: Option<usize>
 }
 
 impl MyGame {
@@ -36,8 +43,8 @@ impl MyGame {
         Ok(Self {
             registry,
             timer,
-            scenes: vec![],
-            active_scene: None
+            entities: vec![],
+            // active_scene: None
         })
     }
 
@@ -48,10 +55,7 @@ impl MyGame {
 
 impl engine::Game for MyGame {
     fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let scene = create_scene(&mut self.registry)?;
-        
-        self.scenes.push(scene);
-        self.active_scene = Some(0);
+        self.entities.append(&mut create_crate(&mut self.registry)?);
 
         Ok(())
     }
@@ -76,20 +80,13 @@ impl engine::Game for MyGame {
             };
         }
 
-        if let Some(index) = self.active_scene {
-            let scene = &self.scenes[index];
+        for entity in self.entities.iter() {
+            engine::gfx::buffer::clear_buffer(None);
 
-            engine::gfx::buffer::clear_buffer(
-                Some(systems::get_color(
-                    _ticks,
-                    scene,
-                    &mut self.registry
-                ))
-            );
+            systems::update_entities(entity, &self.registry);
 
-            systems::update_entities(scene, &self.registry);
-
-            systems::draw_ebo(scene, &mut self.registry).expect("there was a problem drawing the scene");
+            systems::draw_ebo(entity, &mut self.registry)
+                .expect("there was a problem drawing the scene");
         }
 
         Some(())
@@ -105,35 +102,26 @@ fn create_registry() -> Result<engine::Registry, Box<dyn std::error::Error>> {
     Ok(registry)
 }
 
-fn create_scene(
+fn create_crate(
     registry: &mut engine::Registry
-) -> Result<engine::VersionedIndex, Box<dyn std::error::Error>> {
-    type ObjConfig = engine::gfx::object_loader::ObjectConfig;
-    
+) -> Result<Vec<engine::VersionedIndex>, Box<dyn std::error::Error>> {
     let shader = registry.create_resource(
-        resources::Shader::new(&format!("{}/shaders/simple", CONFIG.asset_path))?
+        resources::Shader::new(&format!("{}shaders/simple", CONFIG.asset_path))?
     )?;
 
-    let config = ObjConfig {
-        positions: vec![
-            -0.5, -0.5, 0.0,
-            0.5, -0.5, 0.0,
-            0.0,  0.5, 0.0
-        ],
-        colors: vec![
-            1.0, 0.0, 0.0,
-            0.0, 1.0, 0.0,
-            0.0, 0.0, 1.0
-        ],
-        indices: vec![
-            0, 1, 2
-        ],
-        ..ObjConfig::default()
-    };
+    // load the object data
+    let (models_obj, _materials_obj) = load_obj_file(format!("{}objects/crate.obj", CONFIG.asset_path))?;
+    let model_configs = ObjectConfig::from_obj(models_obj)?;
 
-    registry.create_entity()
-        .with(components::DrawComponent { shader_id: shader })
-        .with(components::ColorComponent(0.0, 0.0, 0.0, 1.0))
-        .with(engine::components::MeshComponent::new(&config)?)
-        .done()
+    let mut entities = vec![];
+    for config in model_configs {
+        entities.push(registry.create_entity()
+            .with(components::DrawComponent { shader_id: shader })
+            .with(components::MeshComponent::new(&config)?)
+            .with(components::TextureComponent { id: 4647, kind: TextureType::Diffuse })
+            .done()?
+        )
+    }
+
+    Ok(entities)
 }

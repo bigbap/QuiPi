@@ -4,7 +4,8 @@ use crate::gfx::{
     buffer::{
         self,
         create_ebo,
-        create_vbo
+        create_vbo,
+        VBO
     },
 };
 
@@ -16,7 +17,7 @@ pub const SHADER_NORMALS_LOCATION: usize = 3;
 pub const SIZE_OF_F32_3: usize = std::mem::size_of::<f32>() * 3;
 pub const SIZE_OF_F32_2: usize = std::mem::size_of::<f32>() * 2;
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct MeshComponent {
     vao: buffer::VertexArray,
 }
@@ -28,7 +29,7 @@ impl MeshComponent {
         let vao = Self::load_vao(config)?;
 
         Ok(Self {
-            vao,
+            vao
         })
     }
 
@@ -41,11 +42,28 @@ impl MeshComponent {
         vao.bind();
         ebo.bind();
 
+        #[cfg(debug_assertions)]
+        {
+            println!("indices: {:?}", config.indices);
+            println!("position: {:?}", config.positions);
+            println!("normals: {:?}", config.normals);
+            println!("colors: {:?}", config.colors);
+            println!("texture coords: {:?}", config.texture_coords);
+        }
+
         // if the vbo isn't assigned to a variable, opengl crashes with STATUS_ACCESS_VIOLATION
-        let _vbo_pos = create_vbo(&config.positions, SHADER_POSITION_LOCATION, 3, SIZE_OF_F32_3)?;
-        let _vbo_norm = create_vbo(&config.normals, SHADER_NORMALS_LOCATION, 3, SIZE_OF_F32_3)?;
-        let _vbo_clr =  create_vbo(&config.colors, SHADER_COLOR_LOCATION, 3, SIZE_OF_F32_3)?;
-        let _vbo_tex = create_vbo(&config.texture_coords, SHADER_TEXCOORD_LOCATION, 2, SIZE_OF_F32_2)?;
+        let mut _vbo_list: Vec<buffer::Buffer<VBO>> = vec![];
+        _vbo_list.push(create_vbo(&config.positions, SHADER_POSITION_LOCATION, 3, SIZE_OF_F32_3)?);
+        
+        if !config.normals.is_empty() {
+            _vbo_list.push(create_vbo(&config.normals, SHADER_NORMALS_LOCATION, 3, SIZE_OF_F32_3)?);
+        }
+        if !config.colors.is_empty() {
+            _vbo_list.push(create_vbo(&config.colors, SHADER_COLOR_LOCATION, 3, SIZE_OF_F32_3)?);
+        }
+        if !config.texture_coords.is_empty() {
+            _vbo_list.push(create_vbo(&config.texture_coords, SHADER_TEXCOORD_LOCATION, 2, SIZE_OF_F32_2)?);
+        }
 
         vao.unbind();
         ebo.unbind();

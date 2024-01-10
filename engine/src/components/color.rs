@@ -1,4 +1,4 @@
-use engine::Component;
+use crate::Component;
 
 #[derive(Debug, Component)]
 pub struct ColorComponent(

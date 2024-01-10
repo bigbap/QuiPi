@@ -1,4 +1,4 @@
-use engine::Component;
+use crate::Component;
 
 #[derive(Debug, Default, Component, PartialEq)]
 pub struct TransformComponent {
