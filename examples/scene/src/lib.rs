@@ -30,7 +30,6 @@ pub struct MyGame {
     timer: std::time::Instant,
 
     entities: Vec<engine::VersionedIndex>,
-    // active_scene: Option<usize>
 }
 
 impl MyGame {
@@ -42,7 +41,6 @@ impl MyGame {
             registry,
             timer,
             entities: vec![],
-            // active_scene: None
         })
     }
 
@@ -81,9 +79,9 @@ impl engine::Game for MyGame {
         for entity in self.entities.iter() {
             engine::gfx::buffer::clear_buffer(None);
 
-            systems::update_entities(entity, &self.registry);
+            systems::update_entity(entity, &self.registry);
 
-            systems::draw_ebo(entity, &mut self.registry)
+            systems::draw_ebo(entity, &self.registry)
                 .expect("there was a problem drawing the scene");
         }
 
@@ -103,6 +101,8 @@ fn create_registry() -> Result<engine::Registry, Box<dyn std::error::Error>> {
 fn create_crate(
     registry: &mut engine::Registry
 ) -> Result<Vec<engine::VersionedIndex>, Box<dyn std::error::Error>> {
+    use components::*;
+
     let shader = registry.create_resource(
         resources::Shader::new(&format!("{}shaders/simple", CONFIG.asset_path))?
     )?;
@@ -114,9 +114,15 @@ fn create_crate(
     let mut entities = vec![];
     for config in model_configs {
         entities.push(registry.create_entity()
-            .with(components::DrawComponent { shader_id: shader })
-            .with(components::MeshComponent::new(&config)?)
-            .with(components::TextureComponent { id: 4647, kind: TextureType::Diffuse })
+            .with(DrawComponent { shader_id: shader })
+            .with(MeshComponent::new(&config)?)
+            .with(TextureComponent { id: 4647, kind: TextureType::Diffuse })
+            .with(TransformComponent {
+                translate: None,
+                scale: Some(glm::vec3(0.5, 0.5, 0.5)),
+                rotate: Some(glm::vec3(0.2, 0.3, 0.0)),
+                angle: Some(0.1)
+            })
             .done()?
         )
     }

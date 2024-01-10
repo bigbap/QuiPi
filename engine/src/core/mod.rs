@@ -3,7 +3,7 @@ pub mod gfx;
 pub mod ecs;
 
 pub use ecs::ECSError;
-pub use ecs::ComponentRegistry;
+pub use ecs::ECS;
 pub use ecs::Component;
 pub use ecs::VersionedIndex;
 pub use ecs::VersionedIndexAllocator;

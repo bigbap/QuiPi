@@ -3,8 +3,8 @@ use engine::{
     Registry
 };
 
-pub fn update_entities(
-    _scene: &VersionedIndex,
+pub fn update_entity(
+    _entity: &VersionedIndex,
     _registry: &Registry
 ) {
 

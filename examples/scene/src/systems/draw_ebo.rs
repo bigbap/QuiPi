@@ -1,6 +1,7 @@
 use engine::{
     VersionedIndex,
     Registry,
+    systems::apply_transforms
 };
 
 use crate::{
@@ -13,15 +14,18 @@ use crate::{
 
 pub fn draw_ebo(
     entity: &VersionedIndex,
-    registry: &mut Registry
+    registry: &Registry
 ) -> Result<(), Box<dyn std::error::Error>> {
     let Some(shader_cmp) = registry.get_component::<DrawComponent>(entity) else { return Ok(()) };
     let Some(shader) = registry.get_resource::<Shader>(&shader_cmp.shader_id) else { return Ok(()) };
     let Some(mesh) = registry.get_component::<MeshComponent>(entity) else { return Ok(()) };
-    
-    shader.program().use_program();
 
+    shader.program().use_program();
     mesh.vao().bind();
+    
+    if let Some(model) = apply_transforms(entity, registry) {
+        shader.program().set_mat4("model", &model);
+    }
 
     unsafe {
         gl::DrawElements(

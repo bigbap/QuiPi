@@ -13,12 +13,12 @@ pub use crate::core::ecs::{
 type EntityMap<C> = IndexedArray<C>;
 
 #[derive(Debug)]
-pub struct ComponentRegistry {
+pub struct ECS {
     entity_allocator: VersionedIndexAllocator,
     component_maps: AnyMap
 }
 
-impl ComponentRegistry {
+impl ECS {
     pub fn new() -> Result<Self, ECSError> {
         Ok(Self {
             entity_allocator: VersionedIndexAllocator::default(),
@@ -94,7 +94,7 @@ mod tests {
 
     #[test]
     fn ecs_register_component() {
-        let mut registry = ComponentRegistry::new().unwrap();
+        let mut registry = ECS::new().unwrap();
         assert_eq!(registry.registered_components_len(), 0);
 
         registry.register_component::<DrawComponent>();

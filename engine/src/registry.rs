@@ -1,5 +1,6 @@
 use crate::{
-    core::ecs,
+    ECS,
+    ecs::ECSError,
     Component,
     VersionedIndex
 };
@@ -9,22 +10,22 @@ pub enum RegistryError {
     #[error("there was a problem initializing the registry")]
     ProblemInitialisingRegistry(
         #[from]
-        ecs::ECSError
+        ECSError
     )
 }
 
 #[derive(Debug)]
 pub struct Registry {
-    components: ecs::ComponentRegistry,
-    resources: ecs::ComponentRegistry,
+    components: ECS,
+    resources: ECS,
 
     currently_building: Option<VersionedIndex>,
 }
 
 impl Registry {
     pub fn init() -> Result<Self, RegistryError> {
-        let components = ecs::ComponentRegistry::new()?;
-        let resources = ecs::ComponentRegistry::new()?;
+        let components = ECS::new()?;
+        let resources = ECS::new()?;
 
         Ok(Self {
             components,
@@ -92,7 +93,7 @@ impl Registry {
 
 #[cfg(test)]
 mod tests {
-    use super::ecs::Component;
+    use super::Component;
 
     use super::*;
 
