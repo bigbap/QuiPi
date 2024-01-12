@@ -9,4 +9,3 @@ pub use ecs::VersionedIndex;
 pub use ecs::VersionedIndexAllocator;
 pub use ecs::IndexedArray;
 pub use gfx::ShaderProgram;
-pub use gfx::Texture;

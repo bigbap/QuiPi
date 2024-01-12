@@ -148,7 +148,7 @@ pub fn create_ebo(
 
 pub fn clear_buffer(clr: Option<(f32, f32, f32, f32)>) {
     unsafe {
-        let clr = clr.unwrap_or((0.5, 0.2, 0.3, 1.0));
+        let clr = clr.unwrap_or((0.02, 0.02, 0.02, 1.0));
 
         gl::ClearColor(clr.0, clr.1, clr.2, clr.3);
         gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);

@@ -2,6 +2,10 @@ extern crate engine;
 extern crate gl;
 extern crate nalgebra_glm as glm;
 
+use engine::{resources::{
+    texture::TextureType,
+    Shader
+}, VersionedIndex};
 use sdl2::{
     EventPump,
     keyboard::Keycode,
@@ -21,29 +25,25 @@ pub use config::CONFIG;
 
 use scene::*;
 
+type Crate = VersionedIndex;
+
 pub struct MyGame {
     registry: engine::Registry,
     timer: std::time::Instant,
     
-    lights: Vec<engine::VersionedIndex>,
-    entities: Vec<engine::VersionedIndex>,
-    camera: engine::VersionedIndex,
+    crates: Vec<Crate>,
 }
 
 impl MyGame {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let mut registry = create_registry()?;
+        let registry = create_registry()?;
         let timer = std::time::Instant::now();
-
-        let camera = create_camera(&mut registry)?;
 
         Ok(Self {
             registry,
             timer,
 
-            lights: vec![],
-            entities: vec![],
-            camera
+            crates: vec![],
         })
     }
 
@@ -54,12 +54,34 @@ impl MyGame {
 
 impl engine::Game for MyGame {
     fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        self.entities.append(
-            &mut create_crate(
-                &mut self.registry,
-                self.camera
-            )?
-        );
+        // let lights = create_lights(&mut self.registry)?;
+        let camera = create_camera(&mut self.registry)?;
+        
+        let shader_program = Shader::new(&format!("{}shaders/simple", CONFIG.asset_path))?;
+        let shader = self.registry.create_resource(
+            shader_program
+        )?;
+        
+        let diffuse = create_texture(
+            &mut self.registry,
+            &format!("{}objects/textures/container.png", CONFIG.asset_path),
+            TextureType::Diffuse
+        )?;
+        let specular = create_texture(
+            &mut self.registry,
+            &format!("{}objects/textures/container_specular.png", CONFIG.asset_path),
+            TextureType::Specular
+        )?;
+
+        self.crates = create_crates(
+            &mut self.registry,
+            shader,
+            camera,
+            vec![
+                diffuse,
+                specular
+            ],
+        )?;
 
         Ok(())
     }
@@ -89,7 +111,7 @@ impl engine::Game for MyGame {
             };
         }
 
-        for entity in self.entities.iter() {
+        for entity in self.crates.iter() {
             engine::gfx::buffer::clear_buffer(None);
 
             systems::update_entity(entity, &self.registry);

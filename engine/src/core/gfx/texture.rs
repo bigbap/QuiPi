@@ -34,135 +34,120 @@ pub enum TextureError {
     )
 }
 
-#[derive(Debug, PartialEq, Clone)]
-pub struct Texture {
-    pub id: u32
+fn new() -> Result<u32, TextureError> {
+    let mut index: gl::types::GLuint = 0;
+    unsafe {
+        gl::GenTextures(1, &mut index);
+    }
+
+    Ok(index)
 }
 
-impl Drop for Texture {
-    fn drop(&mut self) {
-        unsafe {
-            gl::DeleteTextures(1, [self.id].as_ptr());
-        }
-    }
-}
+pub fn from_wavefront_material(
+    material: &tobj::Material,
+) -> Result<u32, TextureError> {
+    let index = new()?;
 
-impl Texture {
-    fn new() -> Result<Self, TextureError> {
-        let mut id: gl::types::GLuint = 0;
-        unsafe {
-            gl::GenTextures(1, &mut id);
-        }
+    bind(&index);
 
-        Ok(Self { id })
-    }
-    
-    pub fn from_wavefront_material(
-        material: &tobj::Material,
-    ) -> Result<Self, TextureError> {
-        let texture = Self::new()?;
+    if let Some(map_kd) = &material.diffuse_texture {
+        // found texture path
+        let format = get_format(map_kd);
 
-        Self::bind(&texture);
-
-        if let Some(map_kd) = &material.diffuse_texture {
-            // found texture path
-            let format = get_format(map_kd);
-
-            add_image_from_file(
-                map_kd,
-                format
-            )?;
-        };
-
-        if let Some(kd) = &material.diffuse {
-            // found texture RGB values
-            add_image_from_color(kd)?;
-        };
-
-        Self::unbind();
-
-        Self::set_default_parameters(&texture)?;
-
-        Ok(texture)
-    }
-
-    pub fn from_gltf(file_path: &str) {
-        let gltf = Gltf::open(file_path).unwrap();
-        for scene in gltf.scenes() {
-            for node in scene.nodes() {
-                println!(
-                    "Node #{} has {} children",
-                    node.index(),
-                    node.children().count(),
-                );
-            }
-        }
-
-        todo!()
-    }
-
-    pub fn from_image(
-        file_path: &str
-    ) -> Result<Self, TextureError> {
-        let texture = Self::new()?;
-        let format = get_format(file_path);
-
-        texture.set_default_parameters()?;
-        
-        Texture::bind(&texture);
         add_image_from_file(
-            file_path,
+            map_kd,
             format
         )?;
-        Texture::unbind();
+    };
 
-        Ok(texture)
-    }
+    if let Some(kd) = &material.diffuse {
+        // found texture RGB values
+        add_image_from_color(kd)?;
+    };
 
-    pub fn bind(texture: &Self) {
-        unsafe {
-            gl::BindTexture(gl::TEXTURE_2D, texture.id);
-        }
-    }
+    unbind();
 
-    pub fn unbind() {
-        unsafe {
-            gl::BindTexture(gl::TEXTURE_2D, 0);
-        }
-    }
+    set_default_parameters(&index)?;
 
-    fn set_default_parameters(&self) -> Result<(), TextureError> {
-        Texture::bind(self);
+    Ok(index)
+}
 
-        Texture::set_parameter(gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE)?;
-        Texture::set_parameter(gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE)?;
-        Texture::set_parameter(gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR)?;
-        Texture::set_parameter(gl::TEXTURE_MAG_FILTER, gl::LINEAR)?;
-
-        Texture::unbind();
-
-        Ok(())
-    }
-
-    pub fn set_parameter(
-        name: gl::types::GLenum,
-        param: gl::types::GLuint
-    ) -> Result<(), TextureError> {
-        unsafe {
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                name,
-                param.try_into().map_err(|_| TextureError::FailedAddingParameter)?
+pub fn from_gltf(file_path: &str) {
+    let gltf = Gltf::open(file_path).unwrap();
+    for scene in gltf.scenes() {
+        for node in scene.nodes() {
+            println!(
+                "Node #{} has {} children",
+                node.index(),
+                node.children().count(),
             );
         }
-
-        Ok(())
     }
 
-    pub fn set_active_texture(unit: gl::types::GLuint) {
-        unsafe {
-            gl::ActiveTexture(gl::TEXTURE0 + unit);
-        }
+    todo!()
+}
+
+pub fn from_image(
+    file_path: &str
+) -> Result<u32, TextureError> {
+    let index = new()?;
+    let format = get_format(file_path);
+
+    set_default_parameters(&index)?;
+
+    bind(&index);
+    add_image_from_file(
+        file_path,
+        format
+    )?;
+    unbind();
+
+    Ok(index)
+}
+
+pub fn bind(index: &u32) {
+    unsafe {
+        gl::BindTexture(gl::TEXTURE_2D, *index);
+    }
+}
+
+pub fn unbind() {
+    unsafe {
+        gl::BindTexture(gl::TEXTURE_2D, 0);
+    }
+}
+
+fn set_default_parameters(index: &u32) -> Result<(), TextureError> {
+    bind(index);
+
+    set_parameter(gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE)?;
+    set_parameter(gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE)?;
+    set_parameter(gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR)?;
+    set_parameter(gl::TEXTURE_MAG_FILTER, gl::LINEAR)?;
+
+    unbind();
+
+    Ok(())
+}
+
+pub fn set_parameter(
+    name: gl::types::GLenum,
+    param: gl::types::GLuint
+) -> Result<(), TextureError> {
+    unsafe {
+        gl::TexParameteri(
+            gl::TEXTURE_2D,
+            name,
+            param.try_into().map_err(|_| TextureError::FailedAddingParameter)?
+        );
+    }
+
+    Ok(())
+}
+
+pub fn set_active_texture(unit: gl::types::GLuint) {
+    unsafe {
+        gl::ActiveTexture(gl::TEXTURE0 + unit);
     }
 }
 
