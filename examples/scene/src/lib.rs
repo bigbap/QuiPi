@@ -57,7 +57,7 @@ impl engine::Game for MyGame {
         // let lights = create_lights(&mut self.registry)?;
         let camera = create_camera(&mut self.registry)?;
         
-        let shader_program = Shader::new(&format!("{}shaders/simple", CONFIG.asset_path))?;
+        let shader_program = Shader::new(&format!("{}shaders/lighting", CONFIG.asset_path))?;
         let shader = self.registry.create_resource(
             shader_program
         )?;
@@ -115,7 +115,10 @@ impl engine::Game for MyGame {
             engine::gfx::buffer::clear_buffer(None);
 
             systems::update_entity(entity, &self.registry);
-            systems::draw_ebo(entity, &self.registry).expect("there was a problem drawing the entity");
+            systems::draw_ebo(
+                entity,
+                &self.registry,
+            ).expect("there was a problem drawing the entity");
         }
 
         Some(())

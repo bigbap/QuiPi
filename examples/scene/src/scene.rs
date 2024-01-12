@@ -53,24 +53,19 @@ pub fn create_crates(
     
     let transforms = TransformComponent {
         transforms: vec![
-            Transforms {
-                translate: Some(glm::vec3(-1.0, 0.0, 0.0)),
-                scale: Some(glm::vec3(0.5, 0.5, 0.5)),
-                rotate: Some(glm::vec3(0.0, 2.0, 0.0)),
-                angle: 0.0
-            }
+            create_transform(glm::vec3(-1.0, 0.0, 0.0), 0.0),
+            create_transform(glm::vec3(0.1, 0.0, 0.1), 0.1),
+            create_transform(glm::vec3(-0.3, 1.0, 0.2), 0.02),
+            
+            create_transform(glm::vec3(-3.0, 0.0, 2.0), 0.0),
+            create_transform(glm::vec3(-1.9, 0.0, 2.1), 0.1),
+            create_transform(glm::vec3(-2.3, 1.0, 2.2), 0.02),
+            
+            create_transform(glm::vec3(1.0, 0.0, -2.0), 0.0),
+            create_transform(glm::vec3(2.1, 0.0, -2.1), 0.1),
+            create_transform(glm::vec3(1.7, 1.0, -2.2), 0.02),
         ]
     };
-        // glm::vec3(0.1, 0.0, 0.1),
-        // glm::vec3(-0.3, 1.0, 0.2),
-        //
-        // glm::vec3(-3.0, 0.0, 2.0),
-        // glm::vec3(-1.9, 0.0, 2.1),
-        // glm::vec3(-2.3, 1.0, 2.2),
-        //
-        // glm::vec3(1.0, 0.0, -2.0),
-        // glm::vec3(2.1, 0.0, -2.1),
-        // glm::vec3(1.7, 1.0, -2.2)
 
     let mut entities = vec![];
     for config in model_configs.iter() {
@@ -117,4 +112,13 @@ pub fn create_texture(
         index: texture::from_image(image_file)?,
         kind
     })
+}
+
+fn create_transform(translate: glm::Vec3, angle: f32) -> Transforms {
+    Transforms {
+        translate: Some(translate),
+        scale: Some(glm::vec3(0.5, 0.5, 0.5)),
+        rotate: Some(glm::vec3(0.0, 2.0, 0.0)),
+        angle
+    }
 }

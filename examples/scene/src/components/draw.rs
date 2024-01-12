@@ -8,4 +8,3 @@ pub struct DrawComponent {
     pub shader_id: VersionedIndex,
     pub textures: Vec<VersionedIndex>
 }
-
