@@ -131,9 +131,9 @@ fn create_scene(
         ..ObjConfig::default()
     };
 
-    registry.create_entity()
-        .with(components::DrawComponent { shader_id: shader })
-        .with(components::ColorComponent(0.0, 0.0, 0.0, 1.0))
-        .with(engine::components::MeshComponent::new(&config)?)
+    registry.create_entity()?
+        .with(components::DrawComponent { shader_id: shader })?
+        .with(components::ColorComponent(0.0, 0.0, 0.0, 1.0))?
+        .with(engine::components::MeshComponent::new(&config)?)?
         .done()
 }

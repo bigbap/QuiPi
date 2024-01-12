@@ -1,10 +1,12 @@
 use engine::{
     Component,
-    VersionedIndex
+    VersionedIndex,
+    gfx::Texture,
 };
 
-#[derive(Debug, Default, Component, PartialEq)]
+#[derive(Debug, Default, Component)]
 pub struct DrawComponent {
-    pub shader_id: VersionedIndex
+    pub shader_id: VersionedIndex,
+    pub textures: Vec<(String, Texture)>
 }
 

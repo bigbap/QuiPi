@@ -46,9 +46,6 @@ impl MeshComponent {
         {
             println!("indices: {:?}", config.indices);
             println!("position: {:?}", config.positions);
-            println!("normals: {:?}", config.normals);
-            println!("colors: {:?}", config.colors);
-            println!("texture coords: {:?}", config.texture_coords);
         }
 
         // if the vbo isn't assigned to a variable, opengl crashes with STATUS_ACCESS_VIOLATION
@@ -56,12 +53,24 @@ impl MeshComponent {
         _vbo_list.push(create_vbo(&config.positions, SHADER_POSITION_LOCATION, 3, SIZE_OF_F32_3)?);
         
         if !config.normals.is_empty() {
+            #[cfg(debug_assertions)]
+            {
+                println!("normals: {:?}", config.normals);
+            }
             _vbo_list.push(create_vbo(&config.normals, SHADER_NORMALS_LOCATION, 3, SIZE_OF_F32_3)?);
         }
         if !config.colors.is_empty() {
+            #[cfg(debug_assertions)]
+            {
+                println!("colors: {:?}", config.colors);
+            }
             _vbo_list.push(create_vbo(&config.colors, SHADER_COLOR_LOCATION, 3, SIZE_OF_F32_3)?);
         }
         if !config.texture_coords.is_empty() {
+            #[cfg(debug_assertions)]
+            {
+                println!("texture coords: {:?}", config.texture_coords);
+            }
             _vbo_list.push(create_vbo(&config.texture_coords, SHADER_TEXCOORD_LOCATION, 2, SIZE_OF_F32_2)?);
         }
 

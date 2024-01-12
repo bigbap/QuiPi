@@ -2,13 +2,6 @@ extern crate engine;
 extern crate gl;
 extern crate nalgebra_glm as glm;
 
-use std::vec;
-
-use engine::gfx::object_loader::{
-    load_obj_file,
-    ObjectConfig
-};
-use engine::components::texture::TextureType;
 use sdl2::{
     EventPump,
     keyboard::Keycode,
@@ -22,25 +15,35 @@ mod components;
 mod systems;
 mod resources;
 mod config;
+mod scene;
 
 pub use config::CONFIG;
+
+use scene::*;
 
 pub struct MyGame {
     registry: engine::Registry,
     timer: std::time::Instant,
-
+    
+    lights: Vec<engine::VersionedIndex>,
     entities: Vec<engine::VersionedIndex>,
+    camera: engine::VersionedIndex,
 }
 
 impl MyGame {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let registry = create_registry()?;
+        let mut registry = create_registry()?;
         let timer = std::time::Instant::now();
+
+        let camera = create_camera(&mut registry)?;
 
         Ok(Self {
             registry,
             timer,
+
+            lights: vec![],
             entities: vec![],
+            camera
         })
     }
 
@@ -51,7 +54,12 @@ impl MyGame {
 
 impl engine::Game for MyGame {
     fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        self.entities.append(&mut create_crate(&mut self.registry)?);
+        self.entities.append(
+            &mut create_crate(
+                &mut self.registry,
+                self.camera
+            )?
+        );
 
         Ok(())
     }
@@ -69,8 +77,13 @@ impl engine::Game for MyGame {
                     unsafe { gl::Viewport(0, 0, w, h); }
                 },
 
-                Event::KeyDown { keycode, .. } if keycode.is_some_and(|k| k == Keycode::Escape) => {
-                    return None
+                Event::KeyDown { keycode, .. } => match keycode {
+                    Some(Keycode::Escape) => return None,
+                    Some(Keycode::W) => (),
+                    Some(Keycode::A) => (),
+                    Some(Keycode::S) => (),
+                    Some(Keycode::D) => (),
+                    _ => ()
                 },
                 _event => ()
             };
@@ -80,52 +93,10 @@ impl engine::Game for MyGame {
             engine::gfx::buffer::clear_buffer(None);
 
             systems::update_entity(entity, &self.registry);
-
-            systems::draw_ebo(entity, &self.registry)
-                .expect("there was a problem drawing the scene");
+            systems::draw_ebo(entity, &self.registry).expect("there was a problem drawing the entity");
         }
 
         Some(())
     }
 }
 
-fn create_registry() -> Result<engine::Registry, Box<dyn std::error::Error>> {
-    let mut registry = engine::Registry::init()?;
-
-    resources::register_resources(&mut registry);
-    components::register_components(&mut registry);
-
-    Ok(registry)
-}
-
-fn create_crate(
-    registry: &mut engine::Registry
-) -> Result<Vec<engine::VersionedIndex>, Box<dyn std::error::Error>> {
-    use components::*;
-
-    let shader = registry.create_resource(
-        resources::Shader::new(&format!("{}shaders/simple", CONFIG.asset_path))?
-    )?;
-
-    // load the object data
-    let (models_obj, _materials_obj) = load_obj_file(format!("{}objects/crate.obj", CONFIG.asset_path))?;
-    let model_configs = ObjectConfig::from_obj(models_obj)?;
-
-    let mut entities = vec![];
-    for config in model_configs {
-        entities.push(registry.create_entity()
-            .with(DrawComponent { shader_id: shader })
-            .with(MeshComponent::new(&config)?)
-            .with(TextureComponent { id: 4647, kind: TextureType::Diffuse })
-            .with(TransformComponent {
-                translate: None,
-                scale: Some(glm::vec3(0.5, 0.5, 0.5)),
-                rotate: Some(glm::vec3(0.2, 0.3, 0.0)),
-                angle: Some(0.1)
-            })
-            .done()?
-        )
-    }
-
-    Ok(entities)
-}

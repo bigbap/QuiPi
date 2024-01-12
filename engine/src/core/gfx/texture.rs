@@ -5,8 +5,6 @@ use image::{
     ImageBuffer,
 };
 
-// const ASSET_PATH: &str = "assets/";
-
 #[derive(Debug, thiserror::Error)]
 pub enum TextureError {
     #[error("There was a problem loading the image")]
@@ -36,13 +34,16 @@ pub enum TextureError {
     )
 }
 
+#[derive(Debug, PartialEq, Clone)]
 pub struct Texture {
     pub id: u32
 }
 
 impl Drop for Texture {
     fn drop(&mut self) {
-        todo!()
+        unsafe {
+            gl::DeleteTextures(1, [self.id].as_ptr());
+        }
     }
 }
 
@@ -65,10 +66,10 @@ impl Texture {
 
         if let Some(map_kd) = &material.diffuse_texture {
             // found texture path
-            let (file_name, format) = parse_file_name(map_kd);
+            let format = get_format(map_kd);
 
             add_image_from_file(
-                file_name,
+                map_kd,
                 format
             )?;
         };
@@ -104,16 +105,16 @@ impl Texture {
         file_path: &str
     ) -> Result<Self, TextureError> {
         let texture = Self::new()?;
-        let (file_name, format) = parse_file_name(file_path);
+        let format = get_format(file_path);
 
-        Self::bind(&texture);
+        texture.set_default_parameters()?;
+        
+        Texture::bind(&texture);
         add_image_from_file(
-            file_name,
+            file_path,
             format
         )?;
-        Self::unbind();
-
-        Self::set_default_parameters(&texture)?;
+        Texture::unbind();
 
         Ok(texture)
     }
@@ -130,15 +131,15 @@ impl Texture {
         }
     }
 
-    pub fn set_default_parameters(texture: &Self) -> Result<(), TextureError> {
-        Self::bind(texture);
+    fn set_default_parameters(&self) -> Result<(), TextureError> {
+        Texture::bind(self);
 
-        Self::set_parameter(gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE)?;
-        Self::set_parameter(gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE)?;
-        Self::set_parameter(gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR)?;
-        Self::set_parameter(gl::TEXTURE_MAG_FILTER, gl::LINEAR)?;
+        Texture::set_parameter(gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE)?;
+        Texture::set_parameter(gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE)?;
+        Texture::set_parameter(gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR)?;
+        Texture::set_parameter(gl::TEXTURE_MAG_FILTER, gl::LINEAR)?;
 
-        Self::unbind();
+        Texture::unbind();
 
         Ok(())
     }
@@ -193,7 +194,7 @@ fn add_image_from_color(color: &[f32; 3]) -> Result<(), TextureError> {
 }
 
 fn add_image_from_file(
-    file_path: String,
+    file_path: &str,
     format: gl::types::GLenum
 ) -> Result<(), TextureError> {
     let img = image::open(file_path)?.flipv();
@@ -218,7 +219,7 @@ fn add_image_from_file(
     Ok(())
 }
 
-fn parse_file_name(path: &str) -> (String, gl::types::GLenum) {
+fn get_format(path: &str) -> gl::types::GLenum {
     let file_name = path
         .split('/')
         .last()
@@ -227,10 +228,8 @@ fn parse_file_name(path: &str) -> (String, gl::types::GLenum) {
 
     let ext = file_name.split('.').last();
 
-    let format = match ext {
+    match ext {
         Some("png") => gl::RGBA,
         _ => gl::RGB
-    };
-
-    (file_name, format)
+    }
 }

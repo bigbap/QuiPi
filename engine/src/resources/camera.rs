@@ -1,12 +1,14 @@
 use crate::Component;
 
+#[derive(Debug)]
 pub enum CameraProjection {
-    Perspective(),
+    Perspective,
     Orthographic(f32, f32)
 }
 
 #[derive(Debug, Component)]
 pub struct Camera3D {
+    pub projection: CameraProjection,
     pub pos: glm::Vec3,
     pub front: glm::Vec3,
     pub up: glm::Vec3,
@@ -36,9 +38,9 @@ impl Camera3D {
             &self.up)
     }
 
-    pub fn projection(&self, projection: CameraProjection) -> glm::Mat4 {
-        match projection {
-            CameraProjection::Perspective() => {
+    pub fn projection(&self) -> glm::Mat4 {
+        match self.projection {
+            CameraProjection::Perspective => {
                 glm::perspective(
                     self.fov.to_radians(),
                     self.aspect_ratio,

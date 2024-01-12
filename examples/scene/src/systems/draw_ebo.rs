@@ -1,7 +1,8 @@
 use engine::{
     VersionedIndex,
     Registry,
-    systems::apply_transforms
+    systems::apply_transforms,
+    gfx::Texture
 };
 
 use crate::{
@@ -16,9 +17,15 @@ pub fn draw_ebo(
     entity: &VersionedIndex,
     registry: &Registry
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let Some(shader_cmp) = registry.get_component::<DrawComponent>(entity) else { return Ok(()) };
-    let Some(shader) = registry.get_resource::<Shader>(&shader_cmp.shader_id) else { return Ok(()) };
+    let Some(draw_cmp) = registry.get_component::<DrawComponent>(entity) else { return Ok(()) };
+    let Some(shader) = registry.get_resource::<Shader>(&draw_cmp.shader_id) else { return Ok(()) };
     let Some(mesh) = registry.get_component::<MeshComponent>(entity) else { return Ok(()) };
+    
+    for (i, (uniform_name, texture)) in draw_cmp.textures.iter().enumerate() {
+        Texture::set_active_texture(i as gl::types::GLuint);
+        Texture::bind(texture);
+        shader.program().set_int(uniform_name, i as i32);
+    }
 
     shader.program().use_program();
     mesh.vao().bind();

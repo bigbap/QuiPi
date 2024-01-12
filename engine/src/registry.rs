@@ -11,7 +11,10 @@ pub enum RegistryError {
     ProblemInitialisingRegistry(
         #[from]
         ECSError
-    )
+    ),
+
+    #[error("there was a problem creating a new entity")]
+    ProblemCreatingEntity
 }
 
 #[derive(Debug)]
@@ -70,16 +73,30 @@ impl Registry {
         Ok(resource)
     }
 
-    pub fn create_entity(&mut self) -> &mut Self {
-        self.currently_building = Some(self.components.create_entity().unwrap());
+    pub fn create_entity(&mut self) -> Result<&mut Self, RegistryError> {
+        self.currently_building = Some(self.components.create_entity()?);
 
-        self
+        Ok(self)
     }
 
-    pub fn with(&mut self, cmp: impl Component + 'static) -> &mut Self {
+    pub fn with(
+        &mut self,
+        cmp: impl Component + 'static
+    ) -> Result<&mut Self, Box<dyn std::error::Error>> {
         self.components.add_component(&self.currently_building.unwrap(), cmp);
 
-        self
+        Ok(self)
+    }
+
+    pub fn with_factory<C: Component + 'static>(
+        &mut self,
+        fac: impl Fn(&mut Self) -> Result<C, Box<dyn std::error::Error>>
+    ) -> Result<&mut Self, Box<dyn std::error::Error>> {
+        let cmp = fac(self)?;
+
+        self.components.add_component(&self.currently_building.unwrap(), cmp);
+
+        Ok(self)
     }
 
     pub fn done(&mut self) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
@@ -123,12 +140,13 @@ mod tests {
     fn registry_create_entities() {
         let mut registry = create_registry();
 
-        let player = registry.create_entity()
-            .with(DrawComponent { shader_id: Some(1234) })
+        let player = registry.create_entity().unwrap()
+            .with(DrawComponent { shader_id: Some(1234) }).unwrap()
             .with(TransformComponent {
                 translate: glm::vec3(1.0, 1.0, 1.0),
                 ..TransformComponent::default()
-            }).done().unwrap();
+            }).unwrap()
+            .done().unwrap();
 
         assert_eq!(
             *registry.components.get_component::<DrawComponent>(&player).unwrap(),

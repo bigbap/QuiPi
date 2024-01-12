@@ -91,8 +91,8 @@ fn create_registry() -> Result<Registry, Box<dyn std::error::Error>> {
 }
 
 fn create_scene(registry: &mut Registry) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
-    let scene = registry.create_entity()
-        .with(components::ColorComponent(0.3, 0.3, 0.3, 1.0))
+    let scene = registry.create_entity()?
+        .with(components::ColorComponent(0.3, 0.3, 0.3, 1.0))?
         .done()?;
 
     Ok(scene)
