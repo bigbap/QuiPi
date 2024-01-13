@@ -1,3 +1,4 @@
+use engine::gfx;
 pub use engine::{
     self,
     Game,
@@ -57,7 +58,7 @@ impl Game for MyGame {
                     win_event: WindowEvent::Resized(w, h),
                     ..
                 } => {
-                    unsafe { gl::Viewport(0, 0, w, h); }
+                    gfx::view::adjust_viewport_dims(w, h);
                 },
 
                 Event::KeyDown { keycode, .. } if keycode.is_some_and(|k| k == Keycode::Escape) => {
@@ -72,10 +73,8 @@ impl Game for MyGame {
             &self.scene,
             &mut self.registry
         );
-        unsafe {
-            gl::ClearColor(bg_color.0, bg_color.1, bg_color.2, bg_color.3);
-            gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
-        }
+
+        engine::gfx::buffer::clear_buffer(Some(bg_color));
 
         Some(())
     }

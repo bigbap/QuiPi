@@ -1,7 +1,8 @@
-use engine::{
+use ::engine::{
     VersionedIndex,
     Registry,
-    components::MeshComponent
+    components::MeshComponent,
+    gfx
 };
 
 use crate::{
@@ -20,16 +21,7 @@ pub fn draw_ebo(
     shader.program().use_program();
 
     mesh.vao().bind();
-
-    unsafe {
-        gl::DrawElements(
-            gl::TRIANGLES,
-            mesh.vao().count(),
-            gl::UNSIGNED_INT,
-            std::ptr::null()
-        );
-    }
-
+    gfx::draw::draw_ebo(mesh.vao());
     mesh.vao().unbind();
 
     Ok(())

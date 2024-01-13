@@ -14,8 +14,6 @@ pub struct Texture {
 
 impl Drop for Texture {
     fn drop(&mut self) {
-        unsafe {
-            gl::DeleteTextures(1, [self.index].as_ptr());
-        }
+        crate::gfx::texture::delete_texture(self.index);
     }
 }

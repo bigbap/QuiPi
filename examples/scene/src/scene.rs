@@ -72,10 +72,10 @@ pub fn create_crates(
         entities.push(registry.create_entity()?
             .with(DrawComponent {
                 shader_id,
+                camera,
                 textures: textures.to_vec()
             })?
             .with(MeshComponent::new(config)?)?
-            .with(CameraComponent { id: camera })?
             .with(transforms.clone())?
             .done()?
         )
@@ -89,17 +89,10 @@ pub fn create_camera(
 ) -> Result<engine::VersionedIndex, Box<dyn std::error::Error>> {
     registry.create_resource(Camera3D {
         projection: CameraProjection::Perspective,
-        pos: glm::vec3(0.0, 1.0, 5.0),
-        front: glm::vec3(0.0, 0.0, -1.0),
-        up: glm::vec3(0.0, 1.0, 0.0),
+        position: glm::vec3(0.0, 1.0, 5.0),
 
-        fov: 75.0,
         aspect_ratio: 800.0/600.0,
-        pitch: 0.0,
-        yaw: -90.0,
-
-        near_plane: 0.1,
-        far_plane: 100.0
+        ..Camera3D::default()
     })
 }
 

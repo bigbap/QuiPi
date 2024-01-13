@@ -3,5 +3,5 @@ pub struct Config {
 }
 
 pub static CONFIG: Config = Config {
-    asset_path: "./assets/"
+    asset_path: "./examples/triangle/assets/"
 };

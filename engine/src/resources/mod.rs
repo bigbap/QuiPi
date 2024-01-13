@@ -4,7 +4,6 @@ pub mod shader;
 pub mod texture;
 
 pub use camera::Camera3D;
-pub use camera::Camera2D;
 pub use camera::CameraProjection;
 pub use material::Material;
 pub use shader::Shader;
@@ -15,7 +14,6 @@ use crate::Registry;
 pub fn register_resource(registry: &mut Registry) {
     registry
         .register_resource::<Camera3D>()
-        .register_resource::<Camera2D>()
         .register_resource::<Material>()
         .register_resource::<Shader>()
         .register_resource::<Texture>();

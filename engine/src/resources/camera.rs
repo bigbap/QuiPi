@@ -1,15 +1,16 @@
 use crate::Component;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub enum CameraProjection {
-    Perspective,
+    #[default] Perspective,
     Orthographic(f32, f32)
 }
 
 #[derive(Debug, Component)]
 pub struct Camera3D {
     pub projection: CameraProjection,
-    pub pos: glm::Vec3,
+
+    pub position: glm::Vec3,
     pub front: glm::Vec3,
     pub up: glm::Vec3,
     
@@ -17,28 +18,50 @@ pub struct Camera3D {
     pub aspect_ratio: f32,
     pub pitch: f32,
     pub yaw: f32,
+    pub max_pitch: f32,
+    pub min_pitch: f32,
 
     pub near_plane: f32,
-    pub far_plane: f32
+    pub far_plane: f32,
+    pub sensitivity: f32,
+}
+
+impl Default for Camera3D {
+    fn default() -> Self {
+        Camera3D {
+            projection: CameraProjection::default(),
+            position: glm::vec3(0.0, 0.0, 0.0),
+            front: glm::vec3(0.0, 0.0, -1.0), // direction from camera to target
+            up: glm::vec3(0.0, 1.0, 0.0),
+
+            fov: 75.0,
+            aspect_ratio: 0.0,
+            pitch: 0.0,
+            yaw: 0.0,
+            max_pitch: 89.0,
+            min_pitch: -89.0,
+
+            near_plane: 0.1,
+            far_plane: 100.0,
+            sensitivity: 0.2
+        }
+    }
 }
 
 impl Camera3D {
-    pub fn position(&self) -> (f32, f32, f32) {
-        (self.pos[0], self.pos[1], self.pos[2])
+    pub fn right(&self) -> glm::Vec3 {
+        glm::normalize(&glm::cross(&self.front, &self.up))
     }
 
-    pub fn direction(&self) -> (f32, f32, f32) {
-        (self.front[0], self.front[1], self.front[2])
-    }
-
-    pub fn look_at(&self) -> glm::Mat4 {
+    pub fn get_view(&self) -> glm::Mat4 {
         glm::look_at(
-            &self.pos, 
-            &(self.pos + self.front),
-            &self.up)
+            &self.position, 
+            &(self.position + self.front),
+            &self.up
+        )
     }
 
-    pub fn projection(&self) -> glm::Mat4 {
+    pub fn get_projection(&self) -> glm::Mat4 {
         match self.projection {
             CameraProjection::Perspective => {
                 glm::perspective(
@@ -61,18 +84,14 @@ impl Camera3D {
         }
     }
 
-    pub fn right_vector(&self) -> glm::Vec3 {
-        glm::normalize(&glm::cross(&self.front, &self.up))
-    }
-}
+    pub fn rotate(&mut self, x_offset: f32, y_offset: f32) {
+        self.pitch = (self.pitch + y_offset).clamp(self.min_pitch, self.max_pitch);
+        self.yaw += x_offset;
 
-#[derive(Debug, Component)]
-pub struct Camera2D {
-    pub pos: glm::Vec2,
-}
-
-impl Camera2D {
-    pub fn position(&self) -> (f32, f32, f32) {
-        (self.pos[0], self.pos[1], 0.0)
+        self.front = glm::normalize(&glm::vec3(
+            self.yaw.to_radians().cos() * self.pitch.to_radians().cos(),
+            self.pitch.to_radians().sin(),
+            self.yaw.to_radians().sin() * self.pitch.to_radians().cos()
+        ))
     }
 }

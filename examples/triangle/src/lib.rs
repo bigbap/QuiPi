@@ -66,7 +66,7 @@ impl engine::Game for MyGame {
                     win_event: WindowEvent::Resized(w, h),
                     ..
                 } => {
-                    unsafe { gl::Viewport(0, 0, w, h); }
+                    engine::gfx::view::adjust_viewport_dims(w, h)
                 },
 
                 Event::KeyDown { keycode, .. } if keycode.is_some_and(|k| k == Keycode::Escape) => {

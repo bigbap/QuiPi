@@ -96,19 +96,19 @@ impl ShaderProgram {
         }
     }
 
-    pub fn set_float_3(&self, key: &str, val: (f32, f32, f32)) {
+    pub fn set_float_3(&self, key: &str, val: &glm::Vec3) {
         self.use_program();
 
         unsafe {
-            gl::Uniform3f(self.get_location(key), val.0, val.1, val.2);
+            gl::Uniform3f(self.get_location(key), val.x, val.y, val.z);
         }
     }
 
-    pub fn set_float_4(&self, key: &str, val: (f32, f32, f32, f32)) {
+    pub fn set_float_4(&self, key: &str, val: &glm::Vec4) {
         self.use_program();
 
         unsafe {
-            gl::Uniform4f(self.get_location(key), val.0, val.1, val.2, val.3);
+            gl::Uniform4f(self.get_location(key), val.x, val.y, val.z, val.w);
         }
     }
 

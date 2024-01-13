@@ -1,4 +1,5 @@
 use sdl2::video::GLProfile;
+use crate::gfx;
 
 pub trait Game {
     /// game.init() is called by the engine, after all the Sdl and
@@ -29,30 +30,30 @@ pub fn run<G: Game>(
     sdl_ctx.mouse().show_cursor(false);
     sdl_ctx.mouse().set_relative_mouse_mode(true);
 
-    let gl_attr = video_subsystem.gl_attr();
-    gl_attr.set_context_profile(GLProfile::Core);
-    gl_attr.set_context_version(4, 5);
-    
-    #[cfg(debug_assertions)]
-    gl_attr.set_context_flags().debug().set();
-
     let window = video_subsystem.window(title, width, height)
         .opengl()
         .resizable()
         .build()?;
 
+    let gl_attr = video_subsystem.gl_attr();
+    gl_attr.set_context_profile(GLProfile::Core);
+    gl_attr.set_context_version(4, 5);
+
+    #[cfg(debug_assertions)]
+    gl_attr.set_context_flags().debug().set();
+
     let _gl_ctx = window.gl_create_context()?;
-    gl::load_with(|name| video_subsystem.gl_get_proc_address(name) as *const _);
 
     debug_assert_eq!(gl_attr.context_profile(), GLProfile::Core);
     debug_assert_eq!(gl_attr.context_version(), (4, 5));
+
+    gfx::init(
+        &video_subsystem,
+        width as i32,
+        height as i32
+    );
     
     game.init()?;
-
-    unsafe {
-        gl::Enable(gl::DEPTH_TEST);
-        gl::Viewport(0, 0, width as i32, height as i32);
-    }
 
     let mut event_pump = sdl_ctx.event_pump()?;
     'running: loop {

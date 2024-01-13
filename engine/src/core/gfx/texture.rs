@@ -145,9 +145,15 @@ pub fn set_parameter(
     Ok(())
 }
 
-pub fn set_active_texture(unit: gl::types::GLuint) {
+pub fn set_active_texture(unit: usize) {
     unsafe {
-        gl::ActiveTexture(gl::TEXTURE0 + unit);
+        gl::ActiveTexture(gl::TEXTURE0 + unit as gl::types::GLuint);
+    }
+}
+
+pub fn delete_texture(index: u32) {
+    unsafe {
+        gl::DeleteTextures(1, [index].as_ptr());
     }
 }
 
