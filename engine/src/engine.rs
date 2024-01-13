@@ -22,13 +22,15 @@ pub fn run<G: Game>(
     game: &mut G,
     title: &str,
     width: u32,
-    height: u32
+    height: u32,
+    show_mouse: bool,
+    relative_mouse_mode: bool
 ) -> Result<(), Box<dyn std::error::Error>> {
     let sdl_ctx = sdl2::init()?;
     let video_subsystem = sdl_ctx.video()?;
 
-    sdl_ctx.mouse().show_cursor(false);
-    sdl_ctx.mouse().set_relative_mouse_mode(true);
+    sdl_ctx.mouse().show_cursor(show_mouse);
+    sdl_ctx.mouse().set_relative_mouse_mode(relative_mouse_mode);
 
     let window = video_subsystem.window(title, width, height)
         .opengl()

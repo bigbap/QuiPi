@@ -100,7 +100,14 @@ fn create_scene(registry: &mut Registry) -> Result<VersionedIndex, Box<dyn std::
 fn main() {
     let mut my_game = MyGame::new().expect("there was a problem initializing the game");
 
-    if let Err(e) = engine::engine::run(&mut my_game, "Learn OpenGL", 800, 600) {
+    if let Err(e) = engine::engine::run(
+        &mut my_game,
+        "Game Engine - BG Color Change Example",
+        800,
+        600,
+        true,
+        true
+    ) {
         eprintln!("{e}")
     }
 }

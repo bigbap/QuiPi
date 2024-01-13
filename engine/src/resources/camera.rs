@@ -23,7 +23,6 @@ pub struct Camera3D {
 
     pub near_plane: f32,
     pub far_plane: f32,
-    pub sensitivity: f32,
 }
 
 impl Default for Camera3D {
@@ -37,13 +36,12 @@ impl Default for Camera3D {
             fov: 75.0,
             aspect_ratio: 0.0,
             pitch: 0.0,
-            yaw: 0.0,
+            yaw: 90.0,
             max_pitch: 89.0,
             min_pitch: -89.0,
 
             near_plane: 0.1,
             far_plane: 100.0,
-            sensitivity: 0.2
         }
     }
 }
@@ -88,7 +86,7 @@ impl Camera3D {
         self.pitch = (self.pitch + y_offset).clamp(self.min_pitch, self.max_pitch);
         self.yaw += x_offset;
 
-        self.front = glm::normalize(&glm::vec3(
+        self.front = glm::normalize(&-glm::vec3(
             self.yaw.to_radians().cos() * self.pitch.to_radians().cos(),
             self.pitch.to_radians().sin(),
             self.yaw.to_radians().sin() * self.pitch.to_radians().cos()

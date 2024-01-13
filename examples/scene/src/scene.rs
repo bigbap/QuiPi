@@ -91,7 +91,7 @@ pub fn create_camera(
         projection: CameraProjection::Perspective,
         position: glm::vec3(0.0, 1.0, 5.0),
 
-        aspect_ratio: 800.0/600.0,
+        aspect_ratio: 800.0 / 600.0,
         ..Camera3D::default()
     })
 }

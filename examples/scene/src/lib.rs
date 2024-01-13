@@ -115,6 +115,13 @@ impl engine::Game for MyGame {
                     Some(Keycode::D) => camera.position += camera.right() * speed,
                     _ => ()
                 },
+                Event::MouseMotion { xrel, yrel, .. } => {
+                    let sensitivity = 0.1;
+                    camera.rotate(
+                        xrel as f32 * sensitivity,
+                        yrel as f32 * sensitivity
+                    );
+                },
                 _event => ()
             };
         }
