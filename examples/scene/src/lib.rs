@@ -99,7 +99,6 @@ impl engine::Game for MyGame {
         self.last_frame = ticks;
         
         let camera = self.registry.get_resource_mut::<Camera3D>(&self.camera).unwrap();
-        let speed = 5.0 * delta;
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit {..} => return None,
@@ -107,14 +106,15 @@ impl engine::Game for MyGame {
                     win_event: WindowEvent::Resized(w, h),
                     ..
                 } => engine::gfx::view::adjust_viewport_dims(w, h),
-                Event::KeyDown { keycode, .. } => match keycode {
-                    Some(Keycode::Escape) => return None,
-                    Some(Keycode::W) => camera.position += camera.front * speed,
-                    Some(Keycode::S) => camera.position -= camera.front * speed,
-                    Some(Keycode::A) => camera.position -= camera.right() * speed,
-                    Some(Keycode::D) => camera.position += camera.right() * speed,
-                    _ => ()
-                },
+                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => return None,
+                Event::KeyDown { keycode: Some(Keycode::W), repeat: false, .. } => camera.move_forward = true,
+                Event::KeyDown { keycode: Some(Keycode::S), repeat: false, .. } => camera.move_backward = true,
+                Event::KeyDown { keycode: Some(Keycode::A), repeat: false, .. } => camera.move_left = true,
+                Event::KeyDown { keycode: Some(Keycode::D), repeat: false, .. } => camera.move_right = true,
+                Event::KeyUp { keycode: Some(Keycode::W), repeat: false, .. } => camera.move_forward = false,
+                Event::KeyUp { keycode: Some(Keycode::S), repeat: false, .. } => camera.move_backward = false,
+                Event::KeyUp { keycode: Some(Keycode::A), repeat: false, .. } => camera.move_left = false,
+                Event::KeyUp { keycode: Some(Keycode::D), repeat: false, .. } => camera.move_right = false,
                 Event::MouseMotion { xrel, yrel, .. } => {
                     let sensitivity = 0.1;
                     camera.rotate(
@@ -125,6 +125,8 @@ impl engine::Game for MyGame {
                 _event => ()
             };
         }
+
+        camera.apply_move(5.0 * delta);
 
         for entity in self.crates.iter() {
             engine::gfx::buffer::clear_buffer(None);

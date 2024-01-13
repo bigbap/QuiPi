@@ -23,6 +23,13 @@ pub struct Camera3D {
 
     pub near_plane: f32,
     pub far_plane: f32,
+
+    pub move_up: bool,
+    pub move_down: bool,
+    pub move_left: bool,
+    pub move_right: bool,
+    pub move_forward: bool,
+    pub move_backward: bool,
 }
 
 impl Default for Camera3D {
@@ -42,6 +49,13 @@ impl Default for Camera3D {
 
             near_plane: 0.1,
             far_plane: 100.0,
+
+            move_up: false,
+            move_down: false,
+            move_left: false,
+            move_right: false,
+            move_forward: false,
+            move_backward: false,
         }
     }
 }
@@ -91,5 +105,25 @@ impl Camera3D {
             self.pitch.to_radians().sin(),
             self.yaw.to_radians().sin() * self.pitch.to_radians().cos()
         ))
+    }
+
+    pub fn apply_move(&mut self, speed: f32) {
+        let mut new_pos = self.position;
+        if self.move_forward {
+            new_pos += self.front * speed;
+        }
+        if self.move_backward {
+            new_pos -= self.front * speed;
+        }
+        if self.move_left {
+            new_pos -= self.right() * speed;
+        }
+        if self.move_right {
+            new_pos += self.right() * speed;
+        }
+
+        // TODO: normalise the distance in case the movement is diagonal
+        
+        self.position = new_pos;
     }
 }
