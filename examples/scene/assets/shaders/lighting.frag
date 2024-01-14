@@ -82,12 +82,13 @@ void main()
         pointLightResult = calcPointLight(pointLight, norm, FragPos, viewDir);
     }
 
-    // // Spot Lights
-    // for(int i = 0; i < NR_SPOT_LIGHTS; i++) {
-    //     result += calcSpotLight(spotLights[i], norm, FragPos, viewDir);
-    // }
+    // Spot Lights
+    vec3 spotLightResult = vec3(0.0, 0.0, 0.0);
+    if (spotLightOn) {
+        spotLightResult = calcSpotLight(spotLight, norm, FragPos, viewDir);
+    }
 
-    FragColor = vec4(dirLightResult + pointLightResult, 1.0);
+    FragColor = vec4(dirLightResult + pointLightResult + spotLightResult, 1.0);
 }
 
 // calculates the color when using a directional light.

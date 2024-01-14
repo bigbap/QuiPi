@@ -53,6 +53,7 @@ pub struct MyGame {
 
     direction_light_on: bool,
     point_light_on: bool,
+    spot_light_on: bool,
 
     last_frame: f32,
     _has_control: bool
@@ -77,6 +78,7 @@ impl MyGame {
 
             direction_light_on: true,
             point_light_on: true,
+            spot_light_on: true,
             
             last_frame: timer.elapsed().as_millis() as f32 / 1000.0,
             _has_control: true
@@ -138,6 +140,13 @@ impl engine::Game for MyGame {
             self.camera,
             model_configs.get(0).unwrap()
         )?);
+        self.spot_light = Some(spot_light(
+            &mut self.registry,
+            light_shader,
+            shader,
+            self.camera,
+            model_configs.get(0).unwrap()
+        )?);
 
         self.shader = Some(shader);
 
@@ -161,6 +170,7 @@ impl engine::Game for MyGame {
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } => return Ok(None),
                 Event::KeyDown { keycode: Some(Keycode::Num1), repeat: false, .. } => self.direction_light_on = !self.direction_light_on,
                 Event::KeyDown { keycode: Some(Keycode::Num2), repeat: false, .. } => self.point_light_on = !self.point_light_on,
+                Event::KeyDown { keycode: Some(Keycode::Num3), repeat: false, .. } => self.spot_light_on = !self.spot_light_on,
 
                 Event::KeyDown { keycode: Some(Keycode::W), repeat: false, .. } => camera.move_forward = true,
                 Event::KeyDown { keycode: Some(Keycode::S), repeat: false, .. } => camera.move_backward = true,
@@ -182,6 +192,8 @@ impl engine::Game for MyGame {
         }
 
         camera.apply_move(5.0 * delta);
+        let camera_pos = camera.position_tup();
+        let camera_dir = camera.front_tup();
 
         engine::gfx::buffer::clear_buffer(Some((0.02, 0.02, 0.02, 1.0)));
         
@@ -191,11 +203,13 @@ impl engine::Game for MyGame {
         if self.point_light_on {
             systems::draw(&self.point_light.unwrap(), &self.registry)?;
         }
-        // systems::draw(self.spot_light.unwrap(), &self.registry).expect("there was a problem drawing the entity");
 
         let shader = self.registry.get_resource::<Shader>(&self.shader.unwrap()).unwrap().program();
         shader.set_int("dirLightOn", self.direction_light_on as i32);
         shader.set_int("pointLightOn", self.point_light_on as i32);
+        shader.set_int("spotLightOn", self.spot_light_on as i32);
+        shader.set_float_3("spotLight.position", camera_pos);
+        shader.set_float_3("spotLight.direction", camera_dir);
         
         for entity in self.crates.iter() {
             systems::update_entity(entity, &self.registry);

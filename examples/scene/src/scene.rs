@@ -16,7 +16,7 @@ use engine::{
     Registry,
     components::{
         transform::Transforms,
-        LightDirectionalComponent, LightPointComponent,
+        LightDirectionalComponent, LightPointComponent, LightSpotComponent,
     }
 };
 
@@ -96,7 +96,8 @@ pub fn create_camera(
     registry.create_resource(Camera3D {
         projection: CameraProjection::Perspective,
         position: glm::vec3(0.0, 1.0, 5.0),
-
+        
+        fov: 90.0,
         aspect_ratio: 800.0 / 600.0,
         ..Camera3D::default()
     })
@@ -226,7 +227,70 @@ pub fn point_light(
             ]
         })?
         .done()
+}
 
+pub fn spot_light(
+    registry: &mut Registry,
+    light_shader_id: VersionedIndex,
+    obj_shader_id: VersionedIndex,
+    camera_id: VersionedIndex,
+    model_config: &ObjectConfig
+) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
+    let shader = registry.get_resource::<Shader>(&obj_shader_id)
+        .unwrap()
+        .program();
+
+    let material = Material {
+        ambient: MaterialPart::Color(0.1, 0.1, 0.1),
+        diffuse: MaterialPart::Color(0.5, 0.5, 0.5),
+        specular: MaterialPart::Color(1.0, 1.0, 1.0),
+        shininess: 0.0
+    };
+    let light = LightSpotComponent {
+        position: (0.0, 0.0, 0.0),
+        direction: (0.0, 0.0, 0.0),
+        material,
+        constant: 1.0,
+        linear: 0.09,
+        quadratic: 0.032,
+        inner_cutoff: 12.5_f32.to_radians().cos(),
+        outer_cutoff: 17.5_f32.to_radians().cos()
+    };
+
+    if let Some(ambient) = material.get_color(&material.ambient) {
+        shader.set_float_3("spotLight.ambient", ambient);
+    }
+    if let Some(diffuse) = material.get_color(&material.diffuse) {
+        shader.set_float_3("spotLight.diffuse", diffuse);
+    }
+    if let Some(specular) = material.get_color(&material.specular) {
+        shader.set_float_3("spotLight.ambient", specular);
+    }
+    shader.set_float("spotLight.constant", light.constant);
+    shader.set_float("spotLight.linear", light.linear);
+    shader.set_float("spotLight.quadratic", light.quadratic);
+    shader.set_float("spotLight.cutOff", light.inner_cutoff);
+    shader.set_float("spotLight.outerCutOff", light.outer_cutoff);
+
+    registry.create_entity()?
+        .with(light)?
+        .with(DrawComponent {
+            shader_id: light_shader_id,
+            camera_id,
+            materials: vec![],
+            color: Some((0.6, 0.0, 0.0))
+        })?
+        .with(MeshComponent::new(model_config)?)?
+        .with(TransformComponent {
+            transforms: vec![
+                Transforms {
+                    translate: Some(glm::vec3(5.0, 1.0, 6.0)),
+                    scale: Some(glm::vec3(0.2, 0.2, 0.2)),
+                    ..Transforms::default()
+                }
+            ]
+        })?
+        .done()
 }
 
 fn create_transform(translate: glm::Vec3, angle: f32) -> Transforms {

@@ -61,6 +61,10 @@ impl Default for Camera3D {
 }
 
 impl Camera3D {
+    pub fn position_tup(&self) -> (f32, f32, f32) { (self.position.x, self.position.y, self.position.z) }
+    pub fn front_tup(&self) -> (f32, f32, f32) { (self.front.x, self.front.y, self.front.z) }
+    pub fn direction_tup(&self) -> (f32, f32, f32) { (-self.front.x, -self.front.y, -self.front.z) }
+
     pub fn right(&self) -> glm::Vec3 {
         glm::normalize(&glm::cross(&self.front, &self.up))
     }
