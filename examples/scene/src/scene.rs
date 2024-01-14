@@ -115,34 +115,7 @@ pub fn create_texture(
     })
 }
 
-pub fn create_lights(
-    registry: &mut Registry,
-    camera_id: VersionedIndex,
-    light_shader_id: VersionedIndex,
-    obj_shader_id: VersionedIndex
-) -> Result<Vec<VersionedIndex>, Box<dyn std::error::Error>> {
-    let (models_obj, _materials_obj) = load_obj_file(format!("{}objects/sphere.obj", CONFIG.asset_path))?;
-    let model_config = ObjectConfig::from_obj(models_obj)?;
-
-    Ok(vec![
-        directional_light(
-            registry,
-            light_shader_id,
-            obj_shader_id,
-            camera_id,
-            model_config.get(0).unwrap()
-        )?,
-        point_light(
-            registry,
-            light_shader_id,
-            obj_shader_id,
-            camera_id,
-            model_config.get(0).unwrap()
-        )?
-    ])
-}
-
-fn directional_light(
+pub fn directional_light(
     registry: &mut Registry,
     light_shader_id: VersionedIndex,
     obj_shader_id: VersionedIndex,
@@ -154,9 +127,9 @@ fn directional_light(
         .program();
 
     let material = Material {
-        ambient: MaterialPart::Color(0.08, 0.08, 0.0),
-        diffuse: MaterialPart::Color(0.2, 0.2, 0.0),
-        specular: MaterialPart::Color(0.3, 0.3, 0.0),
+        ambient: MaterialPart::Color(0.1, 0.1, 0.1),
+        diffuse: MaterialPart::Color(0.3, 0.3, 0.3),
+        specular: MaterialPart::Color(0.5, 0.5, 0.5),
         shininess: 0.0
     };
     let light = LightDirectionalComponent {
@@ -181,7 +154,7 @@ fn directional_light(
             shader_id: light_shader_id,
             camera_id,
             materials: vec![],
-            color: Some((0.8, 0.8, 0.0))
+            color: Some((1.0, 1.0, 1.0))
         })?
         .with(MeshComponent::new(model_config)?)?
         .with(TransformComponent {
@@ -195,7 +168,7 @@ fn directional_light(
         .done()
 }
 
-fn point_light(
+pub fn point_light(
     registry: &mut Registry,
     light_shader_id: VersionedIndex,
     obj_shader_id: VersionedIndex,
@@ -213,7 +186,7 @@ fn point_light(
         shininess: 0.0
     };
     let light = LightPointComponent {
-        position: (-1.0, 1.0, 6.0),
+        position: (5.0, 1.0, 6.0),
         material,
         constant: 1.0,
         linear: 0.09,
@@ -246,7 +219,7 @@ fn point_light(
         .with(TransformComponent {
             transforms: vec![
                 Transforms {
-                    translate: Some(glm::vec3(-1.0, 1.0, 6.0)),
+                    translate: Some(glm::vec3(5.0, 1.0, 6.0)),
                     scale: Some(glm::vec3(0.2, 0.2, 0.2)),
                     ..Transforms::default()
                 }

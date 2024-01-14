@@ -8,10 +8,6 @@ pub use engine::components::MeshComponent;
 
 use engine::Registry;
 pub fn register_components(registry: &mut Registry) {
-    registry
-        .register_component::<ChildrenComponent>()
-        .register_component::<ColorComponent>()
-        .register_component::<DrawComponent>()
-        .register_component::<TransformComponent>()
-        .register_component::<MeshComponent>();
+    engine::components::register_components(registry);
+    registry.register_component::<DrawComponent>();
 }

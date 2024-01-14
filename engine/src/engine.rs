@@ -15,7 +15,7 @@ pub trait Game {
     fn handle_frame(
         &mut self,
         event_pump: &mut sdl2::EventPump
-    ) -> Option<()>;
+    ) -> Result<Option<()>, Box<dyn std::error::Error>>;
 }
 
 pub fn run<G: Game>(
@@ -61,7 +61,7 @@ pub fn run<G: Game>(
     'running: loop {
         if game.handle_frame(
             &mut event_pump
-        ).is_none() {
+        )?.is_none() {
             break 'running
         }
 

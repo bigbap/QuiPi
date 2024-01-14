@@ -8,7 +8,15 @@ use engine::{
         Shader,
         Camera3D
     },
-    VersionedIndex, gfx::{Material, material::MaterialPart}
+    VersionedIndex,
+    gfx::{
+        Material,
+        material::MaterialPart,
+        object_loader::{
+            load_obj_file,
+            ObjectConfig
+        }
+    }
 };
 use sdl2::{
     EventPump,
@@ -35,12 +43,19 @@ type Light = VersionedIndex;
 pub struct MyGame {
     registry: engine::Registry,
     timer: std::time::Instant,
-    
+   
+    shader: Option<VersionedIndex>,
     crates: Vec<Crate>,
-    lights: Vec<Light>,
     camera: VersionedIndex,
+    direction_light: Option<Light>,
+    point_light: Option<Light>,
+    spot_light: Option<Light>,
 
-    last_frame: f32
+    direction_light_on: bool,
+    point_light_on: bool,
+
+    last_frame: f32,
+    _has_control: bool
 }
 
 impl MyGame {
@@ -53,11 +68,18 @@ impl MyGame {
             registry,
             timer,
 
+            shader: None,
             crates: vec![],
-            lights: vec![],
             camera,
+            direction_light: None,
+            point_light: None,
+            spot_light: None,
+
+            direction_light_on: true,
+            point_light_on: true,
             
-            last_frame: timer.elapsed().as_millis() as f32 / 1000.0
+            last_frame: timer.elapsed().as_millis() as f32 / 1000.0,
+            _has_control: true
         })
     }
 
@@ -100,17 +122,29 @@ impl engine::Game for MyGame {
             }
         )?;
 
-        self.lights = create_lights(
+        let (models_obj, _materials_obj) = load_obj_file(format!("{}objects/sphere.obj", CONFIG.asset_path))?;
+        let model_configs = ObjectConfig::from_obj(models_obj)?;
+        self.direction_light = Some(directional_light(
             &mut self.registry,
-            self.camera,
             light_shader,
             shader,
-        )?;
+            self.camera,
+            model_configs.get(0).unwrap()
+        )?);
+        self.point_light = Some(point_light(
+            &mut self.registry,
+            light_shader,
+            shader,
+            self.camera,
+            model_configs.get(0).unwrap()
+        )?);
+
+        self.shader = Some(shader);
 
         Ok(())
     }
 
-    fn handle_frame(&mut self, event_pump: &mut EventPump) -> Option<()> {
+    fn handle_frame(&mut self, event_pump: &mut EventPump) -> Result<Option<()>, Box<dyn std::error::Error>> {
         let ticks = self.ticks();
         let delta = ticks - self.last_frame;
         
@@ -119,12 +153,15 @@ impl engine::Game for MyGame {
         let camera = self.registry.get_resource_mut::<Camera3D>(&self.camera).unwrap();
         for event in event_pump.poll_iter() {
             match event {
-                Event::Quit {..} => return None,
+                Event::Quit {..} => return Ok(None),
                 Event::Window {
                     win_event: WindowEvent::Resized(w, h),
                     ..
                 } => engine::gfx::view::adjust_viewport_dims(w, h),
-                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => return None,
+                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => return Ok(None),
+                Event::KeyDown { keycode: Some(Keycode::Num1), repeat: false, .. } => self.direction_light_on = !self.direction_light_on,
+                Event::KeyDown { keycode: Some(Keycode::Num2), repeat: false, .. } => self.point_light_on = !self.point_light_on,
+
                 Event::KeyDown { keycode: Some(Keycode::W), repeat: false, .. } => camera.move_forward = true,
                 Event::KeyDown { keycode: Some(Keycode::S), repeat: false, .. } => camera.move_backward = true,
                 Event::KeyDown { keycode: Some(Keycode::A), repeat: false, .. } => camera.move_left = true,
@@ -147,23 +184,24 @@ impl engine::Game for MyGame {
         camera.apply_move(5.0 * delta);
 
         engine::gfx::buffer::clear_buffer(Some((0.02, 0.02, 0.02, 1.0)));
-
-        for light in self.lights.iter() {
-            systems::update_entity(light, &self.registry);
-            systems::draw(
-                light,
-                &self.registry,
-            ).expect("there was a problem drawing the entity");
+        
+        if self.direction_light_on {
+            systems::draw(&self.direction_light.unwrap(), &self.registry)?;
         }
+        if self.point_light_on {
+            systems::draw(&self.point_light.unwrap(), &self.registry)?;
+        }
+        // systems::draw(self.spot_light.unwrap(), &self.registry).expect("there was a problem drawing the entity");
+
+        let shader = self.registry.get_resource::<Shader>(&self.shader.unwrap()).unwrap().program();
+        shader.set_int("dirLightOn", self.direction_light_on as i32);
+        shader.set_int("pointLightOn", self.point_light_on as i32);
+        
         for entity in self.crates.iter() {
             systems::update_entity(entity, &self.registry);
-            systems::draw(
-                entity,
-                &self.registry,
-            ).expect("there was a problem drawing the entity");
+            systems::draw(entity, &self.registry)?;
         }
 
-        Some(())
+        Ok(Some(()))
     }
 }
-

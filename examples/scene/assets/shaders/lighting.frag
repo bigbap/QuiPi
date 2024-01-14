@@ -56,6 +56,10 @@ uniform DirLight dirLight;
 uniform PointLight pointLight;
 uniform SpotLight spotLight;
 
+uniform bool dirLightOn;
+uniform bool pointLightOn;
+uniform bool spotLightOn;
+
 vec3 calcDirLight(DirLight light, vec3 normal, vec3 viewDir);
 vec3 calcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 vec3 calcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
@@ -67,17 +71,23 @@ void main()
     vec3 viewDir = normalize(viewPos - FragPos);
     
     // Directional Lighting
-    vec3 result = calcDirLight(dirLight, norm, viewDir);
+    vec3 dirLightResult = vec3(0.0, 0.0, 0.0);
+    if (dirLightOn) {
+        dirLightResult = calcDirLight(dirLight, norm, viewDir);
+    }
 
     // Point Lights
-    result += calcPointLight(pointLight, norm, FragPos, viewDir);
+    vec3 pointLightResult = vec3(0.0, 0.0, 0.0);
+    if (pointLightOn) {
+        pointLightResult = calcPointLight(pointLight, norm, FragPos, viewDir);
+    }
 
     // // Spot Lights
     // for(int i = 0; i < NR_SPOT_LIGHTS; i++) {
     //     result += calcSpotLight(spotLights[i], norm, FragPos, viewDir);
     // }
 
-    FragColor = vec4(result, 1.0);
+    FragColor = vec4(dirLightResult + pointLightResult, 1.0);
 }
 
 // calculates the color when using a directional light.

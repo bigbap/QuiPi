@@ -6,8 +6,8 @@ fn main() {
     if let Err(e) = engine::engine::run(
         &mut my_game,
         "Game Engine - Scene Example",
-        800,
-        600,
+        1600,
+        900,
         false,
         true
     ) {
