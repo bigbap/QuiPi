@@ -4,8 +4,10 @@ pub mod object_loader;
 pub mod buffer;
 pub mod draw;
 pub mod view;
+pub mod material;
 
 pub use shader_program::ShaderProgram;
+pub use material::Material;
 
 use sdl2::VideoSubsystem;
 

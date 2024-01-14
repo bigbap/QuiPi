@@ -8,12 +8,13 @@ pub enum TextureType {
 
 #[derive(Debug, Component)]
 pub struct Texture {
-    pub index: u32,
+    pub id: u32,
+    pub index: i32, // index on the GPU
     pub kind: TextureType
 }
 
 impl Drop for Texture {
     fn drop(&mut self) {
-        crate::gfx::texture::delete_texture(self.index);
+        crate::gfx::texture::delete_texture(self.id);
     }
 }

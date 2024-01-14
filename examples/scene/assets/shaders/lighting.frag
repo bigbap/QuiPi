@@ -53,8 +53,8 @@ in vec2 TexCoords;
 uniform vec3 viewPos;
 uniform Material material;
 uniform DirLight dirLight;
-uniform PointLight pointLights[NR_POINT_LIGHTS];
-uniform SpotLight spotLights[NR_SPOT_LIGHTS];
+uniform PointLight pointLight;
+uniform SpotLight spotLight;
 
 vec3 calcDirLight(DirLight light, vec3 normal, vec3 viewDir);
 vec3 calcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
@@ -70,21 +70,14 @@ void main()
     vec3 result = calcDirLight(dirLight, norm, viewDir);
 
     // Point Lights
-    for(int i = 0; i < NR_POINT_LIGHTS; i++) {
-        result += calcPointLight(pointLights[i], norm, FragPos, viewDir);
-    }
+    result += calcPointLight(pointLight, norm, FragPos, viewDir);
 
-    // Spot Lights
-    for(int i = 0; i < NR_SPOT_LIGHTS; i++) {
-        result += calcSpotLight(spotLights[i], norm, FragPos, viewDir);
-    }
+    // // Spot Lights
+    // for(int i = 0; i < NR_SPOT_LIGHTS; i++) {
+    //     result += calcSpotLight(spotLights[i], norm, FragPos, viewDir);
+    // }
 
-    // FragColor = vec4(result, 1.0);
-
-    vec3 diffuse = vec3(texture(material.diffuse, TexCoords));
-    vec3 specular = vec3(texture(material.specular, TexCoords));
-
-    FragColor = vec4(diffuse + specular, 1.0);
+    FragColor = vec4(result, 1.0);
 }
 
 // calculates the color when using a directional light.

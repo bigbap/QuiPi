@@ -9,7 +9,7 @@ pub struct Transforms {
     pub angle: f32
 }
 
-#[derive(Debug, Default, Component, PartialEq, Clone)]
+#[derive(Debug, Component, PartialEq, Clone)]
 pub struct TransformComponent {
     pub transforms: Vec<Transforms>
 }

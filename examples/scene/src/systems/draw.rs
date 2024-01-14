@@ -5,10 +5,7 @@ use engine::{
         texture,
         draw::draw_ebo
     },
-    resources::{
-        Texture,
-        Camera3D
-    },
+    resources::Camera3D,
     components::TransformComponent
 };
 
@@ -29,13 +26,21 @@ pub fn draw(
     let Some(transforms) = registry.get_component::<TransformComponent>(entity) else { return Ok(()) };
 
     let Some(shader) = registry.get_resource::<Shader>(&draw_cmp.shader_id) else { return Ok(()) };
-    let Some(camera) = registry.get_resource::<Camera3D>(&draw_cmp.camera) else { return Ok(()) };
+    let Some(camera) = registry.get_resource::<Camera3D>(&draw_cmp.camera_id) else { return Ok(()) };
 
-    for (i, texture_i) in draw_cmp.textures.iter().enumerate() {
-        let texture = registry.get_resource::<Texture>(texture_i).unwrap();
+    for material in draw_cmp.materials.iter() {
+        if let Some(diffuse) = material.get_texture(&material.diffuse, registry) {
+            texture::set_active_texture(diffuse.index);
+            texture::bind(&diffuse.id);
+        }
+        if let Some(specular) = material.get_texture(&material.specular, registry) {
+            texture::set_active_texture(specular.index);
+            texture::bind(&specular.id);
+        }
+    }
 
-        texture::set_active_texture(i);
-        texture::bind(&texture.index);
+    if let Some(color) = draw_cmp.color {
+        shader.program().set_float_3("color", color);
     }
 
     shader.program().use_program();
@@ -46,9 +51,12 @@ pub fn draw(
         shader.program().set_mat4("model", &model);
         shader.program().set_mat4("view", &camera.get_view());
         shader.program().set_mat4("projection", &camera.get_projection());
-        shader.program().set_float_3("viewPos", &camera.position);
+        shader.program().set_float_3(
+            "viewPos",
+            (camera.position.x, camera.position.y, camera.position.z)
+        );
         
-        draw_ebo(&mesh.vao());
+        draw_ebo(mesh.vao());
     }
     
     mesh.vao().unbind();

@@ -145,7 +145,7 @@ pub fn set_parameter(
     Ok(())
 }
 
-pub fn set_active_texture(unit: usize) {
+pub fn set_active_texture(unit: i32) {
     unsafe {
         gl::ActiveTexture(gl::TEXTURE0 + unit as gl::types::GLuint);
     }
