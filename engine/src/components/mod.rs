@@ -1,26 +1,29 @@
 pub mod children;
 pub mod color;
+pub mod draw;
 pub mod lights;
 pub mod mesh;
 pub mod transform;
 
-pub use children::ChildrenComponent;
-pub use color::ColorComponent;
-pub use lights::LightDirectionalComponent;
-pub use lights::LightPointComponent;
-pub use lights::LightSpotComponent;
-pub use mesh::MeshComponent;
-pub use transform::TransformComponent;
+pub use children::Children;
+pub use color::Color;
+pub use draw::Draw;
+pub use lights::LightDirectional;
+pub use lights::LightPoint;
+pub use lights::LightSpot;
+pub use mesh::Mesh;
+pub use transform::ModelTransform;
 
 use crate::Registry;
 
 pub fn register_components(registry: &mut Registry) {
     registry
-        .register_component::<ChildrenComponent>()
-        .register_component::<ColorComponent>()
-        .register_component::<LightDirectionalComponent>()
-        .register_component::<LightPointComponent>()
-        .register_component::<LightSpotComponent>()
-        .register_component::<MeshComponent>()
-        .register_component::<TransformComponent>();
+        .register_component::<Children>()
+        .register_component::<Color>()
+        .register_component::<Draw>()
+        .register_component::<LightDirectional>()
+        .register_component::<LightPoint>()
+        .register_component::<LightSpot>()
+        .register_component::<Mesh>()
+        .register_component::<ModelTransform>();
 }

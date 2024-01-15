@@ -10,11 +10,11 @@ pub struct Transforms {
 }
 
 #[derive(Debug, Component, PartialEq, Clone)]
-pub struct TransformComponent {
+pub struct ModelTransform {
     pub transforms: Vec<Transforms>
 }
 
-impl TransformComponent {
+impl ModelTransform {
     pub fn apply_transforms(&self) -> Result<Vec<glm::Mat4>, Box<dyn std::error::Error>> {
         Ok(
             self.transforms.iter().map(|transform| {

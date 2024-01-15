@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 pub fn asset_path() -> Result<PathBuf, std::io::Error> {
     let mut app_path = ::std::env::current_exe()?;
 

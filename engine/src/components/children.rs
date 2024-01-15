@@ -4,6 +4,6 @@ use crate::{
 };
 
 #[derive(Debug, Component)]
-pub struct ChildrenComponent {
-    pub entities: Vec<VersionedIndex>
+pub struct Children {
+    pub children: Vec<VersionedIndex>
 }

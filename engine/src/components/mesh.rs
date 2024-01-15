@@ -18,18 +18,26 @@ pub const SIZE_OF_F32_3: usize = std::mem::size_of::<f32>() * 3;
 pub const SIZE_OF_F32_2: usize = std::mem::size_of::<f32>() * 2;
 
 #[derive(Component, Debug)]
-pub struct MeshComponent {
+pub struct Mesh {
     vao: buffer::VertexArray,
+
+    pub points: Option<Vec<f32>>,
+    pub colors: Option<Vec<f32>>
 }
 
-impl MeshComponent {
+impl Mesh {
     pub fn new(
         config: &ObjectConfig,
     ) -> Result<Self, Box<dyn std::error::Error>> {
         let vao = Self::load_vao(config)?;
 
+        let points = Some(config.points.clone());
+        let colors = Some(config.colors.clone());
+
         Ok(Self {
-            vao
+            vao,
+            points,
+            colors
         })
     }
 
@@ -44,7 +52,7 @@ impl MeshComponent {
 
         // if the vbo isn't assigned to a variable, opengl crashes with STATUS_ACCESS_VIOLATION
         let mut _vbo_list: Vec<buffer::Buffer<VBO>> = vec![];
-        _vbo_list.push(create_vbo(&config.positions, SHADER_POSITION_LOCATION, 3, SIZE_OF_F32_3)?);
+        _vbo_list.push(create_vbo(&config.points, SHADER_POSITION_LOCATION, 3, SIZE_OF_F32_3)?);
         
         if !config.normals.is_empty() {
             _vbo_list.push(create_vbo(&config.normals, SHADER_NORMALS_LOCATION, 3, SIZE_OF_F32_3)?);

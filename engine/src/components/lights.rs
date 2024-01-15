@@ -4,14 +4,14 @@ use crate::gfx::Material;
 use crate::Component;
 
 #[derive(Debug, Component)]
-pub struct LightDirectionalComponent {
+pub struct LightDirectional {
     pub direction: (f32, f32, f32),
 
     pub material: Material,
 }
 
 #[derive(Debug, Component)]
-pub struct LightPointComponent {
+pub struct LightPoint {
     pub position: (f32, f32, f32),
     pub material: Material,
     
@@ -21,7 +21,7 @@ pub struct LightPointComponent {
 }
 
 #[derive(Debug, Component)]
-pub struct LightSpotComponent {
+pub struct LightSpot {
     pub direction: (f32, f32, f32),
     pub position: (f32, f32, f32),
     pub material: Material,

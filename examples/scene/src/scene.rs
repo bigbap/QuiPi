@@ -16,7 +16,9 @@ use engine::{
     Registry,
     components::{
         transform::Transforms,
-        LightDirectionalComponent, LightPointComponent, LightSpotComponent,
+        LightDirectional,
+        LightPoint,
+        LightSpot,
     }
 };
 
@@ -57,7 +59,7 @@ pub fn create_crates(
 
     shader.program().set_float("material.shininess", 0.6 * 128.0);
     
-    let transforms = TransformComponent {
+    let transforms = ModelTransform {
         transforms: vec![
             create_transform(glm::vec3(-1.0, 0.0, 0.0), 0.0),
             create_transform(glm::vec3(0.1, 0.0, 0.1), 0.1),
@@ -76,13 +78,12 @@ pub fn create_crates(
     let mut entities = vec![];
     for config in model_configs.iter() {
         entities.push(registry.create_entity()?
-            .with(DrawComponent {
+            .with(Draw {
                 shader_id,
                 camera_id,
                 materials: vec![material],
-                ..DrawComponent::default()
             })?
-            .with(MeshComponent::new(config)?)?
+            .with(Mesh::new(config)?)?
             .with(transforms.clone())?
             .done()?
         )
@@ -134,7 +135,7 @@ pub fn directional_light(
         specular: MaterialPart::Color(0.5, 0.5, 0.5),
         shininess: 0.0
     };
-    let light = LightDirectionalComponent {
+    let light = LightDirectional {
         direction: (-0.8, -0.1, -0.1),
         material,
     };
@@ -152,14 +153,14 @@ pub fn directional_light(
 
     registry.create_entity()?
         .with(light)?
-        .with(DrawComponent {
+        .with(Draw {
             shader_id: light_shader_id,
             camera_id,
             materials: vec![],
-            color: Some((1.0, 1.0, 1.0))
         })?
-        .with(MeshComponent::new(model_config)?)?
-        .with(TransformComponent {
+        .with(Color(1.0, 1.0, 1.0, 1.0))?
+        .with(Mesh::new(model_config)?)?
+        .with(ModelTransform {
             transforms: vec![
                 Transforms {
                     translate: Some(glm::vec3(7.0, 10.0, 0.0)),
@@ -187,7 +188,7 @@ pub fn point_light(
         specular: MaterialPart::Color(1.0, 0.2, 0.2),
         shininess: 0.0
     };
-    let light = LightPointComponent {
+    let light = LightPoint {
         position: (5.0, 1.0, 6.0),
         material,
         constant: 1.0,
@@ -211,14 +212,14 @@ pub fn point_light(
 
     registry.create_entity()?
         .with(light)?
-        .with(DrawComponent {
+        .with(Draw {
             shader_id: light_shader_id,
             camera_id,
             materials: vec![],
-            color: Some((0.6, 0.0, 0.0))
         })?
-        .with(MeshComponent::new(model_config)?)?
-        .with(TransformComponent {
+        .with(Color(0.6, 0.0, 0.0, 1.0))?
+        .with(Mesh::new(model_config)?)?
+        .with(ModelTransform {
             transforms: vec![
                 Transforms {
                     translate: Some(glm::vec3(5.0, 1.0, 6.0)),
@@ -247,7 +248,7 @@ pub fn spot_light(
         specular: MaterialPart::Color(1.0, 1.0, 1.0),
         shininess: 0.0
     };
-    let light = LightSpotComponent {
+    let light = LightSpot {
         position: (0.0, 0.0, 0.0),
         direction: (0.0, 0.0, 0.0),
         material,
@@ -275,14 +276,14 @@ pub fn spot_light(
 
     registry.create_entity()?
         .with(light)?
-        .with(DrawComponent {
+        .with(Draw {
             shader_id: light_shader_id,
             camera_id,
             materials: vec![],
-            color: Some((0.6, 0.0, 0.0))
         })?
-        .with(MeshComponent::new(model_config)?)?
-        .with(TransformComponent {
+        .with(Color(0.6, 0.0, 0.0, 1.0))?
+        .with(Mesh::new(model_config)?)?
+        .with(ModelTransform {
             transforms: vec![
                 Transforms {
                     translate: Some(glm::vec3(5.0, 1.0, 6.0)),

@@ -2,7 +2,7 @@ use std::io;
 
 #[derive(Debug, Default)]
 pub struct ObjectConfig {
-    pub positions: Vec<f32>,
+    pub points: Vec<f32>,
     pub normals: Vec<f32>,
     pub texture_coords: Vec<f32>,
     pub colors: Vec<f32>,
@@ -19,14 +19,14 @@ impl ObjectConfig {
 
         for model in models {
             let material_id = model.mesh.material_id.unwrap();
-            let positions = model.mesh.positions;
+            let points = model.mesh.positions;
             let normals = model.mesh.normals;
             let texture_coords = model.mesh.texcoords;
             let colors = model.mesh.vertex_color;
             let indices = model.mesh.indices;
 
             obj_configs.push(ObjectConfig {
-                positions,
+                points,
                 indices,
                 normals,
                 texture_coords,

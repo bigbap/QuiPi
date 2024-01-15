@@ -1,15 +1,15 @@
 use engine::{
     VersionedIndex,
-    Registry
+    Registry,
+    components::Color
 };
-use crate::components::ColorComponent;
 
 pub fn get_color(
     ticks: f32,
     entity: &VersionedIndex,
     registry: &mut Registry
 ) -> (f32, f32, f32, f32) {
-    match registry.get_component_mut::<ColorComponent>(entity) {
+    match registry.get_component_mut::<Color>(entity) {
         Some(color) => {
             color.0 = ticks.sin();
             color.1 = ticks.cos();

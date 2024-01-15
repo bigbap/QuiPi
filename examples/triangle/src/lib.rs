@@ -118,7 +118,7 @@ fn create_scene(
     )?;
 
     let config = ObjConfig {
-        positions: vec![
+        points: vec![
             -0.5, -0.5, 0.0,
             0.5, -0.5, 0.0,
             0.0,  0.5, 0.0
@@ -135,8 +135,8 @@ fn create_scene(
     };
 
     registry.create_entity()?
-        .with(components::DrawComponent { shader_id: shader })?
-        .with(components::ColorComponent(0.0, 0.0, 0.0, 1.0))?
-        .with(engine::components::MeshComponent::new(&config)?)?
+        .with(components::Draw { shader_id: shader, ..components::Draw::default() })?
+        .with(components::Color(0.0, 0.0, 0.0, 1.0))?
+        .with(engine::components::Mesh::new(&config)?)?
         .done()
 }
