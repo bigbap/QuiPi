@@ -23,7 +23,7 @@ use engine::{
 use crate::{
     resources::*,
     components::*,
-    CONFIG
+    config,
 };
 
 pub fn create_registry() -> Result<engine::Registry, Box<dyn std::error::Error>> {
@@ -42,7 +42,8 @@ pub fn create_crates(
     material: Material
 ) -> Result<Vec<engine::VersionedIndex>, Box<dyn std::error::Error>> {
     // load the object data
-    let (models_obj, _materials_obj) = load_obj_file(format!("{}objects/crate.obj", CONFIG.asset_path))?;
+    let asset_path = config::asset_path()?.into_os_string().into_string().unwrap();
+    let (models_obj, _materials_obj) = load_obj_file(format!("{}/objects/crate.obj", asset_path))?;
     let model_configs = ObjectConfig::from_obj(models_obj)?;
 
     let shader = registry.get_resource::<Shader>(&shader_id).unwrap();
@@ -128,13 +129,13 @@ pub fn directional_light(
         .program();
 
     let material = Material {
-        ambient: MaterialPart::Color(0.1, 0.1, 0.1),
-        diffuse: MaterialPart::Color(0.3, 0.3, 0.3),
+        ambient: MaterialPart::Color(0.05, 0.05, 0.05),
+        diffuse: MaterialPart::Color(0.1, 0.1, 0.1),
         specular: MaterialPart::Color(0.5, 0.5, 0.5),
         shininess: 0.0
     };
     let light = LightDirectionalComponent {
-        direction: (-2.0, -2.0, -2.0),
+        direction: (-0.8, -0.1, -0.1),
         material,
     };
 
@@ -161,7 +162,7 @@ pub fn directional_light(
         .with(TransformComponent {
             transforms: vec![
                 Transforms {
-                    translate: Some(glm::vec3(1.0, 10.0, 1.0)),
+                    translate: Some(glm::vec3(7.0, 10.0, 0.0)),
                     ..Transforms::default()
                 }
             ]

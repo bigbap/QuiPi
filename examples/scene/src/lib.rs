@@ -33,8 +33,6 @@ mod resources;
 mod config;
 mod scene;
 
-pub use config::CONFIG;
-
 use scene::*;
 
 type Crate = VersionedIndex;
@@ -92,22 +90,23 @@ impl MyGame {
 
 impl engine::Game for MyGame {
     fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let asset_path = config::asset_path()?.into_os_string().into_string().unwrap();
         let shader = self.registry.create_resource(
-            Shader::new(&format!("{}shaders/lighting", CONFIG.asset_path))?
+            Shader::new(&format!("{}/shaders/lighting", asset_path))?
         )?;
         let light_shader = self.registry.create_resource(
-            Shader::new(&format!("{}shaders/light_source", CONFIG.asset_path))?
+            Shader::new(&format!("{}/shaders/light_source", asset_path))?
         )?;
         
         let diffuse = create_texture(
             &mut self.registry,
-            &format!("{}objects/textures/container.png", CONFIG.asset_path),
+            &format!("{}/objects/textures/container.png", asset_path),
             TextureType::Diffuse,
             0
         )?;
         let specular = create_texture(
             &mut self.registry,
-            &format!("{}objects/textures/container_specular.png", CONFIG.asset_path),
+            &format!("{}/objects/textures/container_specular.png", asset_path),
             TextureType::Specular,
             1
         )?;
@@ -124,7 +123,7 @@ impl engine::Game for MyGame {
             }
         )?;
 
-        let (models_obj, _materials_obj) = load_obj_file(format!("{}objects/sphere.obj", CONFIG.asset_path))?;
+        let (models_obj, _materials_obj) = load_obj_file(format!("{}/objects/sphere.obj", asset_path))?;
         let model_configs = ObjectConfig::from_obj(models_obj)?;
         self.direction_light = Some(directional_light(
             &mut self.registry,

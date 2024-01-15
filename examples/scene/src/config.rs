@@ -1,7 +1,8 @@
-pub struct Config {
-    pub asset_path: &'static str
-}
+pub fn asset_path() -> Result<PathBuf, std::io::Error> {
+    let mut app_path = ::std::env::current_exe()?;
 
-pub static CONFIG: Config = Config {
-    asset_path: "examples/scene/assets/"
-};
+    app_path.pop();
+    app_path.push("assets");
+
+    Ok(app_path)
+}

@@ -56,12 +56,15 @@ impl engine::Game for MyGame {
         Ok(())
     }
 
-    fn handle_frame(&mut self, event_pump: &mut EventPump) -> Option<()> {
+    fn handle_frame(
+        &mut self,
+        event_pump: &mut EventPump
+    ) -> Result<Option<()>, Box<dyn std::error::Error>> {
         let _ticks = self.ticks();
 
         for event in event_pump.poll_iter() {
             match event {
-                Event::Quit {..} => return None,
+                Event::Quit {..} => return Ok(None),
                 Event::Window {
                     win_event: WindowEvent::Resized(w, h),
                     ..
@@ -70,7 +73,7 @@ impl engine::Game for MyGame {
                 },
 
                 Event::KeyDown { keycode, .. } if keycode.is_some_and(|k| k == Keycode::Escape) => {
-                    return None
+                    return Ok(None)
                 },
                 _event => ()
             };
@@ -92,7 +95,7 @@ impl engine::Game for MyGame {
             systems::draw_ebo(scene, &mut self.registry).expect("there was a problem drawing the scene");
         }
 
-        Some(())
+        Ok(Some(()))
     }
 }
 

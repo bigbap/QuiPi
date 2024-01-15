@@ -14,3 +14,6 @@ tobj = "4.0"
 gltf = "1.4.0"
 nalgebra-glm = "*"
 engine = { path = "../../engine" }
+
+[build-dependencies]
+walkdir = "2.4"
