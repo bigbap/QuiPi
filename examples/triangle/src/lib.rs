@@ -1,5 +1,4 @@
 extern crate engine;
-extern crate gl;
 extern crate nalgebra_glm as glm;
 
 use std::vec;

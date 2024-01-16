@@ -125,9 +125,28 @@ impl Camera3D {
         if self.move_right {
             new_pos += self.right() * speed;
         }
+        if self.move_up {
+            new_pos -= self.up * speed;
+        }
+        if self.move_down {
+            new_pos += self.up * speed;
+        }
 
         // TODO: normalise the distance in case the movement is diagonal
         
         self.position = new_pos;
+    }
+}
+
+#[derive(Debug, Clone, Copy, Component)]
+pub struct Camera2D {
+    pub position: glm::Vec2
+}
+
+impl Default for Camera2D {
+    fn default() -> Self {
+        Self {
+            position: glm::vec2(0.0, 0.0)
+        }
     }
 }

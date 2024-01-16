@@ -5,4 +5,5 @@ members = [
     "examples/scene",
     "examples/bg_color_change",
     "examples/triangle",
+    "examples/bouncing_shapes"
 ]

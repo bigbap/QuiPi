@@ -53,7 +53,6 @@ name = "bg_color_change"
 version = "0.1.0"
 dependencies = [
  "engine",
- "gl",
  "sdl2",
 ]
 
@@ -68,6 +67,16 @@ name = "bitflags"
 version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
+
+[[package]]
+name = "bouncing_shapes"
+version = "0.1.0"
+dependencies = [
+ "engine",
+ "nalgebra-glm",
+ "sdl2",
+ "thiserror",
+]
 
 [[package]]
 name = "bytemuck"
@@ -586,13 +595,9 @@ name = "scene"
 version = "0.1.0"
 dependencies = [
  "engine",
- "gl",
- "gltf",
- "image",
  "nalgebra-glm",
  "sdl2",
  "thiserror",
- "tobj",
  "walkdir",
 ]
 
@@ -747,13 +752,9 @@ name = "triangle"
 version = "0.1.0"
 dependencies = [
  "engine",
- "gl",
- "gltf",
- "image",
  "nalgebra-glm",
  "sdl2",
  "thiserror",
- "tobj",
 ]
 
 [[package]]
