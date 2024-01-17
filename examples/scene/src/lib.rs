@@ -2,20 +2,26 @@ extern crate engine;
 extern crate nalgebra_glm as glm;
 
 use engine::{
-    resources::{
-        texture::TextureType,
-        Shader,
-        Camera3D
-    },
+    resources::Shader,
     VersionedIndex,
-    gfx::{
-        Material,
+    gfx::object_loader::{
+        load_obj_file,
+        ObjectConfig
+    },
+    components::{
+        CMaterial,
         material::MaterialPart,
-        object_loader::{
-            load_obj_file,
-            ObjectConfig
+        CPosition,
+        CGizmo3D,
+        CVelocity
+    },
+    systems::{
+        movement::s_apply_velocity,
+        rotation::{
+            s_update_angles,
+            s_rotate
         }
-    }
+    },
 };
 use sdl2::{
     EventPump,
@@ -37,11 +43,14 @@ use scene::*;
 type Crate = VersionedIndex;
 type Light = VersionedIndex;
 
+const CAMERA_SPEED: f32 = 5.0;
+
 pub struct MyGame {
     registry: engine::Registry,
     timer: std::time::Instant,
    
     shader: Option<VersionedIndex>,
+    light_shader: Option<VersionedIndex>,
     crates: Vec<Crate>,
     camera: VersionedIndex,
     direction_light: Option<Light>,
@@ -57,16 +66,21 @@ pub struct MyGame {
 }
 
 impl MyGame {
-    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(width: u32, height: u32) -> Result<Self, Box<dyn std::error::Error>> {
         let mut registry = create_registry()?;
         let timer = std::time::Instant::now();
-        let camera = create_camera(&mut registry)?;
+        let camera = create_camera(
+            &mut registry,
+            width as f32,
+            height as f32
+        )?;
 
         Ok(Self {
             registry,
             timer,
 
             shader: None,
+            light_shader: None,
             crates: vec![],
             camera,
             direction_light: None,
@@ -100,25 +114,21 @@ impl engine::Game for MyGame {
         let diffuse = create_texture(
             &mut self.registry,
             &format!("{}/objects/textures/container.png", asset_path),
-            TextureType::Diffuse,
-            0
         )?;
         let specular = create_texture(
             &mut self.registry,
             &format!("{}/objects/textures/container_specular.png", asset_path),
-            TextureType::Specular,
-            1
         )?;
 
         self.crates = create_crates(
             &mut self.registry,
             shader,
             self.camera,
-            Material {
+            CMaterial {
                 diffuse: MaterialPart::Texture(diffuse),
                 specular: MaterialPart::Texture(specular),
                 shininess: 0.6 * 128.0,
-                ..Material::default()
+                ..CMaterial::default()
             }
         )?;
 
@@ -126,27 +136,22 @@ impl engine::Game for MyGame {
         let model_configs = ObjectConfig::from_obj(models_obj)?;
         self.direction_light = Some(directional_light(
             &mut self.registry,
-            light_shader,
             shader,
-            self.camera,
             model_configs.get(0).unwrap()
         )?);
         self.point_light = Some(point_light(
             &mut self.registry,
-            light_shader,
             shader,
-            self.camera,
             model_configs.get(0).unwrap()
         )?);
         self.spot_light = Some(spot_light(
             &mut self.registry,
-            light_shader,
             shader,
-            self.camera,
             model_configs.get(0).unwrap()
         )?);
 
         self.shader = Some(shader);
+        self.light_shader = Some(light_shader);
 
         Ok(())
     }
@@ -156,8 +161,8 @@ impl engine::Game for MyGame {
         let delta = ticks - self.last_frame;
         
         self.last_frame = ticks;
-        
-        let camera = self.registry.get_resource_mut::<Camera3D>(&self.camera).unwrap();
+       
+        let mut velocity = (0.0, 0.0); // index 0: x, index 1: z
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit {..} => return Ok(None),
@@ -170,48 +175,83 @@ impl engine::Game for MyGame {
                 Event::KeyDown { keycode: Some(Keycode::Num2), repeat: false, .. } => self.point_light_on = !self.point_light_on,
                 Event::KeyDown { keycode: Some(Keycode::Num3), repeat: false, .. } => self.spot_light_on = !self.spot_light_on,
 
-                Event::KeyDown { keycode: Some(Keycode::W), repeat: false, .. } => camera.move_forward = true,
-                Event::KeyDown { keycode: Some(Keycode::S), repeat: false, .. } => camera.move_backward = true,
-                Event::KeyDown { keycode: Some(Keycode::A), repeat: false, .. } => camera.move_left = true,
-                Event::KeyDown { keycode: Some(Keycode::D), repeat: false, .. } => camera.move_right = true,
-                Event::KeyUp { keycode: Some(Keycode::W), repeat: false, .. } => camera.move_forward = false,
-                Event::KeyUp { keycode: Some(Keycode::S), repeat: false, .. } => camera.move_backward = false,
-                Event::KeyUp { keycode: Some(Keycode::A), repeat: false, .. } => camera.move_left = false,
-                Event::KeyUp { keycode: Some(Keycode::D), repeat: false, .. } => camera.move_right = false,
+                Event::KeyDown { keycode: Some(Keycode::W), repeat: false, .. } => velocity.1 += CAMERA_SPEED,
+                Event::KeyDown { keycode: Some(Keycode::S), repeat: false, .. } => velocity.1 -= CAMERA_SPEED,
+                Event::KeyDown { keycode: Some(Keycode::A), repeat: false, .. } => velocity.0 -= CAMERA_SPEED,
+                Event::KeyDown { keycode: Some(Keycode::D), repeat: false, .. } => velocity.0 += CAMERA_SPEED,
+                Event::KeyUp { keycode: Some(Keycode::W), repeat: false, .. } => velocity.1 -= CAMERA_SPEED,
+                Event::KeyUp { keycode: Some(Keycode::S), repeat: false, .. } => velocity.1 += CAMERA_SPEED,
+                Event::KeyUp { keycode: Some(Keycode::A), repeat: false, .. } => velocity.0 += CAMERA_SPEED,
+                Event::KeyUp { keycode: Some(Keycode::D), repeat: false, .. } => velocity.0 -= CAMERA_SPEED,
                 Event::MouseMotion { xrel, yrel, .. } => {
                     let sensitivity = 0.1;
-                    camera.rotate(
+                    let euler_angles = s_update_angles(
+                        &mut self.registry,
+                        &self.camera,
                         xrel as f32 * sensitivity,
-                        yrel as f32 * sensitivity
+                        yrel as f32 * sensitivity,
+                        -89.0,
+                        89.0
+                    ).unwrap();
+    
+                    s_rotate(
+                        &mut self.registry,
+                        &self.camera,
+                        euler_angles
                     );
                 },
                 _event => ()
             };
         }
 
-        camera.apply_move(5.0 * delta);
-        let camera_pos = camera.position_tup();
-        let camera_dir = camera.front_tup();
+        let camera_velocity = self.registry.get_component_mut::<CVelocity>(&self.camera).unwrap();
+        camera_velocity.x += velocity.0;
+        camera_velocity.z += velocity.1;
+        let velocity = glm::vec3(camera_velocity.x, camera_velocity.y, camera_velocity.z);
+
+        s_apply_velocity(
+            &mut self.registry,
+            &self.camera,
+            delta,
+            velocity
+        )?;
+        let camera_pos = self.registry.get_component::<CPosition>(&self.camera).unwrap();
+        let camera_dir = self.registry.get_component::<CGizmo3D>(&self.camera).unwrap().front;
 
         engine::gfx::buffer::clear_buffer(Some((0.02, 0.02, 0.02, 1.0)));
         
         if self.direction_light_on {
-            systems::draw(&self.direction_light.unwrap(), &self.registry)?;
+            systems::draw(
+                &self.direction_light.unwrap(),
+                &self.registry,
+                &self.light_shader.unwrap(),
+                &self.camera
+            )?;
         }
         if self.point_light_on {
-            systems::draw(&self.point_light.unwrap(), &self.registry)?;
+            systems::draw(
+                &self.point_light.unwrap(),
+                &self.registry,
+                &self.light_shader.unwrap(),
+                &self.camera
+            )?;
         }
 
         let shader = self.registry.get_resource::<Shader>(&self.shader.unwrap()).unwrap().program();
         shader.set_int("dirLightOn", self.direction_light_on as i32);
         shader.set_int("pointLightOn", self.point_light_on as i32);
         shader.set_int("spotLightOn", self.spot_light_on as i32);
-        shader.set_float_3("spotLight.position", camera_pos);
-        shader.set_float_3("spotLight.direction", camera_dir);
+        shader.set_float_3("spotLight.position", (camera_pos.x, camera_pos.y, camera_pos.z));
+        shader.set_float_3("spotLight.direction", (camera_dir.x, camera_dir.y, camera_dir.z));
         
         for entity in self.crates.iter() {
             systems::update_entity(entity, &self.registry);
-            systems::draw(entity, &self.registry)?;
+            systems::draw(
+                entity,
+                &self.registry,
+                &self.shader.unwrap(),
+                &self.camera
+            )?;
         }
 
         Ok(Some(()))

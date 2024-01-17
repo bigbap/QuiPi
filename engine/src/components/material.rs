@@ -1,7 +1,6 @@
 use crate::{
     VersionedIndex,
-    Registry,
-    components::Texture
+    Component
 };
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -11,34 +10,17 @@ pub enum MaterialPart {
     #[default] None
 }
 
-#[derive(Debug, Clone, Copy, Default)]
-pub struct Material {
+#[derive(Component, Debug, Clone, Copy, Default)]
+pub struct CMaterial {
     pub ambient: MaterialPart,
     pub diffuse: MaterialPart,
     pub specular: MaterialPart,
     pub shininess: f32
 }
 
-impl Material {
-    pub fn get_texture<'a>(&'a self, part: &MaterialPart, registry: &'a Registry) -> Option<&'a Texture> {
-        match part {
-            MaterialPart::Texture(texture_id) => match registry.get_resource(texture_id) {
-                Some(texture) => Some(texture),
-                None => None
-            },
-            _ => None
-        }
-    }
-
-    pub fn get_value(&self, part: &MaterialPart) -> Option<(f32, f32, f32)> {
-        match part {
-            MaterialPart::Value(r, g, b) => Some((*r, *g, *b)),
-            _ => None
-        }
-    }
-
-    pub fn chrome() -> Self {
-        Material {
+impl CMaterial {
+    pub fn chrome() -> CMaterial {
+        CMaterial {
             ambient: MaterialPart::Value(0.25, 0.25, 0.25),
             diffuse: MaterialPart::Value(0.4, 0.4, 0.4),
             specular: MaterialPart::Value(0.774597, 0.774597, 0.774597),

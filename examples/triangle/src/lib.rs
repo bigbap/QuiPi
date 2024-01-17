@@ -3,6 +3,7 @@ extern crate nalgebra_glm as glm;
 
 use std::vec;
 
+use engine::{gfx::ElementArrayMesh, VersionedIndex};
 use sdl2::{
     EventPump,
     keyboard::Keycode,
@@ -21,6 +22,7 @@ pub use config::CONFIG;
 
 pub struct MyGame {
     registry: engine::Registry,
+    shader: Option<VersionedIndex>,
     timer: std::time::Instant,
 
     scenes: Vec<engine::VersionedIndex>,
@@ -34,6 +36,7 @@ impl MyGame {
 
         Ok(Self {
             registry,
+            shader: None,
             timer,
             scenes: vec![],
             active_scene: None
@@ -51,6 +54,9 @@ impl engine::Game for MyGame {
         
         self.scenes.push(scene);
         self.active_scene = Some(0);
+        self.shader = Some(self.registry.create_resource(
+            resources::Shader::new(&format!("{}/shaders/simple", CONFIG.asset_path))?
+        )?);
 
         Ok(())
     }
@@ -91,7 +97,11 @@ impl engine::Game for MyGame {
 
             systems::update_entities(scene, &self.registry);
 
-            systems::draw_ebo(scene, &mut self.registry).expect("there was a problem drawing the scene");
+            systems::draw_ebo(
+                scene,
+                &mut self.registry,
+                &self.shader.unwrap()
+            ).expect("there was a problem drawing the scene");
         }
 
         Ok(Some(()))
@@ -112,9 +122,6 @@ fn create_scene(
 ) -> Result<engine::VersionedIndex, Box<dyn std::error::Error>> {
     type ObjConfig = engine::gfx::object_loader::ObjectConfig;
     
-    let shader = registry.create_resource(
-        resources::Shader::new(&format!("{}/shaders/simple", CONFIG.asset_path))?
-    )?;
 
     let config = ObjConfig {
         points: vec![
@@ -133,9 +140,13 @@ fn create_scene(
         ..ObjConfig::default()
     };
 
+    let mesh = ElementArrayMesh::new(&config.indices)?;
+    mesh
+        .create_vbo_at(&config.points, 0, 3)?
+        .create_vbo_at(&config.colors, 1, 3)?;
+
     registry.create_entity()?
-        .with(components::Draw { shader_id: shader, ..components::Draw::default() })?
-        .with(components::Color(0.0, 0.0, 0.0, 1.0))?
-        .with(engine::components::Mesh::new(&config)?)?
+        .with(components::CRGBA { r: 0.0, g: 0.0, b: 0.0, a: 1.0 })?
+        .with(engine::components::CMesh { mesh })?
         .done()
 }

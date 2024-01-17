@@ -6,38 +6,43 @@ use std::fs;
 use engine::{
     Registry,
     VersionedIndex,
-    resources::{
-        Shader,
-        Camera3D
-    },
+    resources::Shader,
     gfx::{
-        object_loader::ObjectConfig,
         buffer::clear_buffer,
         ShaderProgram,
-        draw::draw_ebo
+        draw::draw_ebo,
+        ElementArrayMesh, utils::normalise_dims
     },
     components::{
-        Mesh,
-        Color,
-        Draw,
-        ModelTransform,
-        transform::Transforms
+        CMesh,
+        CTransform,
+        CVelocity
+    },
+    entity_builders::camera::build_camera_3d,
+    systems::{
+        mvp_matrices::{
+            s_model_matrix_3d,
+            s_view_matrix_3d,
+            s_projection_matrix_3d
+        },
+        movement::s_apply_velocity
     }
 };
-use sdl2::{
-    event::Event,
-    keyboard::Keycode,
-};
 
-const COLOR_VARIABLE: &str = "color";
+mod systems;
+
+use systems::s_handle_input;
+
 const MODEL: &str = "model";
 const VIEW: &str = "view";
 const PROJECTION: &str = "projection";
-const VIEW_POS: &str = "viewPos";
 
 pub struct MyGame {
     registry: Registry,
     timer: std::time::Instant,
+
+    screen_width: f32,
+    screen_height: f32,
     
     shader: Option<VersionedIndex>,
     camera: VersionedIndex,
@@ -47,24 +52,28 @@ pub struct MyGame {
 }
 
 impl MyGame {
-    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(width: f32, height: f32) -> Result<Self, Box<dyn std::error::Error>> {
         let mut registry = engine::Registry::init()?;
         let timer = std::time::Instant::now();
 
         engine::resources::register_resource(&mut registry);
         engine::components::register_components(&mut registry);
 
-        let camera = registry.create_resource(Camera3D {
-            position: glm::vec3(0.0, 0.0, 3.0),
-            front: glm::vec3(0.0, 0.0, -1.0),
-            projection: engine::resources::CameraProjection::Orthographic(800.0, 600.0),
-            ..Camera3D::default()
-        })?;
+        let camera = build_camera_3d(
+            &mut registry,
+            (0.0, 0.0, 1.0),
+            75.0,
+            width / height,
+            0.1,
+            100.0
+        )?;
 
         Ok(MyGame {
             registry,
             shader: None,
             timer,
+            screen_width: width,
+            screen_height: height,
             camera,
             shapes: vec![],
             last_frame: timer.elapsed().as_millis() as f32 / 1000.0
@@ -78,15 +87,13 @@ impl MyGame {
 
 impl engine::Game for MyGame {
     fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        println!("before shader");
         let shader = ShaderProgram::new("./examples/bouncing_shapes/assets/shaders/shape")?;
-        println!("after shader");
         let shader_id = self.registry.create_resource(Shader(shader))?;
 
         self.shapes = create_shapes(
             &mut self.registry,
-            shader_id,
-            self.camera
+            self.screen_width,
+            self.screen_height
         );
         
         self.shader = Some(shader_id);
@@ -103,38 +110,37 @@ impl engine::Game for MyGame {
         
         self.last_frame = ticks;
 
-        let camera = self.registry.get_resource_mut::<Camera3D>(&self.camera).unwrap();
-
         // handle input events
         for event in event_pump.poll_iter() {
-            match event {
-                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => return Ok(None),
-                Event::KeyDown { keycode: Some(Keycode::W), repeat: false, .. } => camera.move_up = true,
-                Event::KeyDown { keycode: Some(Keycode::S), repeat: false, .. } => camera.move_down = true,
-                Event::KeyDown { keycode: Some(Keycode::A), repeat: false, .. } => camera.move_left = true,
-                Event::KeyDown { keycode: Some(Keycode::D), repeat: false, .. } => camera.move_right = true,
-                Event::KeyUp { keycode: Some(Keycode::W), repeat: false, .. } => camera.move_up = false,
-                Event::KeyUp { keycode: Some(Keycode::S), repeat: false, .. } => camera.move_down = false,
-                Event::KeyUp { keycode: Some(Keycode::A), repeat: false, .. } => camera.move_left = false,
-                Event::KeyUp { keycode: Some(Keycode::D), repeat: false, .. } => camera.move_right = false,
-                // Event::MouseMotion { xrel, yrel, .. } => {
-                //     let sensitivity = 0.1;
-                //     camera.rotate(
-                //         xrel as f32 * sensitivity,
-                //         yrel as f32 * sensitivity
-                //     );
-                // },
-                _ => ()
-            }
+            let response = s_handle_input(
+                &self.camera,
+                &mut self.registry,
+                event
+            )?;
+
+            if response.is_none() { return Ok(None) }
         }
 
-        camera.apply_move(20.0 * delta);
-        
+        let velocity = self.registry.get_component::<CVelocity>(&self.camera).unwrap();
+        let velocity = glm::vec3(velocity.x, velocity.y, velocity.z);
+        s_apply_velocity(
+            &mut self.registry,
+            &self.camera,
+            delta,
+            velocity
+        )?;
+
+
         // render
         clear_buffer(Some((0.2, 0.2, 0.1, 1.0)));
 
         for shape in self.shapes.iter() {
-            draw(shape, &mut self.registry)?;
+            draw(
+                shape,
+                &mut self.registry,
+                &self.shader.unwrap(),
+                &self.camera
+            )?;
         }
 
         Ok(Some(()))
@@ -148,8 +154,8 @@ impl engine::Game for MyGame {
 */
 fn create_shapes(
     registry: &mut Registry,
-    shader_id: VersionedIndex,
-    camera_id: VersionedIndex
+    screen_width: f32,
+    screen_height: f32
 ) -> Vec<VersionedIndex> {
     let mut shapes: Vec<VersionedIndex> = Vec::new();
     
@@ -162,8 +168,10 @@ fn create_shapes(
             .collect();
 
         match *kind {
-            "CIRCLE" => create_circle(registry, &parts, shader_id, camera_id),
-            "QUAD" => shapes.push(create_quad(registry, &parts, shader_id, camera_id).unwrap()),
+            "CIRCLE" => create_circle(registry, &parts),
+            "QUAD" => shapes.push(
+                create_quad(registry, &parts, screen_width, screen_height).unwrap()
+            ),
             _ => ()
         }
     }
@@ -174,10 +182,12 @@ fn create_shapes(
 fn create_quad(
     registry: &mut Registry,
     parts: &[f32],
-    shader_id: VersionedIndex,
-    camera_id: VersionedIndex
+    screen_width: f32,
+    screen_height: f32
 ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
     let [width, height, center_x, center_y, r, g, b] = parts else { todo!() };
+    let (width, height) = normalise_dims(*width, *height, screen_width, screen_height);
+    let (center_x, center_y) = normalise_dims(*center_x, *center_y, screen_width, screen_height);
 
     let top_left = (center_x - (width / 2.0), center_y + (height / 2.0));
     let bottom_left = (center_x - (width / 2.0), center_y - (height / 2.0));
@@ -190,33 +200,29 @@ fn create_quad(
     ];
 
     println!("{:?}", points);
+    let r = *r;
+    let g = *g;
+    let b = *b;
+    let color: Vec<f32> = vec![
+        r, g, b, r, g, b, r, g, b,
+        r, g, b, r, g, b, r, g, b
+    ];
     let indices = vec![
         0, 1, 2,
         3, 0, 2
     ];
 
-    let obj_config = ObjectConfig {
-        points,
-        indices,
-        ..ObjectConfig::default()
-    };
+    let mesh = ElementArrayMesh::new(&indices)?;
+    mesh
+        .create_vbo_at(&points, 0, 3)?
+        .create_vbo_at(&color, 1, 3)?;
 
     let quad = registry.create_entity()?
-        .with(Mesh::new(&obj_config)?)?
-        .with(Color(*r, *g, *b, 1.0))?
-        .with(ModelTransform {
-            transforms: vec![
-                Transforms {
-                    translate: Some(glm::vec3(0.0, 0.0, 0.0)),
-                    scale: Some(glm::vec3(0.5, 0.5, 0.5)),
-                    ..Transforms::default()
-                }
-            ]
-        })?
-        .with(Draw {
-            shader_id,
-            camera_id,
-            ..Draw::default()
+        .with(CMesh { mesh })?
+        .with(CTransform {
+            translate: Some(glm::vec3(0.0, 0.0, 0.0)),
+            scale: Some(glm::vec3(0.5, 0.5, 0.5)),
+            ..CTransform::default()
         })?
         .done()?;
 
@@ -224,10 +230,8 @@ fn create_quad(
 }
 
 fn create_circle(
-    registry: &mut Registry,
+    _registry: &mut Registry,
     parts: &[f32],
-    shader_id: VersionedIndex,
-    camera_id: VersionedIndex
 ) {
     let [radius, center_x, center_y, r, g, b] = parts else { todo!() };
 
@@ -237,27 +241,24 @@ fn create_circle(
 fn draw(
     entity: &VersionedIndex,
     registry: &mut Registry,
+    shader_id: &VersionedIndex,
+    camera_id: &VersionedIndex
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let Some(cmp_draw) = registry.get_component::<Draw>(entity) else { return Ok(()) };
-    let Some(cmp_mesh) = registry.get_component::<Mesh>(entity) else { return Ok(()) };
-    let Some(cmp_transforms) = registry.get_component::<ModelTransform>(entity) else { return Ok(()) };
-    let Some(cmp_color) = registry.get_component::<Color>(entity) else { return Ok(()) };
-    let Some(shader) = registry.get_resource::<Shader>(&cmp_draw.shader_id) else { return Ok(()) };
-    let Some(camera) = registry.get_resource::<Camera3D>(&cmp_draw.camera_id) else { return Ok(()) };
+    let Some(cmp_mesh) = registry.get_component::<CMesh>(entity) else { return Ok(()) };
+    let Some(shader) = registry.get_resource::<Shader>(shader_id) else { return Ok(()) };
 
-    let models = cmp_transforms.apply_transforms()?;
+    let model = s_model_matrix_3d(entity, registry);
+    let view = s_view_matrix_3d(camera_id, registry);
+    let projection = s_projection_matrix_3d(camera_id, registry);
 
     shader.program().use_program();
-    cmp_mesh.vao().bind();
+    cmp_mesh.mesh.vao.bind();
 
-    for model in models {
-        
-        shader.program().set_mat4(MODEL, &model);
-        shader.program().set_mat4(VIEW, &camera.get_view());
-        shader.program().set_mat4(PROJECTION, &camera.get_projection());
+    shader.program().set_mat4(MODEL, &model);
+    shader.program().set_mat4(VIEW, &view);
+    shader.program().set_mat4(PROJECTION, &projection);
 
-        draw_ebo(cmp_mesh.vao());
-    }
+    draw_ebo(&cmp_mesh.mesh.vao);
 
     Ok(())
 }

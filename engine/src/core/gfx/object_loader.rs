@@ -68,3 +68,4 @@ pub fn load_obj_file(
 
     Ok((models, materials))
 }
+

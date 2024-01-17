@@ -1,7 +1,7 @@
 use engine::{
     VersionedIndex,
     Registry,
-    components::Color
+    components::CRGBA
 };
 
 pub fn get_color(
@@ -9,17 +9,17 @@ pub fn get_color(
     entity: &VersionedIndex,
     registry: &mut Registry
 ) -> (f32, f32, f32, f32) {
-    match registry.get_component_mut::<Color>(entity) {
+    match registry.get_component_mut::<CRGBA>(entity) {
         Some(color) => {
-            color.0 = ticks.sin();
-            color.1 = ticks.cos();
-            color.2 = ticks.sin();
+            color.r = ticks.sin();
+            color.g = ticks.cos();
+            color.b = ticks.sin();
 
             (
-                color.0,
-                color.1,
-                color.2,
-                color.3
+                color.r,
+                color.g,
+                color.b,
+                color.a
             )
         },
         None => (1.0, 0.0, 0.0, 1.0)

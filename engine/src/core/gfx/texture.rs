@@ -34,21 +34,21 @@ pub enum TextureError {
     )
 }
 
-fn new() -> Result<u32, TextureError> {
-    let mut index: gl::types::GLuint = 0;
+fn generate_texture() -> Result<u32, TextureError> {
+    let mut texture_id: gl::types::GLuint = 0;
     unsafe {
-        gl::GenTextures(1, &mut index);
+        gl::GenTextures(1, &mut texture_id);
     }
 
-    Ok(index)
+    Ok(texture_id)
 }
 
 pub fn from_wavefront_material(
     material: &tobj::Material,
 ) -> Result<u32, TextureError> {
-    let index = new()?;
+    let texture_id = generate_texture()?;
 
-    bind(&index);
+    bind(&texture_id);
 
     if let Some(map_kd) = &material.diffuse_texture {
         // found texture path
@@ -67,9 +67,9 @@ pub fn from_wavefront_material(
 
     unbind();
 
-    set_default_parameters(&index)?;
+    set_default_parameters(&texture_id)?;
 
-    Ok(index)
+    Ok(texture_id)
 }
 
 pub fn from_gltf(file_path: &str) {
@@ -90,19 +90,19 @@ pub fn from_gltf(file_path: &str) {
 pub fn from_image(
     file_path: &str
 ) -> Result<u32, TextureError> {
-    let index = new()?;
+    let texture_id = generate_texture()?;
     let format = get_format(file_path);
 
-    set_default_parameters(&index)?;
+    set_default_parameters(&texture_id)?;
 
-    bind(&index);
+    bind(&texture_id);
     add_image_from_file(
         file_path,
         format
     )?;
     unbind();
 
-    Ok(index)
+    Ok(texture_id)
 }
 
 pub fn bind(index: &u32) {
@@ -152,6 +152,8 @@ pub fn set_active_texture(unit: i32) {
 }
 
 pub fn delete_texture(index: u32) {
+    unbind();
+
     unsafe {
         gl::DeleteTextures(1, [index].as_ptr());
     }
