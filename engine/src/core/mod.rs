@@ -1,11 +1,13 @@
 pub mod utils;
 pub mod gfx;
-pub mod ecs;
+pub mod entity_manager;
+pub mod math;
 
-pub use ecs::ECSError;
-pub use ecs::ECS;
-pub use ecs::Component;
-pub use ecs::VersionedIndex;
-pub use ecs::VersionedIndexAllocator;
-pub use ecs::IndexedArray;
+pub use entity_manager::EMError;
+pub use entity_manager::EntityManager;
+pub use entity_manager::Component;
+pub use entity_manager::VersionedIndex;
+pub use entity_manager::VersionedIndexAllocator;
+pub use entity_manager::IndexedArray;
 pub use gfx::ShaderProgram;
+pub use math::random;

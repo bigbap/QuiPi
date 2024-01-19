@@ -1,6 +1,6 @@
 use crate::{
-    ECS,
-    ecs::ECSError,
+    EntityManager,
+    entity_manager::EMError,
     Component,
     VersionedIndex
 };
@@ -10,7 +10,7 @@ pub enum RegistryError {
     #[error("there was a problem initializing the registry")]
     ProblemInitialisingRegistry(
         #[from]
-        ECSError
+        EMError
     ),
 
     #[error("there was a problem creating a new entity")]
@@ -19,16 +19,16 @@ pub enum RegistryError {
 
 #[derive(Debug)]
 pub struct Registry {
-    components: ECS,
-    resources: ECS,
+    components: EntityManager,
+    resources: EntityManager,
 
     currently_building: Option<VersionedIndex>,
 }
 
 impl Registry {
     pub fn init() -> Result<Self, RegistryError> {
-        let components = ECS::new()?;
-        let resources = ECS::new()?;
+        let components = EntityManager::new()?;
+        let resources = EntityManager::new()?;
 
         Ok(Self {
             components,
@@ -66,15 +66,15 @@ impl Registry {
     }
 
     pub fn create_resource(&mut self, res: impl Component + 'static) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
-        let resource = self.resources.create_entity()?;
+        let resource = self.resources.create_entity("resource")?;
 
         self.resources.add_component(&resource, res);
 
         Ok(resource)
     }
 
-    pub fn create_entity(&mut self) -> Result<&mut Self, RegistryError> {
-        self.currently_building = Some(self.components.create_entity()?);
+    pub fn create_entity(&mut self, tag: &str) -> Result<&mut Self, RegistryError> {
+        self.currently_building = Some(self.components.create_entity(tag)?);
 
         Ok(self)
     }
@@ -105,6 +105,10 @@ impl Registry {
         self.currently_building = None;
 
         Ok(entity)
+    }
+
+    pub fn get_entities_by_tag(&self, tag: &str) -> Vec<VersionedIndex> {
+        self.components.get_entities_by_tag(tag)
     }
 }
 
@@ -140,7 +144,7 @@ mod tests {
     fn registry_create_entities() {
         let mut registry = create_registry();
 
-        let player = registry.create_entity().unwrap()
+        let player = registry.create_entity("player").unwrap()
             .with(DrawComponent { shader_id: Some(1234) }).unwrap()
             .with(TransformComponent {
                 translate: glm::vec3(1.0, 1.0, 1.0),

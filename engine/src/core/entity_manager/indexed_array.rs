@@ -132,28 +132,23 @@ impl<T> IndexedArray<T> {
 
     pub fn get(&self, index: &VersionedIndex) -> Option<&T> {
         match self.0.get(index.index) {
-            None => None,
-            Some(wrapped_entry) => match wrapped_entry {
-                None => None,
-                Some(entry) => {
-                    if entry.version == index.version {
-                        Some(&entry.value)
-                    } else { None }
-                }
-            }
+            Some(Some(entry)) => {
+                if entry.version == index.version {
+                    Some(&entry.value)
+                } else { None }
+            },
+            _ => None
         }
     }
 
     pub fn get_mut(&mut self, index: &VersionedIndex) -> Option<&mut T> {
         match self.0.get_mut(index.index) {
             None => None,
-            Some(wrapped_entry) => match wrapped_entry {
-                None => None,
-                Some(entry) => {
-                    if entry.version == index.version {
-                        Some(&mut entry.value)
-                    } else { None }
-                }
+            Some(None) => None,
+            Some(Some(entry)) => {
+                if entry.version == index.version {
+                    Some(&mut entry.value)
+                } else { None }
             }
         }
     }
@@ -232,10 +227,7 @@ mod tests {
         allocator.deallocate(npc_id);
 
         // used to hold npc
-        assert_eq!(
-            allocator.is_allocated(&VersionedIndex { index: 1, version: 0 }),
-            false
-        );
+        assert!(!allocator.is_allocated(&VersionedIndex { index: 1, version: 0 }));
 
         let npc_id = allocator.allocate();
         entities.set(&npc_id, Entity("npc".to_string()));
@@ -251,14 +243,7 @@ mod tests {
         );
 
         // version 1 is allocated while version 0 is not
-        assert_eq!(
-            allocator.is_allocated(&VersionedIndex { index: 1, version: 0 }),
-            false
-        );
-
-        assert_eq!(
-            allocator.is_allocated(&VersionedIndex { index: 1, version: 1 }),
-            true
-        );
+        assert!(!allocator.is_allocated(&VersionedIndex { index: 1, version: 0 }));
+        assert!(allocator.is_allocated(&VersionedIndex { index: 1, version: 1 }));
     }
 }

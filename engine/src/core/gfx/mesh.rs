@@ -8,7 +8,7 @@ use crate::gfx::buffer::{
 #[derive(Debug)]
 pub struct ElementArrayMesh {
     pub vao: buffer::VertexArray,
-    pub ebo: buffer::Buffer<EBO>
+    pub ebo: buffer::Buffer<EBO>,
 }
 
 impl ElementArrayMesh {

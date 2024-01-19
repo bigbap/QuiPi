@@ -13,12 +13,14 @@ use crate::{
 pub fn s_model_matrix_3d(
     entity: &VersionedIndex,
     registry: &Registry,
+    pos: &CPosition
 ) -> glm::Mat4 {
+    let position = glm::vec3(pos.x, pos.y, pos.z);
     let model = glm::Mat4::identity();
     let Some(transform) = registry.get_component::<CTransform>(entity) else { return model };
-    
+
     let model = match transform.translate {
-        Some(translate) => glm::translate(&model, &translate),
+        Some(translate) => glm::translate(&model, &(translate + position)),
         None => model
     };
     let model = match transform.rotate {

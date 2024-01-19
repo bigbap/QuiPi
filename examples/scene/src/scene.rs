@@ -69,7 +69,7 @@ pub fn create_crates(
                 .create_vbo_at(&config.points, 0, 3)?
                 .create_vbo_at(&config.texture_coords, 2, 2)?;
 
-            entities.push(registry.create_entity()?
+            entities.push(registry.create_entity("crate")?
                 .with(CMesh { mesh })?
                 .with(CTransform {
                     translate: Some(transform.0),
@@ -142,7 +142,7 @@ pub fn directional_light(
     let mesh = ElementArrayMesh::new(&model_config.indices)?;
     mesh.create_vbo_at(&model_config.points, 0, 3)?;
 
-    registry.create_entity()?
+    registry.create_entity("light")?
         .with(CDirection {
             x: direction.0,
             y: direction.1,
@@ -202,7 +202,7 @@ pub fn point_light(
     let mesh = ElementArrayMesh::new(&model_config.indices)?;
     mesh.create_vbo_at(&model_config.points, 0, 3)?;
 
-    registry.create_entity()?
+    registry.create_entity("light")?
         .with(position)?
         .with(attenuation)?
         .with(mat)?
@@ -261,7 +261,7 @@ pub fn spot_light(
     let mesh = ElementArrayMesh::new(&model_config.indices)?;
     mesh.create_vbo_at(&model_config.points, 0, 3)?;
 
-    registry.create_entity()?
+    registry.create_entity("light")?
         .with(CRGBA { r: 0.6, g: 0.0, b: 0.0, a: 1.0 })?
         .with(CPosition { x: 0.0, y: 0.0, z: 0.0 })?
         .with(CDirection { x: 0.0, y: 0.0, z: 0.0 })?

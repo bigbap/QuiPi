@@ -19,7 +19,7 @@ pub fn build_camera_3d(
     near_plane: f32,
     far_plane: f32
 ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
-    registry.create_entity()?
+    registry.create_entity("camera")?
         .with(CPosition {
             x: position.0,
             y: position.1,

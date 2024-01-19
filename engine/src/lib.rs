@@ -12,10 +12,11 @@ pub mod resources;
 pub mod systems;
 
 pub use core::gfx;
-pub use core::ecs;
+pub use core::entity_manager;
 pub use core::utils;
 pub use core::VersionedIndex;
 pub use engine::Game;
 pub use registry::Registry;
 pub use core::Component;
-pub use core::ECS;
+pub use core::EntityManager;
+pub use core::math;
