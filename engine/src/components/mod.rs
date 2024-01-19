@@ -1,8 +1,10 @@
 pub mod material;
 pub mod gizmo;
+pub mod transform;
 
 pub use material::CMaterial;
 pub use gizmo::CGizmo3D;
+pub use transform::CTransform;
 
 use crate::{
     Registry,
@@ -13,7 +15,7 @@ use crate::{
 /**
 * 3D point in world space
 */
-#[derive(Debug, Component, Clone, Copy)]
+#[derive(Debug, Component, Clone, Copy, Default)]
 pub struct CPosition {
     pub x: f32,
     pub y: f32,
@@ -23,7 +25,7 @@ pub struct CPosition {
 /**
 * 3D direction vector
 */
-#[derive(Debug, Component, Clone, Copy)]
+#[derive(Debug, Component, Clone, Copy, Default)]
 pub struct CDirection {
     pub x: f32,
     pub y: f32,
@@ -109,18 +111,6 @@ pub struct CEulerAngles {
 pub struct CZPlanes {
     pub near_plane: f32,
     pub far_plane: f32
-}
-
-/**
-* the model portion for a Model View Projection matrix
-*/
-#[derive(Debug, Component, PartialEq, Clone, Default)]
-pub struct CTransform {
-    pub translate: Option<glm::Vec3>,
-    pub rotate: Option<glm::Vec3>,
-    pub scale: Option<glm::Vec3>,
-
-    pub angle: f32
 }
 
 pub fn register_components(registry: &mut Registry) {

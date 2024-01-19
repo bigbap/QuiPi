@@ -145,7 +145,7 @@ fn create_scene(
         .create_vbo_at(&config.points, 0, 3)?
         .create_vbo_at(&config.colors, 1, 3)?;
 
-    registry.create_entity()?
+    registry.create_entity("triangle")?
         .with(components::CRGBA { r: 0.0, g: 0.0, b: 0.0, a: 1.0 })?
         .with(engine::components::CMesh { mesh })?
         .done()

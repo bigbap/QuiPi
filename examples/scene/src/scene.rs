@@ -71,6 +71,7 @@ pub fn create_crates(
 
             entities.push(registry.create_entity("crate")?
                 .with(CMesh { mesh })?
+                .with(CPosition::default())?
                 .with(CTransform {
                     translate: Some(transform.0),
                     scale: Some(glm::vec3(0.5, 0.5, 0.5)),
@@ -148,6 +149,7 @@ pub fn directional_light(
             y: direction.1,
             z: direction.2
         })?
+        .with(CPosition::default())?
         .with(CRGBA { r: 1.0, g: 1.0, b: 1.0, a: 1.0 })?
         .with(CMesh { mesh })?
         .with(CTransform {
@@ -209,7 +211,7 @@ pub fn point_light(
         .with(CRGBA { r: 0.6, g: 0.0, b: 0.0, a: 1.0 })?
         .with(CMesh { mesh })?
         .with(CTransform {
-            translate: Some(glm::vec3(5.0, 1.0, 6.0)),
+            translate: Some(glm::vec3(0.0, 0.0, 0.0)),
             scale: Some(glm::vec3(0.2, 0.2, 0.2)),
             ..CTransform::default()
         })?

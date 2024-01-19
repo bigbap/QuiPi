@@ -36,6 +36,7 @@ pub fn draw(
     camera: &VersionedIndex
 ) -> Result<(), Box<dyn std::error::Error>> {
     let Some(cmp_mesh) = registry.get_component::<CMesh>(entity) else { return Ok(()) };
+    let Some(pos) = registry.get_component::<CPosition>(entity) else { return Ok(()) };
     let Some(camera_position) = registry.get_component::<CPosition>(camera) else { return Ok(()) };
 
     let Some(shader) = registry.get_resource::<Shader>(shader_id) else { return Ok(()) };
@@ -46,7 +47,7 @@ pub fn draw(
     shader.program().use_program();
     cmp_mesh.mesh.vao.bind();
     
-    let model = s_model_matrix_3d(entity, registry);
+    let model = s_model_matrix_3d(entity, registry, pos);
     shader.program().set_mat4(MODEL, &model);
     shader.program().set_mat4(VIEW, &s_view_matrix_3d(camera, registry));
     shader.program().set_mat4(PROJECTION, &s_projection_matrix_3d(camera, registry));
