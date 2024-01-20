@@ -20,3 +20,4 @@ pub use registry::Registry;
 pub use core::Component;
 pub use core::EntityManager;
 pub use core::math;
+

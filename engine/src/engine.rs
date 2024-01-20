@@ -32,17 +32,17 @@ pub fn run<G: Game>(
     sdl_ctx.mouse().show_cursor(show_mouse);
     sdl_ctx.mouse().set_relative_mouse_mode(relative_mouse_mode);
 
-    let window = video_subsystem.window(title, width, height)
-        .opengl()
-        .resizable()
-        .build()?;
-
     let gl_attr = video_subsystem.gl_attr();
     gl_attr.set_context_profile(GLProfile::Core);
     gl_attr.set_context_version(4, 5);
 
     #[cfg(debug_assertions)]
     gl_attr.set_context_flags().debug().set();
+
+    let window = video_subsystem.window(title, width, height)
+        .opengl()
+        .resizable()
+        .build()?;
 
     let _gl_ctx = window.gl_create_context()?;
 
@@ -70,3 +70,4 @@ pub fn run<G: Game>(
 
     Ok(())
 }
+

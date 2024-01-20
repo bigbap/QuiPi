@@ -30,7 +30,7 @@ pub struct EntityManager {
     entity_allocator: VersionedIndexAllocator,
     component_maps: AnyMap,
 
-    entities: Vec<VersionedIndex>
+    entities: Vec<Option<VersionedIndex>>
 }
 
 impl EntityManager {
@@ -38,7 +38,7 @@ impl EntityManager {
         let mut entity_manager = Self {
             entity_allocator: VersionedIndexAllocator::default(),
             component_maps: AnyMap::new(),
-            entities: Vec::<VersionedIndex>::new()
+            entities: Vec::<Option<VersionedIndex>>::new()
         };
 
         entity_manager.register_component::<CTag>();
@@ -54,7 +54,7 @@ impl EntityManager {
         let entity = self.entity_allocator.allocate();
 
         self.add_component(&entity, CTag { tag: tag.into() });
-        self.entities.push(entity);
+        self.entities.push(Some(entity));
 
         Ok(entity)
     }
@@ -80,6 +80,10 @@ impl EntityManager {
         &self,
         entity: &VersionedIndex
     ) -> Option<&C> {
+        if !self.entity_allocator.validate(entity) {
+            return None;
+        }
+
         match self.component_maps.get::<EntityMap<C>>() {
             None => None,
             Some(cmp_map) => match cmp_map.get(entity) {
@@ -93,6 +97,10 @@ impl EntityManager {
         &mut self,
         entity: &VersionedIndex
     ) -> Option<&mut C> {
+        if !self.entity_allocator.validate(entity) {
+            return None;
+        }
+
         match self.component_maps.get_mut::<EntityMap<C>>() {
             None => None,
             Some(cmp_map) => match cmp_map.get_mut(entity) {
@@ -102,23 +110,52 @@ impl EntityManager {
         }
     }
 
-    pub fn registered_components_len(&self) -> usize {
-        self.component_maps.len()
-    }
-
     pub fn get_entities_by_tag(
         &self,
         tag: &str
     ) -> Vec<VersionedIndex> {
         let Some(tag_map) = self.component_maps.get::<EntityMap<CTag>>() else { return vec![] };
-        
-        self.entities
-            .iter()
-            .filter_map(|i| match tag_map.get(i) {
-                Some(c_tag) => if *c_tag.tag == *tag { Some(*i) } else { None },
-                _ => None
-            })
-            .collect()
+
+        let mut result = Vec::<VersionedIndex>::new();
+        for entity in &self.entities {
+            if entity.is_none() { continue; }
+            
+            let entity = entity.unwrap();
+
+            if !self.entity_allocator.validate(&entity) {
+                continue;
+            }
+
+            if let Some(c_tag) = tag_map.get(&entity) {
+                if *c_tag.tag == *tag {
+                    result.push(entity);
+                }
+            };
+        }
+
+        result
+    }
+
+    pub fn reset(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        for entity in self.entities.iter().flatten() {
+            self.entity_allocator.deallocate(*entity);
+        }
+
+        self.entities.clear();
+
+        Ok(())
+    }
+
+    pub fn registered_components_len(&self) -> usize {
+        self.component_maps.len()
+    }
+
+    pub fn allocator_size(&self) -> usize {
+        self.entity_allocator.length()
+    }
+
+    pub fn count(&self) -> usize {
+        self.entity_allocator.valid_count()
     }
 }
 

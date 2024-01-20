@@ -40,6 +40,9 @@ mod scene;
 
 use scene::*;
 
+pub static WIDTH: u32 = 1600;
+pub static HEIGHT: u32 = 900;
+
 type Crate = VersionedIndex;
 type Light = VersionedIndex;
 

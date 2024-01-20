@@ -1,7 +1,7 @@
 use scene::MyGame;
 
-const WIDTH: u32 = 1600;
-const HEIGHT: u32 = 900;
+use scene::WIDTH;
+use scene::HEIGHT;
 
 fn main() {
     let mut my_game = MyGame::new(WIDTH, HEIGHT).expect("there was a problem initializing the game");

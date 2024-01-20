@@ -16,7 +16,7 @@ use engine::{
         CAttenuation,
         CCutoff,
     },
-    entity_builders::camera::build_camera_3d,
+    entity_builders::camera::build_perspective_camera,
     systems::material
 };
 
@@ -92,7 +92,7 @@ pub fn create_camera(
     width: f32,
     height: f32
 ) -> Result<engine::VersionedIndex, Box<dyn std::error::Error>> {
-    build_camera_3d(
+    build_perspective_camera(
         registry,
         (0.0, 1.0, 5.0),
         90.0,
@@ -211,7 +211,7 @@ pub fn point_light(
         .with(CRGBA { r: 0.6, g: 0.0, b: 0.0, a: 1.0 })?
         .with(CMesh { mesh })?
         .with(CTransform {
-            translate: Some(glm::vec3(0.0, 0.0, 0.0)),
+            translate: Some(glm::vec3(5.0, 1.0, 6.0)),
             scale: Some(glm::vec3(0.2, 0.2, 0.2)),
             ..CTransform::default()
         })?

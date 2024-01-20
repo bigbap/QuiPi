@@ -11,3 +11,4 @@ pub use entity_manager::VersionedIndexAllocator;
 pub use entity_manager::IndexedArray;
 pub use gfx::ShaderProgram;
 pub use math::random;
+pub use utils::time;

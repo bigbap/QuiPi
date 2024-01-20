@@ -1,8 +1,8 @@
-pub fn normalise_dims(
-    width: f32,
-    height: f32,
-    screen_width: f32,
-    screen_height: f32
+pub fn normalise_dims_2d(
+    x: f32,
+    y: f32,
+    screen_x: f32,
+    screen_y: f32
 ) -> (f32, f32) {
-    (width / screen_width, height / screen_height)
+    (x / screen_x, y / screen_y)
 }

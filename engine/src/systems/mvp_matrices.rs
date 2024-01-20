@@ -6,21 +6,19 @@ use crate::{
         CViewSettings,
         CZPlanes,
         CGizmo3D,
-        CPosition
+        CPosition, CDimensions
     }
 };
 
 pub fn s_model_matrix_3d(
     entity: &VersionedIndex,
     registry: &Registry,
-    pos: &CPosition
 ) -> glm::Mat4 {
-    let position = glm::vec3(pos.x, pos.y, pos.z);
     let model = glm::Mat4::identity();
     let Some(transform) = registry.get_component::<CTransform>(entity) else { return model };
 
     let model = match transform.translate {
-        Some(translate) => glm::translate(&model, &(translate + position)),
+        Some(translate) => glm::translate(&model, &translate),
         None => model
     };
     let model = match transform.rotate {
@@ -51,16 +49,15 @@ pub fn s_projection_matrix_3d(
 pub fn s_ortho_projection_matrix_3d(
     camera: &VersionedIndex,
     registry: &Registry,
-    width: f32,
-    height: f32
 ) -> glm::Mat4 {
     let z_planes = registry.get_component::<CZPlanes>(camera).unwrap();
+    let dimensions = registry.get_component::<CDimensions>(camera).unwrap();
 
     glm::ortho(
         0.0,
-        width,
+        dimensions.width,
         0.0,
-        height,
+        dimensions.height,
         z_planes.near_plane,
         z_planes.far_plane
     )

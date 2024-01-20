@@ -1,10 +1,12 @@
 pub mod material;
 pub mod gizmo;
 pub mod transform;
+pub mod dimensions;
 
 pub use material::CMaterial;
 pub use gizmo::CGizmo3D;
 pub use transform::CTransform;
+pub use dimensions::CDimensions;
 
 use crate::{
     Registry,
@@ -118,6 +120,7 @@ pub fn register_components(registry: &mut Registry) {
         .register_component::<CAttenuation>()
         .register_component::<CRGBA>()
         .register_component::<CCutoff>()
+        .register_component::<CDimensions>()
         .register_component::<CDirection>()
         .register_component::<CEulerAngles>()
         .register_component::<CGizmo3D>()

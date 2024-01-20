@@ -56,11 +56,14 @@ impl VersionedIndexAllocator {
     }
 
     pub fn deallocate(&mut self, index: VersionedIndex) {
-        self.entries[index.index] = AllocatorEntry::Free { next: self.next };
+        if self.validate(&index) {
+            self.entries[index.index] = AllocatorEntry::Free { next: self.next };
 
-        self.next = Some(index.index);
-        self.version += 1;
-        self.length -= 1;
+            self.next = Some(index.index);
+            self.version += 1;
+
+            self.length -= 1;
+        }
     }
 
     pub fn is_allocated(&self, index: &VersionedIndex) -> bool {
@@ -74,6 +77,12 @@ impl VersionedIndexAllocator {
     }
 
     pub fn length(&self) -> usize { self.length }
+    pub fn valid_count(&self) -> usize {
+        self.entries
+            .iter()
+            .filter(|e| matches!(e, AllocatorEntry::Occupied {..}))
+            .count()
+    }
 
     fn try_allocate(&mut self) -> Option<VersionedIndex> {
         match self.next {
@@ -98,6 +107,25 @@ impl VersionedIndexAllocator {
         );
 
         self.entries.len() - 1
+    }
+
+    // pub fn reset(&mut self) {
+    //     self.entries.clear();
+    //     self.next = None;
+    //     self.version = 0;
+    //     self.length = 0;
+    // }
+
+    pub fn validate(&self, index: &VersionedIndex) -> bool {
+        let entity = self.entries[index.index];
+
+        if let AllocatorEntry::Occupied { version } = entity {
+            if version == index.version {
+                return true;
+            }
+        }
+
+        false
     }
 }
 

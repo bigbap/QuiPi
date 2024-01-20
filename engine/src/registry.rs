@@ -19,7 +19,7 @@ pub enum RegistryError {
 
 #[derive(Debug)]
 pub struct Registry {
-    components: EntityManager,
+    entities: EntityManager,
     resources: EntityManager,
 
     currently_building: Option<VersionedIndex>,
@@ -27,54 +27,24 @@ pub struct Registry {
 
 impl Registry {
     pub fn init() -> Result<Self, RegistryError> {
-        let components = EntityManager::new()?;
+        let entities = EntityManager::new()?;
         let resources = EntityManager::new()?;
 
         Ok(Self {
-            components,
+            entities,
             resources,
             currently_building: None,
         })
     }
 
-    pub fn register_component<C: Component + 'static>(&mut self) -> &mut Self {
-        self.components.register_component::<C>();
-
-        self
+    pub fn entity_count(&self) -> usize {
+        self.entities.count()
     }
 
-    pub fn register_resource<C: Component + 'static>(&mut self) -> &mut Self {
-        self.resources.register_component::<C>();
-
-        self
-    }
-
-    pub fn get_component_mut<C: Component + 'static>(&mut self, entity: &VersionedIndex) -> Option<&mut C> {
-        self.components.get_component_mut::<C>(entity)
-    }
-
-    pub fn get_resource_mut<C: Component + 'static>(&mut self, entity: &VersionedIndex) -> Option<&mut C> {
-        self.resources.get_component_mut::<C>(entity)
-    }
-
-    pub fn get_component<C: Component + 'static>(&self, entity: &VersionedIndex) -> Option<&C> {
-        self.components.get_component::<C>(entity)
-    }
-
-    pub fn get_resource<C: Component + 'static>(&self, entity: &VersionedIndex) -> Option<&C> {
-        self.resources.get_component::<C>(entity)
-    }
-
-    pub fn create_resource(&mut self, res: impl Component + 'static) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
-        let resource = self.resources.create_entity("resource")?;
-
-        self.resources.add_component(&resource, res);
-
-        Ok(resource)
-    }
+    // entities
 
     pub fn create_entity(&mut self, tag: &str) -> Result<&mut Self, RegistryError> {
-        self.currently_building = Some(self.components.create_entity(tag)?);
+        self.currently_building = Some(self.entities.create_entity(tag)?);
 
         Ok(self)
     }
@@ -83,7 +53,7 @@ impl Registry {
         &mut self,
         cmp: impl Component + 'static
     ) -> Result<&mut Self, Box<dyn std::error::Error>> {
-        self.components.add_component(&self.currently_building.unwrap(), cmp);
+        self.entities.add_component(&self.currently_building.unwrap(), cmp);
 
         Ok(self)
     }
@@ -94,7 +64,7 @@ impl Registry {
     ) -> Result<&mut Self, Box<dyn std::error::Error>> {
         let cmp = fac(self)?;
 
-        self.components.add_component(&self.currently_building.unwrap(), cmp);
+        self.entities.add_component(&self.currently_building.unwrap(), cmp);
 
         Ok(self)
     }
@@ -108,7 +78,62 @@ impl Registry {
     }
 
     pub fn get_entities_by_tag(&self, tag: &str) -> Vec<VersionedIndex> {
-        self.components.get_entities_by_tag(tag)
+        self.entities.get_entities_by_tag(tag)
+    }
+
+    pub fn delete_entity(
+        &mut self,
+        entity: VersionedIndex
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        self.entities.delete_entity(entity);
+
+        Ok(())
+    }
+
+    // components
+
+    pub fn register_component<C: Component + 'static>(&mut self) -> &mut Self {
+        self.entities.register_component::<C>();
+
+        self
+    }
+
+    pub fn get_component_mut<C: Component + 'static>(&mut self, entity: &VersionedIndex) -> Option<&mut C> {
+        self.entities.get_component_mut::<C>(entity)
+    }
+
+    pub fn get_component<C: Component + 'static>(&self, entity: &VersionedIndex) -> Option<&C> {
+        self.entities.get_component::<C>(entity)
+    }
+
+    // resources
+
+    pub fn register_resource<C: Component + 'static>(&mut self) -> &mut Self {
+        self.resources.register_component::<C>();
+
+        self
+    }
+
+    pub fn create_resource(&mut self, res: impl Component + 'static) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
+        let resource = self.resources.create_entity("resource")?;
+
+        self.resources.add_component(&resource, res);
+
+        Ok(resource)
+    }
+
+    pub fn get_resource_mut<C: Component + 'static>(&mut self, entity: &VersionedIndex) -> Option<&mut C> {
+        self.resources.get_component_mut::<C>(entity)
+    }
+
+    pub fn get_resource<C: Component + 'static>(&self, entity: &VersionedIndex) -> Option<&C> {
+        self.resources.get_component::<C>(entity)
+    }
+
+    pub fn delete_resource(&mut self, resource: VersionedIndex) -> Result<(), Box<dyn std::error::Error>> {
+        self.resources.delete_entity(resource);
+
+        Ok(())
     }
 }
 
@@ -153,11 +178,11 @@ mod tests {
             .done().unwrap();
 
         assert_eq!(
-            *registry.components.get_component::<DrawComponent>(&player).unwrap(),
+            *registry.entities.get_component::<DrawComponent>(&player).unwrap(),
             DrawComponent { shader_id: Some(1234) }
         );
         assert_eq!(
-            *registry.components.get_component::<TransformComponent>(&player).unwrap(),
+            *registry.entities.get_component::<TransformComponent>(&player).unwrap(),
             TransformComponent { translate: glm::vec3(1.0, 1.0, 1.0), ..TransformComponent::default() }
         );
     }
