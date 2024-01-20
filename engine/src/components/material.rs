@@ -10,12 +10,27 @@ pub enum MaterialPart {
     #[default] None
 }
 
-#[derive(Component, Debug, Clone, Copy, Default)]
+#[derive(Component, Debug, Clone)]
 pub struct CMaterial {
     pub ambient: MaterialPart,
     pub diffuse: MaterialPart,
     pub specular: MaterialPart,
-    pub shininess: f32
+    pub shininess: f32,
+
+    pub uniform_struct: String
+}
+
+impl Default for CMaterial {
+    fn default() -> Self {
+        Self {
+            ambient: MaterialPart::None,
+            diffuse: MaterialPart::None,
+            specular: MaterialPart::None,
+            shininess: 0.0,
+
+            uniform_struct: "material".to_string()
+        }
+    }
 }
 
 impl CMaterial {
@@ -24,7 +39,9 @@ impl CMaterial {
             ambient: MaterialPart::Value(0.25, 0.25, 0.25),
             diffuse: MaterialPart::Value(0.4, 0.4, 0.4),
             specular: MaterialPart::Value(0.774597, 0.774597, 0.774597),
-            shininess: 0.6 * 128.0
+            shininess: 0.6 * 128.0,
+
+            ..CMaterial::default()
         }
     }
 }

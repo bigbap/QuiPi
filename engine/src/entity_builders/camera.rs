@@ -7,7 +7,10 @@ use crate::{
         CViewSettings,
         CEulerAngles,
         CZPlanes,
-        CVelocity, CDimensions
+        CVelocity,
+        CDimensions,
+        CProjectionMatrix,
+        CViewMatrix
     }
 };
 
@@ -47,6 +50,8 @@ pub fn build_perspective_camera(
             y: 0.0,
             z: 0.0
         })?
+        .with(CProjectionMatrix::default())?
+        .with(CViewMatrix::default())?
         .done()
 }
 
@@ -87,5 +92,7 @@ pub fn build_ortho_camera(
             y: 0.0,
             z: 0.0
         })?
+        .with(CProjectionMatrix::default())?
+        .with(CViewMatrix::default())?
         .done()
 }

@@ -6,14 +6,24 @@ use std::fs;
 use engine::{
     Registry,
     VersionedIndex,
-    resources::Shader,
+    resources::{Shader, shader::UniformVariable},
     gfx::{
         buffer::clear_buffer,
         ShaderProgram,
     },
     entity_builders::camera::build_ortho_camera,
     math::random::Random,
-    utils::{now_secs, to_abs_path}
+    utils::{
+        now_secs,
+        to_abs_path
+    },
+    systems::{
+        draw::s_draw_by_tag,
+        mvp_matrices::{
+            s_set_ortho_projection_matrix,
+            s_set_view_matrix
+        }
+    }
 };
 
 pub static WIDTH: u32 = 800;
@@ -45,12 +55,15 @@ impl MyGame {
 
         let camera = build_ortho_camera(
             &mut registry,
-            (0.0, 0.0, 0.0),
-            WIDTH as f32,
-            HEIGHT as f32,
-            -0.2,
-            100.0
+            (-0.5, -0.5, 0.0),
+            1.0_f32,
+            1.0_f32,
+            0.0,
+            1.0
         )?;
+
+        s_set_ortho_projection_matrix(&camera, &mut registry);
+        s_set_view_matrix(&camera, &mut registry);
 
         Ok(MyGame {
             registry,
@@ -70,12 +83,17 @@ impl MyGame {
 impl engine::Game for MyGame {
     fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let shader = ShaderProgram::new(&format!("{}/shaders/shape", asset_path()))?;
-        let shader_id = self.registry.create_resource(Shader(shader))?;
+        let shader_id = self.registry.create_resource(Shader {
+            program: shader,
+            uniforms: vec![
+                UniformVariable::MVPMatrix("mvpMatrix".to_string())
+            ]
+        })?;
 
-        // create_shapes(
-        //     &mut self.registry,
-        //     &mut self.rand
-        // );
+        create_shapes(
+            &mut self.registry,
+            &mut self.rand
+        );
         
         self.shader = Some(shader_id);
 
@@ -106,16 +124,16 @@ impl engine::Game for MyGame {
         s_update(
             &mut self.registry,
             delta,
-            &mut self.rand
         )?;
 
         // render
         clear_buffer(Some((0.2, 0.2, 0.1, 1.0)));
 
-        s_draw(
-            &mut self.registry,
+        s_draw_by_tag(
+            "quad",
+            &self.registry,
             &self.shader.unwrap(),
-            &self.camera
+            &self.camera,
         )?;
 
         Ok(Some(()))
@@ -148,6 +166,10 @@ fn create_shapes(
             ),
             _ => ()
         }
+
+        // for _ in 0..1000 {
+        //     let _ = s_spawn_quad(registry, rand);
+        // }
     }
 
     shapes

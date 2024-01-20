@@ -2,7 +2,7 @@ extern crate engine;
 extern crate nalgebra_glm as glm;
 
 use engine::{
-    resources::Shader,
+    resources::{Shader, shader::UniformVariable},
     VersionedIndex,
     gfx::object_loader::{
         load_obj_file,
@@ -13,14 +13,19 @@ use engine::{
         material::MaterialPart,
         CPosition,
         CGizmo3D,
-        CVelocity
+        CVelocity, CViewMatrix, CProjectionMatrix
     },
     systems::{
         movement::s_apply_velocity,
         rotation::{
             s_update_angles,
             s_rotate
-        }
+        },
+        draw::{
+            s_draw_by_tag,
+            s_draw_entity
+        },
+        mvp_matrices::*
     },
 };
 use sdl2::{
@@ -108,10 +113,22 @@ impl engine::Game for MyGame {
     fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let asset_path = config::asset_path()?.into_os_string().into_string().unwrap();
         let shader = self.registry.create_resource(
-            Shader::new(&format!("{}/shaders/lighting", asset_path))?
+            Shader::new(
+                &format!("{}/shaders/lighting", asset_path),
+                vec![
+                    UniformVariable::MVPMatrix("mvpMatrix".to_string()),
+                    UniformVariable::ModelMatrix("model".to_string()),
+                ]
+            )?
         )?;
         let light_shader = self.registry.create_resource(
-            Shader::new(&format!("{}/shaders/light_source", asset_path))?
+            Shader::new(
+                &format!("{}/shaders/light_source", asset_path),
+                vec![
+                    UniformVariable::MVPMatrix("mvpMatrix".to_string()),
+                    UniformVariable::Color("color".to_string())
+                ]
+            )?
         )?;
         
         let diffuse = create_texture(
@@ -218,43 +235,63 @@ impl engine::Game for MyGame {
             delta,
             velocity
         )?;
+
+        s_set_projection_matrix(&self.camera, &mut self.registry);
+        s_set_view_matrix(&self.camera, &mut self.registry);
+
         let camera_pos = self.registry.get_component::<CPosition>(&self.camera).unwrap();
         let camera_dir = self.registry.get_component::<CGizmo3D>(&self.camera).unwrap().front;
 
         engine::gfx::buffer::clear_buffer(Some((0.02, 0.02, 0.02, 1.0)));
         
-        if self.direction_light_on {
-            systems::draw(
-                &self.direction_light.unwrap(),
-                &self.registry,
-                &self.light_shader.unwrap(),
-                &self.camera
-            )?;
-        }
-        if self.point_light_on {
-            systems::draw(
-                &self.point_light.unwrap(),
-                &self.registry,
-                &self.light_shader.unwrap(),
-                &self.camera
-            )?;
-        }
+        // if self.direction_light_on {
+            // s_draw(
+            //     "light",
+            //     &mut self.registry,
+            //     &self.light_shader.unwrap(),
+            //     &self.camera,
+            //     "mvpMatrix"
+            // )?;
+        // }
+        // if self.point_light_on {
+        //     s_draw(
+        //         &self.point_light.unwrap(),
+        //         &self.registry,
+        //         &self.light_shader.unwrap(),
+        //         &self.camera
+        //     )?;
+        // }
 
-        let shader = self.registry.get_resource::<Shader>(&self.shader.unwrap()).unwrap().program();
-        shader.set_int("dirLightOn", self.direction_light_on as i32);
-        shader.set_int("pointLightOn", self.point_light_on as i32);
-        shader.set_int("spotLightOn", self.spot_light_on as i32);
-        shader.set_float_3("spotLight.position", (camera_pos.x, camera_pos.y, camera_pos.z));
-        shader.set_float_3("spotLight.direction", (camera_dir.x, camera_dir.y, camera_dir.z));
+        let shader = self.registry.get_resource::<Shader>(&self.shader.unwrap()).unwrap();
+        shader.program.set_int("dirLightOn", self.direction_light_on as i32);
+        shader.program.set_int("pointLightOn", self.point_light_on as i32);
+        shader.program.set_int("spotLightOn", self.spot_light_on as i32);
+        shader.program.set_float_3("spotLight.position", (camera_pos.x, camera_pos.y, camera_pos.z));
+        shader.program.set_float_3("spotLight.direction", (camera_dir.x, camera_dir.y, camera_dir.z));
         
-        for entity in self.crates.iter() {
-            systems::update_entity(entity, &self.registry);
-            systems::draw(
-                entity,
-                &self.registry,
-                &self.shader.unwrap(),
-                &self.camera
-            )?;
+        s_draw_by_tag(
+            "light",
+            &self.registry,
+            &self.light_shader.unwrap(),
+            &self.camera,
+        )?;
+
+        systems::update_entities("crate", &self.registry);
+
+        if let (Some(view), Some(projection)) = (
+            self.registry.get_component::<CViewMatrix>(&self.camera),
+            self.registry.get_component::<CProjectionMatrix>(&self.camera),
+        ) {
+            let projection_view_matrix = projection.0 * view.0;
+            let entities = self.registry.get_entities_by_tag("crate");
+            for entity in entities {
+                s_draw_entity(
+                    &entity,
+                    &self.registry,
+                    shader,
+                    &projection_view_matrix,
+                );
+            }
         }
 
         Ok(Some(()))

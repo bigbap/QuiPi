@@ -3,14 +3,10 @@ use engine::{
     Registry,
     gfx::{
         texture,
-        draw::draw_ebo, ShaderProgram
+        draw::draw_ebo,
+        ShaderProgram
     },
-    components::CPosition,
-    systems::mvp_matrices::{
-        s_view_matrix_3d,
-        s_model_matrix_3d,
-        s_projection_matrix_3d
-    },
+    components::{CPosition, CModelMatrix, CViewMatrix, CProjectionMatrix},
     systems::material
 };
 
@@ -45,15 +41,17 @@ pub fn draw(
 
     shader.program().use_program();
     cmp_mesh.mesh.vao.bind();
-    
-    let model = s_model_matrix_3d(entity, registry);
-    shader.program().set_mat4(MODEL, &model);
-    shader.program().set_mat4(VIEW, &s_view_matrix_3d(camera, registry));
-    shader.program().set_mat4(PROJECTION, &s_projection_matrix_3d(camera, registry));
+
+    let Some(model) = registry.get_component::<CModelMatrix>(entity) else { return Ok(()) };
+    let Some(view) = registry.get_component::<CViewMatrix>(camera) else { return Ok(()) };
+    let Some(projection) = registry.get_component::<CProjectionMatrix>(camera) else { return Ok(()) };
+    shader.program().set_mat4(MODEL, &model.0);
+    shader.program().set_mat4(VIEW, &view.0);
+    shader.program().set_mat4(PROJECTION, &projection.0);
     shader.program().set_float_3(VIEW_POS, (camera_position.x, camera_position.y, camera_position.z));
 
     draw_ebo(&cmp_mesh.mesh.vao);
-    
+
     cmp_mesh.mesh.vao.unbind();
 
     Ok(())

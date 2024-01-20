@@ -14,10 +14,10 @@ use engine::{
         CDirection,
         CPosition,
         CAttenuation,
-        CCutoff,
+        CCutoff, CModelMatrix,
     },
     entity_builders::camera::build_perspective_camera,
-    systems::material
+    systems::{material, mvp_matrices::{s_set_model_matrix, s_set_projection_matrix, s_set_view_matrix}}
 };
 
 use crate::{
@@ -69,7 +69,8 @@ pub fn create_crates(
                 .create_vbo_at(&config.points, 0, 3)?
                 .create_vbo_at(&config.texture_coords, 2, 2)?;
 
-            entities.push(registry.create_entity("crate")?
+            println!("{:?}", config.texture_coords);
+            let entity = registry.create_entity("crate")?
                 .with(CMesh { mesh })?
                 .with(CPosition::default())?
                 .with(CTransform {
@@ -78,9 +79,13 @@ pub fn create_crates(
                     rotate: Some(glm::vec3(0.0, 2.0, 0.0)),
                     angle: transform.1
                 })?
-                .with(material)?
-                .done()?
-            )
+                .with(CModelMatrix::default())?
+                .with(material.clone())?
+                .done()?;
+
+            s_set_model_matrix(&entity, registry);
+
+            entities.push(entity);
         }
     }
 
@@ -92,14 +97,19 @@ pub fn create_camera(
     width: f32,
     height: f32
 ) -> Result<engine::VersionedIndex, Box<dyn std::error::Error>> {
-    build_perspective_camera(
+    let camera = build_perspective_camera(
         registry,
         (0.0, 1.0, 5.0),
         90.0,
         width / height,
         0.1,
         100.0
-    )
+    )?;
+
+    s_set_projection_matrix(&camera, registry);
+    s_set_view_matrix(&camera, registry);
+
+    Ok(camera)
 }
 
 pub fn create_texture(
@@ -124,7 +134,8 @@ pub fn directional_light(
         ambient: MaterialPart::Value(0.05, 0.05, 0.05),
         diffuse: MaterialPart::Value(0.1, 0.1, 0.1),
         specular: MaterialPart::Value(0.5, 0.5, 0.5),
-        shininess: 0.0
+        shininess: 0.0,
+        ..CMaterial::default()
     };
     
     let direction = (-0.8, -0.1, -0.1);
@@ -143,7 +154,7 @@ pub fn directional_light(
     let mesh = ElementArrayMesh::new(&model_config.indices)?;
     mesh.create_vbo_at(&model_config.points, 0, 3)?;
 
-    registry.create_entity("light")?
+    let light = registry.create_entity("light")?
         .with(CDirection {
             x: direction.0,
             y: direction.1,
@@ -156,8 +167,13 @@ pub fn directional_light(
             translate: Some(glm::vec3(7.0, 10.0, 0.0)),
             ..CTransform::default()
         })?
+        .with(CModelMatrix::default())?
         .with(mat)?
-        .done()
+        .done()?;
+
+    s_set_model_matrix(&light, registry);
+
+    Ok(light)
 }
 
 pub fn point_light(
@@ -173,7 +189,8 @@ pub fn point_light(
         ambient: MaterialPart::Value(1.0, 0.0, 0.0),
         diffuse: MaterialPart::Value(1.0, 0.0, 0.0),
         specular: MaterialPart::Value(1.0, 0.2, 0.2),
-        shininess: 0.0
+        shininess: 0.0,
+        ..CMaterial::default()
     };
 
     let position = CPosition {
@@ -204,7 +221,7 @@ pub fn point_light(
     let mesh = ElementArrayMesh::new(&model_config.indices)?;
     mesh.create_vbo_at(&model_config.points, 0, 3)?;
 
-    registry.create_entity("light")?
+    let light = registry.create_entity("light")?
         .with(position)?
         .with(attenuation)?
         .with(mat)?
@@ -215,7 +232,12 @@ pub fn point_light(
             scale: Some(glm::vec3(0.2, 0.2, 0.2)),
             ..CTransform::default()
         })?
-        .done()
+        .with(CModelMatrix::default())?
+        .done()?;
+
+    s_set_model_matrix(&light, registry);
+
+    Ok(light)
 }
 
 pub fn spot_light(
@@ -231,7 +253,8 @@ pub fn spot_light(
         ambient: MaterialPart::Value(0.1, 0.1, 0.1),
         diffuse: MaterialPart::Value(0.5, 0.5, 0.5),
         specular: MaterialPart::Value(1.0, 1.0, 1.0),
-        shininess: 0.0
+        shininess: 0.0,
+        ..CMaterial::default()
     };
 
     let attenuation = CAttenuation {

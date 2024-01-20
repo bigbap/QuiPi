@@ -2,11 +2,15 @@ pub mod material;
 pub mod gizmo;
 pub mod transform;
 pub mod dimensions;
+pub mod matrices;
 
 pub use material::CMaterial;
 pub use gizmo::CGizmo3D;
 pub use transform::CTransform;
 pub use dimensions::CDimensions;
+pub use matrices::CModelMatrix;
+pub use matrices::CViewMatrix;
+pub use matrices::CProjectionMatrix;
 
 use crate::{
     Registry,
@@ -126,9 +130,12 @@ pub fn register_components(registry: &mut Registry) {
         .register_component::<CGizmo3D>()
         .register_component::<CMaterial>()
         .register_component::<CMesh>()
+        .register_component::<CModelMatrix>()
         .register_component::<CTransform>()
         .register_component::<CPosition>()
+        .register_component::<CProjectionMatrix>()
         .register_component::<CVelocity>()
+        .register_component::<CViewMatrix>()
         .register_component::<CViewSettings>()
         .register_component::<CZPlanes>();
 }

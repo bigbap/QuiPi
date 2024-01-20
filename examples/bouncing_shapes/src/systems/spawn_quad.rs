@@ -8,7 +8,9 @@ use engine::{
     components::{
         CMesh,
         CVelocity,
-        CTransform
+        CTransform,
+        CDimensions,
+        CModelMatrix
     },
     math::random::Random
 };
@@ -19,8 +21,8 @@ pub fn s_spawn_quad(
     registry: &mut Registry,
     rand: &mut Random
 ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
-    let width = rand.range(100, 200) as f32;
-    let height = rand.range(50, 125) as f32;
+    let width = rand.range(200, 400) as f32;
+    let height = rand.range(200, 300) as f32;
     s_create_quad(
         registry,
         &[width, height, 0.0, 0.0, rand.random(), rand.random(), rand.random()],
@@ -69,6 +71,11 @@ pub fn s_create_quad(
     );
     let quad = registry.create_entity("quad")?
         .with(CMesh { mesh })?
+        .with(CDimensions {
+            width,
+            height,
+            ..CDimensions::default()
+        })?
         .with(CVelocity {
             x: vel.0,
             y: vel.1,
@@ -79,7 +86,10 @@ pub fn s_create_quad(
             scale: Some(glm::vec3(0.5, 0.5, 0.5)),
             ..CTransform::default()
         })?
+        .with(CModelMatrix::default())?
         .done()?;
+
+    println!("{}", registry.entity_count());
 
     Ok(quad)
 }

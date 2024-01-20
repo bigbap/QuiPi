@@ -72,13 +72,13 @@ void main()
     if (dirLightOn) {
         dirLightResult = calcDirLight(dirLight, norm, viewDir);
     }
-
+    
     // Point Lights
     vec3 pointLightResult = vec3(0.0, 0.0, 0.0);
     if (pointLightOn) {
         pointLightResult = calcPointLight(pointLight, norm, FragPos, viewDir);
     }
-
+    
     // Spot Lights
     vec3 spotLightResult = vec3(0.0, 0.0, 0.0);
     if (spotLightOn) {

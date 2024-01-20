@@ -1,10 +1,7 @@
-use engine::{
-    VersionedIndex,
-    Registry
-};
+use engine::Registry;
 
-pub fn update_entity(
-    _entity: &VersionedIndex,
+pub fn update_entities(
+    _tag: &str,
     _registry: &Registry
 ) {
 
