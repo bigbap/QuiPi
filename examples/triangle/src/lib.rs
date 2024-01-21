@@ -119,7 +119,7 @@ fn create_registry() -> Result<engine::Registry, Box<dyn std::error::Error>> {
 fn create_scene(
     registry: &mut engine::Registry
 ) -> Result<engine::VersionedIndex, Box<dyn std::error::Error>> {
-    type ObjConfig = engine::gfx::object_loader::ObjectConfig;
+    type ObjConfig = engine::systems::load_obj::ObjectConfig;
     
 
     let config = ObjConfig {

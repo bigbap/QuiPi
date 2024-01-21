@@ -1,6 +1,5 @@
 pub mod shader_program;
 pub mod texture;
-pub mod object_loader;
 pub mod buffer;
 pub mod draw;
 pub mod view;

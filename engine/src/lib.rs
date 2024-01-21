@@ -1,7 +1,7 @@
 pub extern crate sdl2;
 pub extern crate gl;
 pub extern crate nalgebra_glm as glm;
-pub extern crate gltf;
+// pub extern crate gltf;
 
 pub mod entity_builders;
 pub mod core;
@@ -20,4 +20,3 @@ pub use registry::Registry;
 pub use core::Component;
 pub use core::EntityManager;
 pub use core::math;
-

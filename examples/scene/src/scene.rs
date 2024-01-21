@@ -1,10 +1,6 @@
 use engine::{
     gfx::{
         texture,
-        object_loader::{
-            load_obj_file,
-            ObjectConfig
-        },
         ElementArrayMesh
     },
     VersionedIndex,
@@ -32,7 +28,11 @@ use engine::{
             s_set_model_matrix,
             s_set_projection_matrix,
             s_set_view_matrix
-        }
+        },
+        load_obj::{
+            s_load_obj_file,
+            ObjectConfig
+        },
     }
 };
 
@@ -55,7 +55,7 @@ pub fn create_crates(
 ) -> Result<Vec<engine::VersionedIndex>, Box<dyn std::error::Error>> {
     // load the object data
     let asset_path = config::asset_path()?.into_os_string().into_string().unwrap();
-    let (models_obj, _materials_obj) = load_obj_file(format!("{}/objects/crate.obj", asset_path))?;
+    let (models_obj, _materials_obj) = s_load_obj_file(format!("{}/objects/crate.obj", asset_path))?;
     let model_configs = ObjectConfig::from_obj(models_obj)?;
 
 

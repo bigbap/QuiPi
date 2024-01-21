@@ -3,8 +3,8 @@ pub mod indexed_array;
 pub use indexed_array::VersionedIndex;
 pub use indexed_array::VersionedIndexAllocator;
 pub use indexed_array::IndexedArray;
-
 pub use component_derive::Component;
+
 pub trait Component {
     fn my_type(&self) -> String;
 }
@@ -13,8 +13,8 @@ use anymap2::AnyMap;
 use std::rc::Rc;
 
 #[derive(Debug, Component, Clone)]
-struct CTag {
-    tag: Rc<str>
+pub struct CTag {
+    pub tag: Rc<str>
 }
 
 type EntityMap<C> = IndexedArray<C>;

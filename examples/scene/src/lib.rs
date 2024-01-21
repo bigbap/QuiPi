@@ -7,10 +7,6 @@ use engine::{
         shader::UniformVariable
     },
     VersionedIndex,
-    gfx::object_loader::{
-        load_obj_file,
-        ObjectConfig
-    },
     components::{
         CMaterial,
         material::MaterialPart,
@@ -28,7 +24,11 @@ use engine::{
             s_draw_by_tag,
             s_draw_entity
         },
-        mvp_matrices::*
+        mvp_matrices::*,
+        load_obj::{
+            ObjectConfig,
+            s_load_obj_file
+        }
     },
 };
 use sdl2::{
@@ -153,7 +153,7 @@ impl engine::Game for MyGame {
             }
         )?;
 
-        let (models_obj, _materials_obj) = load_obj_file(format!("{}/objects/sphere.obj", asset_path))?;
+        let (models_obj, _materials_obj) = s_load_obj_file(format!("{}/objects/sphere.obj", asset_path))?;
         let model_configs = ObjectConfig::from_obj(models_obj)?;
         self.direction_light = Some(directional_light(
             &mut self.registry,

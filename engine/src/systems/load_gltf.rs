@@ -1,49 +1,50 @@
-use gltf::{Node, iter::Nodes};
+use gltf::Node;
+use crate::gfx::object_loader::ObjectConfig;
 
+// TODO
 pub fn s_create_model_from_gltf(
-    file_path: &str
-) -> Result<(), Box<dyn std::error::Error>> {
-    println!("loading gltf");
-    let (document, buffers, images) = gltf::import(file_path)?;
-    println!("gltf loaded");
+    file_path: &str,
+    _tag: &str,
+) -> Result<Vec<ObjectConfig>, Box<dyn std::error::Error>> {
+    let mut result: Vec<ObjectConfig> = vec![];
+    let (document, _buffers, _images) = gltf::import(file_path)?;
    
-    let nodes = document.nodes();
-    for scene in document.scenes() {
-        for node in scene.nodes() {
-            traverse_nodes(node, &nodes);
-        //     if let Some(vertices) = node.mesh() {
-        //         println!("{:?}", vertices);
-        //     }
-        //
-        //
-        //     // println!(
-        //     //     "Node #{} has {} children",
-        //     //     node.index(),
-        //     //     node.children().count(),
-        //     // );
+    let _nodes = document.nodes();
+
+    // we only support single scene loading for now
+    if let Some(scene) = document.scenes().next() {
+        for root in scene.nodes() {
+            let mut stack = vec![root];
+
+            while !stack.is_empty() {
+                if let Some(node) = stack.pop() {
+                    let mut children: Vec<Node> = vec![];
+
+                    for child in node.children() {
+                        children.push(child);
+                    };
+
+                    if !children.is_empty() {
+                        children.reverse();
+
+                        stack.append(&mut children);
+                    } else {
+                        let mesh_list = node.mesh();
+                        
+                        for _mesh in mesh_list.iter() {
+                            // println!("{:#?}", mesh);
+
+                            result.push(ObjectConfig {
+                                ..ObjectConfig::default()
+                            });
+                        };
+                    }
+                }
+            }
         }
     }
 
-    Ok(())
+    println!("gltf loaded");
+
+    Ok(result)
 }
-
-fn traverse_nodes(root: Node, nodes: &Nodes) {
-    let mut stack = vec![root];
-    
-    while !stack.is_empty() {
-        if let Some(node) = stack.pop() {
-            println!("Node: {}", node.index());
-
-            let mesh = node.mesh();
-            println!("{:#?}", mesh);
-
-            let mut children: Vec<Node> = node
-                .children()
-                .collect();
-            
-            children.reverse();
-
-            stack.append(&mut children);
-        }
-    }
-} 
