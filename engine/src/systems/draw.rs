@@ -1,11 +1,10 @@
 use crate::{
     VersionedIndex,
     components::{
-        CMesh,
         CViewMatrix,
         CProjectionMatrix,
         CModelMatrix,
-        CMaterial, CRGBA
+        CMaterial, CRGBA, CModelNode
     },
     Registry,
     resources::shader::{
@@ -68,8 +67,8 @@ pub fn s_draw_entity(
     // TODO: this can be optimized to have textures per tag instead of per entity
     bind_textures(entity, registry, shader);
 
-    if let (Some(mesh), Some(model)) = (
-        registry.get_component::<CMesh>(entity),
+    if let (Some(root), Some(model_matrix)) = (
+        registry.get_component::<CModelNode>(entity),
         registry.get_component::<CModelMatrix>(entity)
     ) {
         set_uniforms(
@@ -77,13 +76,22 @@ pub fn s_draw_entity(
             registry,
             shader,
             projection_view_matrix,
-            &model.0
+            &model_matrix.0
         );
-        
+    
+        draw_node(root, shader);
+    }
+}
+
+fn draw_node(
+    node: &CModelNode,
+    shader: &Shader
+) {
+    if let Some(mesh) = &node.mesh {
         shader.program.use_program();
-        mesh.mesh.vao.bind();
-        draw_ebo(&mesh.mesh.vao);
-        mesh.mesh.vao.unbind();
+        mesh.vao.bind();
+        draw_ebo(&mesh.vao);
+        mesh.vao.unbind();
     }
 }
 

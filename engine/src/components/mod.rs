@@ -3,6 +3,7 @@ pub mod gizmo;
 pub mod transform;
 pub mod dimensions;
 pub mod matrices;
+pub mod model;
 
 pub use material::CMaterial;
 pub use gizmo::CGizmo3D;
@@ -11,11 +12,12 @@ pub use dimensions::CDimensions;
 pub use matrices::CModelMatrix;
 pub use matrices::CViewMatrix;
 pub use matrices::CProjectionMatrix;
+pub use model::CModelNode;
 
 use crate::{
     Registry,
     Component,
-    gfx::ElementArrayMesh
+    // gfx::ElementArrayMesh
 };
 
 /**
@@ -60,13 +62,13 @@ pub struct CRGBA {
     pub a: f32
 }
 
-/**
-* holds the VertexArray to draw a single mesh
-*/
-#[derive(Component, Debug)]
-pub struct CMesh {
-    pub mesh: ElementArrayMesh,
-}
+// /**
+// * holds the VertexArray to draw a single mesh
+// */
+// #[derive(Component, Debug)]
+// pub struct CMesh {
+//     pub mesh: ElementArrayMesh,
+// }
 
 /**
 * used to reduce the intensity of light over time
@@ -129,8 +131,9 @@ pub fn register_components(registry: &mut Registry) {
         .register_component::<CEulerAngles>()
         .register_component::<CGizmo3D>()
         .register_component::<CMaterial>()
-        .register_component::<CMesh>()
+        // .register_component::<CMesh>()
         .register_component::<CModelMatrix>()
+        .register_component::<CModelNode>()
         .register_component::<CTransform>()
         .register_component::<CPosition>()
         .register_component::<CProjectionMatrix>()

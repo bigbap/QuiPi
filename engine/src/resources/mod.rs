@@ -6,7 +6,7 @@ pub use texture::Texture;
 
 use crate::Registry;
 
-pub fn register_resource(registry: &mut Registry) {
+pub fn register_resources(registry: &mut Registry) {
     registry
         .register_resource::<Shader>()
         .register_resource::<Texture>();

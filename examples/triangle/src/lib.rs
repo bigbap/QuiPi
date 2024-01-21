@@ -3,7 +3,12 @@ extern crate nalgebra_glm as glm;
 
 use std::vec;
 
-use engine::{gfx::ElementArrayMesh, VersionedIndex};
+use engine::{
+    gfx::ElementArrayMesh,
+    VersionedIndex,
+    components::{CModelNode, CModelMatrix},
+    resources::Shader
+};
 use sdl2::{
     EventPump,
     keyboard::Keycode,
@@ -13,9 +18,6 @@ use sdl2::{
     }
 };
 
-mod components;
-mod systems;
-mod resources;
 mod config;
 
 pub use config::CONFIG;
@@ -55,7 +57,10 @@ impl engine::Game for MyGame {
         self.scenes.push(scene);
         self.active_scene = Some(0);
         self.shader = Some(self.registry.create_resource(
-            resources::Shader::new(&format!("{}/shaders/simple", CONFIG.asset_path))?
+            engine::resources::Shader::new(
+                &format!("{}/shaders/simple", CONFIG.asset_path),
+                vec![]
+            )?
         )?);
 
         Ok(())
@@ -87,21 +92,15 @@ impl engine::Game for MyGame {
         if let Some(index) = self.active_scene {
             let scene = &self.scenes[index];
 
-            engine::gfx::buffer::clear_buffer(
-                Some(systems::get_color(
-                    _ticks,
-                    scene,
-                    &mut self.registry
-                ))
-            );
+            engine::gfx::buffer::clear_buffer(Some((0.3, 0.4, 0.5, 1.0)));
 
-            systems::update_entities(scene, &self.registry);
-
-            systems::draw_ebo(
+            let shader = self.registry.get_resource::<Shader>(&self.shader.unwrap()).unwrap();
+            engine::systems::draw::s_draw_entity(
                 scene,
-                &mut self.registry,
-                &self.shader.unwrap()
-            ).expect("there was a problem drawing the scene");
+                &self.registry,
+                shader,
+                &glm::Mat4::identity()
+            );
         }
 
         Ok(Some(()))
@@ -111,8 +110,8 @@ impl engine::Game for MyGame {
 fn create_registry() -> Result<engine::Registry, Box<dyn std::error::Error>> {
     let mut registry = engine::Registry::init()?;
 
-    resources::register_resources(&mut registry);
-    components::register_components(&mut registry);
+    engine::resources::register_resources(&mut registry);
+    engine::components::register_components(&mut registry);
 
     Ok(registry)
 }
@@ -146,7 +145,10 @@ fn create_scene(
         .create_vbo_at(&config.colors, 1, 3)?;
 
     registry.create_entity("triangle")?
-        .with(components::CRGBA { r: 0.0, g: 0.0, b: 0.0, a: 1.0 })?
-        .with(engine::components::CMesh { mesh })?
+        .with(engine::components::CModelNode {
+            mesh: Some(mesh),
+            ..CModelNode::default()
+        })?
+        .with(CModelMatrix::default())?
         .done()
 }

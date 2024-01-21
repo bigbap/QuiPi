@@ -1,5 +1,4 @@
 use std::io;
-use gltf::Gltf;
 use image::{
     self,
     ImageBuffer,
@@ -70,21 +69,6 @@ pub fn from_wavefront_material(
     set_default_parameters(&texture_id)?;
 
     Ok(texture_id)
-}
-
-pub fn from_gltf(file_path: &str) {
-    let gltf = Gltf::open(file_path).unwrap();
-    for scene in gltf.scenes() {
-        for node in scene.nodes() {
-            println!(
-                "Node #{} has {} children",
-                node.index(),
-                node.children().count(),
-            );
-        }
-    }
-
-    todo!()
 }
 
 pub fn from_image(

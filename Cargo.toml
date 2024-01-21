@@ -4,5 +4,6 @@ members = [
     "engine",
     "examples/scene",
     "examples/triangle",
-    "examples/bouncing_shapes"
+    "examples/bouncing_shapes",
+    "examples/backpack"
 ]

@@ -4,7 +4,7 @@ use scene::WIDTH;
 use scene::HEIGHT;
 
 fn main() {
-    let mut my_game = MyGame::new(WIDTH, HEIGHT).expect("there was a problem initializing the game");
+    let mut my_game = MyGame::new().expect("there was a problem initializing the game");
 
     if let Err(e) = engine::engine::run(
         &mut my_game,
