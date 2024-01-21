@@ -50,7 +50,7 @@ impl MyGame {
         let timer = std::time::Instant::now();
         let rand = Random::from_seed(now_secs()?);
 
-        engine::resources::register_resource(&mut registry);
+        engine::resources::register_resources(&mut registry);
         engine::components::register_components(&mut registry);
 
         let camera = build_ortho_camera(

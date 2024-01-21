@@ -6,7 +6,7 @@ use engine::{
         utils::normalise_dims_2d
     },
     components::{
-        CMesh,
+        CModelNode,
         CVelocity,
         CTransform,
         CDimensions,
@@ -70,7 +70,10 @@ pub fn s_create_quad(
         ((rand.random() * 2.0) - 1.0) * 1.0,
     );
     let quad = registry.create_entity("quad")?
-        .with(CMesh { mesh })?
+        .with(CModelNode {
+            mesh: Some(mesh),
+            ..CModelNode::default()
+        })?
         .with(CDimensions {
             width,
             height,

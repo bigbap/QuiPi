@@ -9,28 +9,40 @@ use engine::{
     },
     VersionedIndex,
     Registry,
+    resources::{
+        Shader,
+        Texture
+    },
     components::{
         material::MaterialPart,
         CDirection,
         CPosition,
         CAttenuation,
-        CCutoff, CModelMatrix,
+        CCutoff,
+        CModelMatrix,
+        CModelNode,
+        CMaterial,
+        CTransform,
+        CRGBA
     },
     entity_builders::camera::build_perspective_camera,
-    systems::{material, mvp_matrices::{s_set_model_matrix, s_set_projection_matrix, s_set_view_matrix}}
+    systems::{
+        material,
+        mvp_matrices::{
+            s_set_model_matrix,
+            s_set_projection_matrix,
+            s_set_view_matrix
+        }
+    }
 };
 
-use crate::{
-    resources::*,
-    components::*,
-    config,
-};
+use crate::config;
 
 pub fn create_registry() -> Result<engine::Registry, Box<dyn std::error::Error>> {
     let mut registry = engine::Registry::init()?;
 
-    register_resources(&mut registry);
-    register_components(&mut registry);
+    engine::resources::register_resources(&mut registry);
+    engine::components::register_components(&mut registry);
 
     Ok(registry)
 }
@@ -69,9 +81,11 @@ pub fn create_crates(
                 .create_vbo_at(&config.points, 0, 3)?
                 .create_vbo_at(&config.texture_coords, 2, 2)?;
 
-            println!("{:?}", config.texture_coords);
             let entity = registry.create_entity("crate")?
-                .with(CMesh { mesh })?
+                .with(CModelNode {
+                    mesh: Some(mesh),
+                    ..CModelNode::default()
+                })?
                 .with(CPosition::default())?
                 .with(CTransform {
                     translate: Some(transform.0),
@@ -162,7 +176,10 @@ pub fn directional_light(
         })?
         .with(CPosition::default())?
         .with(CRGBA { r: 1.0, g: 1.0, b: 1.0, a: 1.0 })?
-        .with(CMesh { mesh })?
+        .with(CModelNode {
+            mesh: Some(mesh),
+            ..CModelNode::default()
+        })?
         .with(CTransform {
             translate: Some(glm::vec3(7.0, 10.0, 0.0)),
             ..CTransform::default()
@@ -226,7 +243,10 @@ pub fn point_light(
         .with(attenuation)?
         .with(mat)?
         .with(CRGBA { r: 0.6, g: 0.0, b: 0.0, a: 1.0 })?
-        .with(CMesh { mesh })?
+        .with(CModelNode {
+            mesh: Some(mesh),
+            ..CModelNode::default()
+        })?
         .with(CTransform {
             translate: Some(glm::vec3(5.0, 1.0, 6.0)),
             scale: Some(glm::vec3(0.2, 0.2, 0.2)),
@@ -293,7 +313,10 @@ pub fn spot_light(
         .with(attenuation)?
         .with(cutoffs)?
         .with(mat)?
-        .with(CMesh { mesh })?
+        .with(CModelNode {
+            mesh: Some(mesh),
+            ..CModelNode::default()
+        })?
         .with(CTransform {
             translate: Some(glm::vec3(5.0, 1.0, 6.0)),
             scale: Some(glm::vec3(0.2, 0.2, 0.2)),

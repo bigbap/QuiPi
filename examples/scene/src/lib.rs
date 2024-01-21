@@ -2,7 +2,10 @@ extern crate engine;
 extern crate nalgebra_glm as glm;
 
 use engine::{
-    resources::{Shader, shader::UniformVariable},
+    resources::{
+        Shader,
+        shader::UniformVariable
+    },
     VersionedIndex,
     gfx::object_loader::{
         load_obj_file,
@@ -37,9 +40,7 @@ use sdl2::{
     }
 };
 
-mod components;
 mod systems;
-mod resources;
 mod config;
 mod scene;
 
@@ -74,13 +75,13 @@ pub struct MyGame {
 }
 
 impl MyGame {
-    pub fn new(width: u32, height: u32) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
         let mut registry = create_registry()?;
         let timer = std::time::Instant::now();
         let camera = create_camera(
             &mut registry,
-            width as f32,
-            height as f32
+            WIDTH as f32,
+            HEIGHT as f32
         )?;
 
         Ok(Self {
@@ -191,8 +192,12 @@ impl engine::Game for MyGame {
                     ..
                 } => engine::gfx::view::adjust_viewport_dims(w, h),
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } => return Ok(None),
-                Event::KeyDown { keycode: Some(Keycode::Num1), repeat: false, .. } => self.direction_light_on = !self.direction_light_on,
-                Event::KeyDown { keycode: Some(Keycode::Num2), repeat: false, .. } => self.point_light_on = !self.point_light_on,
+                Event::KeyDown { keycode: Some(Keycode::Num1), repeat: false, .. } => {
+                    self.direction_light_on = !self.direction_light_on;
+                },
+                Event::KeyDown { keycode: Some(Keycode::Num2), repeat: false, .. } => {
+                    self.point_light_on = !self.point_light_on;
+                },
                 Event::KeyDown { keycode: Some(Keycode::Num3), repeat: false, .. } => self.spot_light_on = !self.spot_light_on,
 
                 Event::KeyDown { keycode: Some(Keycode::W), repeat: false, .. } => velocity.1 += CAMERA_SPEED,
@@ -244,24 +249,6 @@ impl engine::Game for MyGame {
 
         engine::gfx::buffer::clear_buffer(Some((0.02, 0.02, 0.02, 1.0)));
         
-        // if self.direction_light_on {
-            // s_draw(
-            //     "light",
-            //     &mut self.registry,
-            //     &self.light_shader.unwrap(),
-            //     &self.camera,
-            //     "mvpMatrix"
-            // )?;
-        // }
-        // if self.point_light_on {
-        //     s_draw(
-        //         &self.point_light.unwrap(),
-        //         &self.registry,
-        //         &self.light_shader.unwrap(),
-        //         &self.camera
-        //     )?;
-        // }
-
         let shader = self.registry.get_resource::<Shader>(&self.shader.unwrap()).unwrap();
         shader.program.set_int("dirLightOn", self.direction_light_on as i32);
         shader.program.set_int("pointLightOn", self.point_light_on as i32);
