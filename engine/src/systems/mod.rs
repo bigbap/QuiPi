@@ -4,4 +4,5 @@ pub mod rotation;
 pub mod material;
 pub mod print;
 pub mod draw;
-pub mod load_gltf;
+pub mod model;
+pub mod load_obj;

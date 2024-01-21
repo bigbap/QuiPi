@@ -17,12 +17,6 @@ fn impl_component_trait(ast: DeriveInput) -> TokenStream {
 
     // generate impl
     (quote::quote! {
-        impl #ident {
-            fn type_name() -> &'static str {
-                #ident_str
-            }
-        }
-
         impl Component for #ident {
             fn my_type(&self) -> String {
                 #ident_str.to_string()
