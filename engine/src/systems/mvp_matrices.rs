@@ -98,8 +98,8 @@ pub fn s_set_ortho_projection_matrix(
     ) {
         let pos_x = position.x;
         let pos_y = position.y;
-        let w = dimensions.width * 2.0;
-        let h = dimensions.height * 2.0;
+        let w = dimensions.width;
+        let h = dimensions.height;
         let matrix = glm::ortho(
             pos_x,
             pos_x + w,

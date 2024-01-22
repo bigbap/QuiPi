@@ -1,10 +1,7 @@
 use engine::{
     Registry,
     VersionedIndex,
-    gfx::{
-        ElementArrayMesh,
-        utils::normalise_dims_2d
-    },
+    gfx::ElementArrayMesh,
     components::{
         CModelNode,
         CVelocity,
@@ -36,15 +33,18 @@ pub fn s_create_quad(
     rand: &mut Random
 ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
     let [width, height, center_x, center_y, r, g, b] = parts else { todo!() };
-    let (width, height) = normalise_dims_2d(*width, *height, WIDTH as f32, HEIGHT as f32);
-    let (pos_x, pos_y) = normalise_dims_2d(*center_x, *center_y, WIDTH as f32, HEIGHT as f32);
 
     let points: Vec<f32> = vec![
-        pos_x, pos_y, 0.0,
-        pos_x + width, pos_y, 0.0,
-        pos_x + width, pos_y + height, 0.0,
-        pos_x, pos_y + height, 0.0
+        *center_x - (width / 2.0), *center_y + (height / 2.0), 0.0, // top left
+        *center_x + (width / 2.0), *center_y + (height / 2.0), 0.0, // top right
+        *center_x + (width / 2.0), *center_y - (height / 2.0), 0.0, // bottom right
+        *center_x - (width / 2.0), *center_y - (height / 2.0), 0.0 // bottom left
     ];
+
+    let pos = (
+        WIDTH as f32 / 2.0,
+        HEIGHT as f32 / 2.0
+    );
 
     let r = *r;
     let g = *g;
@@ -65,18 +65,20 @@ pub fn s_create_quad(
         .create_vbo_at(&points, 0, 3)?
         .create_vbo_at(&color, 1, 3)?;
 
-    let vel = (
-        ((rand.random() * 2.0) - 1.0) * 1.0,
-        ((rand.random() * 2.0) - 1.0) * 1.0,
+    let mut vel = (
+        rand.range(200, 400) as f32,
+        rand.range(200, 400) as f32,
     );
+    if rand.random() > 0.5 { vel.0 *= -1.0; }
+    if rand.random() > 0.5 { vel.1 *= -1.0; }
     let quad = registry.create_entity("quad")?
         .with(CModelNode {
             mesh: Some(mesh),
             ..CModelNode::default()
         })?
         .with(CDimensions {
-            width,
-            height,
+            width: *width,
+            height: *height,
             ..CDimensions::default()
         })?
         .with(CVelocity {
@@ -85,8 +87,8 @@ pub fn s_create_quad(
             z: 0.0
         })?
         .with(CTransform {
-            translate: Some(glm::vec3(0.0, 0.0, 0.0)),
-            scale: Some(glm::vec3(0.5, 0.5, 0.5)),
+            translate: Some(glm::vec3(pos.0, pos.1, 0.0)),
+            scale: Some(glm::vec3(0.2, 0.2, 0.0)),
             ..CTransform::default()
         })?
         .with(CModelMatrix::default())?

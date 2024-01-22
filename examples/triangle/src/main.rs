@@ -1,3 +1,4 @@
+use engine::engine::Flags;
 use triangle::MyGame;
 
 pub static ASSET_PATH: &str = "./assets/";
@@ -10,8 +11,7 @@ fn main() {
         "Game Engine - Triangle Example",
         800,
         600,
-        true,
-        false
+        vec![Flags::HideMouse]
     ) {
         eprintln!("{e}")
     }

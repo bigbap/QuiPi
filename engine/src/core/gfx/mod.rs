@@ -4,23 +4,32 @@ pub mod buffer;
 pub mod draw;
 pub mod view;
 pub mod mesh;
-pub mod utils;
 
 pub use shader_program::ShaderProgram;
 pub use mesh::ElementArrayMesh;
 
 use sdl2::VideoSubsystem;
 use std::ffi::c_void;
+use crate::engine::Flags;
 
 pub fn init(
     video_subsystem: &VideoSubsystem,
     width: i32,
-    height: i32
+    height: i32,
+    flags: &[Flags]
 ) {
     gl::load_with(|name| video_subsystem.gl_get_proc_address(name) as *const _);
     unsafe {
-        gl::Enable(gl::DEPTH_TEST);
         gl::Viewport(0, 0, width, height);
+    }
+
+    for flag in flags.iter() {
+        match flag {
+            Flags::DepthTest => unsafe { gl::Enable(gl::DEPTH_TEST) },
+            Flags::DepthMaskOn => unsafe { gl::DepthMask(gl::TRUE) },
+            Flags::DepthMaskOff => unsafe { gl::DepthMask(gl::FALSE) },
+            _ => ()
+        }
     }
 
     let mut flags: gl::types::GLint = 0;

@@ -7,10 +7,10 @@ use engine::{
     }, systems::mvp_matrices::s_set_model_matrix,
 };
 
-// use crate::{
-//     HEIGHT,
-//     WIDTH
-// };
+use crate::{
+    HEIGHT,
+    WIDTH
+};
 
 pub fn s_update(
     registry: &mut Registry,
@@ -23,10 +23,16 @@ pub fn s_update(
         let Some(transform) = registry.get_component::<CTransform>(&quad)   else { continue };
         let Some(translate) = transform.translate                           else { continue };
         let Some(dims)      = registry.get_component::<CDimensions>(&quad)  else { continue };
+        
+        let scale = transform.scale.unwrap();
 
         let vel = glm::vec3(vel.x, vel.y, 0.0);
         let translate = translate + (vel * delta);
-        let (colided_x, colided_y) = check_screen_collision(translate, dims.width, dims.height);
+        let (colided_x, colided_y) = check_screen_collision(
+            translate,
+            dims.width * scale.x,
+            dims.height * scale.y
+        );
 
         let Some(transform) = registry.get_component_mut::<CTransform>(&quad) else { continue };
         transform.translate = Some(translate);
@@ -46,8 +52,13 @@ fn check_screen_collision(
     w: f32,
     h: f32
 ) -> (bool, bool) {
-    let colided_x = (pos.x + w) <= -1.0 || pos.x >= 1.0;
-    let colided_y = pos.y >= 1.0 || (pos.y + h) <= -1.0;
+    let offset_x = w / 2.0;
+    let offset_y = h / 2.0;
+
+    let colided_x = pos.x <= (0.0 + offset_x) || pos.x >= (WIDTH as f32 - offset_x);
+    let colided_y = pos.y >= (HEIGHT as f32 - offset_y) || pos.y <= (0.0 + offset_y);
+
+    // println!("{:?}", pos);
 
     (colided_x, colided_y)
 }

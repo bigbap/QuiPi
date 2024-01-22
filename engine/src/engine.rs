@@ -1,6 +1,15 @@
 use sdl2::video::GLProfile;
 use crate::gfx;
 
+pub enum Flags {
+    HideMouse,
+    RelativeMouseMode,
+
+    DepthTest,
+    DepthMaskOn,
+    DepthMaskOff,
+}
+
 pub trait Game {
     /// game.init() is called by the engine, after all the Sdl and
     /// openGl setup is done.
@@ -23,14 +32,10 @@ pub fn run<G: Game>(
     title: &str,
     width: u32,
     height: u32,
-    show_mouse: bool,
-    relative_mouse_mode: bool
+    flags: Vec<Flags>
 ) -> Result<(), Box<dyn std::error::Error>> {
     let sdl_ctx = sdl2::init()?;
     let video_subsystem = sdl_ctx.video()?;
-
-    sdl_ctx.mouse().show_cursor(show_mouse);
-    sdl_ctx.mouse().set_relative_mouse_mode(relative_mouse_mode);
 
     let gl_attr = video_subsystem.gl_attr();
     gl_attr.set_context_profile(GLProfile::Core);
@@ -52,8 +57,17 @@ pub fn run<G: Game>(
     gfx::init(
         &video_subsystem,
         width as i32,
-        height as i32
+        height as i32,
+        &flags
     );
+
+    for flag in flags.iter() {
+        match flag {
+            Flags::HideMouse => sdl_ctx.mouse().show_cursor(false),
+            Flags::RelativeMouseMode => sdl_ctx.mouse().set_relative_mouse_mode(true),
+            _ => ()
+        }
+    }
     
     game.init()?;
 

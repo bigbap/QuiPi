@@ -78,11 +78,11 @@ pub fn build_ortho_camera(
             front: glm::vec3(0.0, 0.0, -1.0),
             up: glm::vec3(0.0, 1.0, 0.0)
         })?
-        .with(CEulerAngles {
-            pitch: 0.0,
-            yaw: 90.0,
-            roll: 0.0
-        })?
+        // .with(CEulerAngles {
+        //     pitch: 0.0,
+        //     yaw: 90.0,
+        //     roll: 0.0
+        // })?
         .with(CZPlanes {
             near_plane,
             far_plane

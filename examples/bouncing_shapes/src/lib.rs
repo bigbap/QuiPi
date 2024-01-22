@@ -55,11 +55,11 @@ impl MyGame {
 
         let camera = build_ortho_camera(
             &mut registry,
-            (-0.5, -0.5, 0.0),
-            1.0_f32,
-            1.0_f32,
+            (0.0, 0.0, 0.0),
+            WIDTH as f32,
+            HEIGHT as f32,
             0.0,
-            1.0
+            2.0
         )?;
 
         s_set_ortho_projection_matrix(&camera, &mut registry);

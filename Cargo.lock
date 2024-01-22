@@ -182,6 +182,7 @@ dependencies = [
  "sdl2",
  "thiserror",
  "tobj",
+ "walkdir",
 ]
 
 [[package]]

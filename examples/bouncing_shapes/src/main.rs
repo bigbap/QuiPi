@@ -7,7 +7,13 @@ use bouncing_shapes::{
 fn main() {
     let mut game = MyGame::new().expect("There was a problem initializing the game.");
 
-    if let Err(e) = engine::engine::run(&mut game, "Bouncing Shapes", WIDTH, HEIGHT, true, false) {
+    if let Err(e) = engine::engine::run(
+        &mut game,
+        "Bouncing Shapes",
+        WIDTH,
+        HEIGHT,
+        vec![]
+    ) {
         eprintln!("Game ended unexpectedly: {}", e);
     };
 }

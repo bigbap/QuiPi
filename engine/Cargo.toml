@@ -17,3 +17,6 @@ anymap2 = "0.13"
 component-derive = { path = "./macros/component-derive" }
 rand = "0.8"
 rand_chacha = "*"
+
+[build-dependencies]
+walkdir = "2.4"
