@@ -6,10 +6,8 @@ use crate::Component;
 #[derive(Debug, Component, PartialEq, Clone)]
 pub struct CTransform {
     pub translate: Option<glm::Vec3>,
-    pub rotate: Option<glm::Vec3>,
+    pub rotate: Option<Vec<(glm::Vec3, f32)>>,
     pub scale: Option<glm::Vec3>,
-
-    pub angle: f32
 }
 
 impl Default for CTransform {
@@ -18,7 +16,6 @@ impl Default for CTransform {
             translate: Some(glm::vec3(0.0, 0.0, 0.0)),
             rotate: None,
             scale: None,
-            angle: 0.0
         }
     }
 }

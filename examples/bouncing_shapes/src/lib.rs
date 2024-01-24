@@ -1,7 +1,7 @@
 extern crate engine;
 extern crate nalgebra_glm as glm;
 
-use std::fs;
+// use std::fs;
 
 use engine::{
     Registry,
@@ -22,7 +22,8 @@ use engine::{
         mvp_matrices::{
             s_set_ortho_projection_matrix,
             s_set_view_matrix
-        }
+        },
+        rotation::s_rotate_camera
     }
 };
 
@@ -61,6 +62,8 @@ impl MyGame {
             0.0,
             2.0
         )?;
+
+        s_rotate_camera(&mut registry, &camera);
 
         s_set_ortho_projection_matrix(&camera, &mut registry);
         s_set_view_matrix(&camera, &mut registry);
@@ -148,31 +151,27 @@ impl engine::Game for MyGame {
 fn create_shapes(
     registry: &mut Registry,
     rand: &mut Random
-) -> Vec<VersionedIndex> {
-    let mut shapes: Vec<VersionedIndex> = Vec::new();
+) {
+    // for line in fs::read_to_string(format!("{}/config.txt", asset_path())).unwrap().lines() {
+    //     let parts: Vec<&str> = line.split(' ').collect();
+    //     let kind = parts.first().unwrap();
+    //     let parts: Vec<f32> = parts[1..]
+    //         .iter()
+    //         .map(|part| part.parse::<f32>().unwrap())
+    //         .collect();
+    //
+    //     match *kind {
+    //         "CIRCLE" => s_create_circle(registry, &parts),
+    //         "QUAD" => shapes.push(
+    //             s_create_quad(registry, &parts, rand).unwrap()
+    //         ),
+    //         _ => ()
+    //     }
+    // }
     
-    for line in fs::read_to_string(format!("{}/config.txt", asset_path())).unwrap().lines() {
-        let parts: Vec<&str> = line.split(' ').collect();
-        let kind = parts.first().unwrap();
-        let parts: Vec<f32> = parts[1..]
-            .iter()
-            .map(|part| part.parse::<f32>().unwrap())
-            .collect();
-
-        match *kind {
-            "CIRCLE" => s_create_circle(registry, &parts),
-            "QUAD" => shapes.push(
-                s_create_quad(registry, &parts, rand).unwrap()
-            ),
-            _ => ()
-        }
-
-        // for _ in 0..1000 {
-        //     let _ = s_spawn_quad(registry, rand);
-        // }
+    for _ in 0..10 {
+        let _ = s_spawn_quad(registry, rand);
     }
-
-    shapes
 }
 
 fn asset_path() -> String {

@@ -6,3 +6,4 @@ pub mod print;
 pub mod draw;
 pub mod model;
 pub mod load_obj;
+pub mod grid;

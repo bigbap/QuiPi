@@ -7,22 +7,21 @@ use crate::{
     }
 };
 
-pub fn s_rotate(
+pub fn s_rotate_camera(
     registry: &mut Registry,
     camera: &VersionedIndex,
-    euler_angles: CEulerAngles
 ) {
-    let gizmo = match registry.get_component_mut::<CGizmo3D>(camera) {
-        Some(val) => val,
-        _ => return
-    };
+    let Some(euler_angles) = registry.get_component::<CEulerAngles>(camera) else { return };
 
-
-    gizmo.front = glm::normalize(&-glm::vec3(
+    let front = glm::normalize(&-glm::vec3(
         euler_angles.yaw.to_radians().cos() * euler_angles.pitch.to_radians().cos(),
         euler_angles.pitch.to_radians().sin(),
         euler_angles.yaw.to_radians().sin() * euler_angles.pitch.to_radians().cos()
-    ))
+    ));
+
+    let Some(gizmo) = registry.get_component_mut::<CGizmo3D>(camera) else { return };
+    gizmo.front = front;
+    gizmo.update_vectors();
 }
 
 pub fn s_update_angles(

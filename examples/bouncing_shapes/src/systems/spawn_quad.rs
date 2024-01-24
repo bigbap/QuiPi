@@ -18,11 +18,11 @@ pub fn s_spawn_quad(
     registry: &mut Registry,
     rand: &mut Random
 ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
-    let width = rand.range(200, 400) as f32;
-    let height = rand.range(200, 300) as f32;
+    // let width = rand.range(200, 400) as f32;
+    // let height = rand.range(200, 300) as f32;
     s_create_quad(
         registry,
-        &[width, height, 0.0, 0.0, rand.random(), rand.random(), rand.random()],
+        &[256.0, 256.0, 0.0, 0.0, rand.random(), rand.random(), rand.random()],
         rand
     )
 }
@@ -66,11 +66,14 @@ pub fn s_create_quad(
         .create_vbo_at(&color, 1, 3)?;
 
     let mut vel = (
-        rand.range(200, 400) as f32,
-        rand.range(200, 400) as f32,
+        rand.range(0, 200) as f32,
+        rand.range(0, 200) as f32,
     );
     if rand.random() > 0.5 { vel.0 *= -1.0; }
     if rand.random() > 0.5 { vel.1 *= -1.0; }
+
+    println!("{:?}", vel);
+    
     let quad = registry.create_entity("quad")?
         .with(CModelNode {
             mesh: Some(mesh),

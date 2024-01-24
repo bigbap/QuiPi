@@ -5,7 +5,7 @@ pub fn s_print<C: Component + Debug + 'static>(
     entity: &VersionedIndex,
     registry: &Registry
 ) {
-    let cmp = registry.get_component::<C>(entity).unwrap();
-
-    println!("{:?}", cmp);
+    if let Some(cmp) = registry.get_component::<C>(entity) {
+        println!("{:?}", cmp);
+    }
 }

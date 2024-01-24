@@ -10,8 +10,10 @@ use crate::{
         CVelocity,
         CDimensions,
         CProjectionMatrix,
-        CViewMatrix
-    }
+        CViewMatrix,
+        CTarget,
+        CDistance
+    }, systems::movement::s_apply_follow_target
 };
 
 pub fn build_perspective_camera(
@@ -20,7 +22,8 @@ pub fn build_perspective_camera(
     fov: f32,
     aspect_ratio: f32,
     near_plane: f32,
-    far_plane: f32
+    far_plane: f32,
+    angles: CEulerAngles
 ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
     registry.create_entity("camera")?
         .with(CPosition {
@@ -28,19 +31,15 @@ pub fn build_perspective_camera(
             y: position.1,
             z: position.2
         })?
-        .with(CGizmo3D {
-            front: glm::vec3(0.0, 0.0, -1.0),
-            up: glm::vec3(0.0, 1.0, 0.0)
-        })?
+        .with(CGizmo3D::new(
+            glm::vec3(0.0, 0.0, -1.0),
+            glm::vec3(0.0, 1.0, 0.0)
+        ))?
         .with(CViewSettings {
             fov,
             aspect_ratio
         })?
-        .with(CEulerAngles {
-            pitch: 0.0,
-            yaw: 90.0,
-            roll: 0.0
-        })?
+        .with(angles)?
         .with(CZPlanes {
             near_plane,
             far_plane
@@ -58,10 +57,12 @@ pub fn build_perspective_camera(
 pub fn build_ortho_camera(
     registry: &mut Registry,
     position: (f32, f32, f32),
+    target: (f32, f32, f32),
     width: f32,
     height: f32,
     near_plane: f32,
-    far_plane: f32
+    far_plane: f32,
+    angles: CEulerAngles
 ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
     registry.create_entity("camera")?
         .with(CPosition {
@@ -74,15 +75,11 @@ pub fn build_ortho_camera(
             height,
             ..CDimensions::default()
         })?
-        .with(CGizmo3D {
-            front: glm::vec3(0.0, 0.0, -1.0),
-            up: glm::vec3(0.0, 1.0, 0.0)
-        })?
-        // .with(CEulerAngles {
-        //     pitch: 0.0,
-        //     yaw: 90.0,
-        //     roll: 0.0
-        // })?
+        .with(CGizmo3D::new(
+            glm::vec3(0.0, 0.0, -1.0),
+            glm::vec3(0.0, 1.0, 0.0)
+        ))?
+        .with(angles)?
         .with(CZPlanes {
             near_plane,
             far_plane
@@ -91,6 +88,11 @@ pub fn build_ortho_camera(
             x: 0.0,
             y: 0.0,
             z: 0.0
+        })?
+        .with(CTarget {
+            x: target.0,
+            y: target.1,
+            z: target.2
         })?
         .with(CProjectionMatrix::default())?
         .with(CViewMatrix::default())?

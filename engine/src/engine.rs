@@ -1,6 +1,7 @@
 use sdl2::video::GLProfile;
 use crate::gfx;
 
+#[derive(Debug)]
 pub enum Flags {
     HideMouse,
     RelativeMouseMode,

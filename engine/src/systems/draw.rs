@@ -4,7 +4,9 @@ use crate::{
         CViewMatrix,
         CProjectionMatrix,
         CModelMatrix,
-        CMaterial, CRGBA, CModelNode
+        CMaterial,
+        CRGBA,
+        CModelNode,
     },
     Registry,
     resources::shader::{
@@ -17,6 +19,8 @@ use crate::{
     },
     systems::material
 };
+
+pub use crate::gfx::draw::DrawMode;
 
 /**
 * draw entities by tag
@@ -36,21 +40,17 @@ pub fn s_draw_by_tag(
     registry: &Registry,
     shader_id: &VersionedIndex,
     camera_id: &VersionedIndex,
+    mode: DrawMode
 ) -> Result<(), Box<dyn std::error::Error>> {
-    if let (Some(view), Some(projection), Some(shader)) = (
-        registry.get_component::<CViewMatrix>(camera_id),
-        registry.get_component::<CProjectionMatrix>(camera_id),
-        registry.get_resource::<Shader>(shader_id)
-    ) {
-        let projection_view_matrix = projection.0 * view.0;
-
+    if let Some(shader) = registry.get_resource::<Shader>(shader_id) {
         let entities = registry.get_entities_by_tag(tag);
         for entity in entities.iter() {
             s_draw_entity(
                 entity,
                 registry,
+                camera_id,
                 shader,
-                &projection_view_matrix,
+                mode
             );
         }
     }
@@ -61,36 +61,34 @@ pub fn s_draw_by_tag(
 pub fn s_draw_entity(
     entity: &VersionedIndex,
     registry: &Registry,
+    camera: &VersionedIndex,
     shader: &Shader,
-    projection_view_matrix: &glm::Mat4,
+    mode: DrawMode
 ) {
     // TODO: this can be optimized to have textures per tag instead of per entity
     bind_textures(entity, registry, shader);
 
-    if let (Some(root), Some(model_matrix)) = (
-        registry.get_component::<CModelNode>(entity),
-        registry.get_component::<CModelMatrix>(entity)
-    ) {
+    if let Some(root) = registry.get_component::<CModelNode>(entity) {
         set_uniforms(
             entity,
             registry,
             shader,
-            projection_view_matrix,
-            &model_matrix.0
+            camera
         );
     
-        draw_node(root, shader);
+        draw_node(root, shader, mode);
     }
 }
 
 fn draw_node(
     node: &CModelNode,
-    shader: &Shader
+    shader: &Shader,
+    mode: DrawMode
 ) {
     if let Some(mesh) = &node.mesh {
         shader.program.use_program();
         mesh.vao.bind();
-        draw_ebo(&mesh.vao);
+        draw_ebo(&mesh.vao, mode);
         mesh.vao.unbind();
     }
 }
@@ -99,21 +97,38 @@ fn set_uniforms(
     entity: &VersionedIndex,
     registry: &Registry,
     shader: &Shader,
-    projection_view_matrix: &glm::Mat4,
-    model: &glm::Mat4
+    camera: &VersionedIndex,
 ) {
     shader.program.use_program();
     for uniform in shader.uniforms.iter() {
         match uniform {
             UniformVariable::Color(var) => set_color(entity, registry, shader, var),
             UniformVariable::MVPMatrix(var) => {
-                let mvp_matrix = projection_view_matrix * model;
-                
-                shader.program.set_mat4(var, &mvp_matrix);
+                if let (Some(model), Some(view), Some(projection)) = (
+                    registry.get_component::<CModelMatrix>(entity),
+                    registry.get_component::<CViewMatrix>(camera),
+                    registry.get_component::<CProjectionMatrix>(camera),
+                ) {
+                    let mvp_matrix = projection.0 * view.0 * model.0;
+
+                    shader.program.set_mat4(var, &mvp_matrix);
+                }
             },
-            UniformVariable::ModelMatrix(var) => shader.program.set_mat4(var, model),
-            UniformVariable::ViewMatrix(_var) => todo!(),
-            UniformVariable::ProjectionMatrix(_var) => todo!(),
+            UniformVariable::ModelMatrix(var) => {
+                if let Some(model) = registry.get_component::<CModelMatrix>(entity) {
+                    shader.program.set_mat4(var, &model.0)
+                }
+            },
+            UniformVariable::ViewMatrix(var) => {
+                if let Some(view) = registry.get_component::<CViewMatrix>(camera) {
+                    shader.program.set_mat4(var, &view.0)
+                }
+            },
+            UniformVariable::ProjectionMatrix(var) => {
+                if let Some(projection) = registry.get_component::<CProjectionMatrix>(camera) {
+                    shader.program.set_mat4(var, &projection.0)
+                }
+            },
         }
     }
 }

@@ -10,7 +10,7 @@ use crate::{
         CDimensions,
         CModelMatrix,
         CViewMatrix,
-        CProjectionMatrix
+        CProjectionMatrix, CTarget, distance
     }
 };
 
@@ -34,9 +34,14 @@ pub fn s_set_model_matrix(
             Some(translate) => glm::translate(&model, &translate),
             None => model
         };
-        let model = match transform.rotate {
+        let model = match &transform.rotate {
             None => model,
-            Some(rotate) => glm::rotate(&model, transform.angle, &glm::normalize(&rotate))
+            Some(rotate) => {
+                for (axis, angle) in rotate {
+                    glm::rotate(&model, *angle, &glm::normalize(axis));
+                }
+                model
+            }
         };
         let model = match transform.scale {
             Some(scale) => glm::scale(&model, &scale),
@@ -126,12 +131,15 @@ pub fn s_set_view_matrix(
     camera: &VersionedIndex,
     registry: &mut Registry,
 ) {
-    if let (Some(position), Some(gizmo), Some(_)) = (
+    if let (Some(position), Some(target), Some(gizmo), Some(_)) = (
         registry.get_component::<CPosition>(camera),
+        registry.get_component::<CTarget>(camera),
         registry.get_component::<CGizmo3D>(camera),
         registry.get_component::<CViewMatrix>(camera)
     ) {
         let position = glm::vec3(position.x, position.y, position.z);
+        let target = glm::vec3(target.x, target.y, target.z);
+        let distance = target - position;
 
         let matrix = glm::look_at(
             &position, 

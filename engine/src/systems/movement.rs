@@ -3,7 +3,7 @@ use crate::{
     VersionedIndex,
     components::{
         CPosition,
-        CGizmo3D
+        CGizmo3D, CTarget, CEulerAngles, CDistance
     }
 };
 
@@ -28,7 +28,7 @@ pub fn s_apply_velocity(
 
         change_vec += gizmo.front * velocity.z * delta;
         change_vec += gizmo.up * velocity.y * delta;
-        change_vec += gizmo.right() * velocity.x * delta;
+        change_vec += gizmo.right * velocity.x * delta;
 
         let position = registry.get_component_mut::<CPosition>(entity).unwrap();
         position.x += change_vec.x;
@@ -39,3 +39,28 @@ pub fn s_apply_velocity(
     Ok(())
 }
 
+pub fn s_apply_follow_target(
+    registry: &mut Registry,
+    entity: &VersionedIndex
+) -> Result<(), Box<dyn std::error::Error>> {
+    if let (Some(_), Some(distance), Some(target), Some(angles)) = (
+        registry.get_component::<CPosition>(entity),
+        registry.get_component::<CDistance>(entity),
+        registry.get_component::<CTarget>(entity),
+        registry.get_component::<CEulerAngles>(entity),
+    ) {
+        let pos = glm::vec3(
+            target.x + distance.0 * angles.yaw.cos() * angles.pitch.sin(),
+            target.y + distance.0 * angles.pitch.cos(),
+            target.z + distance.0 * angles.yaw.sin() * angles.pitch.sin()
+        );
+
+        let position = registry.get_component_mut::<CPosition>(entity).unwrap();
+        position.x = pos.x;
+        position.y = pos.y;
+        position.z = pos.z;
+    }
+
+    Ok(())
+
+}

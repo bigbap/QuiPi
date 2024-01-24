@@ -2,17 +2,21 @@ pub mod material;
 pub mod gizmo;
 pub mod transform;
 pub mod dimensions;
+pub mod distance;
 pub mod matrices;
 pub mod model;
+pub mod target;
 
 pub use material::CMaterial;
 pub use gizmo::CGizmo3D;
 pub use transform::CTransform;
 pub use dimensions::CDimensions;
+pub use distance::CDistance;
 pub use matrices::CModelMatrix;
 pub use matrices::CViewMatrix;
 pub use matrices::CProjectionMatrix;
 pub use model::CModelNode;
+pub use target::CTarget;
 
 use crate::{
     Registry,
@@ -61,14 +65,6 @@ pub struct CRGBA {
     pub b: f32,
     pub a: f32
 }
-
-// /**
-// * holds the VertexArray to draw a single mesh
-// */
-// #[derive(Component, Debug)]
-// pub struct CMesh {
-//     pub mesh: ElementArrayMesh,
-// }
 
 /**
 * used to reduce the intensity of light over time
@@ -128,15 +124,16 @@ pub fn register_components(registry: &mut Registry) {
         .register_component::<CCutoff>()
         .register_component::<CDimensions>()
         .register_component::<CDirection>()
+        .register_component::<CDistance>()
         .register_component::<CEulerAngles>()
         .register_component::<CGizmo3D>()
         .register_component::<CMaterial>()
-        // .register_component::<CMesh>()
         .register_component::<CModelMatrix>()
         .register_component::<CModelNode>()
         .register_component::<CTransform>()
         .register_component::<CPosition>()
         .register_component::<CProjectionMatrix>()
+        .register_component::<CTarget>()
         .register_component::<CVelocity>()
         .register_component::<CViewMatrix>()
         .register_component::<CViewSettings>()

@@ -344,6 +344,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a257582fdcde896fd96463bf2d40eefea0580021c0712a0e2b028b60b47a837a"
 
 [[package]]
+name = "isometric"
+version = "0.1.0"
+dependencies = [
+ "engine",
+ "nalgebra-glm",
+ "sdl2",
+ "thiserror",
+ "walkdir",
+]
+
+[[package]]
 name = "itoa"
 version = "1.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"

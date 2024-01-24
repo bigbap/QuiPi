@@ -18,7 +18,7 @@ use engine::{
         movement::s_apply_velocity,
         rotation::{
             s_update_angles,
-            s_rotate
+            s_rotate_camera
         },
         draw::{
             s_draw_by_tag,
@@ -134,11 +134,11 @@ impl engine::Game for MyGame {
         
         let diffuse = create_texture(
             &mut self.registry,
-            &format!("{}/objects/textures/container.png", asset_path),
+            &format!("{}/objects/textures/tex.png", asset_path),
         )?;
         let specular = create_texture(
             &mut self.registry,
-            &format!("{}/objects/textures/container_specular.png", asset_path),
+            &format!("{}/objects/textures/tex.png", asset_path),
         )?;
 
         self.crates = create_crates(
@@ -210,19 +210,19 @@ impl engine::Game for MyGame {
                 Event::KeyUp { keycode: Some(Keycode::D), repeat: false, .. } => velocity.0 -= CAMERA_SPEED,
                 Event::MouseMotion { xrel, yrel, .. } => {
                     let sensitivity = 0.1;
-                    let euler_angles = s_update_angles(
+
+                    s_update_angles(
                         &mut self.registry,
                         &self.camera,
                         xrel as f32 * sensitivity,
                         yrel as f32 * sensitivity,
                         -89.0,
                         89.0
-                    ).unwrap();
+                    );
     
-                    s_rotate(
+                    s_rotate_camera(
                         &mut self.registry,
                         &self.camera,
-                        euler_angles
                     );
                 },
                 _event => ()
@@ -261,6 +261,7 @@ impl engine::Game for MyGame {
             &self.registry,
             &self.light_shader.unwrap(),
             &self.camera,
+            engine::systems::draw::DrawMode::Triangles
         )?;
 
         systems::update_entities("crate", &self.registry);
@@ -275,8 +276,9 @@ impl engine::Game for MyGame {
                 s_draw_entity(
                     &entity,
                     &self.registry,
+                    &self.camera,
                     shader,
-                    &projection_view_matrix,
+                    engine::systems::draw::DrawMode::Triangles
                 );
             }
         }

@@ -1,0 +1,147 @@
+pub extern crate engine;
+pub extern crate nalgebra_glm as glm;
+
+mod systems;
+
+use systems::*;
+
+use engine::{
+    Game,
+    utils::to_abs_path,
+    gfx::{
+        buffer::clear_buffer,
+        ShaderProgram
+    },
+    Registry,
+    resources::{
+        Shader,
+        register_resources, shader::UniformVariable
+    },
+    components::{
+        register_components,
+        CEulerAngles,
+        CPosition
+    },
+    VersionedIndex,
+    systems::{
+        draw::{
+            s_draw_by_tag,
+            DrawMode
+        },
+        mvp_matrices::*,
+        rotation::s_rotate_camera,
+        print::s_print, grid::{Grid, s_create_grid, s_draw_grid}
+    },
+    entity_builders::camera::{
+        build_ortho_camera,
+        build_perspective_camera
+    }
+};
+
+pub static WIDTH: u32 = 800;
+pub static HEIGHT: u32 = 600;
+
+pub struct MyGame {
+    registry: Registry,
+    shader: Option<VersionedIndex>,
+    camera: VersionedIndex,
+    grid: Option<Grid>
+}
+
+impl MyGame {
+    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
+        let mut registry = Registry::init()?;
+
+        register_components(&mut registry);
+        register_resources(&mut registry);
+
+        let camera = build_ortho_camera(
+            &mut registry,
+            (0.0, 0.0, 0.0),
+            (0.0, 0.0, 0.0),
+            WIDTH as f32,
+            HEIGHT as f32,
+            0.1,
+            100.0,
+            CEulerAngles {
+                pitch: 0.0,
+                yaw: 0.0,
+                roll: 0.0
+            }
+        )?;
+
+        s_rotate_camera(&mut registry, &camera);
+        s_set_view_matrix(&camera, &mut registry);
+        // s_set_ortho_projection_matrix(&camera, &mut registry);
+
+        Ok(Self {
+            registry,
+            shader: None,
+            camera,
+            grid: None
+        })
+    }
+}
+
+impl Game for MyGame {
+    fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let shader = ShaderProgram::new(&format!("{}/shaders/simple", asset_path()))?;
+        let shader = self.registry.create_resource(Shader {
+            program: shader,
+            uniforms: vec![
+                UniformVariable::MVPMatrix("mvpMatrix".to_string())
+            ]
+        })?;
+
+        self.grid = Some(s_create_grid(&mut self.registry)?);
+        self.shader = Some(shader);
+
+        scene::s_load_scene(
+            &mut self.registry
+        )?;
+
+        Ok(())
+    }
+
+    fn handle_frame(
+        &mut self,
+        event_pump: &mut sdl2::EventPump
+    ) -> Result<Option<()>, Box<dyn std::error::Error>> {
+        for event in event_pump.poll_iter() {
+            let response = handle_input::s_handle_input(
+                &mut self.registry,
+                &self.camera,
+                event
+            )?;
+            
+            if response.is_none() { return Ok(None) }
+
+            s_print::<CEulerAngles>(&self.camera, &self.registry);
+            s_print::<CPosition>(&self.camera, &self.registry);
+        }
+
+        // render
+        // clear_buffer(Some((0.3, 0.3, 0.3, 1.0)));
+        clear_buffer(Some((0.0, 0.0, 0.0, 1.0)));
+
+        // if let Some(shader) = self.shader {
+        //     s_draw_by_tag(
+        //         "cube",
+        //         &self.registry,
+        //         &shader,
+        //         &self.camera,
+        //         DrawMode::Triangles
+        //     )?;
+        // }
+
+        if let Some(grid) = &self.grid {
+            s_draw_grid(&self.registry, &self.camera, grid)?;
+        }
+
+        Ok(Some(()))
+    }
+}
+
+pub fn asset_path() -> String {
+    to_abs_path("assets").unwrap().to_string_lossy().to_string()
+}
