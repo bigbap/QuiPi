@@ -12,7 +12,7 @@ use engine::{
         material::MaterialPart,
         CPosition,
         CGizmo3D,
-        CVelocity, CViewMatrix, CProjectionMatrix
+        CVelocity
     },
     systems::{
         movement::s_apply_velocity,
@@ -28,7 +28,8 @@ use engine::{
         load_obj::{
             ObjectConfig,
             s_load_obj_file
-        }
+        },
+        grid::*
     },
 };
 use sdl2::{
@@ -49,7 +50,6 @@ use scene::*;
 pub static WIDTH: u32 = 1600;
 pub static HEIGHT: u32 = 900;
 
-type Crate = VersionedIndex;
 type Light = VersionedIndex;
 
 const CAMERA_SPEED: f32 = 5.0;
@@ -57,10 +57,10 @@ const CAMERA_SPEED: f32 = 5.0;
 pub struct MyGame {
     registry: engine::Registry,
     timer: std::time::Instant,
+    grid: Option<Grid>,
    
     shader: Option<VersionedIndex>,
     light_shader: Option<VersionedIndex>,
-    crates: Vec<Crate>,
     camera: VersionedIndex,
     direction_light: Option<Light>,
     point_light: Option<Light>,
@@ -87,10 +87,10 @@ impl MyGame {
         Ok(Self {
             registry,
             timer,
+            grid: None,
 
             shader: None,
             light_shader: None,
-            crates: vec![],
             camera,
             direction_light: None,
             point_light: None,
@@ -134,14 +134,14 @@ impl engine::Game for MyGame {
         
         let diffuse = create_texture(
             &mut self.registry,
-            &format!("{}/objects/textures/tex.png", asset_path),
+            &format!("{}/objects/textures/container.png", asset_path),
         )?;
         let specular = create_texture(
             &mut self.registry,
-            &format!("{}/objects/textures/tex.png", asset_path),
+            &format!("{}/objects/textures/container_specular.png", asset_path),
         )?;
 
-        self.crates = create_crates(
+        create_crates(
             &mut self.registry,
             shader,
             self.camera,
@@ -173,6 +173,7 @@ impl engine::Game for MyGame {
 
         self.shader = Some(shader);
         self.light_shader = Some(light_shader);
+        self.grid = Some(s_create_grid(&mut self.registry)?);
 
         Ok(())
     }
@@ -241,7 +242,7 @@ impl engine::Game for MyGame {
             velocity
         )?;
 
-        s_set_projection_matrix(&self.camera, &mut self.registry);
+        // s_set_projection_matrix(&self.camera, &mut self.registry);
         s_set_view_matrix(&self.camera, &mut self.registry);
 
         let camera_pos = self.registry.get_component::<CPosition>(&self.camera).unwrap();
@@ -266,21 +267,19 @@ impl engine::Game for MyGame {
 
         systems::update_entities("crate", &self.registry);
 
-        if let (Some(view), Some(projection)) = (
-            self.registry.get_component::<CViewMatrix>(&self.camera),
-            self.registry.get_component::<CProjectionMatrix>(&self.camera),
-        ) {
-            let projection_view_matrix = projection.0 * view.0;
-            let entities = self.registry.get_entities_by_tag("crate");
-            for entity in entities {
-                s_draw_entity(
-                    &entity,
-                    &self.registry,
-                    &self.camera,
-                    shader,
-                    engine::systems::draw::DrawMode::Triangles
-                );
-            }
+        let entities = self.registry.get_entities_by_tag("crate");
+        for entity in entities {
+            s_draw_entity(
+                &entity,
+                &self.registry,
+                &self.camera,
+                shader,
+                engine::systems::draw::DrawMode::Triangles
+            );
+        }
+
+        if let Some(shader) = &self.grid {
+            s_draw_grid(&self.registry, &self.camera, shader)?;
         }
 
         Ok(Some(()))

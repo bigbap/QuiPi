@@ -90,8 +90,7 @@ pub fn create_crates(
                 .with(CTransform {
                     translate: Some(transform.0),
                     scale: Some(glm::vec3(0.5, 0.5, 0.5)),
-                    rotate: Some(glm::vec3(0.0, 2.0, 0.0)),
-                    angle: transform.1
+                    rotate: Some(vec![(glm::vec3(0.0, 1.0, 0.0), transform.1)]),
                 })?
                 .with(CModelMatrix::default())?
                 .with(material.clone())?
@@ -114,14 +113,19 @@ pub fn create_camera(
     let camera = build_perspective_camera(
         registry,
         (0.0, 1.0, 5.0),
-        90.0,
+        45.0,
         width / height,
         0.1,
-        100.0
+        100.0,
+        engine::components::CEulerAngles {
+            pitch: 0.0,
+            yaw: 90.0,
+            roll: 0.0
+        }
     )?;
 
-    s_set_projection_matrix(&camera, registry);
     s_set_view_matrix(&camera, registry);
+    s_set_projection_matrix(&camera, registry);
 
     Ok(camera)
 }

@@ -1,10 +1,28 @@
 use crate::Component;
 
-#[derive(Debug, Component, Default)]
+#[derive(Debug, Component)]
 pub struct CModelMatrix(pub glm::Mat4);
 
-#[derive(Debug, Component, Default)]
+impl Default for CModelMatrix {
+    fn default() -> Self {
+        Self(glm::Mat4::identity())
+    }
+}
+
+#[derive(Debug, Component)]
 pub struct CViewMatrix(pub glm::Mat4);
 
-#[derive(Debug, Component, Default)]
+impl Default for CViewMatrix {
+    fn default() -> Self {
+        Self(glm::Mat4::identity())
+    }
+}
+
+#[derive(Debug, Component)]
 pub struct CProjectionMatrix(pub glm::Mat4);
+
+impl Default for CProjectionMatrix {
+    fn default() -> Self {
+        Self(glm::Mat4::identity())
+    }
+}

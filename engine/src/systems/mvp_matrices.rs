@@ -10,7 +10,7 @@ use crate::{
         CDimensions,
         CModelMatrix,
         CViewMatrix,
-        CProjectionMatrix, CTarget, distance
+        CProjectionMatrix,
     }
 };
 
@@ -131,15 +131,12 @@ pub fn s_set_view_matrix(
     camera: &VersionedIndex,
     registry: &mut Registry,
 ) {
-    if let (Some(position), Some(target), Some(gizmo), Some(_)) = (
+    if let (Some(position), Some(gizmo), Some(_)) = (
         registry.get_component::<CPosition>(camera),
-        registry.get_component::<CTarget>(camera),
         registry.get_component::<CGizmo3D>(camera),
         registry.get_component::<CViewMatrix>(camera)
     ) {
         let position = glm::vec3(position.x, position.y, position.z);
-        let target = glm::vec3(target.x, target.y, target.z);
-        let distance = target - position;
 
         let matrix = glm::look_at(
             &position, 

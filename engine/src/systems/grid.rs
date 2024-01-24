@@ -65,6 +65,22 @@ pub fn s_create_grid(
     build_axis(registry, y_mesh, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, length, 0.0))?;
     build_axis(registry, z_mesh, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, length))?;
     
+    // let mesh = ElementArrayMesh::new(&[0, 1, 2, 2, 3, 0])?;
+    // mesh
+    //     .create_vbo_at(&[
+    //         -1.0, -1.0, 0.0,
+    //         1.0, -1.0, 0.0,
+    //         1.0, 1.0, 0.0,
+    //         -1.0, 1.0, 0.0,
+    //         // 1.0, 1.0, 0.0,
+    //         // -1.0, -1.0, 0.0,
+    //         // -1.0, 1.0, 0.0,
+    //         // -1.0, -1.0, 0.0,
+    //         // 1.0, 1.0, 0.0,
+    //         // 1.0, -1.0, 0.0
+    //     ], 0, 3)?;
+    // build_axis(registry, mesh, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0))?;
+
     let shader = registry.create_resource(Shader::new(
         &format!("{}/shaders/grid", asset_path()),
         vec![
@@ -113,7 +129,7 @@ pub fn s_draw_grid(
                 registry,
                 camera,
                 shader,
-                super::draw::DrawMode::Lines
+                super::draw::DrawMode::Triangles
             );
         }
     }

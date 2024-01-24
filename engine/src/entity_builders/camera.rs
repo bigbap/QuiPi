@@ -12,8 +12,7 @@ use crate::{
         CProjectionMatrix,
         CViewMatrix,
         CTarget,
-        CDistance
-    }, systems::movement::s_apply_follow_target
+    },
 };
 
 pub fn build_perspective_camera(
