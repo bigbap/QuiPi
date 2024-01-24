@@ -26,66 +26,62 @@ pub struct Grid {
 pub fn s_create_grid(
     registry: &mut Registry
 ) -> Result<Grid, Box<dyn std::error::Error>>{
-    let length = 100000.0;
-    let size = 0.2;
-
-    for i in -1000..1000 {
-        if i == 0 { continue; }
-
-        let x_mesh = ElementArrayMesh::new(&[0, 1])?;
-        x_mesh
-            .create_vbo_at(&[-1.0, 0.0, 0.0, 1.0, 0.0, 0.0], 0, 3)?
-            .create_vbo_at(&[0.3, 0.3, 0.3, 0.3, 0.3, 0.3], 1, 3)?;
-
-        let z_mesh = ElementArrayMesh::new(&[0, 1])?;
-        z_mesh
-            .create_vbo_at(&[0.0, 0.0, -1.0, 0.0, 0.0, 1.0], 0, 3)?
-            .create_vbo_at(&[0.3, 0.3, 0.3, 0.3, 0.3, 0.3], 1, 3)?;
-
-        build_axis(registry, x_mesh, glm::vec3(0.0, 0.0, i as f32 * size), glm::vec3(length, 0.0, 0.0))?;
-        build_axis(registry, z_mesh, glm::vec3(i as f32 * size, 0.0, 0.0), glm::vec3(0.0, 0.0, length))?;
-    }
-
-    let x_mesh = ElementArrayMesh::new(&[0, 1])?;
-    x_mesh
-        .create_vbo_at(&[-1.0, 0.0, 0.0, 1.0, 0.0, 0.0], 0, 3)?
-        .create_vbo_at(&[1.0, 0.0, 0.0, 1.0, 0.0, 0.0], 1, 3)?;
-
-    let y_mesh = ElementArrayMesh::new(&[0, 1])?;
-    y_mesh
-        .create_vbo_at(&[0.0, -1.0, 0.0, 0.0, 1.0, 0.0], 0, 3)?
-        .create_vbo_at(&[0.0, 1.0, 0.0, 0.0, 1.0, 0.0], 1, 3)?;
-
-    let z_mesh = ElementArrayMesh::new(&[0, 1])?;
-    z_mesh
-        .create_vbo_at(&[0.0, 0.0, -1.0, 0.0, 0.0, 1.0], 0, 3)?
-        .create_vbo_at(&[0.0, 0.0, 1.0, 0.0, 0.0, 1.0], 1, 3)?;
-
-    build_axis(registry, x_mesh, glm::vec3(0.0, 0.0, 0.0), glm::vec3(length, 0.0, 0.0))?;
-    build_axis(registry, y_mesh, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, length, 0.0))?;
-    build_axis(registry, z_mesh, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, length))?;
+    // let length = 100000.0;
+    // let size = 0.2;
+    //
+    // for i in -1000..1000 {
+    //     if i == 0 { continue; }
+    //
+    //     let x_mesh = ElementArrayMesh::new(&[0, 1])?;
+    //     x_mesh
+    //         .create_vbo_at(&[-1.0, 0.0, 0.0, 1.0, 0.0, 0.0], 0, 3)?
+    //         .create_vbo_at(&[0.3, 0.3, 0.3, 0.3, 0.3, 0.3], 1, 3)?;
+    //
+    //     let z_mesh = ElementArrayMesh::new(&[0, 1])?;
+    //     z_mesh
+    //         .create_vbo_at(&[0.0, 0.0, -1.0, 0.0, 0.0, 1.0], 0, 3)?
+    //         .create_vbo_at(&[0.3, 0.3, 0.3, 0.3, 0.3, 0.3], 1, 3)?;
+    //
+    //     build_axis(registry, x_mesh, glm::vec3(0.0, 0.0, i as f32 * size), glm::vec3(length, 0.0, 0.0))?;
+    //     build_axis(registry, z_mesh, glm::vec3(i as f32 * size, 0.0, 0.0), glm::vec3(0.0, 0.0, length))?;
+    // }
+    //
+    // let x_mesh = ElementArrayMesh::new(&[0, 1])?;
+    // x_mesh
+    //     .create_vbo_at(&[-1.0, 0.0, 0.0, 1.0, 0.0, 0.0], 0, 3)?
+    //     .create_vbo_at(&[1.0, 0.0, 0.0, 1.0, 0.0, 0.0], 1, 3)?;
+    //
+    // let y_mesh = ElementArrayMesh::new(&[0, 1])?;
+    // y_mesh
+    //     .create_vbo_at(&[0.0, -1.0, 0.0, 0.0, 1.0, 0.0], 0, 3)?
+    //     .create_vbo_at(&[0.0, 1.0, 0.0, 0.0, 1.0, 0.0], 1, 3)?;
+    //
+    // let z_mesh = ElementArrayMesh::new(&[0, 1])?;
+    // z_mesh
+    //     .create_vbo_at(&[0.0, 0.0, -1.0, 0.0, 0.0, 1.0], 0, 3)?
+    //     .create_vbo_at(&[0.0, 0.0, 1.0, 0.0, 0.0, 1.0], 1, 3)?;
+    //
+    // build_axis(registry, x_mesh, glm::vec3(0.0, 0.0, 0.0), glm::vec3(length, 0.0, 0.0))?;
+    // build_axis(registry, y_mesh, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, length, 0.0))?;
+    // build_axis(registry, z_mesh, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, length))?;
     
-    // let mesh = ElementArrayMesh::new(&[0, 1, 2, 2, 3, 0])?;
-    // mesh
-    //     .create_vbo_at(&[
-    //         -1.0, -1.0, 0.0,
-    //         1.0, -1.0, 0.0,
-    //         1.0, 1.0, 0.0,
-    //         -1.0, 1.0, 0.0,
-    //         // 1.0, 1.0, 0.0,
-    //         // -1.0, -1.0, 0.0,
-    //         // -1.0, 1.0, 0.0,
-    //         // -1.0, -1.0, 0.0,
-    //         // 1.0, 1.0, 0.0,
-    //         // 1.0, -1.0, 0.0
-    //     ], 0, 3)?;
-    // build_axis(registry, mesh, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0))?;
+    let mesh = ElementArrayMesh::new(&[0, 1, 2, 2, 3, 0])?;
+    mesh
+        .create_vbo_at(&[
+            -1.0, -1.0, 0.0,
+            1.0, -1.0, 0.0,
+            1.0, 1.0, 0.0,
+            -1.0, 1.0, 0.0,
+        ], 0, 3)?;
+    build_axis(registry, mesh, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0))?;
 
     let shader = registry.create_resource(Shader::new(
         &format!("{}/shaders/grid", asset_path()),
         vec![
-            UniformVariable::ModelMatrix("model".to_string()),
-            UniformVariable::ViewMatrix("view".to_string())
+            UniformVariable::ProjectionMatrix("projection".to_string()),
+            UniformVariable::ViewMatrix("view".to_string()),
+            UniformVariable::NearPlane("near".to_string()),
+            UniformVariable::FarPlane("far".to_string())
         ]
     )?)?;
 

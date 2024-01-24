@@ -1,3 +1,4 @@
+use ::engine::gfx::GFXFlags;
 use isometric::{
     MyGame,
     WIDTH,
@@ -14,9 +15,8 @@ fn main() {
         "Examples - Isometric",
         WIDTH,
         HEIGHT,
-        vec![
-            engine::Flags::DepthTest
-        ]
+        vec![],
+        vec![GFXFlags::DepthTest, GFXFlags::AlphaBlending]
     ) {
         eprintln!("Game ended unexpectedly: {}", e);
     };

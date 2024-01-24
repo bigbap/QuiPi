@@ -10,13 +10,19 @@ pub use mesh::ElementArrayMesh;
 
 use sdl2::VideoSubsystem;
 use std::ffi::c_void;
-use crate::engine::Flags;
+
+pub enum GFXFlags {
+    DepthTest,
+    DepthMaskOn,
+    DepthMaskOff,
+    AlphaBlending
+}
 
 pub fn init(
     video_subsystem: &VideoSubsystem,
     width: i32,
     height: i32,
-    flags: &[Flags]
+    flags: &[GFXFlags]
 ) {
     gl::load_with(|name| video_subsystem.gl_get_proc_address(name) as *const _);
     unsafe {
@@ -25,10 +31,13 @@ pub fn init(
 
     for flag in flags.iter() {
         match flag {
-            Flags::DepthTest => unsafe { gl::Enable(gl::DEPTH_TEST) },
-            Flags::DepthMaskOn => unsafe { gl::DepthMask(gl::TRUE) },
-            Flags::DepthMaskOff => unsafe { gl::DepthMask(gl::FALSE) },
-            _ => ()
+            GFXFlags::DepthTest => unsafe { gl::Enable(gl::DEPTH_TEST) },
+            GFXFlags::DepthMaskOn => unsafe { gl::DepthMask(gl::TRUE) },
+            GFXFlags::DepthMaskOff => unsafe { gl::DepthMask(gl::FALSE) },
+            GFXFlags::AlphaBlending => unsafe {
+                gl::Enable(gl::BLEND);
+                gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA)
+            },
         }
     }
 

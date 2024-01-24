@@ -20,22 +20,18 @@ use engine::{
     components::{
         register_components,
         CEulerAngles,
-        CPosition
     },
     VersionedIndex,
     systems::{
-        draw::{
-            s_draw_by_tag,
-            DrawMode
-        },
         mvp_matrices::*,
         rotation::s_rotate_camera,
-        print::s_print, grid::{Grid, s_create_grid, s_draw_grid}
+        grid::{
+            Grid,
+            s_create_grid,
+            s_draw_grid
+        }, draw::{s_draw_by_tag, DrawMode},
     },
-    entity_builders::camera::{
-        build_ortho_camera,
-        build_perspective_camera
-    }
+    entity_builders::camera::build_perspective_camera
 };
 
 pub static WIDTH: u32 = 800;
@@ -55,24 +51,23 @@ impl MyGame {
         register_components(&mut registry);
         register_resources(&mut registry);
 
-        let camera = build_ortho_camera(
+        let camera = build_perspective_camera(
             &mut registry,
-            (0.0, 0.0, 0.0),
-            (0.0, 0.0, 0.0),
-            WIDTH as f32,
-            HEIGHT as f32,
+            (5.0, 5.0, 5.0),
+            45.0,
+            WIDTH as f32 / HEIGHT as f32,
             0.1,
             100.0,
             CEulerAngles {
-                pitch: 0.0,
-                yaw: 0.0,
-                roll: 0.0
+                pitch: 45.0,
+                yaw: -90.0,
+                roll: 35.0
             }
         )?;
 
         s_rotate_camera(&mut registry, &camera);
         s_set_view_matrix(&camera, &mut registry);
-        // s_set_ortho_projection_matrix(&camera, &mut registry);
+        s_set_projection_matrix(&camera, &mut registry);
 
         Ok(Self {
             registry,
@@ -115,24 +110,20 @@ impl Game for MyGame {
             )?;
             
             if response.is_none() { return Ok(None) }
-
-            s_print::<CEulerAngles>(&self.camera, &self.registry);
-            s_print::<CPosition>(&self.camera, &self.registry);
         }
 
         // render
-        // clear_buffer(Some((0.3, 0.3, 0.3, 1.0)));
         clear_buffer(Some((0.0, 0.0, 0.0, 1.0)));
 
-        // if let Some(shader) = self.shader {
-        //     s_draw_by_tag(
-        //         "cube",
-        //         &self.registry,
-        //         &shader,
-        //         &self.camera,
-        //         DrawMode::Triangles
-        //     )?;
-        // }
+        if let Some(shader) = self.shader {
+            s_draw_by_tag(
+                "cube",
+                &self.registry,
+                &shader,
+                &self.camera,
+                DrawMode::Triangles
+            )?;
+        }
 
         if let Some(grid) = &self.grid {
             s_draw_grid(&self.registry, &self.camera, grid)?;

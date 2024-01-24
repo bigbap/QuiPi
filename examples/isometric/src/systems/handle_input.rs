@@ -1,4 +1,4 @@
-use engine::systems::movement::{s_apply_follow_target, s_apply_velocity};
+use engine::systems::movement::s_apply_velocity;
 use engine::{
     Registry,
     VersionedIndex,
@@ -106,8 +106,6 @@ fn update_camera(
     camera: &VersionedIndex
 ) {
     s_rotate_camera(registry, camera);
-    s_set_ortho_projection_matrix(camera, registry);
-    // s_set_projection_matrix(camera, registry);
-    // s_apply_follow_target(registry, camera).unwrap();
+    s_set_projection_matrix(camera, registry);
     s_set_view_matrix(camera, registry);
 }

@@ -6,7 +6,7 @@ use crate::{
         CModelMatrix,
         CMaterial,
         CRGBA,
-        CModelNode,
+        CModelNode, CZPlanes,
     },
     Registry,
     resources::shader::{
@@ -127,6 +127,16 @@ fn set_uniforms(
             UniformVariable::ProjectionMatrix(var) => {
                 if let Some(projection) = registry.get_component::<CProjectionMatrix>(camera) {
                     shader.program.set_mat4(var, &projection.0)
+                }
+            },
+            UniformVariable::NearPlane(var) => {
+                if let Some(z_planes) = registry.get_component::<CZPlanes>(camera) {
+                    shader.program.set_float(var, z_planes.near_plane)
+                }
+            },
+            UniformVariable::FarPlane(var) => {
+                if let Some(z_planes) = registry.get_component::<CZPlanes>(camera) {
+                    shader.program.set_float(var, z_planes.far_plane)
                 }
             },
         }

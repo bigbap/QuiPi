@@ -1,4 +1,5 @@
 use engine::engine::Flags;
+use engine::gfx::GFXFlags;
 use scene::MyGame;
 
 use scene::WIDTH;
@@ -12,7 +13,8 @@ fn main() {
         "Game Engine - Scene Example",
         WIDTH,
         HEIGHT,
-        vec![Flags::HideMouse, Flags::RelativeMouseMode, Flags::DepthTest]
+        vec![Flags::HideMouse, Flags::RelativeMouseMode],
+        vec![GFXFlags::DepthTest]
     ) {
         eprintln!("{e}")
     }

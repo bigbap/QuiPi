@@ -7,7 +7,9 @@ pub enum UniformVariable {
     ModelMatrix(String),
     ViewMatrix(String),
     ProjectionMatrix(String),
-    Color(String)
+    Color(String),
+    NearPlane(String),
+    FarPlane(String),
 }
 
 #[derive(Debug, Component)]
