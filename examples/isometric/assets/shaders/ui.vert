@@ -5,10 +5,12 @@ layout (location = 1) in vec4 aColor;
 
 uniform mat4 mvpMatrix;
 
-out vec4 color;
+out vec3 ui_fragPos;
+out vec4 ui_fragColor;
 
 void main(){
     gl_Position = mvpMatrix * vec4(aPos, 1.0);
-
-    color = aColor;
+    
+    ui_fragPos = aPos;
+    ui_fragColor = aColor;
 }

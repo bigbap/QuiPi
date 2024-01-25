@@ -7,7 +7,8 @@ use engine::{
         CVelocity,
         CTransform,
         CDimensions,
-        CModelMatrix
+        CModelMatrix,
+        CQuadConfig
     },
     math::random::Random
 };
@@ -18,52 +19,37 @@ pub fn s_spawn_quad(
     registry: &mut Registry,
     rand: &mut Random
 ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
-    // let width = rand.range(200, 400) as f32;
-    // let height = rand.range(200, 300) as f32;
+    let config = CQuadConfig {
+        width: 256.0,
+        height: 256.0,
+        center_x: 0.0,
+        center_y: 0.0
+    };
+
     s_create_quad(
         registry,
-        &[256.0, 256.0, 0.0, 0.0, rand.random(), rand.random(), rand.random()],
+        config,
+        (rand.random(), rand.random(), rand.random(), 0.5),
         rand
     )
 }
 
 pub fn s_create_quad(
     registry: &mut Registry,
-    parts: &[f32],
+    config: CQuadConfig,
+    color: (f32, f32, f32, f32),
     rand: &mut Random
 ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
-    let [width, height, center_x, center_y, r, g, b] = parts else { todo!() };
-
-    let points: Vec<f32> = vec![
-        *center_x - (width / 2.0), *center_y + (height / 2.0), 0.0, // top left
-        *center_x + (width / 2.0), *center_y + (height / 2.0), 0.0, // top right
-        *center_x + (width / 2.0), *center_y - (height / 2.0), 0.0, // bottom right
-        *center_x - (width / 2.0), *center_y - (height / 2.0), 0.0 // bottom left
-    ];
-
     let pos = (
         WIDTH as f32 / 2.0,
         HEIGHT as f32 / 2.0
     );
 
-    let r = *r;
-    let g = *g;
-    let b = *b;
-    let color: Vec<f32> = vec![
-        r, g, b,
-        r, g, b,
-        r, g, b,
-        r, g, b
-    ];
-    let indices = vec![
-        0, 1, 2,
-        3, 0, 2
-    ];
-
-    let mesh = ElementArrayMesh::new(&indices)?;
+    let obj_config = config.to_obj_config(color);
+    let mesh = ElementArrayMesh::new(&obj_config.indices)?;
     mesh
-        .create_vbo_at(&points, 0, 3)?
-        .create_vbo_at(&color, 1, 3)?;
+        .create_vbo_at(&obj_config.points, 0, 3)?
+        .create_vbo_at(&obj_config.colors, 1, 4)?;
 
     let mut vel = (
         rand.range(0, 200) as f32,
@@ -80,8 +66,8 @@ pub fn s_create_quad(
             ..CModelNode::default()
         })?
         .with(CDimensions {
-            width: *width,
-            height: *height,
+            width: config.width,
+            height: config.height,
             ..CDimensions::default()
         })?
         .with(CVelocity {

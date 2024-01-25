@@ -10,7 +10,4 @@ out vec4 fragColor;
 
 void main(){
     fragColor = texture(uTexture, texCoords);
-    
-    // gl_FragDepth = pos.y;
-    // fragColor = vec4(color, 1.0);
 }

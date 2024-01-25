@@ -3,6 +3,7 @@ use bouncing_shapes::{
     WIDTH,
     HEIGHT
 };
+use engine::gfx::GFXFlags;
 
 fn main() {
     let mut game = MyGame::new().expect("There was a problem initializing the game.");
@@ -12,7 +13,8 @@ fn main() {
         "Bouncing Shapes",
         WIDTH,
         HEIGHT,
-        vec![]
+        vec![],
+        vec![GFXFlags::AlphaBlending]
     ) {
         eprintln!("Game ended unexpectedly: {}", e);
     };

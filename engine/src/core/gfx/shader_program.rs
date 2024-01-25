@@ -74,6 +74,10 @@ impl ShaderProgram {
                     error.as_ptr() as *mut gl::types::GLchar
                 );
 
+                if cfg!(debug_assertions) {
+                    println!("{:?}", error);
+                }
+
                 return Err(ShaderError::LinkingError);
             }
         }
@@ -178,6 +182,10 @@ fn compile_shader(
                 std::ptr::null_mut(),
                 error.as_ptr() as *mut gl::types::GLchar
             );
+
+            if cfg!(debug_assertions) {
+                println!("{:?}", error);
+            }
 
             return Err(ShaderError::CompileError(file_name.to_string()));
         }
