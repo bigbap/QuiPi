@@ -1,4 +1,4 @@
-use engine::{
+use skald::{
     gfx::{
         texture,
         ElementArrayMesh
@@ -6,10 +6,12 @@ use engine::{
     VersionedIndex,
     Registry,
     resources::{
+        register_resources,
         Shader,
         Texture
     },
     components::{
+        register_components,
         material::MaterialPart,
         CDirection,
         CPosition,
@@ -19,7 +21,8 @@ use engine::{
         CModelNode,
         CMaterial,
         CTransform,
-        CRGBA
+        CRGBA,
+        CEulerAngles
     },
     entity_builders::camera::build_perspective_camera,
     systems::{
@@ -38,11 +41,11 @@ use engine::{
 
 use crate::config;
 
-pub fn create_registry() -> Result<engine::Registry, Box<dyn std::error::Error>> {
-    let mut registry = engine::Registry::init()?;
+pub fn create_registry() -> Result<Registry, Box<dyn std::error::Error>> {
+    let mut registry = Registry::init()?;
 
-    engine::resources::register_resources(&mut registry);
-    engine::components::register_components(&mut registry);
+    register_resources(&mut registry);
+    register_components(&mut registry);
 
     Ok(registry)
 }
@@ -52,7 +55,7 @@ pub fn create_crates(
     _shader_id: VersionedIndex,
     _camera_id: VersionedIndex,
     material: CMaterial
-) -> Result<Vec<engine::VersionedIndex>, Box<dyn std::error::Error>> {
+) -> Result<Vec<VersionedIndex>, Box<dyn std::error::Error>> {
     // load the object data
     let asset_path = config::asset_path()?.into_os_string().into_string().unwrap();
     let (models_obj, _materials_obj) = s_load_obj_file(format!("{}/objects/crate.obj", asset_path))?;
@@ -106,10 +109,10 @@ pub fn create_crates(
 }
 
 pub fn create_camera(
-    registry: &mut engine::Registry,
+    registry: &mut Registry,
     width: f32,
     height: f32
-) -> Result<engine::VersionedIndex, Box<dyn std::error::Error>> {
+) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
     let camera = build_perspective_camera(
         registry,
         (0.0, 1.0, 5.0),
@@ -117,7 +120,7 @@ pub fn create_camera(
         width / height,
         0.1,
         100.0,
-        engine::components::CEulerAngles {
+        CEulerAngles {
             pitch: 0.0,
             yaw: 90.0,
             roll: 0.0

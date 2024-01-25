@@ -1,4 +1,4 @@
-use engine::Registry;
+use skald::Registry;
 
 pub fn update_entities(
     _tag: &str,

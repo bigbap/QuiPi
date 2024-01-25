@@ -1,7 +1,7 @@
-extern crate engine;
+extern crate skald;
 extern crate nalgebra_glm as glm;
 
-use engine::{
+use skald::{
     resources::{
         Shader,
         shader::UniformVariable
@@ -55,7 +55,7 @@ type Light = VersionedIndex;
 const CAMERA_SPEED: f32 = 5.0;
 
 pub struct MyGame {
-    registry: engine::Registry,
+    registry: skald::Registry,
     timer: Timer,
     grid: Option<Grid>,
    
@@ -104,7 +104,7 @@ impl MyGame {
     }
 }
 
-impl engine::Game for MyGame {
+impl skald::Game for MyGame {
     fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let asset_path = config::asset_path()?.into_os_string().into_string().unwrap();
         let shader = self.registry.create_resource(
@@ -182,7 +182,7 @@ impl engine::Game for MyGame {
                 Event::Window {
                     win_event: WindowEvent::Resized(w, h),
                     ..
-                } => engine::gfx::view::adjust_viewport_dims(w, h),
+                } => skald::gfx::view::adjust_viewport_dims(w, h),
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } => return Ok(None),
                 Event::KeyDown { keycode: Some(Keycode::Num1), repeat: false, .. } => {
                     self.direction_light_on = !self.direction_light_on;
@@ -239,7 +239,7 @@ impl engine::Game for MyGame {
         let camera_pos = self.registry.get_component::<CPosition>(&self.camera).unwrap();
         let camera_dir = self.registry.get_component::<CGizmo3D>(&self.camera).unwrap().front;
 
-        engine::gfx::buffer::clear_buffer(Some((0.02, 0.02, 0.02, 1.0)));
+        skald::gfx::buffer::clear_buffer(Some((0.02, 0.02, 0.02, 1.0)));
         
         let shader = self.registry.get_resource::<Shader>(&self.shader.unwrap()).unwrap();
         shader.program.set_int("dirLightOn", self.direction_light_on as i32);
@@ -253,7 +253,7 @@ impl engine::Game for MyGame {
             &self.registry,
             &self.light_shader.unwrap(),
             &self.camera,
-            engine::systems::draw::DrawMode::Triangles
+            skald::systems::draw::DrawMode::Triangles
         )?;
 
         systems::update_entities("crate", &self.registry);
@@ -265,7 +265,7 @@ impl engine::Game for MyGame {
                 &self.registry,
                 &self.camera,
                 shader,
-                engine::systems::draw::DrawMode::Triangles
+                skald::systems::draw::DrawMode::Triangles
             );
         }
 

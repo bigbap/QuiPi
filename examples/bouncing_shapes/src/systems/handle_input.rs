@@ -1,10 +1,10 @@
-use engine::components::CEulerAngles;
-use engine::math::random::Random;
-use engine::systems::{
+use skald::components::CEulerAngles;
+use skald::math::random::Random;
+use skald::systems::{
     rotation::s_rotate_camera,
     mvp_matrices::*
 };
-use engine::{
+use skald::{
     Registry,
     VersionedIndex,
     gfx

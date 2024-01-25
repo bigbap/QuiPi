@@ -1,15 +1,8 @@
-use engine::systems::movement::s_apply_velocity;
-use engine::{
+use skald::{
     Registry,
     VersionedIndex,
-    components::*
-};
-use engine::{
-    gfx,
-    systems::{
-        mvp_matrices::*,
-        rotation::*
-    }
+    components::*,
+    gfx
 };
 use sdl2::event::{
     Event,

@@ -20,3 +20,6 @@ pub use registry::Registry;
 pub use core::Component;
 pub use core::EntityManager;
 pub use core::math;
+pub use engine::Flags;
+pub use engine::run;
+pub use core::gfx::GFXFlags;

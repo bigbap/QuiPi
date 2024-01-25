@@ -3,6 +3,7 @@ pub mod gfx;
 pub mod entity_manager;
 pub mod math;
 pub mod text;
+pub mod gui;
 
 pub use entity_manager::EMError;
 pub use entity_manager::EntityManager;

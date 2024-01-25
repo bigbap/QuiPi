@@ -1,16 +1,16 @@
-use ::engine::gfx::GFXFlags;
+use ::skald::GFXFlags;
 use isometric::{
     MyGame,
     WIDTH,
     HEIGHT
 };
 
-use engine::engine;
+use skald;
 
 fn main() {
     let mut game = MyGame::new().expect("There was a problem initializing the game.");
 
-    if let Err(e) = engine::run(
+    if let Err(e) = skald::run(
         &mut game,
         "Examples - Isometric",
         WIDTH,

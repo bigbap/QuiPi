@@ -3,12 +3,12 @@ use bouncing_shapes::{
     WIDTH,
     HEIGHT
 };
-use engine::gfx::GFXFlags;
+use skald::GFXFlags;
 
 fn main() {
     let mut game = MyGame::new().expect("There was a problem initializing the game.");
 
-    if let Err(e) = engine::engine::run(
+    if let Err(e) = skald::run(
         &mut game,
         "Bouncing Shapes",
         WIDTH,
