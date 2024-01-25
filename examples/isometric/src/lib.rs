@@ -2,12 +2,19 @@ pub extern crate engine;
 pub extern crate nalgebra_glm as glm;
 
 mod systems;
+mod ui;
 
-use systems::*;
+use systems::{
+    *,
+    update_camera::s_update_camera
+};
 
 use engine::{
     Game,
-    utils::to_abs_path,
+    utils::{
+        to_abs_path,
+        Timer
+    },
     gfx::{
         buffer::clear_buffer,
         ShaderProgram
@@ -15,7 +22,8 @@ use engine::{
     Registry,
     resources::{
         Shader,
-        register_resources, shader::UniformVariable
+        register_resources,
+        shader::UniformVariable
     },
     components::{
         register_components,
@@ -29,24 +37,32 @@ use engine::{
             Grid,
             s_create_grid,
             s_draw_grid
-        }, draw::{s_draw_by_tag, DrawMode},
+        },
+        draw::{
+            s_draw_by_tag,
+            DrawMode
+        },
     },
     entity_builders::camera::build_perspective_camera
 };
+use ui::MyUI;
 
-pub static WIDTH: u32 = 800;
-pub static HEIGHT: u32 = 600;
+pub static WIDTH: u32 = 1600;
+pub static HEIGHT: u32 = 900;
 
 pub struct MyGame {
     registry: Registry,
+    timer: Timer,
     shader: Option<VersionedIndex>,
     camera: VersionedIndex,
-    grid: Option<Grid>
+    grid: Option<Grid>,
+    ui: Option<MyUI>,
 }
 
 impl MyGame {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
         let mut registry = Registry::init()?;
+        let timer = Timer::new()?;
 
         register_components(&mut registry);
         register_resources(&mut registry);
@@ -73,14 +89,17 @@ impl MyGame {
             registry,
             shader: None,
             camera,
-            grid: None
+            grid: None,
+            ui: None,
+            timer,
         })
     }
 }
 
 impl Game for MyGame {
     fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let shader = ShaderProgram::new(&format!("{}/shaders/simple", asset_path()))?;
+        println!("{}", to_abs_path("assets/shaders/simple")?);
+        let shader = ShaderProgram::new(&to_abs_path("assets/shaders/simple")?)?;
         let shader = self.registry.create_resource(Shader {
             program: shader,
             uniforms: vec![
@@ -90,6 +109,11 @@ impl Game for MyGame {
 
         self.grid = Some(s_create_grid(&mut self.registry)?);
         self.shader = Some(shader);
+        
+        let mut ui = MyUI::init()?;
+        ui.create_quad((0.0, 0.0, 0.0, 0.5))?;
+
+        self.ui = Some(ui);
 
         scene::s_load_scene(
             &mut self.registry
@@ -102,6 +126,8 @@ impl Game for MyGame {
         &mut self,
         event_pump: &mut sdl2::EventPump
     ) -> Result<Option<()>, Box<dyn std::error::Error>> {
+        let delta = self.timer.delta();
+
         for event in event_pump.poll_iter() {
             let response = handle_input::s_handle_input(
                 &mut self.registry,
@@ -111,6 +137,13 @@ impl Game for MyGame {
             
             if response.is_none() { return Ok(None) }
         }
+
+        // update camera
+        s_update_camera(
+            &self.camera,
+            &mut self.registry,
+            delta
+        )?;
 
         // render
         clear_buffer(Some((0.0, 0.0, 0.0, 1.0)));
@@ -129,10 +162,10 @@ impl Game for MyGame {
             s_draw_grid(&self.registry, &self.camera, grid)?;
         }
 
+        if let Some(ui) = &self.ui {
+            ui.draw()?;
+        }
+
         Ok(Some(()))
     }
-}
-
-pub fn asset_path() -> String {
-    to_abs_path("assets").unwrap().to_string_lossy().to_string()
 }

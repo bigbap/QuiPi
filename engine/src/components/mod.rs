@@ -1,11 +1,13 @@
-pub mod material;
-pub mod gizmo;
-pub mod transform;
 pub mod dimensions;
 pub mod distance;
+pub mod gizmo;
+pub mod material;
 pub mod matrices;
 pub mod model;
+pub mod quad;
+pub mod states;
 pub mod target;
+pub mod transform;
 
 pub use material::CMaterial;
 pub use gizmo::CGizmo3D;
@@ -16,12 +18,13 @@ pub use matrices::CModelMatrix;
 pub use matrices::CViewMatrix;
 pub use matrices::CProjectionMatrix;
 pub use model::CModelNode;
+pub use states::CMouseBtnState;
+pub use quad::CQuadConfig;
 pub use target::CTarget;
 
 use crate::{
     Registry,
     Component,
-    // gfx::ElementArrayMesh
 };
 
 /**
@@ -130,8 +133,10 @@ pub fn register_components(registry: &mut Registry) {
         .register_component::<CMaterial>()
         .register_component::<CModelMatrix>()
         .register_component::<CModelNode>()
+        .register_component::<CMouseBtnState>()
         .register_component::<CTransform>()
         .register_component::<CPosition>()
+        .register_component::<CQuadConfig>()
         .register_component::<CProjectionMatrix>()
         .register_component::<CTarget>()
         .register_component::<CVelocity>()

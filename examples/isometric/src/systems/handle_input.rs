@@ -16,6 +16,7 @@ use sdl2::event::{
     WindowEvent
 };
 use sdl2::keyboard::Keycode;
+use sdl2::mouse::MouseButton;
 
 pub fn s_handle_input(
     registry: &mut Registry,
@@ -31,81 +32,51 @@ pub fn s_handle_input(
             gfx::view::adjust_viewport_dims(w, h);
         },
         Event::KeyDown { keycode: Some(Keycode::Escape), .. } => return Ok(None),
-        Event::KeyDown { keycode: Some(Keycode::Up), .. } => {
-            if let Some(angles) = registry.get_component_mut::<CEulerAngles>(camera) {
-                angles.pitch += 1.0;
-
-                update_camera(registry, camera);
+        Event::KeyDown { keycode, repeat: false, .. } => {
+            if let Some(vel) = registry.get_component_mut::<CVelocity>(camera) {
+                match keycode {
+                    Some(Keycode::W) => vel.z = 5.0,
+                    Some(Keycode::S) => vel.z = -5.0,
+                    Some(Keycode::A) => vel.x = -5.0,
+                    Some(Keycode::D) => vel.x = 5.0,
+                    _ => ()
+                }
             }
         },
-        Event::KeyDown { keycode: Some(Keycode::Down), .. } => {
-            if let Some(angles) = registry.get_component_mut::<CEulerAngles>(camera) {
-                angles.pitch -= 1.0;
-
-                update_camera(registry, camera);
+        Event::KeyUp { keycode, repeat: false, .. } => {
+            if let Some(vel) = registry.get_component_mut::<CVelocity>(camera) {
+                match keycode {
+                    Some(Keycode::W) | Some(Keycode::S) => vel.z = 0.0,
+                    Some(Keycode::A) | Some(Keycode::D) => vel.x = 0.0,
+                    _ => ()
+                }
             }
         },
-        Event::KeyDown { keycode: Some(Keycode::Left), .. } => {
-            if let Some(angles) = registry.get_component_mut::<CEulerAngles>(camera) {
-                angles.yaw -= 1.0;
-
-                update_camera(registry, camera);
+        Event::MouseButtonDown { mouse_btn: MouseButton::Middle, .. } => {
+            if let Some(mouse_btn_state) = registry.get_component_mut::<CMouseBtnState>(camera) {
+                mouse_btn_state.btn_middle = true;
             }
         },
-        Event::KeyDown { keycode: Some(Keycode::Right), .. } => {
-            if let Some(angles) = registry.get_component_mut::<CEulerAngles>(camera) {
-                angles.yaw += 1.0;
-
-                update_camera(registry, camera);
+        Event::MouseButtonUp { mouse_btn: MouseButton::Middle, .. } => {
+            if let Some(mouse_btn_state) = registry.get_component_mut::<CMouseBtnState>(camera) {
+                mouse_btn_state.btn_middle = false;
             }
         },
-        Event::KeyDown { keycode: Some(Keycode::W), .. } => {
-            let velocity = glm::vec3(0.0, 0.0, 0.5);
-
-            s_apply_velocity(registry, camera, 0.3, velocity)?;
-            update_camera(registry, camera);
-        },
-        Event::KeyDown { keycode: Some(Keycode::S), .. } => {
-            let velocity = glm::vec3(0.0, 0.0, -0.5);
-
-            s_apply_velocity(registry, camera, 0.3, velocity)?;
-            update_camera(registry, camera);
-        },
-        Event::KeyDown { keycode: Some(Keycode::A), .. } => {
-            let velocity = glm::vec3(0.0, -0.5, 0.0);
-
-            s_apply_velocity(registry, camera, 0.3, velocity)?;
-            update_camera(registry, camera);
-        },
-        Event::KeyDown { keycode: Some(Keycode::D), .. } => {
-            let velocity = glm::vec3(0.0, 0.5, 0.0);
-
-            s_apply_velocity(registry, camera, 0.3, velocity)?;
-            update_camera(registry, camera);
-        },
-        Event::KeyDown { keycode: Some(Keycode::Q), .. } => {
-            let velocity = glm::vec3(0.5, 0.0, 0.0);
-
-            s_apply_velocity(registry, camera, 0.3, velocity)?;
-            update_camera(registry, camera);
-        },
-        Event::KeyDown { keycode: Some(Keycode::E), .. } => {
-            let velocity = glm::vec3(-0.5, 0.0, 0.0);
-
-            s_apply_velocity(registry, camera, 0.3, velocity)?;
-            update_camera(registry, camera);
-        },
+        Event::MouseMotion { xrel, yrel, .. } => {
+            let mut mov = (0.0, 0.0);
+            if let Some(mouse_btn_state) = registry.get_component::<CMouseBtnState>(camera) {
+                if mouse_btn_state.btn_middle {
+                    mov = (xrel as f32, yrel as f32);
+                }
+            }
+            if let Some(angles) = registry.get_component_mut::<CEulerAngles>(camera) {
+                angles.pitch += mov.1 * 0.5;
+                angles.yaw += mov.0 * 0.5;
+            }
+        }
         _ => ()
     };
 
     Ok(Some(()))
 }
 
-fn update_camera(
-    registry: &mut Registry,
-    camera: &VersionedIndex
-) {
-    s_rotate_camera(registry, camera);
-    s_set_projection_matrix(camera, registry);
-    s_set_view_matrix(camera, registry);
-}

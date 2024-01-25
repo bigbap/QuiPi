@@ -30,7 +30,7 @@ use engine::{
             s_load_obj_file
         },
         grid::*
-    },
+    }, utils::Timer,
 };
 use sdl2::{
     EventPump,
@@ -56,7 +56,7 @@ const CAMERA_SPEED: f32 = 5.0;
 
 pub struct MyGame {
     registry: engine::Registry,
-    timer: std::time::Instant,
+    timer: Timer,
     grid: Option<Grid>,
    
     shader: Option<VersionedIndex>,
@@ -70,14 +70,13 @@ pub struct MyGame {
     point_light_on: bool,
     spot_light_on: bool,
 
-    last_frame: f32,
     _has_control: bool
 }
 
 impl MyGame {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
         let mut registry = create_registry()?;
-        let timer = std::time::Instant::now();
+        let timer = Timer::new()?;
         let camera = create_camera(
             &mut registry,
             WIDTH as f32,
@@ -100,13 +99,8 @@ impl MyGame {
             point_light_on: true,
             spot_light_on: true,
             
-            last_frame: timer.elapsed().as_millis() as f32 / 1000.0,
             _has_control: true
         })
-    }
-
-    pub fn ticks(&self) -> f32 {
-        self.timer.elapsed().as_millis() as f32 / 1000.0
     }
 }
 
@@ -179,10 +173,7 @@ impl engine::Game for MyGame {
     }
 
     fn handle_frame(&mut self, event_pump: &mut EventPump) -> Result<Option<()>, Box<dyn std::error::Error>> {
-        let ticks = self.ticks();
-        let delta = ticks - self.last_frame;
-        
-        self.last_frame = ticks;
+        let delta = self.timer.delta();
        
         let mut velocity = (0.0, 0.0); // index 0: x, index 1: z
         for event in event_pump.poll_iter() {

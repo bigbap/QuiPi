@@ -14,7 +14,7 @@ fn main() {
         WIDTH,
         HEIGHT,
         vec![Flags::HideMouse, Flags::RelativeMouseMode],
-        vec![GFXFlags::DepthTest]
+        vec![GFXFlags::DepthTest, GFXFlags::AlphaBlending]
     ) {
         eprintln!("{e}")
     }

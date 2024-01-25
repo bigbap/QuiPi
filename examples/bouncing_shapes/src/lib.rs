@@ -1,8 +1,6 @@
 extern crate engine;
 extern crate nalgebra_glm as glm;
 
-// use std::fs;
-
 use engine::{
     Registry,
     VersionedIndex,
@@ -24,6 +22,11 @@ use engine::{
             s_set_view_matrix
         },
         rotation::s_rotate_camera
+    },
+    components::{
+        CEulerAngles,
+        CPosition,
+        CZPlanes
     }
 };
 
@@ -56,11 +59,15 @@ impl MyGame {
 
         let camera = build_ortho_camera(
             &mut registry,
-            (0.0, 0.0, 0.0),
             WIDTH as f32,
             HEIGHT as f32,
-            0.0,
-            2.0
+            CPosition { x: 0.0, y: 0.0, z: 0.0 },
+            CZPlanes { near_plane: 0.0, far_plane: 0.2 },
+            CEulerAngles {
+                pitch: 0.0,
+                yaw: 90.0,
+                roll: 0.0
+            }
         )?;
 
         s_rotate_camera(&mut registry, &camera);
@@ -85,7 +92,7 @@ impl MyGame {
 
 impl engine::Game for MyGame {
     fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let shader = ShaderProgram::new(&format!("{}/shaders/shape", asset_path()))?;
+        let shader = ShaderProgram::new(&to_abs_path("assets/shaders/shape")?)?;
         let shader_id = self.registry.create_resource(Shader {
             program: shader,
             uniforms: vec![
@@ -137,43 +144,19 @@ impl engine::Game for MyGame {
             &self.registry,
             &self.shader.unwrap(),
             &self.camera,
+            engine::systems::draw::DrawMode::Triangles
         )?;
 
         Ok(Some(()))
     }
 }
 
-/**
-* Config key
-* CIRCLE radius x_pos y_pos r g b
-* QUAD width height x_pos y_pos r g b
-*/
 fn create_shapes(
     registry: &mut Registry,
     rand: &mut Random
 ) {
-    // for line in fs::read_to_string(format!("{}/config.txt", asset_path())).unwrap().lines() {
-    //     let parts: Vec<&str> = line.split(' ').collect();
-    //     let kind = parts.first().unwrap();
-    //     let parts: Vec<f32> = parts[1..]
-    //         .iter()
-    //         .map(|part| part.parse::<f32>().unwrap())
-    //         .collect();
-    //
-    //     match *kind {
-    //         "CIRCLE" => s_create_circle(registry, &parts),
-    //         "QUAD" => shapes.push(
-    //             s_create_quad(registry, &parts, rand).unwrap()
-    //         ),
-    //         _ => ()
-    //     }
-    // }
-    
     for _ in 0..10 {
         let _ = s_spawn_quad(registry, rand);
     }
 }
 
-fn asset_path() -> String {
-    to_abs_path("assets").unwrap().to_string_lossy().to_string()
-}

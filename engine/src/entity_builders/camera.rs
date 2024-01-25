@@ -11,7 +11,7 @@ use crate::{
         CDimensions,
         CProjectionMatrix,
         CViewMatrix,
-        CTarget,
+        CMouseBtnState,
     },
 };
 
@@ -48,6 +48,7 @@ pub fn build_perspective_camera(
             y: 0.0,
             z: 0.0
         })?
+        .with(CMouseBtnState::default())?
         .with(CProjectionMatrix::default())?
         .with(CViewMatrix::default())?
         .done()
@@ -55,20 +56,14 @@ pub fn build_perspective_camera(
 
 pub fn build_ortho_camera(
     registry: &mut Registry,
-    position: (f32, f32, f32),
-    target: (f32, f32, f32),
     width: f32,
     height: f32,
-    near_plane: f32,
-    far_plane: f32,
+    position: CPosition,
+    planes: CZPlanes,
     angles: CEulerAngles
 ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
     registry.create_entity("camera")?
-        .with(CPosition {
-            x: position.0,
-            y: position.1,
-            z: position.2
-        })?
+        .with(position)?
         .with(CDimensions {
             width,
             height,
@@ -79,20 +74,13 @@ pub fn build_ortho_camera(
             glm::vec3(0.0, 1.0, 0.0)
         ))?
         .with(angles)?
-        .with(CZPlanes {
-            near_plane,
-            far_plane
-        })?
+        .with(planes)?
         .with(CVelocity {
             x: 0.0,
             y: 0.0,
             z: 0.0
         })?
-        .with(CTarget {
-            x: target.0,
-            y: target.1,
-            z: target.2
-        })?
+        .with(CMouseBtnState::default())?
         .with(CProjectionMatrix::default())?
         .with(CViewMatrix::default())?
         .done()
