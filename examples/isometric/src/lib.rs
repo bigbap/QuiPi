@@ -43,7 +43,7 @@ use skald::{
             DrawMode
         },
     },
-    entity_builders::camera::build_perspective_camera
+    entity_builders::camera::build_perspective_camera, core::GUI
 };
 use ui::MyUI;
 
@@ -57,6 +57,7 @@ pub struct MyGame {
     camera: VersionedIndex,
     grid: Option<Grid>,
     ui: Option<MyUI>,
+    debug_gui: Option<GUI>
 }
 
 impl MyGame {
@@ -92,12 +93,13 @@ impl MyGame {
             grid: None,
             ui: None,
             timer,
+            debug_gui: None
         })
     }
 }
 
 impl Game for MyGame {
-    fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    fn init(&mut self, debug_gui: Option<GUI>) -> Result<(), Box<dyn std::error::Error>> {
         println!("{}", to_abs_path("assets/shaders/simple")?);
         let shader = ShaderProgram::new(&to_abs_path("assets/shaders/simple")?)?;
         let shader = self.registry.create_resource(Shader {
@@ -114,6 +116,7 @@ impl Game for MyGame {
         ui.create_quad((0.0, 0.0, 0.0, 0.5))?;
 
         self.ui = Some(ui);
+        self.debug_gui = debug_gui;
 
         scene::s_load_scene(
             &mut self.registry
@@ -144,6 +147,11 @@ impl Game for MyGame {
             &mut self.registry,
             delta
         )?;
+
+        // update debug gui
+        if let Some(debug_gui) = &mut self.debug_gui {
+            debug_gui.update()?;
+        }
 
         // render
         clear_buffer(Some((0.0, 0.0, 0.0, 1.0)));

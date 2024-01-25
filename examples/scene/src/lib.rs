@@ -30,7 +30,7 @@ use skald::{
             s_load_obj_file
         },
         grid::*
-    }, utils::Timer,
+    }, utils::Timer, core::GUI,
 };
 use sdl2::{
     EventPump,
@@ -70,7 +70,8 @@ pub struct MyGame {
     point_light_on: bool,
     spot_light_on: bool,
 
-    _has_control: bool
+    _has_control: bool,
+    debug_gui: Option<GUI>
 }
 
 impl MyGame {
@@ -99,13 +100,14 @@ impl MyGame {
             point_light_on: true,
             spot_light_on: true,
             
-            _has_control: true
+            _has_control: true,
+            debug_gui: None
         })
     }
 }
 
 impl skald::Game for MyGame {
-    fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    fn init(&mut self, debug_gui: Option<GUI>) -> Result<(), Box<dyn std::error::Error>> {
         let asset_path = config::asset_path()?.into_os_string().into_string().unwrap();
         let shader = self.registry.create_resource(
             Shader::new(
@@ -168,6 +170,7 @@ impl skald::Game for MyGame {
         self.shader = Some(shader);
         self.light_shader = Some(light_shader);
         self.grid = Some(s_create_grid(&mut self.registry)?);
+        self.debug_gui = debug_gui;
 
         Ok(())
     }
@@ -238,6 +241,11 @@ impl skald::Game for MyGame {
 
         let camera_pos = self.registry.get_component::<CPosition>(&self.camera).unwrap();
         let camera_dir = self.registry.get_component::<CGizmo3D>(&self.camera).unwrap().front;
+
+        // update debug gui
+        if let Some(debug_gui) = &mut self.debug_gui {
+            debug_gui.update()?;
+        }
 
         skald::gfx::buffer::clear_buffer(Some((0.02, 0.02, 0.02, 1.0)));
         

@@ -35,7 +35,7 @@ use skald::{
         CEulerAngles,
         CPosition,
         CZPlanes
-    }
+    }, core::GUI
 };
 
 pub static WIDTH: u32 = 800;
@@ -53,7 +53,9 @@ pub struct MyGame {
     shader: Option<VersionedIndex>,
     camera: VersionedIndex,
 
-    last_frame: f32
+    last_frame: f32,
+
+    debug_gui: Option<GUI>
 }
 
 impl MyGame {
@@ -89,7 +91,8 @@ impl MyGame {
             timer,
             rand,
             camera,
-            last_frame: timer.elapsed().as_millis() as f32 / 1000.0
+            last_frame: timer.elapsed().as_millis() as f32 / 1000.0,
+            debug_gui: None
         })
     }
 
@@ -99,7 +102,7 @@ impl MyGame {
 }
 
 impl skald::Game for MyGame {
-    fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    fn init(&mut self, debug_gui: Option<GUI>) -> Result<(), Box<dyn std::error::Error>> {
         let shader = ShaderProgram::new(&to_abs_path("assets/shaders/shape")?)?;
         let shader_id = self.registry.create_resource(Shader {
             program: shader,
@@ -114,6 +117,7 @@ impl skald::Game for MyGame {
         );
         
         self.shader = Some(shader_id);
+        self.debug_gui = debug_gui;
 
         Ok(())
     }
@@ -143,6 +147,11 @@ impl skald::Game for MyGame {
             &mut self.registry,
             delta,
         )?;
+
+        // update gui
+        if let Some(debug_gui) = &mut self.debug_gui {
+            debug_gui.update()?;
+        }
 
         // render
         clear_buffer(Some((0.0, 0.0, 0.0, 1.0)));

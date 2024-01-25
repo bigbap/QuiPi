@@ -1,8 +1,8 @@
 use sdl2::video::GLProfile;
-use crate::gfx::{
+use crate::{gfx::{
     self,
     GFXFlags
-};
+}, core::GUI};
 
 #[derive(Debug)]
 pub enum Flags {
@@ -17,7 +17,7 @@ pub trait Game {
     /// Use this method to set up your game. If you do anything
     /// that uses the 'gl::' crate before this method gets called
     /// by the engine, you will get a 'function not loaded error'
-    fn init(&mut self) -> Result<(), Box<dyn std::error::Error>>;
+    fn init(&mut self, gui: Option<GUI>) -> Result<(), Box<dyn std::error::Error>>;
     
     /// This method is called by the engine every frame.
     /// This is where you will do all your game specific logic.
@@ -35,6 +35,12 @@ pub fn run<G: Game>(
     flags: Vec<Flags>,
     gfx_flags: Vec<GFXFlags>,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    let mut gui: Option<GUI> = None;
+
+    if cfg!(debug_assertions) {
+        gui = Some(GUI::new()?);
+    }
+
     let sdl_ctx = sdl2::init()?;
     let video_subsystem = sdl_ctx.video()?;
 
@@ -69,7 +75,7 @@ pub fn run<G: Game>(
         }
     }
     
-    game.init()?;
+    game.init(gui)?;
 
     let mut event_pump = sdl_ctx.event_pump()?;
     'running: loop {
