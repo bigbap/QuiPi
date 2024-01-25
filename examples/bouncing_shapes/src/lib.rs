@@ -1,10 +1,14 @@
-extern crate engine;
+extern crate skald;
 extern crate nalgebra_glm as glm;
 
-use engine::{
+use skald::{
     Registry,
     VersionedIndex,
-    resources::{Shader, shader::UniformVariable},
+    resources::{
+        register_resources,
+        Shader,
+        shader::UniformVariable
+    },
     gfx::{
         buffer::clear_buffer,
         ShaderProgram,
@@ -16,7 +20,10 @@ use engine::{
         to_abs_path
     },
     systems::{
-        draw::s_draw_by_tag,
+        draw::{
+            DrawMode,
+            s_draw_by_tag
+        },
         mvp_matrices::{
             s_set_ortho_projection_matrix,
             s_set_view_matrix
@@ -24,6 +31,7 @@ use engine::{
         rotation::s_rotate_camera
     },
     components::{
+        register_components,
         CEulerAngles,
         CPosition,
         CZPlanes
@@ -50,12 +58,12 @@ pub struct MyGame {
 
 impl MyGame {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let mut registry = engine::Registry::init()?;
+        let mut registry = Registry::init()?;
         let timer = std::time::Instant::now();
         let rand = Random::from_seed(now_secs()?);
 
-        engine::resources::register_resources(&mut registry);
-        engine::components::register_components(&mut registry);
+        register_resources(&mut registry);
+        register_components(&mut registry);
 
         let camera = build_ortho_camera(
             &mut registry,
@@ -90,7 +98,7 @@ impl MyGame {
     }
 }
 
-impl engine::Game for MyGame {
+impl skald::Game for MyGame {
     fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let shader = ShaderProgram::new(&to_abs_path("assets/shaders/shape")?)?;
         let shader_id = self.registry.create_resource(Shader {
@@ -137,14 +145,14 @@ impl engine::Game for MyGame {
         )?;
 
         // render
-        clear_buffer(Some((0.2, 0.2, 0.1, 1.0)));
+        clear_buffer(Some((0.0, 0.0, 0.0, 1.0)));
 
         s_draw_by_tag(
             "quad",
             &self.registry,
             &self.shader.unwrap(),
             &self.camera,
-            engine::systems::draw::DrawMode::Triangles
+            DrawMode::Triangles
         )?;
 
         Ok(Some(()))

@@ -9,7 +9,7 @@ edition = "2021"
 sdl2 = { version = "0.36.0", features = ["bundled", "static-link"] }
 thiserror = "1.0"
 nalgebra-glm = "*"
-engine = { path = "../../engine" }
+skald = { path = "../../skald" }
 
 [build-dependencies]
 walkdir = "2.4"
