@@ -40,7 +40,6 @@ pub fn s_handle_input(
                 angles.pitch += 1.0;
 
                 s_rotate_camera(registry, camera);
-                s_set_ortho_projection_matrix(camera, registry);
                 s_set_view_matrix(camera, registry);
             }
         },
@@ -49,7 +48,6 @@ pub fn s_handle_input(
                 angles.pitch -= 1.0;
 
                 s_rotate_camera(registry, camera);
-                s_set_ortho_projection_matrix(camera, registry);
                 s_set_view_matrix(camera, registry);
             }
         },
@@ -58,7 +56,6 @@ pub fn s_handle_input(
                 angles.yaw -= 1.0;
 
                 s_rotate_camera(registry, camera);
-                s_set_ortho_projection_matrix(camera, registry);
                 s_set_view_matrix(camera, registry);
             }
         },
@@ -67,7 +64,6 @@ pub fn s_handle_input(
                 angles.yaw += 1.0;
 
                 s_rotate_camera(registry, camera);
-                s_set_ortho_projection_matrix(camera, registry);
                 s_set_view_matrix(camera, registry);
             }
         },

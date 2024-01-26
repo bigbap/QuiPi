@@ -28,7 +28,6 @@ use skald::{
         material,
         mvp_matrices::{
             s_set_model_matrix,
-            s_set_projection_matrix,
             s_set_view_matrix
         },
         load_obj::{
@@ -133,7 +132,6 @@ pub fn create_camera(
     )?;
 
     s_set_view_matrix(&camera, registry);
-    s_set_projection_matrix(&camera, registry);
 
     Ok(camera)
 }

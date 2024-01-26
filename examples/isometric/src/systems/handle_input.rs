@@ -63,7 +63,7 @@ pub fn s_handle_input(
                 }
             }
             if let Some(angles) = registry.get_component_mut::<CEulerAngles>(camera) {
-                angles.pitch += mov.1 * 0.5;
+                angles.pitch = (angles.pitch + mov.1 * 0.5).clamp(-89.0, 89.0);
                 angles.yaw += mov.0 * 0.5;
             }
         }

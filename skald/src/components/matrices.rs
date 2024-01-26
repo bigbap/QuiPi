@@ -17,12 +17,3 @@ impl Default for CViewMatrix {
         Self(glm::Mat4::identity())
     }
 }
-
-#[derive(Debug, Component)]
-pub struct CProjectionMatrix(pub glm::Mat4);
-
-impl Default for CProjectionMatrix {
-    fn default() -> Self {
-        Self(glm::Mat4::identity())
-    }
-}

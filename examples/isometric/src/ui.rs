@@ -26,7 +26,6 @@ use skald::{
         mvp_matrices::{
             s_set_model_matrix,
             s_set_view_matrix,
-            s_set_ortho_projection_matrix
         }
     }
 };
@@ -55,8 +54,8 @@ impl MyUI {
             &mut registry,
             WIDTH as f32,
             HEIGHT as f32,
-            CTransform::default(),
             CZPlanes { near_plane: 0.0, far_plane: 0.2 },
+            CTransform::default(),
             CEulerAngles {
                 pitch: 0.0,
                 yaw: 0.0,
@@ -64,7 +63,6 @@ impl MyUI {
             }
         )?;
         s_set_view_matrix(&camera, &mut registry);
-        s_set_ortho_projection_matrix(&camera, &mut registry);
 
         Ok(Self {
             registry,
