@@ -26,6 +26,7 @@ pub fn build_perspective_camera(
             view.near,
             view.far
         )?)?
+        .with(view)?
         .with(transform)?
         .with(CGizmo3D::new(
             glm::vec3(0.0, 0.0, -1.0),
