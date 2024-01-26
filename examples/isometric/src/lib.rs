@@ -11,10 +11,7 @@ use systems::{
 
 use skald::{
     Game,
-    utils::{
-        to_abs_path,
-        Timer
-    },
+    utils::Timer,
     gfx::{
         buffer::clear_buffer,
         ShaderProgram
@@ -98,8 +95,7 @@ impl MyGame {
 
 impl Game for MyGame {
     fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        println!("{}", to_abs_path("assets/shaders/simple")?);
-        let shader = ShaderProgram::new(&to_abs_path("assets/shaders/simple")?)?;
+        let shader = ShaderProgram::new("assets/shaders/simple")?;
         let shader = self.registry.create_resource(Shader {
             program: shader,
             uniforms: vec![

@@ -4,9 +4,12 @@ use std::{
     ffi
 };
 
-use crate::core::utils::{
-    macros,
-    strings
+use crate::{
+    core::utils::{
+        macros,
+        strings
+    },
+    utils::to_abs_path
 };
 
 #[derive(Debug, thiserror::Error)]
@@ -44,6 +47,7 @@ impl Drop for ShaderProgram {
 
 impl ShaderProgram {
     pub fn new (name: &str) -> Result<Self, ShaderError> {
+        let name = &to_abs_path(name)?;
         let shaders = vec![
             compile_shader(&format!("{name}.vert"), gl::VERTEX_SHADER)?,
             compile_shader(&format!("{name}.frag"), gl::FRAGMENT_SHADER)?
