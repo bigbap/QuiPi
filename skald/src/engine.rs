@@ -35,12 +35,6 @@ pub fn run<G: Game>(
     flags: Vec<Flags>,
     gfx_flags: Vec<GFXFlags>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut gui: Option<GUI> = None;
-
-    if cfg!(debug_assertions) {
-        gui = Some(GUI::new()?);
-    }
-
     let sdl_ctx = sdl2::init()?;
     let video_subsystem = sdl_ctx.video()?;
 
@@ -75,6 +69,10 @@ pub fn run<G: Game>(
         }
     }
     
+    let mut gui: Option<GUI> = None;
+    if cfg!(debug_assertions) {
+        gui = Some(GUI::new()?);
+    }
     game.init(gui)?;
 
     let mut event_pump = sdl_ctx.event_pump()?;
