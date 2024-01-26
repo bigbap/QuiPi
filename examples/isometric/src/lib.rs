@@ -11,10 +11,7 @@ use systems::{
 
 use skald::{
     Game,
-    utils::{
-        to_abs_path,
-        Timer
-    },
+    utils::Timer,
     gfx::{
         buffer::clear_buffer,
         ShaderProgram
@@ -28,6 +25,7 @@ use skald::{
     components::{
         register_components,
         CEulerAngles,
+        CTransform, CBoundingBox,
     },
     VersionedIndex,
     systems::{
@@ -43,7 +41,8 @@ use skald::{
             DrawMode
         },
     },
-    entity_builders::camera::build_perspective_camera, core::GUI
+    builders::camera::build_perspective_camera,
+    core::GUI
 };
 use ui::MyUI;
 
@@ -70,11 +69,18 @@ impl MyGame {
 
         let camera = build_perspective_camera(
             &mut registry,
-            (5.0, 5.0, 5.0),
             45.0,
-            WIDTH as f32 / HEIGHT as f32,
-            0.1,
-            100.0,
+            CBoundingBox {
+                right: WIDTH as f32,
+                top: HEIGHT as f32,
+                near: 0.1,
+                far: 100.0,
+                ..CBoundingBox::default()
+            },
+            CTransform {
+                translate: glm::vec3(5.0, 5.0, 5.0),
+                ..CTransform::default()
+            },
             CEulerAngles {
                 pitch: 45.0,
                 yaw: -90.0,
@@ -84,7 +90,6 @@ impl MyGame {
 
         s_rotate_camera(&mut registry, &camera);
         s_set_view_matrix(&camera, &mut registry);
-        s_set_projection_matrix(&camera, &mut registry);
 
         Ok(Self {
             registry,
@@ -100,8 +105,7 @@ impl MyGame {
 
 impl Game for MyGame {
     fn init(&mut self, debug_gui: Option<GUI>) -> Result<(), Box<dyn std::error::Error>> {
-        println!("{}", to_abs_path("assets/shaders/simple")?);
-        let shader = ShaderProgram::new(&to_abs_path("assets/shaders/simple")?)?;
+        let shader = ShaderProgram::new("assets/shaders/simple")?;
         let shader = self.registry.create_resource(Shader {
             program: shader,
             uniforms: vec![

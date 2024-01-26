@@ -13,7 +13,7 @@ use skald::{
         buffer::clear_buffer,
         ShaderProgram,
     },
-    entity_builders::camera::build_ortho_camera,
+    builders::camera::build_ortho_camera,
     math::random::Random,
     utils::{
         now_secs,
@@ -24,18 +24,16 @@ use skald::{
             DrawMode,
             s_draw_by_tag
         },
-        mvp_matrices::{
-            s_set_ortho_projection_matrix,
-            s_set_view_matrix
-        },
+        mvp_matrices::s_set_view_matrix,
         rotation::s_rotate_camera
     },
     components::{
         register_components,
         CEulerAngles,
-        CPosition,
-        CZPlanes
-    }, core::GUI
+        CTransform,
+        CBoundingBox
+    },
+    core::GUI
 };
 
 pub static WIDTH: u32 = 800;
@@ -69,10 +67,17 @@ impl MyGame {
 
         let camera = build_ortho_camera(
             &mut registry,
-            WIDTH as f32,
-            HEIGHT as f32,
-            CPosition { x: 0.0, y: 0.0, z: 0.0 },
-            CZPlanes { near_plane: 0.0, far_plane: 0.2 },
+            CBoundingBox {
+                right: WIDTH as f32,
+                top: HEIGHT as f32,
+                near: 0.0,
+                far: 0.2,
+                ..CBoundingBox::default()
+            },
+            CTransform {
+                translate: glm::vec3(0.0, 0.0, 0.0),
+                ..CTransform::default()
+            },
             CEulerAngles {
                 pitch: 0.0,
                 yaw: 90.0,
@@ -81,8 +86,6 @@ impl MyGame {
         )?;
 
         s_rotate_camera(&mut registry, &camera);
-
-        s_set_ortho_projection_matrix(&camera, &mut registry);
         s_set_view_matrix(&camera, &mut registry);
 
         Ok(MyGame {
@@ -134,7 +137,6 @@ impl skald::Game for MyGame {
         // handle input events
         for event in event_pump.poll_iter() {
             let response = s_handle_input(
-                &self.camera,
                 &mut self.registry,
                 event,
                 &mut self.rand

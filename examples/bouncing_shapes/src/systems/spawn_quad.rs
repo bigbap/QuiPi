@@ -6,9 +6,9 @@ use skald::{
         CModelNode,
         CVelocity,
         CTransform,
-        CDimensions,
         CModelMatrix,
-        CQuadConfig
+        CQuadConfig,
+        CBoundingBox
     },
     math::random::Random
 };
@@ -40,11 +40,6 @@ pub fn s_create_quad(
     color: (f32, f32, f32, f32),
     rand: &mut Random
 ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
-    let pos = (
-        WIDTH as f32 / 2.0,
-        HEIGHT as f32 / 2.0
-    );
-
     let obj_config = config.to_obj_config(color);
     let mesh = ElementArrayMesh::new(&obj_config.indices)?;
     mesh
@@ -65,10 +60,10 @@ pub fn s_create_quad(
             mesh: Some(mesh),
             ..CModelNode::default()
         })?
-        .with(CDimensions {
-            width: config.width,
-            height: config.height,
-            ..CDimensions::default()
+        .with(CBoundingBox {
+            right: config.width,
+            bottom: config.height,
+            ..CBoundingBox::default()
         })?
         .with(CVelocity {
             x: vel.0,
@@ -76,7 +71,7 @@ pub fn s_create_quad(
             z: 0.0
         })?
         .with(CTransform {
-            translate: Some(glm::vec3(pos.0, pos.1, 0.0)),
+            translate: glm::vec3(WIDTH as f32 * 0.5, HEIGHT as f32 * 0.5, 0.0),
             scale: Some(glm::vec3(0.2, 0.2, 0.0)),
             ..CTransform::default()
         })?

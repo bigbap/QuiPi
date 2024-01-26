@@ -3,8 +3,9 @@ use skald::{
     components::{
         CVelocity,
         CTransform,
-        CDimensions
-    }, systems::mvp_matrices::s_set_model_matrix,
+        CBoundingBox,
+    },
+    systems::mvp_matrices::s_set_model_matrix,
 };
 
 use crate::{
@@ -21,21 +22,20 @@ pub fn s_update(
     for quad in quads {
         let Some(vel)       = registry.get_component::<CVelocity>(&quad)    else { continue };
         let Some(transform) = registry.get_component::<CTransform>(&quad)   else { continue };
-        let Some(translate) = transform.translate                           else { continue };
-        let Some(dims)      = registry.get_component::<CDimensions>(&quad)  else { continue };
+        let Some(b_box)      = registry.get_component::<CBoundingBox>(&quad)  else { continue };
         
         let scale = transform.scale.unwrap();
 
         let vel = glm::vec3(vel.x, vel.y, 0.0);
-        let translate = translate + (vel * delta);
+        let translate = transform.translate + (vel * delta);
         let (colided_x, colided_y) = check_screen_collision(
             translate,
-            dims.width * scale.x,
-            dims.height * scale.y
+            b_box.right * scale.x,
+            b_box.bottom * scale.y
         );
 
         let Some(transform) = registry.get_component_mut::<CTransform>(&quad) else { continue };
-        transform.translate = Some(translate);
+        transform.translate = translate;
 
         let Some(vel) = registry.get_component_mut::<CVelocity>(&quad) else { continue };
         if colided_x { vel.x *= -1.0 }
@@ -52,8 +52,8 @@ fn check_screen_collision(
     w: f32,
     h: f32
 ) -> (bool, bool) {
-    let offset_x = w / 2.0;
-    let offset_y = h / 2.0;
+    let offset_x = w * 0.5;
+    let offset_y = h * 0.5;
 
     let colided_x = pos.x <= (0.0 + offset_x) || pos.x >= (WIDTH as f32 - offset_x);
     let colided_y = pos.y >= (HEIGHT as f32 - offset_y) || pos.y <= (0.0 + offset_y);

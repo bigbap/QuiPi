@@ -14,7 +14,6 @@ use skald::{
         register_components,
         material::MaterialPart,
         CDirection,
-        CPosition,
         CAttenuation,
         CCutoff,
         CModelMatrix,
@@ -22,14 +21,13 @@ use skald::{
         CMaterial,
         CTransform,
         CRGBA,
-        CEulerAngles
+        CEulerAngles, CBoundingBox
     },
-    entity_builders::camera::build_perspective_camera,
+    builders::camera::build_perspective_camera,
     systems::{
         material,
         mvp_matrices::{
             s_set_model_matrix,
-            s_set_projection_matrix,
             s_set_view_matrix
         },
         load_obj::{
@@ -89,11 +87,12 @@ pub fn create_crates(
                     mesh: Some(mesh),
                     ..CModelNode::default()
                 })?
-                .with(CPosition::default())?
                 .with(CTransform {
-                    translate: Some(transform.0),
+                    translate: transform.0,
                     scale: Some(glm::vec3(0.5, 0.5, 0.5)),
-                    rotate: Some(vec![(glm::vec3(0.0, 1.0, 0.0), transform.1)]),
+                    rotate: Some(glm::vec3(0.0, 1.0, 0.0)),
+
+                    angle: transform.1
                 })?
                 .with(CModelMatrix::default())?
                 .with(material.clone())?
@@ -115,11 +114,18 @@ pub fn create_camera(
 ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
     let camera = build_perspective_camera(
         registry,
-        (0.0, 1.0, 5.0),
         45.0,
-        width / height,
-        0.1,
-        100.0,
+        CBoundingBox {
+            right: width,
+            top: height,
+            near: 0.1,
+            far: 100.0,
+            ..CBoundingBox::default()
+        },
+        CTransform {
+            translate: glm::vec3(0.0, 1.0, 6.0),
+            ..CTransform::default()
+        },
         CEulerAngles {
             pitch: 0.0,
             yaw: 90.0,
@@ -128,7 +134,6 @@ pub fn create_camera(
     )?;
 
     s_set_view_matrix(&camera, registry);
-    s_set_projection_matrix(&camera, registry);
 
     Ok(camera)
 }
@@ -181,14 +186,13 @@ pub fn directional_light(
             y: direction.1,
             z: direction.2
         })?
-        .with(CPosition::default())?
         .with(CRGBA { r: 1.0, g: 1.0, b: 1.0, a: 1.0 })?
         .with(CModelNode {
             mesh: Some(mesh),
             ..CModelNode::default()
         })?
         .with(CTransform {
-            translate: Some(glm::vec3(7.0, 10.0, 0.0)),
+            translate: glm::vec3(7.0, 100.0, 0.0),
             ..CTransform::default()
         })?
         .with(CModelMatrix::default())?
@@ -217,10 +221,10 @@ pub fn point_light(
         ..CMaterial::default()
     };
 
-    let position = CPosition {
-        x: 5.0,
-        y: 1.0,
-        z: 6.0
+    let transform = CTransform {
+        translate: glm::vec3(5.0, 3.0, 10.0),
+        scale: Some(glm::vec3(0.2, 0.2, 0.2)),
+        ..CTransform::default()
     };
     let attenuation = CAttenuation {
         constant: 1.0,
@@ -237,7 +241,11 @@ pub fn point_light(
     if let Some(specular) = material::s_get_value(&mat.specular) {
         shader.set_float_3("pointLight.ambient", specular);
     }
-    shader.set_float_3("pointLight.position", (position.x, position.y, position.z));
+    shader.set_float_3("pointLight.position", (
+        transform.translate.x,
+        transform.translate.y,
+        transform.translate.z
+    ));
     shader.set_float("pointLight.constant", attenuation.constant);
     shader.set_float("pointLight.linear", attenuation.linear);
     shader.set_float("pointLight.quadratic", attenuation.quadratic);
@@ -246,7 +254,6 @@ pub fn point_light(
     mesh.create_vbo_at(&model_config.points, 0, 3)?;
 
     let light = registry.create_entity("light")?
-        .with(position)?
         .with(attenuation)?
         .with(mat)?
         .with(CRGBA { r: 0.6, g: 0.0, b: 0.0, a: 1.0 })?
@@ -254,11 +261,7 @@ pub fn point_light(
             mesh: Some(mesh),
             ..CModelNode::default()
         })?
-        .with(CTransform {
-            translate: Some(glm::vec3(5.0, 1.0, 6.0)),
-            scale: Some(glm::vec3(0.2, 0.2, 0.2)),
-            ..CTransform::default()
-        })?
+        .with(transform)?
         .with(CModelMatrix::default())?
         .done()?;
 
@@ -315,7 +318,6 @@ pub fn spot_light(
 
     registry.create_entity("light")?
         .with(CRGBA { r: 0.6, g: 0.0, b: 0.0, a: 1.0 })?
-        .with(CPosition { x: 0.0, y: 0.0, z: 0.0 })?
         .with(CDirection { x: 0.0, y: 0.0, z: 0.0 })?
         .with(attenuation)?
         .with(cutoffs)?
@@ -325,7 +327,7 @@ pub fn spot_light(
             ..CModelNode::default()
         })?
         .with(CTransform {
-            translate: Some(glm::vec3(5.0, 1.0, 6.0)),
+            translate: glm::vec3(5.0, 1.0, 6.0),
             scale: Some(glm::vec3(0.2, 0.2, 0.2)),
             ..CTransform::default()
         })?

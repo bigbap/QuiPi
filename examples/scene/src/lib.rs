@@ -10,9 +10,8 @@ use skald::{
     components::{
         CMaterial,
         material::MaterialPart,
-        CPosition,
         CGizmo3D,
-        CVelocity
+        CVelocity, CTransform
     },
     systems::{
         movement::s_apply_velocity,
@@ -239,7 +238,7 @@ impl skald::Game for MyGame {
         // s_set_projection_matrix(&self.camera, &mut self.registry);
         s_set_view_matrix(&self.camera, &mut self.registry);
 
-        let camera_pos = self.registry.get_component::<CPosition>(&self.camera).unwrap();
+        let camera_pos = self.registry.get_component::<CTransform>(&self.camera).unwrap().translate;
         let camera_dir = self.registry.get_component::<CGizmo3D>(&self.camera).unwrap().front;
 
         // update debug gui
