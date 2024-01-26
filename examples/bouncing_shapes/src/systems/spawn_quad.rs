@@ -76,7 +76,7 @@ pub fn s_create_quad(
             z: 0.0
         })?
         .with(CTransform {
-            translate: Some(glm::vec3(pos.0, pos.1, 0.0)),
+            translate: glm::vec3(pos.0, pos.1, 0.0),
             scale: Some(glm::vec3(0.2, 0.2, 0.0)),
             ..CTransform::default()
         })?

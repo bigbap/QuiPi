@@ -61,7 +61,7 @@ fn build_axis(
             ..CModelNode::default()
         })?
         .with(CTransform {
-            translate: Some(translate),
+            translate,
             scale: Some(scale),
             ..CTransform::default()
         })?

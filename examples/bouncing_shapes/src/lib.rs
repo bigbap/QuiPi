@@ -33,8 +33,7 @@ use skald::{
     components::{
         register_components,
         CEulerAngles,
-        CPosition,
-        CZPlanes
+        CZPlanes, CTransform
     }
 };
 
@@ -69,7 +68,10 @@ impl MyGame {
             &mut registry,
             WIDTH as f32,
             HEIGHT as f32,
-            CPosition { x: 0.0, y: 0.0, z: 0.0 },
+            CTransform {
+                translate: glm::vec3(0.0, 0.0, 0.0),
+                ..CTransform::default()
+            },
             CZPlanes { near_plane: 0.0, far_plane: 0.2 },
             CEulerAngles {
                 pitch: 0.0,

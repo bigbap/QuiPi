@@ -51,11 +51,11 @@ pub fn s_load_scene(
                         ..CMaterial::default()
                     })?
                     .with(CTransform {
-                        translate: Some(glm::vec3(
+                        translate: glm::vec3(
                             0.0 + (1.0 * x as f32),
                             0.0,
                             0.0 + (1.0 * y as f32),
-                        )), 
+                        ),
                         scale: Some(glm::vec3(0.5, 0.5, 0.5)),
                         ..CTransform::default()
                     })?
