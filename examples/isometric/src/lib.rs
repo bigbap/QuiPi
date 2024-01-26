@@ -24,7 +24,8 @@ use skald::{
     },
     components::{
         register_components,
-        CEulerAngles, CZPlanes, CTransform,
+        CEulerAngles,
+        CTransform, CBoundingBox,
     },
     VersionedIndex,
     systems::{
@@ -40,7 +41,7 @@ use skald::{
             DrawMode
         },
     },
-    entity_builders::camera::build_perspective_camera
+    builders::camera::build_perspective_camera
 };
 use ui::MyUI;
 
@@ -67,10 +68,12 @@ impl MyGame {
         let camera = build_perspective_camera(
             &mut registry,
             45.0,
-            WIDTH as f32 / HEIGHT as f32,
-            CZPlanes {
-                near_plane: 0.1,
-                far_plane: 100.0
+            CBoundingBox {
+                right: WIDTH as f32,
+                top: HEIGHT as f32,
+                near: 0.1,
+                far: 100.0,
+                ..CBoundingBox::default()
             },
             CTransform {
                 translate: glm::vec3(5.0, 5.0, 5.0),

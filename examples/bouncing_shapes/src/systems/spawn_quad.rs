@@ -6,9 +6,9 @@ use skald::{
         CModelNode,
         CVelocity,
         CTransform,
-        CDimensions,
         CModelMatrix,
-        CQuadConfig
+        CQuadConfig,
+        CBoundingBox
     },
     math::random::Random
 };
@@ -60,10 +60,10 @@ pub fn s_create_quad(
             mesh: Some(mesh),
             ..CModelNode::default()
         })?
-        .with(CDimensions {
-            width: config.width,
-            height: config.height,
-            ..CDimensions::default()
+        .with(CBoundingBox {
+            right: config.width,
+            bottom: config.height,
+            ..CBoundingBox::default()
         })?
         .with(CVelocity {
             x: vel.0,

@@ -6,8 +6,7 @@ use crate::{
         CModelMatrix,
         CMaterial,
         CRGBA,
-        CModelNode,
-        CZPlanes,
+        CModelNode, CBoundingBox,
     },
     Registry,
     resources::shader::{
@@ -131,13 +130,13 @@ fn set_uniforms(
                 }
             },
             UniformVariable::NearPlane(var) => {
-                if let Some(z_planes) = registry.get_component::<CZPlanes>(camera) {
-                    shader.program.set_float(var, z_planes.near_plane)
+                if let Some(b_box) = registry.get_component::<CBoundingBox>(camera) {
+                    shader.program.set_float(var, b_box.near)
                 }
             },
             UniformVariable::FarPlane(var) => {
-                if let Some(z_planes) = registry.get_component::<CZPlanes>(camera) {
-                    shader.program.set_float(var, z_planes.far_plane)
+                if let Some(b_box) = registry.get_component::<CBoundingBox>(camera) {
+                    shader.program.set_float(var, b_box.far)
                 }
             },
         }

@@ -3,7 +3,7 @@ pub extern crate gl;
 pub extern crate nalgebra_glm as glm;
 // pub extern crate gltf;
 
-pub mod entity_builders;
+pub mod builders;
 pub mod core;
 pub mod engine;
 pub mod registry;

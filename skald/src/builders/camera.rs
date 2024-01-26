@@ -3,42 +3,34 @@ use crate::{
     Registry,
     components::{
         CGizmo3D,
-        CViewSettings,
         CEulerAngles,
         CVelocity,
-        CDimensions,
         CViewMatrix,
         CMouseBtnState,
         CTransform,
-        CCamera, CZPlanes,
+        CCamera, CBoundingBox,
     },
 };
 
 pub fn build_perspective_camera(
     registry: &mut Registry,
     fov: f32,
-    aspect_ratio: f32,
-    z_planes: CZPlanes,
+    view: CBoundingBox,
     transform: CTransform,
     angles: CEulerAngles
 ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
     registry.create_entity("camera")?
         .with(CCamera::new_perspective(
-            aspect_ratio,
+            (view.right - view.left).abs() / (view.top - view.bottom).abs(),
             fov,
-            z_planes.near_plane,
-            z_planes.far_plane
+            view.near,
+            view.far
         )?)?
         .with(transform)?
         .with(CGizmo3D::new(
             glm::vec3(0.0, 0.0, -1.0),
             glm::vec3(0.0, 1.0, 0.0)
         ))?
-        .with(CViewSettings {
-            fov,
-            aspect_ratio
-        })?
-        .with(z_planes)?
         .with(angles)?
         .with(CVelocity {
             x: 0.0,
@@ -52,36 +44,24 @@ pub fn build_perspective_camera(
 
 pub fn build_ortho_camera(
     registry: &mut Registry,
-    width: f32,
-    height: f32,
-    z_planes: CZPlanes,
+    frustrum: CBoundingBox,
     transform: CTransform,
     angles: CEulerAngles
 ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
     registry.create_entity("camera")?
         .with(CCamera::new_orthographic(
-            0.0,
-            width,
-            0.0,
-            height,
-            // -(width * 0.5),
-            // width * 0.5,
-            // -(height * 0.5),
-            // height * 0.5,
-            z_planes.near_plane,
-            z_planes.far_plane
+            frustrum.left,
+            frustrum.right,
+            frustrum.bottom,
+            frustrum.top,
+            frustrum.near,
+            frustrum.far
         )?)?
         .with(transform)?
-        .with(CDimensions {
-            width,
-            height,
-            ..CDimensions::default()
-        })?
         .with(CGizmo3D::new(
             glm::vec3(0.0, 0.0, -1.0),
             glm::vec3(0.0, 1.0, 0.0)
         ))?
-        .with(z_planes)?
         .with(angles)?
         .with(CVelocity {
             x: 0.0,
