@@ -24,7 +24,7 @@ use skald::{
     },
     components::{
         register_components,
-        CEulerAngles,
+        CEulerAngles, CZPlanes, CTransform,
     },
     VersionedIndex,
     systems::{
@@ -66,11 +66,16 @@ impl MyGame {
 
         let camera = build_perspective_camera(
             &mut registry,
-            (5.0, 5.0, 5.0),
             45.0,
             WIDTH as f32 / HEIGHT as f32,
-            0.1,
-            100.0,
+            CZPlanes {
+                near_plane: 0.1,
+                far_plane: 100.0
+            },
+            CTransform {
+                translate: glm::vec3(5.0, 5.0, 5.0),
+                ..CTransform::default()
+            },
             CEulerAngles {
                 pitch: 45.0,
                 yaw: -90.0,

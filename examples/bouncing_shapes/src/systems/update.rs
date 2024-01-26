@@ -4,7 +4,8 @@ use skald::{
         CVelocity,
         CTransform,
         CDimensions
-    }, systems::mvp_matrices::s_set_model_matrix,
+    },
+    systems::mvp_matrices::s_set_model_matrix,
 };
 
 use crate::{
@@ -21,13 +22,12 @@ pub fn s_update(
     for quad in quads {
         let Some(vel)       = registry.get_component::<CVelocity>(&quad)    else { continue };
         let Some(transform) = registry.get_component::<CTransform>(&quad)   else { continue };
-        let Some(translate) = transform.translate                           else { continue };
         let Some(dims)      = registry.get_component::<CDimensions>(&quad)  else { continue };
         
         let scale = transform.scale.unwrap();
 
         let vel = glm::vec3(vel.x, vel.y, 0.0);
-        let translate = translate + (vel * delta);
+        let translate = transform.translate + (vel * delta);
         let (colided_x, colided_y) = check_screen_collision(
             translate,
             dims.width * scale.x,
@@ -35,7 +35,7 @@ pub fn s_update(
         );
 
         let Some(transform) = registry.get_component_mut::<CTransform>(&quad) else { continue };
-        transform.translate = Some(translate);
+        transform.translate = translate;
 
         let Some(vel) = registry.get_component_mut::<CVelocity>(&quad) else { continue };
         if colided_x { vel.x *= -1.0 }

@@ -27,15 +27,15 @@ use crate::{
     Component,
 };
 
-/**
-* 3D point in world space
-*/
-#[derive(Debug, Component, Clone, Copy, Default)]
-pub struct CPosition {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32
-}
+// /**
+// * 3D point in world space
+// */
+// #[derive(Debug, Component, Clone, Copy, Default)]
+// pub struct CPosition {
+//     pub x: f32,
+//     pub y: f32,
+//     pub z: f32
+// }
 
 /**
 * 3D direction vector
@@ -135,7 +135,7 @@ pub fn register_components(registry: &mut Registry) {
         .register_component::<CModelNode>()
         .register_component::<CMouseBtnState>()
         .register_component::<CTransform>()
-        .register_component::<CPosition>()
+        // .register_component::<CPosition>()
         .register_component::<CQuadConfig>()
         .register_component::<CProjectionMatrix>()
         .register_component::<CTarget>()

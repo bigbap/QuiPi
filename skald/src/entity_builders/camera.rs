@@ -2,7 +2,6 @@ use crate::{
     VersionedIndex,
     Registry,
     components::{
-        CPosition,
         CGizmo3D,
         CViewSettings,
         CEulerAngles,
@@ -12,24 +11,20 @@ use crate::{
         CProjectionMatrix,
         CViewMatrix,
         CMouseBtnState,
+        CTransform,
     },
 };
 
 pub fn build_perspective_camera(
     registry: &mut Registry,
-    position: (f32, f32, f32),
     fov: f32,
     aspect_ratio: f32,
-    near_plane: f32,
-    far_plane: f32,
+    planes: CZPlanes,
+    transform: CTransform,
     angles: CEulerAngles
 ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
     registry.create_entity("camera")?
-        .with(CPosition {
-            x: position.0,
-            y: position.1,
-            z: position.2
-        })?
+        .with(transform)?
         .with(CGizmo3D::new(
             glm::vec3(0.0, 0.0, -1.0),
             glm::vec3(0.0, 1.0, 0.0)
@@ -39,10 +34,7 @@ pub fn build_perspective_camera(
             aspect_ratio
         })?
         .with(angles)?
-        .with(CZPlanes {
-            near_plane,
-            far_plane
-        })?
+        .with(planes)?
         .with(CVelocity {
             x: 0.0,
             y: 0.0,
@@ -58,12 +50,12 @@ pub fn build_ortho_camera(
     registry: &mut Registry,
     width: f32,
     height: f32,
-    position: CPosition,
+    transform: CTransform,
     planes: CZPlanes,
     angles: CEulerAngles
 ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
     registry.create_entity("camera")?
-        .with(position)?
+        .with(transform)?
         .with(CDimensions {
             width,
             height,

@@ -9,7 +9,6 @@ use skald::{
     components::{
         CEulerAngles,
         register_components,
-        CPosition,
         CZPlanes,
         CQuadConfig,
         CDimensions,
@@ -56,7 +55,7 @@ impl MyUI {
             &mut registry,
             WIDTH as f32,
             HEIGHT as f32,
-            CPosition { x: 0.0, y: 0.0, z: 0.0 },
+            CTransform::default(),
             CZPlanes { near_plane: 0.0, far_plane: 0.2 },
             CEulerAngles {
                 pitch: 0.0,
@@ -101,7 +100,7 @@ impl MyUI {
             let quad = self.registry.create_entity("quad")?
                 .with(CModelNode { mesh: Some(mesh), ..CModelNode::default() })?
                 .with(CTransform {
-                    translate: Some(glm::vec3(pos.0, pos.1, pos.2)),
+                    translate: glm::vec3(pos.0, pos.1, pos.2),
                     ..CTransform::default()
                 })?
                 .with(CDimensions {
