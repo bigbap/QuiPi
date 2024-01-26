@@ -13,7 +13,7 @@ use skald::{
         buffer::clear_buffer,
         ShaderProgram,
     },
-    entity_builders::camera::build_ortho_camera,
+    builders::camera::build_ortho_camera,
     math::random::Random,
     utils::{
         now_secs,
@@ -30,7 +30,7 @@ use skald::{
     components::{
         register_components,
         CEulerAngles,
-        CZPlanes, CTransform
+        CTransform, CBoundingBox
     }
 };
 
@@ -63,9 +63,13 @@ impl MyGame {
 
         let camera = build_ortho_camera(
             &mut registry,
-            WIDTH as f32,
-            HEIGHT as f32,
-            CZPlanes { near_plane: 0.0, far_plane: 0.2 },
+            CBoundingBox {
+                right: WIDTH as f32,
+                top: HEIGHT as f32,
+                near: 0.0,
+                far: 0.2,
+                ..CBoundingBox::default()
+            },
             CTransform {
                 translate: glm::vec3(0.0, 0.0, 0.0),
                 ..CTransform::default()
@@ -127,7 +131,6 @@ impl skald::Game for MyGame {
         // handle input events
         for event in event_pump.poll_iter() {
             let response = s_handle_input(
-                &self.camera,
                 &mut self.registry,
                 event,
                 &mut self.rand

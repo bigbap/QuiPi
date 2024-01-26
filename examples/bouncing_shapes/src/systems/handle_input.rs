@@ -1,12 +1,6 @@
-use skald::components::CEulerAngles;
 use skald::math::random::Random;
-use skald::systems::{
-    rotation::s_rotate_camera,
-    mvp_matrices::*
-};
 use skald::{
     Registry,
-    VersionedIndex,
     gfx
 };
 use sdl2::event::{
@@ -18,7 +12,6 @@ use sdl2::keyboard::Keycode;
 use super::s_spawn_quad;
 
 pub fn s_handle_input(
-    camera: &VersionedIndex,
     registry: &mut Registry,
     event: sdl2::event::Event,
     rand: &mut Random
@@ -34,38 +27,6 @@ pub fn s_handle_input(
         Event::KeyDown { keycode: Some(Keycode::Escape), .. } => return Ok(None),
         Event::KeyDown { keycode: Some(Keycode::Space), .. } => {
             s_spawn_quad(registry, rand)?;
-        },
-        Event::KeyDown { keycode: Some(Keycode::Up), .. } => {
-            if let Some(angles) = registry.get_component_mut::<CEulerAngles>(camera) {
-                angles.pitch += 1.0;
-
-                s_rotate_camera(registry, camera);
-                s_set_view_matrix(camera, registry);
-            }
-        },
-        Event::KeyDown { keycode: Some(Keycode::Down), .. } => {
-            if let Some(angles) = registry.get_component_mut::<CEulerAngles>(camera) {
-                angles.pitch -= 1.0;
-
-                s_rotate_camera(registry, camera);
-                s_set_view_matrix(camera, registry);
-            }
-        },
-        Event::KeyDown { keycode: Some(Keycode::Left), .. } => {
-            if let Some(angles) = registry.get_component_mut::<CEulerAngles>(camera) {
-                angles.yaw -= 1.0;
-
-                s_rotate_camera(registry, camera);
-                s_set_view_matrix(camera, registry);
-            }
-        },
-        Event::KeyDown { keycode: Some(Keycode::Right), .. } => {
-            if let Some(angles) = registry.get_component_mut::<CEulerAngles>(camera) {
-                angles.yaw += 1.0;
-
-                s_rotate_camera(registry, camera);
-                s_set_view_matrix(camera, registry);
-            }
         },
         _ => ()
     };

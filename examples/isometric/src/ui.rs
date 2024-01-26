@@ -9,13 +9,11 @@ use skald::{
     components::{
         CEulerAngles,
         register_components,
-        CZPlanes,
         CQuadConfig,
-        CDimensions,
         CModelNode,
-        CTransform, CModelMatrix
+        CTransform, CModelMatrix, CBoundingBox
     },
-    entity_builders::camera::build_ortho_camera,
+    builders::camera::build_ortho_camera,
     gfx::ElementArrayMesh,
     utils::to_abs_path,
     systems::{
@@ -52,9 +50,12 @@ impl MyUI {
 
         let camera = build_ortho_camera(
             &mut registry,
-            WIDTH as f32,
-            HEIGHT as f32,
-            CZPlanes { near_plane: 0.0, far_plane: 0.2 },
+            CBoundingBox {
+                right: WIDTH as f32,
+                top: HEIGHT as f32,
+                far: 0.2,
+                ..CBoundingBox::default()
+            },
             CTransform::default(),
             CEulerAngles {
                 pitch: 0.0,
@@ -75,10 +76,10 @@ impl MyUI {
         &mut self,
         color: (f32, f32, f32, f32)
     ) -> Result<(), Box<dyn std::error::Error>> {
-        if let Some(dims) = self.registry.get_component::<CDimensions>(&self.camera) {
+        if let Some(b_box) = self.registry.get_component::<CBoundingBox>(&self.camera) {
             let quad_config = CQuadConfig {
                 width: 300.0,
-                height: dims.height,
+                height: b_box.height(),
                 center_x: 0.0,
                 center_y: 0.0
             };
@@ -91,8 +92,8 @@ impl MyUI {
                 .create_vbo_at(&obj_config.colors, 1, 4)?;
 
             let pos = (
-                dims.width - (quad_config.width / 2.0),
-                dims.height / 2.0,
+                b_box.width() - (quad_config.width / 2.0),
+                b_box.height() / 2.0,
                 0.0
             );
             let quad = self.registry.create_entity("quad")?
@@ -101,10 +102,10 @@ impl MyUI {
                     translate: glm::vec3(pos.0, pos.1, pos.2),
                     ..CTransform::default()
                 })?
-                .with(CDimensions {
-                    width: quad_config.width,
-                    height: quad_config.height,
-                    ..CDimensions::default()
+                .with(CBoundingBox {
+                    right: quad_config.width,
+                    top: quad_config.height,
+                    ..CBoundingBox::default()
                 })?
                 .with(CModelMatrix::default())?
                 .done()?;

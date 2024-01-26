@@ -3,7 +3,7 @@ use skald::{
     components::{
         CVelocity,
         CTransform,
-        CDimensions
+        CBoundingBox,
     },
     systems::mvp_matrices::s_set_model_matrix,
 };
@@ -22,7 +22,7 @@ pub fn s_update(
     for quad in quads {
         let Some(vel)       = registry.get_component::<CVelocity>(&quad)    else { continue };
         let Some(transform) = registry.get_component::<CTransform>(&quad)   else { continue };
-        let Some(dims)      = registry.get_component::<CDimensions>(&quad)  else { continue };
+        let Some(b_box)      = registry.get_component::<CBoundingBox>(&quad)  else { continue };
         
         let scale = transform.scale.unwrap();
 
@@ -30,8 +30,8 @@ pub fn s_update(
         let translate = transform.translate + (vel * delta);
         let (colided_x, colided_y) = check_screen_collision(
             translate,
-            dims.width * scale.x,
-            dims.height * scale.y
+            b_box.right * scale.x,
+            b_box.bottom * scale.y
         );
 
         let Some(transform) = registry.get_component_mut::<CTransform>(&quad) else { continue };

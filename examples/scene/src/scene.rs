@@ -21,9 +21,9 @@ use skald::{
         CMaterial,
         CTransform,
         CRGBA,
-        CEulerAngles, CZPlanes
+        CEulerAngles, CBoundingBox
     },
-    entity_builders::camera::build_perspective_camera,
+    builders::camera::build_perspective_camera,
     systems::{
         material,
         mvp_matrices::{
@@ -115,10 +115,12 @@ pub fn create_camera(
     let camera = build_perspective_camera(
         registry,
         45.0,
-        width / height,
-        CZPlanes {
-            near_plane: 0.1,
-            far_plane: 100.0
+        CBoundingBox {
+            right: width,
+            top: height,
+            near: 0.1,
+            far: 100.0,
+            ..CBoundingBox::default()
         },
         CTransform {
             translate: glm::vec3(0.0, 1.0, 6.0),
@@ -190,7 +192,7 @@ pub fn directional_light(
             ..CModelNode::default()
         })?
         .with(CTransform {
-            translate: glm::vec3(7.0, 10.0, 0.0),
+            translate: glm::vec3(7.0, 100.0, 0.0),
             ..CTransform::default()
         })?
         .with(CModelMatrix::default())?
