@@ -85,7 +85,6 @@ impl MyGame {
 
         s_rotate_camera(&mut registry, &camera);
         s_set_view_matrix(&camera, &mut registry);
-        s_set_projection_matrix(&camera, &mut registry);
 
         Ok(Self {
             registry,

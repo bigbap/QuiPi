@@ -24,10 +24,7 @@ use skald::{
             DrawMode,
             s_draw_by_tag
         },
-        mvp_matrices::{
-            s_set_ortho_projection_matrix,
-            s_set_view_matrix
-        },
+        mvp_matrices::s_set_view_matrix,
         rotation::s_rotate_camera
     },
     components::{
@@ -68,11 +65,11 @@ impl MyGame {
             &mut registry,
             WIDTH as f32,
             HEIGHT as f32,
+            CZPlanes { near_plane: 0.0, far_plane: 0.2 },
             CTransform {
                 translate: glm::vec3(0.0, 0.0, 0.0),
                 ..CTransform::default()
             },
-            CZPlanes { near_plane: 0.0, far_plane: 0.2 },
             CEulerAngles {
                 pitch: 0.0,
                 yaw: 90.0,
@@ -81,8 +78,6 @@ impl MyGame {
         )?;
 
         s_rotate_camera(&mut registry, &camera);
-
-        s_set_ortho_projection_matrix(&camera, &mut registry);
         s_set_view_matrix(&camera, &mut registry);
 
         Ok(MyGame {

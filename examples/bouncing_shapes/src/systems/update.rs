@@ -52,8 +52,8 @@ fn check_screen_collision(
     w: f32,
     h: f32
 ) -> (bool, bool) {
-    let offset_x = w / 2.0;
-    let offset_y = h / 2.0;
+    let offset_x = w * 0.5;
+    let offset_y = h * 0.5;
 
     let colided_x = pos.x <= (0.0 + offset_x) || pos.x >= (WIDTH as f32 - offset_x);
     let colided_y = pos.y >= (HEIGHT as f32 - offset_y) || pos.y <= (0.0 + offset_y);

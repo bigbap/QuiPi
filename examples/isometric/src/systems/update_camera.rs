@@ -3,10 +3,8 @@ use skald::{
     Registry,
     systems::{
         rotation::s_rotate_camera,
-        mvp_matrices::{
-            s_set_view_matrix,
-            s_set_projection_matrix
-        }, movement::s_apply_velocity
+        mvp_matrices::s_set_view_matrix,
+        movement::s_apply_velocity
     },
     components::CVelocity
 };
@@ -21,7 +19,6 @@ pub fn s_update_camera(
     }
 
     s_rotate_camera(registry, camera);
-    s_set_projection_matrix(camera, registry);
     s_set_view_matrix(camera, registry);
 
     Ok(())

@@ -1,12 +1,13 @@
 use crate::{
     VersionedIndex,
     components::{
+        CCamera,
         CViewMatrix,
-        CProjectionMatrix,
         CModelMatrix,
         CMaterial,
         CRGBA,
-        CModelNode, CZPlanes,
+        CModelNode,
+        CZPlanes,
     },
     Registry,
     resources::shader::{
@@ -104,12 +105,12 @@ fn set_uniforms(
         match uniform {
             UniformVariable::Color(var) => set_color(entity, registry, shader, var),
             UniformVariable::MVPMatrix(var) => {
-                if let (Some(model), Some(view), Some(projection)) = (
+                if let (Some(model), Some(view), Some(c_camera)) = (
                     registry.get_component::<CModelMatrix>(entity),
                     registry.get_component::<CViewMatrix>(camera),
-                    registry.get_component::<CProjectionMatrix>(camera),
+                    registry.get_component::<CCamera>(camera),
                 ) {
-                    let mvp_matrix = projection.0 * view.0 * model.0;
+                    let mvp_matrix = c_camera.projection_matrix * view.0 * model.0;
 
                     shader.program.set_mat4(var, &mvp_matrix);
                 }
@@ -125,8 +126,8 @@ fn set_uniforms(
                 }
             },
             UniformVariable::ProjectionMatrix(var) => {
-                if let Some(projection) = registry.get_component::<CProjectionMatrix>(camera) {
-                    shader.program.set_mat4(var, &projection.0)
+                if let Some(c_camera) = registry.get_component::<CCamera>(camera) {
+                    shader.program.set_mat4(var, &c_camera.projection_matrix)
                 }
             },
             UniformVariable::NearPlane(var) => {
