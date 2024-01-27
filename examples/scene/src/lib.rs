@@ -238,7 +238,7 @@ impl skald::Game for MyGame {
         let camera_pos = self.registry.get_component::<CTransform>(&self.camera).unwrap().translate;
         let camera_dir = self.registry.get_component::<CGizmo3D>(&self.camera).unwrap().front;
 
-        skald::gfx::buffer::clear_buffer(Some((0.02, 0.02, 0.02, 1.0)));
+        skald::gfx::gl_clear_buffers(Some((0.02, 0.02, 0.02, 1.0)));
         
         let shader = self.registry.get_resource::<Shader>(&self.shader.unwrap()).unwrap();
         shader.program.set_int("dirLightOn", self.direction_light_on as i32);

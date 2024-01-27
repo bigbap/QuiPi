@@ -1,7 +1,7 @@
 use skald::{
     Registry,
     VersionedIndex,
-    gfx::ElementArrayMesh,
+    gfx::{ElementArrayMesh, mesh::{BufferUsage, VboKind}},
     components::{
         CModelNode,
         CVelocity,
@@ -41,10 +41,14 @@ pub fn s_create_quad(
     rand: &mut Random
 ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
     let obj_config = config.to_obj_config(color);
-    let mesh = ElementArrayMesh::new(&obj_config.indices)?;
+    let mut mesh = ElementArrayMesh::new(
+        obj_config.indices.len(),
+        BufferUsage::StaticDraw
+    )?;
     mesh
-        .create_vbo_at(&obj_config.points, 0, 3)?
-        .create_vbo_at(&obj_config.colors, 1, 4)?;
+        .with_ebo(&obj_config.indices)?
+        .create_vbo_at(VboKind::Vertex, &obj_config.points, 0, 3)?
+        .create_vbo_at(VboKind::Color, &obj_config.colors, 1, 4)?;
 
     let mut vel = (
         rand.range(0, 200) as f32,

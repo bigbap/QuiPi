@@ -5,7 +5,13 @@ use crate::{
         CTransform,
         CModelMatrix,
     },
-    gfx::ElementArrayMesh,
+    gfx::{
+        ElementArrayMesh,
+        mesh::{
+            BufferUsage,
+            VboKind
+        }
+    },
     VersionedIndex,
     resources::{
         Shader,
@@ -26,14 +32,19 @@ pub struct Grid {
 pub fn s_create_grid(
     registry: &mut Registry
 ) -> Result<Grid, Box<dyn std::error::Error>>{
-    let mesh = ElementArrayMesh::new(&[0, 1, 2, 2, 3, 0])?;
+    let indices = &[0, 1, 2, 2, 3, 0];
+    let vertices = &[
+        -1.0, -1.0, 0.0,
+        1.0, -1.0, 0.0,
+        1.0, 1.0, 0.0,
+        -1.0, 1.0, 0.0,
+    ];
+
+    let mut mesh = ElementArrayMesh::new(6, BufferUsage::StaticDraw)?;
     mesh
-        .create_vbo_at(&[
-            -1.0, -1.0, 0.0,
-            1.0, -1.0, 0.0,
-            1.0, 1.0, 0.0,
-            -1.0, 1.0, 0.0,
-        ], 0, 3)?;
+        .with_ebo(indices)?
+        .create_vbo_3_f32::<0>(VboKind::Vertex, vertices.len(), Some(vertices))?;
+
     build_axis(registry, mesh, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0))?;
 
     let shader = registry.create_resource(Shader::new(

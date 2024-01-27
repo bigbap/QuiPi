@@ -1,14 +1,16 @@
 use std::io;
+use ft::Face;
+
 use super::{
     opengl::textures::{
         Texture,
         Format,
         Target,
-        ParameterValues,
-        ParameterNames
     },
     image::Image
 };
+
+pub use super::opengl::textures::use_texture_unit as gl_use_texture_unit;
 
 pub trait ITexture {
     fn width(&self) -> i32;
@@ -74,11 +76,29 @@ pub fn from_image(
 
     texture
         .bind()
-        .add_image_data(Format::Rgba, format, &img.flipv())
-        .set_parameter(ParameterNames::WrapS, ParameterValues::ClampToEdge)
-        .set_parameter(ParameterNames::WrapT, ParameterValues::ClampToEdge)
-        .set_parameter(ParameterNames::MinFilter, ParameterValues::LinearMipmapLinear)
-        .set_parameter(ParameterNames::MagFilter, ParameterValues::Linear);
+        .add_image_data(Format::Rgba, format, &img.flipv());
+        // .set_parameter(ParameterNames::WrapS, ParameterValues::ClampToEdge)
+        // .set_parameter(ParameterNames::WrapT, ParameterValues::ClampToEdge)
+        // .set_parameter(ParameterNames::MinFilter, ParameterValues::LinearMipmapLinear)
+        // .set_parameter(ParameterNames::MagFilter, ParameterValues::Linear);
+
+    Ok(Box::new(texture))
+}
+
+pub fn from_font(
+    face: &Face,
+    width: i32,
+    height: i32
+) -> Result<Box<dyn ITexture>, TextureError>{
+    let texture = Texture::new(
+        width,
+        height,
+        Target::Texture2D
+    );
+
+    texture
+        .bind()
+        .add_image_data(Format::Red, Format::Red, face.glyph().bitmap().buffer());
 
     Ok(Box::new(texture))
 }

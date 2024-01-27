@@ -14,7 +14,7 @@ use skald::{
         CTransform, CModelMatrix, CBoundingBox
     },
     builders::camera::build_ortho_camera,
-    gfx::ElementArrayMesh,
+    gfx::{ElementArrayMesh, mesh::{BufferUsage, VboKind}},
     utils::to_abs_path,
     systems::{
         draw::{
@@ -86,10 +86,14 @@ impl MyUI {
             
             let obj_config = quad_config.to_obj_config(color);
 
-            let mesh = ElementArrayMesh::new(&obj_config.indices)?;
+            let mut mesh = ElementArrayMesh::new(
+                obj_config.indices.len(),
+                BufferUsage::StaticDraw
+            )?;
             mesh
-                .create_vbo_at(&obj_config.points, 0, 3)?
-                .create_vbo_at(&obj_config.colors, 1, 4)?;
+                .with_ebo(&obj_config.indices)?
+                .create_vbo_at(VboKind::Vertex, &obj_config.points, 0, 3)?
+                .create_vbo_at(VboKind::Color, &obj_config.colors, 1, 4)?;
 
             let pos = (
                 b_box.width() - (quad_config.width / 2.0),

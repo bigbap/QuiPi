@@ -10,7 +10,7 @@ use skald::{
     resources::Texture,
     gfx::{
         texture::*,
-        ElementArrayMesh
+        ElementArrayMesh, mesh::{BufferUsage, VboKind}
     },
     components::{
         CMaterial,
@@ -34,10 +34,14 @@ pub fn s_load_scene(
     for x in 0..50 {
         for y in 0..50 {
             for config in &obj_configs {
-                let mesh = ElementArrayMesh::new(&config.indices)?;
+                let mut mesh = ElementArrayMesh::new(
+                    config.indices.len(),
+                    BufferUsage::StaticDraw,
+                )?;
                 mesh
-                    .create_vbo_at(&config.points, 0, 3)?
-                    .create_vbo_at(&config.texture_coords, 1, 2)?;
+                    .with_ebo(&config.indices)?
+                    .create_vbo_at(VboKind::Vertex, &config.points, 0, 3)?
+                    .create_vbo_at(VboKind::UVCoords, &config.texture_coords, 1, 2)?;
 
                 let cube = registry.create_entity("cube")?
                     .with(CModelNode {

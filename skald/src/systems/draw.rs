@@ -13,7 +13,10 @@ use crate::{
         RShader,
         UniformVariable
     },
-    gfx::draw::draw_ebo,
+    gfx::{
+        gl_draw,
+        draw::DrawBuffer
+    },
     systems::material
 };
 
@@ -85,7 +88,14 @@ fn draw_node(
     if let Some(mesh) = &node.mesh {
         shader.program.use_program();
         mesh.vao.bind();
-        draw_ebo(&mesh.vao, mode);
+        gl_draw(
+            match mesh.ebo {
+                Some(_) => DrawBuffer::Elements,
+                _ => DrawBuffer::Arrays
+            },
+            mode,
+            mesh.vao.count()
+        );
         mesh.vao.unbind();
     }
 }

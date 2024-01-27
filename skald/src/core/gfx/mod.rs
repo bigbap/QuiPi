@@ -2,7 +2,6 @@ pub mod flags;
 pub mod image;
 pub mod shader_program;
 pub mod texture;
-pub mod buffer;
 pub mod draw;
 pub mod view;
 pub mod mesh;
@@ -10,6 +9,9 @@ pub mod mesh;
 pub use shader_program::ShaderProgram;
 pub use mesh::ElementArrayMesh;
 pub use flags::*;
+pub use opengl::pixel_store as gl_pixel_store;
+pub use opengl::buffer::clear_buffers as gl_clear_buffers;
+pub use opengl::draw::draw as gl_draw;
 
 mod opengl;
 

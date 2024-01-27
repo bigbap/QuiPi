@@ -1,27 +1,67 @@
-use crate::gfx::pixel_store;
-use ft::{face::LoadFlag, FtResult};
+use std::char;
+use std::collections::HashMap;
+use ft::{
+    face::LoadFlag,
+    FtResult
+};
+
+use crate::gfx::{
+    gl_pixel_store,
+    texture::{
+        self,
+        ITexture
+    }
+};
 
 pub struct Character {
-    texture_id: u32,
-    size: glm::Vec2,
-    bearing: glm::Vec2,
-    advance: u32
+    pub texture: Box<dyn ITexture>,
+    pub size: glm::Vec2,
+    pub bearing: glm::Vec2,
+    pub advance: i32
 }
 
-pub fn load_char_textures(face: ft::Face) -> FtResult<()> {
-    pixel_store::set_unpack_alignment(1);
+pub fn load_char_textures(font: &str) -> FtResult<HashMap<char, Character>> {
+    let library = ft::Library::init()?;
+    let face = library.new_face(font, 0)?;
+
+    gl_pixel_store::set_unpack_alignment(1);
+
+    let mut map: HashMap<char, Character> = HashMap::new();
 
     for c in 0..128 {
-        match face.load_char(c, LoadFlag::RENDER) {
-            Err(e) => {
-                #[cfg(debug_assertions)]
-                println!("{}", e);
+        if let Err(e) = face.load_char(c, LoadFlag::RENDER) {
+            #[cfg(debug_assertions)]
+            println!("{}", e);
 
-                continue
-            },
-            _ => ()
+            continue
+        }
+
+        let width = face.glyph().bitmap().width();
+        let rows = face.glyph().bitmap().rows();
+        let left = face.glyph().bitmap_left();
+        let top = face.glyph().bitmap_top();
+        let texture = texture::from_font(
+            &face,
+            width,
+            rows
+        ).map_err(|e| {
+            #[cfg(debug_assertions)]
+            println!("{:?}", e);
+
+            ft::Error::Unknown
+        })?;
+
+        let m_char = Character {
+            texture,
+            size: glm::vec2(width as f32, rows as f32),
+            bearing: glm::vec2(left as f32, top as f32),
+            advance: face.glyph().advance().x
+        };
+
+        if let Some(c) = char::from_u32(c as u32) {
+            map.insert(c, m_char);
         }
     }
 
-    Ok(())
+    Ok(map)
 }

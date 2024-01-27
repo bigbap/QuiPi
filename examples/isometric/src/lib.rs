@@ -13,7 +13,7 @@ use skald::{
     Game,
     utils::Timer,
     gfx::{
-        buffer::clear_buffer,
+        gl_clear_buffers,
         ShaderProgram
     },
     Registry,
@@ -149,7 +149,7 @@ impl Game for MyGame {
         )?;
 
         // render
-        clear_buffer(Some((0.0, 0.0, 0.0, 1.0)));
+        gl_clear_buffers(Some((0.0, 0.0, 0.0, 1.0)));
 
         if let Some(shader) = self.shader {
             s_draw_by_tag(

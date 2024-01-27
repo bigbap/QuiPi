@@ -15,7 +15,8 @@ pub enum Target {
 #[derive(Debug, Clone, Copy)]
 pub enum Format {
     Rgb,
-    Rgba
+    Rgba,
+    Red,
 }
 
 #[allow(dead_code)]
@@ -108,6 +109,7 @@ impl Texture {
         self
     }
 
+    #[allow(dead_code)]
     pub fn set_parameter(
         &self,
         pname: ParameterNames,
@@ -151,6 +153,12 @@ impl ITexture for Texture {
     }
 }
 
+pub fn use_texture_unit(unit: i32) {
+    unsafe {
+        gl::ActiveTexture(gl::TEXTURE0 + unit as gl::types::GLuint);
+    }
+}
+
 /**
 * Private
 */
@@ -169,7 +177,8 @@ impl Format {
     fn unwrap(&self) -> gl::types::GLenum {
         match self {
             Format::Rgb => gl::RGB,
-            Format::Rgba => gl::RGBA
+            Format::Rgba => gl::RGBA,
+            Format::Red => gl::RED
         }
     }
 }

@@ -1,7 +1,11 @@
 use skald::{
     gfx::{
         texture,
-        ElementArrayMesh
+        ElementArrayMesh,
+        mesh::{
+            VboKind,
+            BufferUsage
+        }
     },
     VersionedIndex,
     Registry,
@@ -62,25 +66,38 @@ pub fn create_crates(
 
     let transforms = [
         (glm::vec3(-1.0, 0.0, 0.0), 0.0),
-        (glm::vec3(0.1, 0.0, 0.1), 0.1),
-        (glm::vec3(-0.3, 1.0, 0.2), 0.02),
-
-        (glm::vec3(-3.0, 0.0, 2.0), 0.0),
-        (glm::vec3(-1.9, 0.0, 2.1), 0.1),
-        (glm::vec3(-2.3, 1.0, 2.2), 0.02),
-
-        (glm::vec3(1.0, 0.0, -2.0), 0.0),
-        (glm::vec3(2.1, 0.0, -2.1), 0.1),
-        (glm::vec3(1.7, 1.0, -2.2), 0.02),
+        // (glm::vec3(0.1, 0.0, 0.1), 0.1),
+        // (glm::vec3(-0.3, 1.0, 0.2), 0.02),
+        //
+        // (glm::vec3(-3.0, 0.0, 2.0), 0.0),
+        // (glm::vec3(-1.9, 0.0, 2.1), 0.1),
+        // (glm::vec3(-2.3, 1.0, 2.2), 0.02),
+        //
+        // (glm::vec3(1.0, 0.0, -2.0), 0.0),
+        // (glm::vec3(2.1, 0.0, -2.1), 0.1),
+        // (glm::vec3(1.7, 1.0, -2.2), 0.02),
     ];
 
     let mut entities = vec![];
     for config in model_configs.iter() {
         for transform in transforms.iter() {
-            let mesh = ElementArrayMesh::new(&config.indices)?;
+            let mut mesh = ElementArrayMesh::new(
+                config.indices.len(),
+                BufferUsage::StaticDraw
+            )?;
+
             mesh
-                .create_vbo_at(&config.points, 0, 3)?
-                .create_vbo_at(&config.texture_coords, 2, 2)?;
+                .with_ebo(&config.indices)?
+                .create_vbo_3_f32::<0>(
+                    VboKind::Vertex,
+                    config.points.len(),
+                    Some(&config.points)
+                )?
+                .create_vbo_2_f32::<2>(
+                    VboKind::UVCoords,
+                    config.texture_coords.len(),
+                    Some(&config.texture_coords)
+                )?;
 
             let entity = registry.create_entity("crate")?
                 .with(CModelNode {
@@ -175,8 +192,17 @@ pub fn directional_light(
     }
     shader.set_float_3("dirLight.direction", direction);
 
-    let mesh = ElementArrayMesh::new(&model_config.indices)?;
-    mesh.create_vbo_at(&model_config.points, 0, 3)?;
+    let mut mesh = ElementArrayMesh::new(
+        model_config.indices.len(),
+        BufferUsage::StaticDraw
+    )?;
+    mesh
+        .with_ebo(&model_config.indices)?
+        .create_vbo_3_f32::<0>(
+            VboKind::Vertex,
+            model_config.points.len(),
+            Some(&model_config.points)
+        )?;
 
     let light = registry.create_entity("light")?
         .with(CDirection {
@@ -248,8 +274,17 @@ pub fn point_light(
     shader.set_float("pointLight.linear", attenuation.linear);
     shader.set_float("pointLight.quadratic", attenuation.quadratic);
 
-    let mesh = ElementArrayMesh::new(&model_config.indices)?;
-    mesh.create_vbo_at(&model_config.points, 0, 3)?;
+    let mut mesh = ElementArrayMesh::new(
+        model_config.indices.len(),
+        BufferUsage::StaticDraw
+    )?;
+    mesh
+        .with_ebo(&model_config.indices)?
+        .create_vbo_3_f32::<0>(
+            VboKind::Vertex,
+            model_config.points.len(),
+            Some(&model_config.points)
+        )?;
 
     let light = registry.create_entity("light")?
         .with(attenuation)?
@@ -311,8 +346,17 @@ pub fn spot_light(
     shader.set_float("spotLight.cutOff", cutoffs.inner_cutoff);
     shader.set_float("spotLight.outerCutOff", cutoffs.outer_cutoff);
 
-    let mesh = ElementArrayMesh::new(&model_config.indices)?;
-    mesh.create_vbo_at(&model_config.points, 0, 3)?;
+    let mut mesh = ElementArrayMesh::new(
+        model_config.indices.len(),
+        BufferUsage::StaticDraw
+    )?;
+    mesh
+        .with_ebo(&model_config.indices)?
+        .create_vbo_3_f32::<0>(
+            VboKind::Vertex,
+            model_config.points.len(),
+            Some(&model_config.points)
+        )?;
 
     registry.create_entity("light")?
         .with(CRGBA { r: 0.6, g: 0.0, b: 0.0, a: 1.0 })?
