@@ -58,6 +58,7 @@ pub fn build_ortho_camera(
             frustrum.near,
             frustrum.far
         )?)?
+        .with(frustrum)?
         .with(transform)?
         .with(CGizmo3D::new(
             glm::vec3(0.0, 0.0, -1.0),

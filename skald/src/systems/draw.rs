@@ -10,13 +10,10 @@ use crate::{
     },
     Registry,
     resources::shader::{
-        Shader,
+        RShader,
         UniformVariable
     },
-    gfx::{
-        draw::draw_ebo,
-        texture
-    },
+    gfx::draw::draw_ebo,
     systems::material
 };
 
@@ -42,7 +39,7 @@ pub fn s_draw_by_tag(
     camera_id: &VersionedIndex,
     mode: DrawMode
 ) -> Result<(), Box<dyn std::error::Error>> {
-    if let Some(shader) = registry.get_resource::<Shader>(shader_id) {
+    if let Some(shader) = registry.get_resource::<RShader>(shader_id) {
         let entities = registry.get_entities_by_tag(tag);
         for entity in entities.iter() {
             s_draw_entity(
@@ -62,7 +59,7 @@ pub fn s_draw_entity(
     entity: &VersionedIndex,
     registry: &Registry,
     camera: &VersionedIndex,
-    shader: &Shader,
+    shader: &RShader,
     mode: DrawMode
 ) {
     // TODO: this can be optimized to have textures per tag instead of per entity
@@ -82,7 +79,7 @@ pub fn s_draw_entity(
 
 fn draw_node(
     node: &CModelNode,
-    shader: &Shader,
+    shader: &RShader,
     mode: DrawMode
 ) {
     if let Some(mesh) = &node.mesh {
@@ -96,7 +93,7 @@ fn draw_node(
 fn set_uniforms(
     entity: &VersionedIndex,
     registry: &Registry,
-    shader: &Shader,
+    shader: &RShader,
     camera: &VersionedIndex,
 ) {
     shader.program.use_program();
@@ -146,7 +143,7 @@ fn set_uniforms(
 fn bind_textures(
     entity: &VersionedIndex,
     registry: &Registry,
-    shader: &Shader
+    shader: &RShader
 ) {
     if let Some(mat) = registry.get_component::<CMaterial>(entity) {
         shader.program.use_program();
@@ -154,13 +151,11 @@ fn bind_textures(
 
         if let Some(diffuse) = material::s_get_texture(&mat.diffuse, registry) {
             shader.program.set_int(&format!("{}.diffuse", mat.uniform_struct), 0);
-            texture::set_active_texture(0);
-            texture::bind(&diffuse.id);
+            diffuse.0.use_texture(0);
         }
         if let Some(specular) = material::s_get_texture(&mat.specular, registry) {
             shader.program.set_int(&format!("{}.specular", mat.uniform_struct), 1);
-            texture::set_active_texture(1);
-            texture::bind(&specular.id);
+            specular.0.use_texture(1);
         }
     }
 }
@@ -168,7 +163,7 @@ fn bind_textures(
 fn set_color(
     entity: &VersionedIndex,
     registry: &Registry,
-    shader: &Shader,
+    shader: &RShader,
     var: &str
 ) {
     if let Some(color) = registry.get_component::<CRGBA>(entity) {
