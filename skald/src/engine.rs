@@ -1,8 +1,13 @@
+use std::time::Instant;
+
 use sdl2::video::GLProfile;
-use crate::{gfx::{
-    self,
-    GFXFlags
-}, core::GUI};
+use crate::{
+    gfx::{
+        self,
+        GFXFlags
+    },
+    core::GUI
+};
 
 #[derive(Debug)]
 pub enum Flags {
@@ -50,6 +55,7 @@ pub fn run<G: Game>(
         .resizable()
         .build()?;
 
+
     let _gl_ctx = window.gl_create_context()?;
 
     debug_assert_eq!(gl_attr.context_profile(), GLProfile::Core);
@@ -75,8 +81,16 @@ pub fn run<G: Game>(
     }
     game.init(gui)?;
 
+    let timer = Instant::now();
+    let mut last_frame = timer.elapsed().as_millis();
     let mut event_pump = sdl_ctx.event_pump()?;
     'running: loop {
+        // limit fps to 60
+        if timer.elapsed().as_millis() - last_frame < 1000 / 60 {
+            continue;
+        }
+        last_frame = timer.elapsed().as_millis();
+
         if game.handle_frame(
             &mut event_pump
         )?.is_none() {
