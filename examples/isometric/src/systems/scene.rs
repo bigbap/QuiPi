@@ -27,9 +27,7 @@ pub fn s_load_scene(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let (models, _) = load_obj::s_load_obj_file(to_abs_path("assets/objects/cube.obj")?)?;
     let obj_configs = ObjectConfig::from_obj(models)?;
-    let texture = Texture {
-        id: from_image(&to_abs_path("assets/objects/textures/tex.png")?)?
-    };
+    let texture = Texture(from_image(&to_abs_path("assets/objects/textures/tex.png")?)?);
 
     let texture = registry.create_resource(texture)?;
 

@@ -104,6 +104,14 @@ impl ShaderProgram {
         }
     }
 
+    pub fn set_float_2(&self, key: &str, val: (f32, f32)) {
+        self.use_program();
+
+        unsafe {
+            gl::Uniform2f(self.get_location(key), val.0, val.1);
+        }
+    }
+
     pub fn set_float_3(&self, key: &str, val: (f32, f32, f32)) {
         self.use_program();
 
