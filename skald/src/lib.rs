@@ -1,6 +1,7 @@
 pub extern crate sdl2;
 pub extern crate gl;
 pub extern crate nalgebra_glm as glm;
+pub extern crate freetype as ft;
 // pub extern crate gltf;
 
 pub mod builders;
