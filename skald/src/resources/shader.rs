@@ -13,12 +13,12 @@ pub enum UniformVariable {
 }
 
 #[derive(Debug, Component)]
-pub struct Shader {
+pub struct RShader {
     pub program: ShaderProgram,
     pub uniforms: Vec<UniformVariable>
 }
 
-impl Shader {
+impl RShader {
     pub fn new(
         file_name: &str,
         uniforms: Vec<UniformVariable>
