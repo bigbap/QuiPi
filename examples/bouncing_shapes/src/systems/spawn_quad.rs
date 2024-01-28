@@ -1,7 +1,10 @@
 use skald::{
     Registry,
     VersionedIndex,
-    gfx::ElementArrayMesh,
+    gfx::{
+        ElementArrayMesh,
+        mesh::BufferUsage
+    },
     components::{
         CModelNode,
         CVelocity,
@@ -20,8 +23,8 @@ pub fn s_spawn_quad(
     rand: &mut Random
 ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
     let config = CQuadConfig {
-        width: 256.0,
-        height: 256.0,
+        width: 128.0,
+        height: 128.0,
         center_x: 0.0,
         center_y: 0.0
     };
@@ -41,10 +44,14 @@ pub fn s_create_quad(
     rand: &mut Random
 ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
     let obj_config = config.to_obj_config(color);
-    let mesh = ElementArrayMesh::new(&obj_config.indices)?;
+    let mut mesh = ElementArrayMesh::new(
+        obj_config.indices.len(),
+        BufferUsage::StaticDraw
+    )?;
     mesh
-        .create_vbo_at(&obj_config.points, 0, 3)?
-        .create_vbo_at(&obj_config.colors, 1, 4)?;
+        .with_ebo(&obj_config.indices)?
+        .create_vbo_3_f32(0, obj_config.points.len(), Some(&obj_config.points))?
+        .create_vbo_4_f32(1, obj_config.colors.len(), Some(&obj_config.colors))?;
 
     let mut vel = (
         rand.range(0, 200) as f32,
@@ -52,8 +59,6 @@ pub fn s_create_quad(
     );
     if rand.random() > 0.5 { vel.0 *= -1.0; }
     if rand.random() > 0.5 { vel.1 *= -1.0; }
-
-    println!("{:?}", vel);
     
     let quad = registry.create_entity("quad")?
         .with(CModelNode {
@@ -77,8 +82,6 @@ pub fn s_create_quad(
         })?
         .with(CModelMatrix::default())?
         .done()?;
-
-    println!("{}", registry.entity_count());
 
     Ok(quad)
 }

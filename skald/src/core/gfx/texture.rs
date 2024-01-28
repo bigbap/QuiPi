@@ -1,16 +1,21 @@
-use std::io;
+use std::{io, fmt};
+use ft::Face;
+
+use crate::utils::to_abs_path;
 use super::{
     opengl::textures::{
         Texture,
         Format,
         Target,
-        ParameterValues,
-        ParameterNames
+        ParameterNames,
+        ParameterValues
     },
     image::Image
 };
 
-pub trait ITexture {
+pub use super::opengl::textures::use_texture_unit as gl_use_texture_unit;
+
+pub trait ITexture: fmt::Debug {
     fn width(&self) -> i32;
     fn height(&self) -> i32;
     fn use_texture(&self, unit: i32);
@@ -63,6 +68,7 @@ pub fn from_wavefront_material(
 pub fn from_image(
     file_path: &str
 ) -> Result<Box<dyn ITexture>, TextureError> {
+    let file_path = &to_abs_path(file_path)?;
     let format = get_format(file_path);
     let img = Image::from_file(file_path)?;
 
@@ -79,6 +85,24 @@ pub fn from_image(
         .set_parameter(ParameterNames::WrapT, ParameterValues::ClampToEdge)
         .set_parameter(ParameterNames::MinFilter, ParameterValues::LinearMipmapLinear)
         .set_parameter(ParameterNames::MagFilter, ParameterValues::Linear);
+
+    Ok(Box::new(texture))
+}
+
+pub fn from_font(
+    face: &Face,
+    width: i32,
+    height: i32
+) -> Result<Box<dyn ITexture>, TextureError>{
+    let texture = Texture::new(
+        width,
+        height,
+        Target::Texture2D
+    );
+
+    texture
+        .bind()
+        .add_image_data(Format::Red, Format::Red, face.glyph().bitmap().buffer());
 
     Ok(Box::new(texture))
 }

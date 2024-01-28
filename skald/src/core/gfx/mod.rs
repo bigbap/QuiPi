@@ -1,15 +1,16 @@
-pub mod flags;
 pub mod image;
 pub mod shader_program;
 pub mod texture;
-pub mod buffer;
 pub mod draw;
 pub mod view;
 pub mod mesh;
 
 pub use shader_program::ShaderProgram;
 pub use mesh::ElementArrayMesh;
-pub use flags::*;
+pub use opengl::flags as gl_flags;
+pub use opengl::pixel_store as gl_pixel_store;
+pub use opengl::buffer::clear_buffers as gl_clear_buffers;
+pub use opengl::draw::draw as gl_draw;
 
 mod opengl;
 
@@ -20,14 +21,14 @@ pub fn init(
     video_subsystem: &VideoSubsystem,
     width: i32,
     height: i32,
-    flags: &[GFXFlags]
+    flags: &[gl_flags::GFXFlags]
 ) {
     gl::load_with(|name| video_subsystem.gl_get_proc_address(name) as *const _);
     unsafe {
         gl::Viewport(0, 0, width, height);
     }
 
-    flags::set_flags(flags);
+    gl_flags::set_flags(flags);
 
     let mut flags: gl::types::GLint = 0;
     unsafe {

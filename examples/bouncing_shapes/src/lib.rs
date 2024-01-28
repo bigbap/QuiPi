@@ -10,15 +10,12 @@ use skald::{
         shader::UniformVariable
     },
     gfx::{
-        buffer::clear_buffer,
+        gl_clear_buffers,
         ShaderProgram,
     },
     builders::camera::build_ortho_camera,
     math::random::Random,
-    utils::{
-        now_secs,
-        to_abs_path
-    },
+    utils::{now_secs, Timer},
     systems::{
         draw::{
             DrawMode,
@@ -31,7 +28,8 @@ use skald::{
         register_components,
         CEulerAngles,
         CTransform, CBoundingBox
-    }
+    },
+    core::text::{TextRenderer, DEFAULT_FONT},
 };
 
 pub static WIDTH: u32 = 800;
@@ -43,19 +41,17 @@ use systems::*;
 
 pub struct MyGame {
     registry: Registry,
-    timer: std::time::Instant,
+    timer: Timer,
     rand: Random,
     
     shader: Option<VersionedIndex>,
     camera: VersionedIndex,
-
-    last_frame: f32
+    text_renderer: Option<TextRenderer>,
 }
 
 impl MyGame {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
         let mut registry = Registry::init()?;
-        let timer = std::time::Instant::now();
         let rand = Random::from_seed(now_secs()?);
 
         register_resources(&mut registry);
@@ -87,21 +83,17 @@ impl MyGame {
         Ok(MyGame {
             registry,
             shader: None,
-            timer,
+            text_renderer: None,
+            timer: Timer::new()?,
             rand,
             camera,
-            last_frame: timer.elapsed().as_millis() as f32 / 1000.0
         })
-    }
-
-    pub fn ticks(&self) -> f32 {
-        self.timer.elapsed().as_millis() as f32 / 1000.0
     }
 }
 
 impl skald::Game for MyGame {
     fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let shader = ShaderProgram::new(&to_abs_path("assets/shaders/shape")?)?;
+        let shader = ShaderProgram::new("assets/shaders/shape")?;
         let shader_id = self.registry.create_resource(Shader {
             program: shader,
             uniforms: vec![
@@ -116,6 +108,15 @@ impl skald::Game for MyGame {
         
         self.shader = Some(shader_id);
 
+        let mut text = TextRenderer::new(
+            DEFAULT_FONT,
+            WIDTH as f32,
+            HEIGHT as f32
+        )?;
+        text.color = glm::vec3(1.0, 1.0, 1.0);
+        text.scale = 0.7;
+        self.text_renderer = Some(text);
+        
         Ok(())
     }
 
@@ -123,10 +124,7 @@ impl skald::Game for MyGame {
         &mut self,
         event_pump: &mut sdl2::EventPump
     ) -> Result<Option<()>, Box<dyn std::error::Error>> {
-        let ticks = self.ticks();
-        let delta = ticks - self.last_frame;
-        
-        self.last_frame = ticks;
+        let delta = self.timer.delta();
 
         // handle input events
         for event in event_pump.poll_iter() {
@@ -145,7 +143,7 @@ impl skald::Game for MyGame {
         )?;
 
         // render
-        clear_buffer(Some((0.0, 0.0, 0.0, 1.0)));
+        gl_clear_buffers(Some((0.0, 0.0, 0.0, 1.0)));
 
         s_draw_by_tag(
             "quad",
@@ -154,6 +152,14 @@ impl skald::Game for MyGame {
             &self.camera,
             DrawMode::Triangles
         )?;
+       
+        let entity_count = self.registry.entity_count();
+        if let Some(text_renderer) = &self.text_renderer {
+            text_renderer.draw(
+                format!("entities: {}", entity_count),
+                glm::vec2(25.0, HEIGHT as f32 - 30.0)
+            );
+        }
 
         Ok(Some(()))
     }

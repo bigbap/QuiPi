@@ -105,10 +105,9 @@ impl MyGame {
 
 impl skald::Game for MyGame {
     fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let asset_path = config::asset_path()?.into_os_string().into_string().unwrap();
         let shader = self.registry.create_resource(
             Shader::new(
-                &format!("{}/shaders/lighting", asset_path),
+                "assets/shaders/lighting",
                 vec![
                     UniformVariable::MVPMatrix("mvpMatrix".to_string()),
                     UniformVariable::ModelMatrix("model".to_string()),
@@ -117,7 +116,7 @@ impl skald::Game for MyGame {
         )?;
         let light_shader = self.registry.create_resource(
             Shader::new(
-                &format!("{}/shaders/light_source", asset_path),
+                "assets/shaders/light_source",
                 vec![
                     UniformVariable::MVPMatrix("mvpMatrix".to_string()),
                     UniformVariable::Color("color".to_string())
@@ -127,11 +126,11 @@ impl skald::Game for MyGame {
         
         let diffuse = create_texture(
             &mut self.registry,
-            &format!("{}/objects/textures/container.png", asset_path),
+            "assets/objects/textures/container.png",
         )?;
         let specular = create_texture(
             &mut self.registry,
-            &format!("{}/objects/textures/container_specular.png", asset_path),
+            "assets/objects/textures/container_specular.png",
         )?;
 
         create_crates(
@@ -146,7 +145,7 @@ impl skald::Game for MyGame {
             }
         )?;
 
-        let (models_obj, _materials_obj) = s_load_obj_file(format!("{}/objects/sphere.obj", asset_path))?;
+        let (models_obj, _materials_obj) = s_load_obj_file("assets/objects/sphere.obj".to_string())?;
         let model_configs = ObjectConfig::from_obj(models_obj)?;
         self.direction_light = Some(directional_light(
             &mut self.registry,
@@ -238,7 +237,7 @@ impl skald::Game for MyGame {
         let camera_pos = self.registry.get_component::<CTransform>(&self.camera).unwrap().translate;
         let camera_dir = self.registry.get_component::<CGizmo3D>(&self.camera).unwrap().front;
 
-        skald::gfx::buffer::clear_buffer(Some((0.02, 0.02, 0.02, 1.0)));
+        skald::gfx::gl_clear_buffers(Some((0.02, 0.02, 0.02, 1.0)));
         
         let shader = self.registry.get_resource::<Shader>(&self.shader.unwrap()).unwrap();
         shader.program.set_int("dirLightOn", self.direction_light_on as i32);
