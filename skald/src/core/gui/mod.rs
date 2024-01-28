@@ -3,13 +3,18 @@ use egui::{
     Mesh, TextureId, TexturesDelta
 };
 
-use crate::{gfx::{
-    ElementArrayMesh,
-    draw::{
-        draw_ebo,
-        DrawMode
-    }
-}, components::CCamera};
+use crate::{
+    gfx::{
+        gl_draw,
+        ElementArrayMesh,
+        draw::{DrawMode, DrawBuffer},
+        mesh::{
+            BufferUsage,
+            ShaderLocation
+        }
+    },
+    components::CCamera
+};
 
 use super::ShaderProgram;
 
@@ -58,20 +63,28 @@ impl GUI {
 
             self.texture = Some(mesh.texture_id);
 
-            let mesh = ElementArrayMesh::new(&mesh.indices)?;
-            mesh
-                .create_vbo_at(&points, 0, 2)?
-                .create_vbo_at(&colors, 1, 4)?
-                .create_vbo_at(&uv_coords, 2, 2)?;
+            let mut m_mesh = ElementArrayMesh::new(
+                mesh.indices.len(),
+                BufferUsage::StaticDraw
+            )?;
+            m_mesh
+                .with_ebo(&mesh.indices)?
+                .with_vbo::<2, f32>(ShaderLocation::Zero, &points)?
+                .with_vbo::<4, f32>(ShaderLocation::One, &colors)?
+                .with_vbo::<2, f32>(ShaderLocation::Two, &uv_coords)?;
 
-            self.mesh = Some(mesh);
+            self.mesh = Some(m_mesh);
         }
         self.paint(full_output.textures_delta);
 
         Ok(())
     }
 
-    pub fn paint(&self, t_delta: TexturesDelta) {
+    pub fn paint(&mut self, t_delta: TexturesDelta) {
+        for (texture_id, delta) in t_delta.set {
+            self.upload_egui_texture(texture_id, &delta)
+        }
+
         if let (Some(mesh), Some(shader)) = (&self.mesh, &self.shader) {
             unsafe {
                 gl::Enable(gl::FRAMEBUFFER_SRGB);
@@ -79,25 +92,44 @@ impl GUI {
                 gl::Enable(gl::BLEND);
                 gl::BlendFunc(gl::ONE, gl::ONE_MINUS_SRC_ALPHA);
                 
+                shader.use_program();
+                // shader.set_float_2("u_screenSize", (width, height));
+                shader.set_mat4("u_mvpMatrix", &self.camera.projection_matrix);
+
+                mesh.vao.bind();
+                gl_draw(DrawBuffer::Elements, DrawMode::Triangles, mesh.vao.count());
+                mesh.vao.unbind();
 
                 gl::Disable(gl::FRAMEBUFFER_SRGB);
                 gl::Disable(gl::SCISSOR_TEST);
                 gl::Disable(gl::BLEND);
             }
-
-
-            shader.use_program();
-            // shader.set_float_2("u_screenSize", (width, height));
-            shader.set_mat4("u_mvpMatrix", &self.camera.projection_matrix);
-
-            mesh.vao.bind();
-            draw_ebo(&mesh.vao, DrawMode::Triangles);
-            mesh.vao.unbind();
         }
     }
 
     fn upload_egui_texture(&mut self, id: egui::TextureId, delta: &egui::epaint::ImageDelta) {
+        // Modeled after equi_sdl2_gl's upload_egui_texture.
+        // https://github.com/ArjunNair/egui_sdl2_gl/blob/main/src/painter.rs
 
+        let pixels: Vec<u8> = match &delta.image {
+            egui::ImageData::Color(image) => {
+                assert_eq!(
+                    image.width() * image.height(),
+                    image.pixels.len(),
+                    "mismatch between texture size and texel count"
+                );
+
+                image
+                    .pixels
+                    .iter()
+                    .flat_map(|color| color.to_array())
+                    .collect()
+            },
+            egui::ImageData::Font(image) => image
+                .srgba_pixels(None)
+                .flat_map(|color| color.to_array())
+                .collect()
+        };
     }
 }
 
@@ -110,10 +142,10 @@ fn parse_vertices(mesh: &mut Mesh) -> (Vec<f32>, Vec<f32>, Vec<f32>) {
         pos.push(row.pos.x);
         pos.push(row.pos.y);
 
-        color.push(row.color.r() as f32 / 255.0);
-        color.push(row.color.g() as f32 / 255.0);
-        color.push(row.color.b() as f32 / 255.0);
-        color.push(row.color.a() as f32 / 255.0);
+        color.push(row.color.r() as f32);
+        color.push(row.color.g() as f32);
+        color.push(row.color.b() as f32);
+        color.push(row.color.a() as f32);
 
         uv_coords.push(row.uv.x);
         uv_coords.push(row.uv.y);

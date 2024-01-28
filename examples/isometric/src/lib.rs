@@ -178,10 +178,6 @@ impl Game for MyGame {
             s_draw_grid(&self.registry, &self.camera, grid)?;
         }
 
-        if let Some(debug_gui) = &self.debug_gui {
-            debug_gui.draw(WIDTH as f32, HEIGHT as f32);
-        }
-
         Ok(Some(()))
     }
 }

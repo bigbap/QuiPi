@@ -30,10 +30,13 @@ use skald::{
         CTransform,
         CBoundingBox
     },
-    core::text::{
-        TextRenderer,
-        DEFAULT_FONT
-    },
+    core::{
+        GUI,
+        text::{
+            TextRenderer,
+            DEFAULT_FONT
+        },
+    }
 };
 
 pub static WIDTH: u32 = 800;
@@ -98,7 +101,7 @@ impl MyGame {
 }
 
 impl skald::Game for MyGame {
-    fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    fn init(&mut self, debug_gui: Option<GUI>) -> Result<(), Box<dyn std::error::Error>> {
         let shader = ShaderProgram::new("assets/shaders/shape")?;
         let shader_id = self.registry.create_resource(Shader {
             program: shader,
@@ -149,13 +152,8 @@ impl skald::Game for MyGame {
             delta,
         )?;
 
-        // update gui
-        if let Some(debug_gui) = &mut self.debug_gui {
-            debug_gui.update()?;
-        }
-
         // render
-        gl_clear_buffers(Some((0.0, 0.0, 0.0, 1.0)));
+        gl_clear_buffers(Some((0.4, 0.0, 0.0, 1.0)));
 
         s_draw_by_tag(
             "quad",
@@ -164,13 +162,18 @@ impl skald::Game for MyGame {
             &self.camera,
             DrawMode::Triangles
         )?;
-       
+
         let entity_count = self.registry.entity_count();
         if let Some(text_renderer) = &self.text_renderer {
             text_renderer.draw(
                 format!("entities: {}", entity_count),
                 glm::vec2(25.0, HEIGHT as f32 - 30.0)
             );
+        }
+
+        // update gui
+        if let Some(debug_gui) = &mut self.debug_gui {
+            debug_gui.update()?;
         }
 
         Ok(Some(()))
