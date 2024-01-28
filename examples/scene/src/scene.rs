@@ -2,10 +2,7 @@ use skald::{
     gfx::{
         texture,
         ElementArrayMesh,
-        mesh::{
-            VboKind,
-            BufferUsage
-        }
+        mesh::BufferUsage
     },
     VersionedIndex,
     Registry,
@@ -66,16 +63,16 @@ pub fn create_crates(
 
     let transforms = [
         (glm::vec3(-1.0, 0.0, 0.0), 0.0),
-        // (glm::vec3(0.1, 0.0, 0.1), 0.1),
-        // (glm::vec3(-0.3, 1.0, 0.2), 0.02),
-        //
-        // (glm::vec3(-3.0, 0.0, 2.0), 0.0),
-        // (glm::vec3(-1.9, 0.0, 2.1), 0.1),
-        // (glm::vec3(-2.3, 1.0, 2.2), 0.02),
-        //
-        // (glm::vec3(1.0, 0.0, -2.0), 0.0),
-        // (glm::vec3(2.1, 0.0, -2.1), 0.1),
-        // (glm::vec3(1.7, 1.0, -2.2), 0.02),
+        (glm::vec3(0.1, 0.0, 0.1), 0.1),
+        (glm::vec3(-0.3, 1.0, 0.2), 0.02),
+
+        (glm::vec3(-3.0, 0.0, 2.0), 0.0),
+        (glm::vec3(-1.9, 0.0, 2.1), 0.1),
+        (glm::vec3(-2.3, 1.0, 2.2), 0.02),
+
+        (glm::vec3(1.0, 0.0, -2.0), 0.0),
+        (glm::vec3(2.1, 0.0, -2.1), 0.1),
+        (glm::vec3(1.7, 1.0, -2.2), 0.02),
     ];
 
     let mut entities = vec![];
@@ -88,13 +85,13 @@ pub fn create_crates(
 
             mesh
                 .with_ebo(&config.indices)?
-                .create_vbo_3_f32::<0>(
-                    VboKind::Vertex,
+                .create_vbo_3_f32(
+                    0,
                     config.points.len(),
                     Some(&config.points)
                 )?
-                .create_vbo_2_f32::<2>(
-                    VboKind::UVCoords,
+                .create_vbo_2_f32(
+                    2,
                     config.texture_coords.len(),
                     Some(&config.texture_coords)
                 )?;
@@ -198,8 +195,8 @@ pub fn directional_light(
     )?;
     mesh
         .with_ebo(&model_config.indices)?
-        .create_vbo_3_f32::<0>(
-            VboKind::Vertex,
+        .create_vbo_3_f32(
+            0,
             model_config.points.len(),
             Some(&model_config.points)
         )?;
@@ -280,8 +277,8 @@ pub fn point_light(
     )?;
     mesh
         .with_ebo(&model_config.indices)?
-        .create_vbo_3_f32::<0>(
-            VboKind::Vertex,
+        .create_vbo_3_f32(
+            0,
             model_config.points.len(),
             Some(&model_config.points)
         )?;
@@ -352,8 +349,8 @@ pub fn spot_light(
     )?;
     mesh
         .with_ebo(&model_config.indices)?
-        .create_vbo_3_f32::<0>(
-            VboKind::Vertex,
+        .create_vbo_3_f32(
+            0,
             model_config.points.len(),
             Some(&model_config.points)
         )?;

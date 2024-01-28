@@ -1,10 +1,7 @@
 use std::collections::HashMap;
 use crate::gfx::{
     ElementArrayMesh,
-    mesh::{
-        BufferUsage,
-        VboKind
-    },
+    mesh::BufferUsage,
     texture::gl_use_texture_unit,
     gl_draw, draw::{DrawBuffer, DrawMode}
 };
@@ -33,7 +30,7 @@ impl TextRenderer {
         shader.set_mat4("projection", &projection);
         
         let mut mesh = ElementArrayMesh::new(6, BufferUsage::DynamicDraw)?;
-        mesh.create_vbo::<0, 4, f32>(VboKind::Vertex, 6 * 4, None)?;
+        mesh.create_vbo::<4, f32>(0, 6 * 4, None)?;
 
         Ok(Self {
             shader,
@@ -75,7 +72,7 @@ impl TextRenderer {
             ];
 
             ch.texture.use_texture(0);
-            if let Some(mesh) = self.mesh.vbo_map.get(&VboKind::Vertex) {
+            if let Some(mesh) = self.mesh.vbo_list.get(0) {
                 mesh.bind();
                 mesh.buffer_sub_data(
                     0,

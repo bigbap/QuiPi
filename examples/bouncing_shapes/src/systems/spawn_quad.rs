@@ -1,7 +1,10 @@
 use skald::{
     Registry,
     VersionedIndex,
-    gfx::{ElementArrayMesh, mesh::{BufferUsage, VboKind}},
+    gfx::{
+        ElementArrayMesh,
+        mesh::BufferUsage
+    },
     components::{
         CModelNode,
         CVelocity,
@@ -47,8 +50,8 @@ pub fn s_create_quad(
     )?;
     mesh
         .with_ebo(&obj_config.indices)?
-        .create_vbo_at(VboKind::Vertex, &obj_config.points, 0, 3)?
-        .create_vbo_at(VboKind::Color, &obj_config.colors, 1, 4)?;
+        .create_vbo_3_f32(0, obj_config.points.len(), Some(&obj_config.points))?
+        .create_vbo_4_f32(1, obj_config.colors.len(), Some(&obj_config.colors))?;
 
     let mut vel = (
         rand.range(0, 200) as f32,

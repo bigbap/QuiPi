@@ -1,11 +1,14 @@
 use std::io;
 use ft::Face;
 
+use crate::utils::to_abs_path;
 use super::{
     opengl::textures::{
         Texture,
         Format,
         Target,
+        ParameterNames,
+        ParameterValues
     },
     image::Image
 };
@@ -65,6 +68,7 @@ pub fn from_wavefront_material(
 pub fn from_image(
     file_path: &str
 ) -> Result<Box<dyn ITexture>, TextureError> {
+    let file_path = &to_abs_path(file_path)?;
     let format = get_format(file_path);
     let img = Image::from_file(file_path)?;
 
@@ -76,11 +80,11 @@ pub fn from_image(
 
     texture
         .bind()
-        .add_image_data(Format::Rgba, format, &img.flipv());
-        // .set_parameter(ParameterNames::WrapS, ParameterValues::ClampToEdge)
-        // .set_parameter(ParameterNames::WrapT, ParameterValues::ClampToEdge)
-        // .set_parameter(ParameterNames::MinFilter, ParameterValues::LinearMipmapLinear)
-        // .set_parameter(ParameterNames::MagFilter, ParameterValues::Linear);
+        .add_image_data(Format::Rgba, format, &img.flipv())
+        .set_parameter(ParameterNames::WrapS, ParameterValues::ClampToEdge)
+        .set_parameter(ParameterNames::WrapT, ParameterValues::ClampToEdge)
+        .set_parameter(ParameterNames::MinFilter, ParameterValues::LinearMipmapLinear)
+        .set_parameter(ParameterNames::MagFilter, ParameterValues::Linear);
 
     Ok(Box::new(texture))
 }

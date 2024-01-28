@@ -1,7 +1,7 @@
 use sdl2::video::GLProfile;
 use crate::gfx::{
     self,
-    GFXFlags
+    gl_flags::GFXFlags
 };
 
 #[derive(Debug)]

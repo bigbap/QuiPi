@@ -15,10 +15,7 @@ use skald::{
     },
     builders::camera::build_ortho_camera,
     math::random::Random,
-    utils::{
-        now_secs,
-        to_abs_path
-    },
+    utils::now_secs,
     systems::{
         draw::{
             DrawMode,
@@ -101,7 +98,7 @@ impl MyGame {
 
 impl skald::Game for MyGame {
     fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let shader = ShaderProgram::new(&to_abs_path("assets/shaders/shape")?)?;
+        let shader = ShaderProgram::new("assets/shaders/shape")?;
         let shader_id = self.registry.create_resource(Shader {
             program: shader,
             uniforms: vec![

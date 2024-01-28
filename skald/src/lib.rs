@@ -23,4 +23,4 @@ pub use core::EntityManager;
 pub use core::math;
 pub use engine::Flags;
 pub use engine::run;
-pub use core::gfx::GFXFlags;
+pub use core::gfx::gl_flags::GFXFlags;
