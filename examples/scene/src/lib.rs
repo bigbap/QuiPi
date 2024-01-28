@@ -29,7 +29,10 @@ use skald::{
             s_load_obj_file
         },
         grid::*
-    }, utils::Timer,
+    },
+    utils::Timer,
+    core::GUI,
+    gfx::canvas::Canvas, gl_capabilities::{self, GLCapability, BlendingFactor},
 };
 use sdl2::{
     EventPump,
@@ -69,7 +72,8 @@ pub struct MyGame {
     point_light_on: bool,
     spot_light_on: bool,
 
-    _has_control: bool
+    _has_control: bool,
+    debug_gui: Option<GUI>
 }
 
 impl MyGame {
@@ -98,13 +102,14 @@ impl MyGame {
             point_light_on: true,
             spot_light_on: true,
             
-            _has_control: true
+            _has_control: true,
+            debug_gui: None
         })
     }
 }
 
 impl skald::Game for MyGame {
-    fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    fn init(&mut self, debug_gui: Option<GUI>) -> Result<(), Box<dyn std::error::Error>> {
         let shader = self.registry.create_resource(
             Shader::new(
                 "assets/shaders/lighting",
@@ -166,6 +171,7 @@ impl skald::Game for MyGame {
         self.shader = Some(shader);
         self.light_shader = Some(light_shader);
         self.grid = Some(s_create_grid(&mut self.registry)?);
+        self.debug_gui = debug_gui;
 
         Ok(())
     }
@@ -180,7 +186,7 @@ impl skald::Game for MyGame {
                 Event::Window {
                     win_event: WindowEvent::Resized(w, h),
                     ..
-                } => skald::gfx::view::adjust_viewport_dims(w, h),
+                } => skald::gfx::canvas::set_dimensions(Canvas { x: 0, y: 0, width: w, height: h }),
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } => return Ok(None),
                 Event::KeyDown { keycode: Some(Keycode::Num1), repeat: false, .. } => {
                     self.direction_light_on = !self.direction_light_on;
@@ -237,7 +243,7 @@ impl skald::Game for MyGame {
         let camera_pos = self.registry.get_component::<CTransform>(&self.camera).unwrap().translate;
         let camera_dir = self.registry.get_component::<CGizmo3D>(&self.camera).unwrap().front;
 
-        skald::gfx::gl_clear_buffers(Some((0.02, 0.02, 0.02, 1.0)));
+        skald::gfx::clear_buffer((0.02, 0.02, 0.02, 1.0));
         
         let shader = self.registry.get_resource::<Shader>(&self.shader.unwrap()).unwrap();
         shader.program.set_int("dirLightOn", self.direction_light_on as i32);
@@ -245,6 +251,10 @@ impl skald::Game for MyGame {
         shader.program.set_int("spotLightOn", self.spot_light_on as i32);
         shader.program.set_float_3("spotLight.position", (camera_pos.x, camera_pos.y, camera_pos.z));
         shader.program.set_float_3("spotLight.direction", (camera_dir.x, camera_dir.y, camera_dir.z));
+
+        gl_capabilities::enable(GLCapability::AlphaBlending);
+        gl_capabilities::enable(GLCapability::DepthTest);
+        gl_capabilities::blending_func(BlendingFactor::SrcAlpha, BlendingFactor::OneMinusSrcAlpha);
         
         s_draw_by_tag(
             "light",

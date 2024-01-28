@@ -1,7 +1,7 @@
 #![allow(clippy::new_without_default)]
 #![allow(clippy::upper_case_acronyms)]
 
-use super::flags::BUFFER_FLAGS;
+pub static mut BUFFER_FLAGS: u32 = gl::COLOR_BUFFER_BIT;
 
 #[derive(Debug)]
 pub enum BufferUsage {
@@ -175,9 +175,7 @@ pub fn create_ebo(
     Ok(index_buffer)
 }
 
-pub fn clear_buffers(clr: Option<(f32, f32, f32, f32)>) {
-    let clr = clr.unwrap_or((0.02, 0.02, 0.02, 1.0));
-
+pub fn clear_buffers(clr: (f32, f32, f32, f32)) {
     unsafe {
         gl::ClearColor(clr.0, clr.1, clr.2, clr.3);
         gl::Clear(BUFFER_FLAGS);

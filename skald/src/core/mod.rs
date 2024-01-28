@@ -14,3 +14,4 @@ pub use entity_manager::IndexedArray;
 pub use gfx::ShaderProgram;
 pub use math::random;
 pub use utils::time;
+pub use gui::GUI;

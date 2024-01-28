@@ -13,8 +13,9 @@ use skald::{
     Game,
     utils::Timer,
     gfx::{
-        gl_clear_buffers,
-        ShaderProgram
+        gl_capabilities,
+        ShaderProgram,
+        clear_buffer
     },
     Registry,
     resources::{
@@ -41,7 +42,8 @@ use skald::{
             DrawMode
         },
     },
-    builders::camera::build_perspective_camera
+    builders::camera::build_perspective_camera,
+    core::GUI, gl_capabilities::{GLCapability, BlendingFactor}
 };
 use ui::MyUI;
 
@@ -55,6 +57,7 @@ pub struct MyGame {
     camera: VersionedIndex,
     grid: Option<Grid>,
     ui: Option<MyUI>,
+    debug_gui: Option<GUI>
 }
 
 impl MyGame {
@@ -96,12 +99,13 @@ impl MyGame {
             grid: None,
             ui: None,
             timer,
+            debug_gui: None
         })
     }
 }
 
 impl Game for MyGame {
-    fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    fn init(&mut self, debug_gui: Option<GUI>) -> Result<(), Box<dyn std::error::Error>> {
         let shader = ShaderProgram::new("assets/shaders/simple")?;
         let shader = self.registry.create_resource(Shader {
             program: shader,
@@ -117,6 +121,7 @@ impl Game for MyGame {
         ui.create_quad((0.0, 0.0, 0.0, 0.5))?;
 
         self.ui = Some(ui);
+        self.debug_gui = debug_gui;
 
         scene::s_load_scene(
             &mut self.registry
@@ -148,8 +153,17 @@ impl Game for MyGame {
             delta
         )?;
 
+        // update debug gui
+        if let Some(debug_gui) = &mut self.debug_gui {
+            debug_gui.update()?;
+        }
+
         // render
-        gl_clear_buffers(Some((0.0, 0.0, 0.0, 1.0)));
+        clear_buffer((0.0, 0.0, 0.0, 1.0));
+
+        gl_capabilities::enable(GLCapability::AlphaBlending);
+        gl_capabilities::enable(GLCapability::DepthTest);
+        gl_capabilities::blending_func(BlendingFactor::SrcAlpha, BlendingFactor::OneMinusSrcAlpha);
 
         if let Some(shader) = self.shader {
             s_draw_by_tag(

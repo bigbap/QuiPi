@@ -1,7 +1,9 @@
+use std::time::Instant;
+
 use sdl2::video::GLProfile;
-use crate::gfx::{
-    self,
-    gl_flags::GFXFlags
+use crate::core::{
+    gfx,
+    GUI
 };
 
 #[derive(Debug)]
@@ -17,7 +19,7 @@ pub trait Game {
     /// Use this method to set up your game. If you do anything
     /// that uses the 'gl::' crate before this method gets called
     /// by the engine, you will get a 'function not loaded error'
-    fn init(&mut self) -> Result<(), Box<dyn std::error::Error>>;
+    fn init(&mut self, gui: Option<GUI>) -> Result<(), Box<dyn std::error::Error>>;
     
     /// This method is called by the engine every frame.
     /// This is where you will do all your game specific logic.
@@ -33,7 +35,6 @@ pub fn run<G: Game>(
     width: u32,
     height: u32,
     flags: Vec<Flags>,
-    gfx_flags: Vec<GFXFlags>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let sdl_ctx = sdl2::init()?;
     let video_subsystem = sdl_ctx.video()?;
@@ -50,6 +51,7 @@ pub fn run<G: Game>(
         .resizable()
         .build()?;
 
+
     let _gl_ctx = window.gl_create_context()?;
 
     debug_assert_eq!(gl_attr.context_profile(), GLProfile::Core);
@@ -59,8 +61,7 @@ pub fn run<G: Game>(
         &video_subsystem,
         width as i32,
         height as i32,
-        &gfx_flags
-    );
+    )?;
 
     for flag in flags.iter() {
         match flag {
@@ -69,10 +70,22 @@ pub fn run<G: Game>(
         }
     }
     
-    game.init()?;
+    let mut gui: Option<GUI> = None;
+    if cfg!(debug_assertions) {
+        gui = Some(GUI::new(250.0, 600.0)?);
+    }
+    game.init(gui)?;
 
+    let timer = Instant::now();
+    let mut last_frame = timer.elapsed().as_millis();
     let mut event_pump = sdl_ctx.event_pump()?;
     'running: loop {
+        // limit fps to 60
+        if timer.elapsed().as_millis() - last_frame < 1000 / 60 {
+            continue;
+        }
+        last_frame = timer.elapsed().as_millis();
+
         if game.handle_frame(
             &mut event_pump
         )?.is_none() {

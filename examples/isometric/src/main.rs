@@ -1,11 +1,8 @@
-use ::skald::GFXFlags;
 use isometric::{
     MyGame,
     WIDTH,
     HEIGHT
 };
-
-use skald;
 
 fn main() {
     let mut game = MyGame::new().expect("There was a problem initializing the game.");
@@ -16,7 +13,6 @@ fn main() {
         WIDTH,
         HEIGHT,
         vec![],
-        vec![GFXFlags::DepthTest, GFXFlags::AlphaBlending]
     ) {
         eprintln!("Game ended unexpectedly: {}", e);
     };

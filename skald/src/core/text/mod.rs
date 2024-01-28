@@ -1,10 +1,19 @@
 use std::collections::HashMap;
-use crate::{gfx::{
-    ElementArrayMesh,
-    mesh::{BufferUsage, ShaderLocation},
-    texture::gl_use_texture_unit,
-    gl_draw, draw::{DrawBuffer, DrawMode}
-}, utils::to_abs_path};
+use crate::{
+    gfx::{
+        ElementArrayMesh,
+        mesh::{BufferUsage, ShaderLocation},
+        texture::gl_use_texture_unit,
+        draw_buffer,
+        draw::{DrawBuffer, DrawMode}
+    },
+    utils::to_abs_path,
+    gl_capabilities::{
+        self,
+        GLCapability,
+        BlendingFactor
+    }
+};
 
 use super::ShaderProgram;
 
@@ -57,6 +66,9 @@ impl TextRenderer {
         text: String,
         mut pos: glm::Vec2,
     ) {
+        gl_capabilities::enable(GLCapability::AlphaBlending);
+        gl_capabilities::blending_func(BlendingFactor::SrcAlpha, BlendingFactor::OneMinusSrcAlpha);
+
         self.shader.use_program();
         self.shader.set_float_3("textColor", (self.color.x, self.color.y, self.color.z));
         
@@ -92,7 +104,7 @@ impl TextRenderer {
                 );
                 mesh.unbind();
 
-                gl_draw(
+                draw_buffer(
                     DrawBuffer::Arrays,
                     DrawMode::Triangles,
                     6
@@ -103,6 +115,8 @@ impl TextRenderer {
         }
 
         self.mesh.vao.unbind();
+
+        gl_capabilities::disable(GLCapability::AlphaBlending);
     }
 }
 

@@ -10,26 +10,29 @@ use skald::{
         shader::UniformVariable
     },
     gfx::{
-        gl_clear_buffers,
+        clear_buffer,
         ShaderProgram,
     },
     builders::camera::build_ortho_camera,
     math::random::Random,
     utils::{now_secs, Timer},
     systems::{
-        draw::{
-            DrawMode,
-            s_draw_by_tag
-        },
         mvp_matrices::s_set_view_matrix,
         rotation::s_rotate_camera
     },
     components::{
         register_components,
         CEulerAngles,
-        CTransform, CBoundingBox
+        CTransform,
+        CBoundingBox
     },
-    core::text::{TextRenderer, DEFAULT_FONT},
+    core::{
+        GUI,
+        text::{
+            TextRenderer,
+            DEFAULT_FONT
+        },
+    }
 };
 
 pub static WIDTH: u32 = 800;
@@ -46,6 +49,7 @@ pub struct MyGame {
     
     shader: Option<VersionedIndex>,
     camera: VersionedIndex,
+    debug_gui: Option<GUI>,
     text_renderer: Option<TextRenderer>,
 }
 
@@ -87,12 +91,13 @@ impl MyGame {
             timer: Timer::new()?,
             rand,
             camera,
+            debug_gui: None
         })
     }
 }
 
 impl skald::Game for MyGame {
-    fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    fn init(&mut self, debug_gui: Option<GUI>) -> Result<(), Box<dyn std::error::Error>> {
         let shader = ShaderProgram::new("assets/shaders/shape")?;
         let shader_id = self.registry.create_resource(Shader {
             program: shader,
@@ -107,6 +112,7 @@ impl skald::Game for MyGame {
         );
         
         self.shader = Some(shader_id);
+        self.debug_gui = debug_gui;
 
         let mut text = TextRenderer::new(
             DEFAULT_FONT,
@@ -143,22 +149,18 @@ impl skald::Game for MyGame {
         )?;
 
         // render
-        gl_clear_buffers(Some((0.0, 0.0, 0.0, 1.0)));
+        clear_buffer((0.2, 0.0, 0.0, 1.0));
 
-        s_draw_by_tag(
-            "quad",
+        s_draw_frame(
             &self.registry,
             &self.shader.unwrap(),
             &self.camera,
-            DrawMode::Triangles
+            self.text_renderer.as_ref().unwrap()
         )?;
-       
-        let entity_count = self.registry.entity_count();
-        if let Some(text_renderer) = &self.text_renderer {
-            text_renderer.draw(
-                format!("entities: {}", entity_count),
-                glm::vec2(25.0, HEIGHT as f32 - 30.0)
-            );
+
+        // update gui
+        if let Some(debug_gui) = &mut self.debug_gui {
+            debug_gui.update()?;
         }
 
         Ok(Some(()))

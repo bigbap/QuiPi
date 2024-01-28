@@ -21,7 +21,7 @@ pub enum Format {
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
-pub enum ParameterNames {
+pub enum ParameterName {
     MinFilter,
     MagFilter,
     WrapT,
@@ -31,7 +31,7 @@ pub enum ParameterNames {
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
-pub enum ParameterValues {
+pub enum ParameterValue {
     Nearest,
     Linear,
     NearestMipmapNearest,
@@ -78,7 +78,7 @@ impl Texture {
         &self,
         internal_format: Format,
         format: Format,
-        buffer: &[u8]
+        buffer: &[u8],
     ) -> &Self {
         let internal_format = internal_format.unwrap();
         let format = format.unwrap();
@@ -94,8 +94,9 @@ impl Texture {
                 0,
                 format,
                 gl::UNSIGNED_BYTE,
-                buffer.as_ptr() as *const std::ffi::c_void
+                buffer.as_ptr() as *const gl::types::GLvoid
             );
+
             gl::GenerateMipmap(self.target);
             gl::BindTexture(self.target, 0);
         }
@@ -109,11 +110,10 @@ impl Texture {
         self
     }
 
-    #[allow(dead_code)]
     pub fn set_parameter(
         &self,
-        pname: ParameterNames,
-        value: ParameterValues
+        pname: ParameterName,
+        value: ParameterValue
     ) -> &Self {
         unsafe {
             gl::TexParameteri(
@@ -183,35 +183,35 @@ impl Format {
     }
 }
 
-impl ParameterNames {
+impl ParameterName {
     pub fn unwrap(&self) -> u32 {
         match self {
-            ParameterNames::MinFilter => gl::TEXTURE_MIN_FILTER,
-            ParameterNames::MagFilter => gl::TEXTURE_MAG_FILTER,
-            ParameterNames::WrapT => gl::TEXTURE_WRAP_T,
-            ParameterNames::WrapR => gl::TEXTURE_WRAP_R,
-            ParameterNames::WrapS => gl::TEXTURE_WRAP_S,
+            ParameterName::MinFilter => gl::TEXTURE_MIN_FILTER,
+            ParameterName::MagFilter => gl::TEXTURE_MAG_FILTER,
+            ParameterName::WrapT => gl::TEXTURE_WRAP_T,
+            ParameterName::WrapR => gl::TEXTURE_WRAP_R,
+            ParameterName::WrapS => gl::TEXTURE_WRAP_S,
         }
     }
 }
 
-impl ParameterValues {
+impl ParameterValue {
     pub fn unwrap(&self) -> u32 {
         match self {
-            ParameterValues::Linear => gl::LINEAR,
-            ParameterValues::Nearest => gl::NEAREST,
-            ParameterValues::LinearMipmapLinear => gl::LINEAR_MIPMAP_LINEAR,
-            ParameterValues::LinearMipmapNearest => gl::LINEAR_MIPMAP_NEAREST,
-            ParameterValues::NearestMipmapLinear => gl::NEAREST_MIPMAP_LINEAR,
-            ParameterValues::NearestMipmapNearest => gl::NEAREST_MIPMAP_NEAREST,
+            ParameterValue::Linear => gl::LINEAR,
+            ParameterValue::Nearest => gl::NEAREST,
+            ParameterValue::LinearMipmapLinear => gl::LINEAR_MIPMAP_LINEAR,
+            ParameterValue::LinearMipmapNearest => gl::LINEAR_MIPMAP_NEAREST,
+            ParameterValue::NearestMipmapLinear => gl::NEAREST_MIPMAP_LINEAR,
+            ParameterValue::NearestMipmapNearest => gl::NEAREST_MIPMAP_NEAREST,
 
-            ParameterValues::ClampToEdge => gl::CLAMP_TO_EDGE,
-            ParameterValues::ClampToBorder => gl::CLAMP_TO_BORDER,
-            ParameterValues::MirroredRepeat => gl::MIRRORED_REPEAT,
-            ParameterValues::Repeat => gl::REPEAT,
-            ParameterValues::MirrorClampToEdge => gl::MIRROR_CLAMP_TO_EDGE,
+            ParameterValue::ClampToEdge => gl::CLAMP_TO_EDGE,
+            ParameterValue::ClampToBorder => gl::CLAMP_TO_BORDER,
+            ParameterValue::MirroredRepeat => gl::MIRRORED_REPEAT,
+            ParameterValue::Repeat => gl::REPEAT,
+            ParameterValue::MirrorClampToEdge => gl::MIRROR_CLAMP_TO_EDGE,
 
-            ParameterValues::U32(val) => *val
+            ParameterValue::U32(val) => *val
         }
     }
 }
