@@ -1,8 +1,8 @@
 pub mod shader;
 pub mod texture;
 
-pub use shader::Shader;
-pub use texture::Texture;
+pub use shader::RShader as Shader;
+pub use texture::RTexture as Texture;
 
 use crate::Registry;
 

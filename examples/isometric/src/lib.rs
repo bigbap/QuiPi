@@ -13,7 +13,7 @@ use skald::{
     Game,
     utils::Timer,
     gfx::{
-        buffer::clear_buffer,
+        gl_clear_buffers,
         ShaderProgram
     },
     Registry,
@@ -158,25 +158,25 @@ impl Game for MyGame {
         }
 
         // render
-        clear_buffer(Some((0.4, 0.2, 0.2, 1.0)));
+        gl_clear_buffers(Some((0.0, 0.0, 0.0, 1.0)));
 
-        // if let Some(shader) = self.shader {
-        //     s_draw_by_tag(
-        //         "cube",
-        //         &self.registry,
-        //         &shader,
-        //         &self.camera,
-        //         DrawMode::Triangles
-        //     )?;
-        // }
+        if let Some(shader) = self.shader {
+            s_draw_by_tag(
+                "cube",
+                &self.registry,
+                &shader,
+                &self.camera,
+                DrawMode::Triangles
+            )?;
+        }
 
-        // if let Some(grid) = &self.grid {
-        //     s_draw_grid(&self.registry, &self.camera, grid)?;
-        // }
+        if let Some(ui) = &self.ui {
+            ui.draw()?;
+        }
 
-        // if let Some(ui) = &self.ui {
-        //     ui.draw()?;
-        // }
+        if let Some(grid) = &self.grid {
+            s_draw_grid(&self.registry, &self.camera, grid)?;
+        }
 
         if let Some(debug_gui) = &self.debug_gui {
             debug_gui.draw(WIDTH as f32, HEIGHT as f32);

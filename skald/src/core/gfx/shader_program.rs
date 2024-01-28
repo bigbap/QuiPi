@@ -46,54 +46,40 @@ impl Drop for ShaderProgram {
 }
 
 impl ShaderProgram {
-    pub fn new (name: &str) -> Result<Self, ShaderError> {
-        let name = &to_abs_path(name)?;
+    pub fn new(name: &str) -> Result<Self, ShaderError> {
+        Self::from_file(name)
+    }
+
+    pub fn from_str(
+        vert: &str,
+        frag: &str,
+    ) -> Result<Self, ShaderError> {
+        let c_vert = str_to_cstring(vert)?;
+        let c_frag = str_to_cstring(frag)?;
+
         let shaders = vec![
-            compile_shader(&format!("{name}.vert"), gl::VERTEX_SHADER)?,
-            compile_shader(&format!("{name}.frag"), gl::FRAGMENT_SHADER)?
+            compile_shader(c_vert, gl::VERTEX_SHADER, ShaderError::CompileError(vert.to_string()))?,
+            compile_shader(c_frag, gl::FRAGMENT_SHADER, ShaderError::CompileError(frag.to_string()))?
         ];
-        let id: gl::types::GLuint = unsafe { gl::CreateProgram() };
-
-        for shader in &shaders {
-            unsafe {
-                gl::AttachShader(id, *shader);
-            }
-        }
-
-        unsafe {
-            gl::LinkProgram(id);
-
-            let mut success: gl::types::GLint = 0;
-            gl::GetProgramiv(id, gl::LINK_STATUS, &mut success);
-
-            if success == 0 {
-                let mut len: gl::types::GLint = 0;
-                gl::GetProgramiv(id, gl::INFO_LOG_LENGTH, &mut len);
-
-                let error = strings::create_empty_cstring_with_len(len as usize);
-                gl::GetProgramInfoLog(
-                    id,
-                    len,
-                    std::ptr::null_mut(),
-                    error.as_ptr() as *mut gl::types::GLchar
-                );
-
-                if cfg!(debug_assertions) {
-                    println!("{:?}", error);
-                }
-
-                return Err(ShaderError::LinkingError);
-            }
-        }
-
-        for shader in &shaders {
-            unsafe {
-                gl::DetachShader(id, *shader);
-            }
-        }
 
         Ok(ShaderProgram {
-            id,
+            id: link_program(&shaders)?,
+            _shaders: shaders
+        })
+    }
+
+    pub fn from_file(name: &str) -> Result<Self, ShaderError> {
+        let name = &to_abs_path(name)?;
+        let vert = shader_to_cstring(&format!("{name}.vert"))?;
+        let frag = shader_to_cstring(&format!("{name}.frag"))?;
+
+        let shaders = vec![
+            compile_shader(vert, gl::VERTEX_SHADER, ShaderError::CompileError(name.to_string()))?,
+            compile_shader(frag, gl::FRAGMENT_SHADER, ShaderError::CompileError(name.to_string()))?
+        ];
+
+        Ok(ShaderProgram {
+            id: link_program(&shaders)?,
             _shaders: shaders
         })
     }
@@ -101,6 +87,14 @@ impl ShaderProgram {
     pub fn use_program(&self) {
         unsafe {
             gl::UseProgram(self.id);
+        }
+    }
+
+    pub fn set_float_2(&self, key: &str, val: (f32, f32)) {
+        self.use_program();
+
+        unsafe {
+            gl::Uniform2f(self.get_location(key), val.0, val.1);
         }
     }
 
@@ -156,11 +150,57 @@ impl ShaderProgram {
 
 // helper functions
 
-fn compile_shader(
-    file_name: &str,
-    kind: gl::types::GLenum
+fn link_program(
+    shaders: &[gl::types::GLuint]
 ) -> Result<gl::types::GLuint, ShaderError> {
-    let source = shader_to_cstring(file_name)?;
+    let id: gl::types::GLuint = unsafe { gl::CreateProgram() };
+
+    for shader in shaders {
+        unsafe {
+            gl::AttachShader(id, *shader);
+        }
+    }
+
+    unsafe {
+        gl::LinkProgram(id);
+
+        let mut success: gl::types::GLint = 0;
+        gl::GetProgramiv(id, gl::LINK_STATUS, &mut success);
+
+        if success == 0 {
+            let mut len: gl::types::GLint = 0;
+            gl::GetProgramiv(id, gl::INFO_LOG_LENGTH, &mut len);
+
+            let error = strings::create_empty_cstring_with_len(len as usize);
+            gl::GetProgramInfoLog(
+                id,
+                len,
+                std::ptr::null_mut(),
+                error.as_ptr() as *mut gl::types::GLchar
+            );
+
+            if cfg!(debug_assertions) {
+                println!("{:?}", error);
+            }
+
+            return Err(ShaderError::LinkingError);
+        }
+    }
+
+    for shader in shaders {
+        unsafe {
+            gl::DetachShader(id, *shader);
+        }
+    }
+
+    Ok(id)
+}
+
+fn compile_shader(
+    source: ffi::CString,
+    kind: gl::types::GLenum,
+    err: ShaderError
+) -> Result<gl::types::GLuint, ShaderError> {
     let id = unsafe { gl::CreateShader(kind) };
 
     unsafe {
@@ -191,11 +231,22 @@ fn compile_shader(
                 println!("{:?}", error);
             }
 
-            return Err(ShaderError::CompileError(file_name.to_string()));
+            return Err(err);
         }
     }
 
     Ok(id)
+}
+
+fn str_to_cstring(shader: &str) -> Result<ffi::CString, ShaderError> {
+    let buffer = shader.as_bytes();
+
+    // check for null byte
+    if buffer.iter().any(|i| *i == 0) {
+        return Err(ShaderError::FileContainsNil);
+    }
+
+    Ok(unsafe { ffi::CString::from_vec_unchecked(buffer.to_vec()) })
 }
 
 fn shader_to_cstring(shader_path: &str) -> Result<ffi::CString, ShaderError> {

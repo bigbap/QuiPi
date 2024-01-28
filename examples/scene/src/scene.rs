@@ -1,7 +1,8 @@
 use skald::{
     gfx::{
         texture,
-        ElementArrayMesh
+        ElementArrayMesh,
+        mesh::{BufferUsage, ShaderLocation}
     },
     VersionedIndex,
     Registry,
@@ -77,10 +78,21 @@ pub fn create_crates(
     let mut entities = vec![];
     for config in model_configs.iter() {
         for transform in transforms.iter() {
-            let mesh = ElementArrayMesh::new(&config.indices)?;
+            let mut mesh = ElementArrayMesh::new(
+                config.indices.len(),
+                BufferUsage::StaticDraw
+            )?;
+
             mesh
-                .create_vbo_at(&config.points, 0, 3)?
-                .create_vbo_at(&config.texture_coords, 2, 2)?;
+                .with_ebo(&config.indices)?
+                .with_vbo::<3, f32>(
+                    ShaderLocation::Zero,
+                    &config.points
+                )?
+                .with_vbo::<2, f32>(
+                    ShaderLocation::Two,
+                    &config.texture_coords
+                )?;
 
             let entity = registry.create_entity("crate")?
                 .with(CModelNode {
@@ -142,9 +154,7 @@ pub fn create_texture(
     registry: &mut Registry,
     image_file: &str,
 ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
-    registry.create_resource(Texture {
-        id: texture::from_image(image_file)?,
-    })
+    registry.create_resource(Texture(texture::from_image(image_file)?))
 }
 
 pub fn directional_light(
@@ -177,8 +187,16 @@ pub fn directional_light(
     }
     shader.set_float_3("dirLight.direction", direction);
 
-    let mesh = ElementArrayMesh::new(&model_config.indices)?;
-    mesh.create_vbo_at(&model_config.points, 0, 3)?;
+    let mut mesh = ElementArrayMesh::new(
+        model_config.indices.len(),
+        BufferUsage::StaticDraw
+    )?;
+    mesh
+        .with_ebo(&model_config.indices)?
+        .with_vbo::<3, f32>(
+            ShaderLocation::Zero,
+            &model_config.points
+        )?;
 
     let light = registry.create_entity("light")?
         .with(CDirection {
@@ -250,8 +268,16 @@ pub fn point_light(
     shader.set_float("pointLight.linear", attenuation.linear);
     shader.set_float("pointLight.quadratic", attenuation.quadratic);
 
-    let mesh = ElementArrayMesh::new(&model_config.indices)?;
-    mesh.create_vbo_at(&model_config.points, 0, 3)?;
+    let mut mesh = ElementArrayMesh::new(
+        model_config.indices.len(),
+        BufferUsage::StaticDraw
+    )?;
+    mesh
+        .with_ebo(&model_config.indices)?
+        .with_vbo::<3, f32>(
+            ShaderLocation::Zero,
+            &model_config.points
+        )?;
 
     let light = registry.create_entity("light")?
         .with(attenuation)?
@@ -313,8 +339,16 @@ pub fn spot_light(
     shader.set_float("spotLight.cutOff", cutoffs.inner_cutoff);
     shader.set_float("spotLight.outerCutOff", cutoffs.outer_cutoff);
 
-    let mesh = ElementArrayMesh::new(&model_config.indices)?;
-    mesh.create_vbo_at(&model_config.points, 0, 3)?;
+    let mut mesh = ElementArrayMesh::new(
+        model_config.indices.len(),
+        BufferUsage::StaticDraw
+    )?;
+    mesh
+        .with_ebo(&model_config.indices)?
+        .with_vbo::<3, f32>(
+            ShaderLocation::Zero,
+            &model_config.points
+        )?;
 
     registry.create_entity("light")?
         .with(CRGBA { r: 0.6, g: 0.0, b: 0.0, a: 1.0 })?

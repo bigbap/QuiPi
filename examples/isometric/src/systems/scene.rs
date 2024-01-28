@@ -10,7 +10,8 @@ use skald::{
     resources::Texture,
     gfx::{
         texture::*,
-        ElementArrayMesh
+        ElementArrayMesh,
+        mesh::{BufferUsage, ShaderLocation}
     },
     components::{
         CMaterial,
@@ -27,19 +28,21 @@ pub fn s_load_scene(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let (models, _) = load_obj::s_load_obj_file(to_abs_path("assets/objects/cube.obj")?)?;
     let obj_configs = ObjectConfig::from_obj(models)?;
-    let texture = Texture {
-        id: from_image(&to_abs_path("assets/objects/textures/tex.png")?)?
-    };
+    let texture = Texture(from_image(&to_abs_path("assets/objects/textures/tex.png")?)?);
 
     let texture = registry.create_resource(texture)?;
 
     for x in 0..50 {
         for y in 0..50 {
             for config in &obj_configs {
-                let mesh = ElementArrayMesh::new(&config.indices)?;
+                let mut mesh = ElementArrayMesh::new(
+                    config.indices.len(),
+                    BufferUsage::StaticDraw,
+                )?;
                 mesh
-                    .create_vbo_at(&config.points, 0, 3)?
-                    .create_vbo_at(&config.texture_coords, 1, 2)?;
+                    .with_ebo(&config.indices)?
+                    .with_vbo::<3, f32>(ShaderLocation::Zero, &config.points)?
+                    .with_vbo::<2, f32>(ShaderLocation::One, &config.texture_coords)?;
 
                 let cube = registry.create_entity("cube")?
                     .with(CModelNode {

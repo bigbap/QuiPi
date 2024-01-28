@@ -1,12 +1,7 @@
-use crate::Component;
+use crate::{
+    Component,
+    gfx::texture::ITexture
+};
 
-#[derive(Debug, Component)]
-pub struct Texture {
-    pub id: u32,
-}
-
-impl Drop for Texture {
-    fn drop(&mut self) {
-        crate::gfx::texture::delete_texture(self.id);
-    }
-}
+#[derive(Component)]
+pub struct RTexture(pub Box<dyn ITexture>);

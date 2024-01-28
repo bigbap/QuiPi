@@ -1,8 +1,25 @@
-use std::io;
-use image::{
-    self,
-    ImageBuffer,
+use std::{io, fmt};
+use ft::Face;
+
+use crate::utils::to_abs_path;
+use super::{
+    opengl::textures::{
+        Texture,
+        Format,
+        Target,
+        ParameterNames,
+        ParameterValues
+    },
+    image::Image
 };
+
+pub use super::opengl::textures::use_texture_unit as gl_use_texture_unit;
+
+pub trait ITexture: fmt::Debug {
+    fn width(&self) -> i32;
+    fn height(&self) -> i32;
+    fn use_texture(&self, unit: i32);
+}
 
 #[derive(Debug, thiserror::Error)]
 pub enum TextureError {
@@ -30,173 +47,67 @@ pub enum TextureError {
         #[from]
         #[source]
         tobj::LoadError
-    )
+    ),
+
+    #[error("the wavefront material file doesn't have a texture path")]
+    CouldntFindWavefrontTexture
 }
 
-fn generate_texture() -> Result<u32, TextureError> {
-    let mut texture_id: gl::types::GLuint = 0;
-    unsafe {
-        gl::GenTextures(1, &mut texture_id);
-    }
-
-    Ok(texture_id)
-}
 
 pub fn from_wavefront_material(
     material: &tobj::Material,
-) -> Result<u32, TextureError> {
-    let texture_id = generate_texture()?;
-
-    bind(&texture_id);
+) -> Result<Box<dyn ITexture>, TextureError> {
 
     if let Some(map_kd) = &material.diffuse_texture {
-        // found texture path
-        let format = get_format(map_kd);
-
-        add_image_from_file(
-            map_kd,
-            format
-        )?;
+        return from_image(map_kd);
     };
 
-    if let Some(kd) = &material.diffuse {
-        // found texture RGB values
-        add_image_from_color(kd)?;
-    };
-
-    unbind();
-
-    set_default_parameters(&texture_id)?;
-
-    Ok(texture_id)
+    Err(TextureError::CouldntFindWavefrontTexture)
 }
 
 pub fn from_image(
     file_path: &str
-) -> Result<u32, TextureError> {
-    let texture_id = generate_texture()?;
+) -> Result<Box<dyn ITexture>, TextureError> {
+    let file_path = &to_abs_path(file_path)?;
     let format = get_format(file_path);
+    let img = Image::from_file(file_path)?;
 
-    set_default_parameters(&texture_id)?;
+    let texture = Texture::new(
+        img.width as i32,
+        img.height as i32,
+        Target::Texture2D
+    );
 
-    bind(&texture_id);
-    add_image_from_file(
-        file_path,
-        format
-    )?;
-    unbind();
+    texture
+        .bind()
+        .add_image_data(Format::Rgba, format, &img.flipv())
+        .set_parameter(ParameterNames::WrapS, ParameterValues::ClampToEdge)
+        .set_parameter(ParameterNames::WrapT, ParameterValues::ClampToEdge)
+        .set_parameter(ParameterNames::MinFilter, ParameterValues::LinearMipmapLinear)
+        .set_parameter(ParameterNames::MagFilter, ParameterValues::Linear);
 
-    Ok(texture_id)
+    Ok(Box::new(texture))
 }
 
-pub fn bind(index: &u32) {
-    unsafe {
-        gl::BindTexture(gl::TEXTURE_2D, *index);
-    }
+pub fn from_font(
+    face: &Face,
+    width: i32,
+    height: i32
+) -> Result<Box<dyn ITexture>, TextureError>{
+    let texture = Texture::new(
+        width,
+        height,
+        Target::Texture2D
+    );
+
+    texture
+        .bind()
+        .add_image_data(Format::Red, Format::Red, face.glyph().bitmap().buffer());
+
+    Ok(Box::new(texture))
 }
 
-pub fn unbind() {
-    unsafe {
-        gl::BindTexture(gl::TEXTURE_2D, 0);
-    }
-}
-
-fn set_default_parameters(index: &u32) -> Result<(), TextureError> {
-    bind(index);
-
-    set_parameter(gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE)?;
-    set_parameter(gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE)?;
-    set_parameter(gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR)?;
-    set_parameter(gl::TEXTURE_MAG_FILTER, gl::LINEAR)?;
-
-    unbind();
-
-    Ok(())
-}
-
-pub fn set_parameter(
-    name: gl::types::GLenum,
-    param: gl::types::GLuint
-) -> Result<(), TextureError> {
-    unsafe {
-        gl::TexParameteri(
-            gl::TEXTURE_2D,
-            name,
-            param.try_into().map_err(|_| TextureError::FailedAddingParameter)?
-        );
-    }
-
-    Ok(())
-}
-
-pub fn set_active_texture(unit: i32) {
-    unsafe {
-        gl::ActiveTexture(gl::TEXTURE0 + unit as gl::types::GLuint);
-    }
-}
-
-pub fn delete_texture(index: u32) {
-    unbind();
-
-    unsafe {
-        gl::DeleteTextures(1, [index].as_ptr());
-    }
-}
-
-fn add_image_from_color(color: &[f32; 3]) -> Result<(), TextureError> {
-    let img_buf = ImageBuffer::from_pixel(1, 1, image::Rgb([
-        (color[0] * 256.0) as u8,
-        (color[1] * 256.0) as u8,
-        (color[2] * 256.0) as u8
-    ]));
-    let width: i32 = img_buf.width().try_into().map_err(|_| TextureError::FailedAddingTextureImage)?;
-    let height: i32 = img_buf.height().try_into().map_err(|_| TextureError::FailedAddingTextureImage)?;
-
-    unsafe {
-        gl::TexImage2D(
-            gl::TEXTURE_2D,
-            0,
-            gl::RGB8.try_into().map_err(|_| TextureError::FailedAddingTextureImage)?,
-            width,
-            height,
-            0,
-            gl::RGB,
-            gl::UNSIGNED_BYTE,
-            img_buf.as_ptr() as *const std::ffi::c_void
-        );
-        gl::GenerateMipmap(gl::TEXTURE_2D);
-    }
-
-    Ok(())
-}
-
-fn add_image_from_file(
-    file_path: &str,
-    format: gl::types::GLenum
-) -> Result<(), TextureError> {
-    let img = image::open(file_path)?.flipv();
-    let width = img.width().try_into().map_err(|_| TextureError::FailedAddingTextureImage)?;
-    let height = img.height().try_into().map_err(|_| TextureError::FailedAddingTextureImage)?;
-
-    unsafe {
-        gl::TexImage2D(
-            gl::TEXTURE_2D,
-            0,
-            gl::RGB8.try_into().map_err(|_| TextureError::FailedAddingTextureImage)?,
-            width,
-            height,
-            0,
-            format,
-            gl::UNSIGNED_BYTE,
-            img.as_bytes().as_ptr() as *const std::ffi::c_void
-        );
-        gl::GenerateMipmap(gl::TEXTURE_2D);
-    }
-
-    Ok(())
-}
-
-fn get_format(path: &str) -> gl::types::GLenum {
+fn get_format(path: &str) -> Format {
     let file_name = path
         .split('/')
         .last()
@@ -206,7 +117,7 @@ fn get_format(path: &str) -> gl::types::GLenum {
     let ext = file_name.split('.').last();
 
     match ext {
-        Some("png") => gl::RGBA,
-        _ => gl::RGB
+        Some("png") => Format::Rgba,
+        _ => Format::Rgb
     }
 }

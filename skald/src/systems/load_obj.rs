@@ -1,5 +1,7 @@
 use std::io;
 
+use crate::utils::to_abs_path;
+
 #[derive(Debug, Default)]
 pub struct ObjectConfig {
     pub points: Vec<f32>,
@@ -64,10 +66,9 @@ pub enum ObjectError {
 }
 
 pub fn s_load_obj_file(
-    full_path: String
+    rel_path: String
 ) -> Result<(Vec<tobj::Model>, Vec<tobj::Material>), ObjectError> {
-    println!("{full_path}");
-
+    let full_path = to_abs_path(&rel_path)?;
     let (models, materials) = tobj::load_obj(
         full_path,
         &tobj::GPU_LOAD_OPTIONS

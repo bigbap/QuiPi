@@ -1,45 +1,34 @@
+pub mod image;
 pub mod shader_program;
 pub mod texture;
-pub mod buffer;
 pub mod draw;
 pub mod view;
 pub mod mesh;
 
 pub use shader_program::ShaderProgram;
 pub use mesh::ElementArrayMesh;
+pub use opengl::flags as gl_flags;
+pub use opengl::pixel_store as gl_pixel_store;
+pub use opengl::buffer::clear_buffers as gl_clear_buffers;
+pub use opengl::draw::draw as gl_draw;
+
+mod opengl;
 
 use sdl2::VideoSubsystem;
 use std::ffi::c_void;
-
-pub enum GFXFlags {
-    DepthTest,
-    DepthMaskOn,
-    DepthMaskOff,
-    AlphaBlending
-}
 
 pub fn init(
     video_subsystem: &VideoSubsystem,
     width: i32,
     height: i32,
-    flags: &[GFXFlags]
+    flags: &[gl_flags::GFXFlags]
 ) {
     gl::load_with(|name| video_subsystem.gl_get_proc_address(name) as *const _);
     unsafe {
         gl::Viewport(0, 0, width, height);
     }
 
-    for flag in flags.iter() {
-        match flag {
-            GFXFlags::DepthTest => unsafe { gl::Enable(gl::DEPTH_TEST) },
-            GFXFlags::DepthMaskOn => unsafe { gl::DepthMask(gl::TRUE) },
-            GFXFlags::DepthMaskOff => unsafe { gl::DepthMask(gl::FALSE) },
-            GFXFlags::AlphaBlending => unsafe {
-                gl::Enable(gl::BLEND);
-                gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA)
-            },
-        }
-    }
+    gl_flags::set_flags(flags);
 
     let mut flags: gl::types::GLint = 0;
     unsafe {
