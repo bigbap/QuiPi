@@ -7,8 +7,8 @@ pub mod mesh;
 
 pub use shader_program::ShaderProgram;
 pub use mesh::ElementArrayMesh;
-pub use draw::call_api_draw;
-pub use draw::call_api_clear;
+pub use draw::draw_buffer;
+pub use draw::clear_buffer;
 
 pub use opengl::capabilities as gl_capabilities;
 pub use opengl::pixel_store as gl_pixel_store;

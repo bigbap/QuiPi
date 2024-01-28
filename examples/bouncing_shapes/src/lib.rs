@@ -10,7 +10,7 @@ use skald::{
         shader::UniformVariable
     },
     gfx::{
-        call_api_clear,
+        clear_buffer,
         ShaderProgram,
     },
     builders::camera::build_ortho_camera,
@@ -149,7 +149,7 @@ impl skald::Game for MyGame {
         )?;
 
         // render
-        call_api_clear((0.2, 0.0, 0.0, 1.0));
+        clear_buffer((0.2, 0.0, 0.0, 1.0));
 
         s_draw_frame(
             &self.registry,

@@ -4,7 +4,7 @@ use crate::{
         ElementArrayMesh,
         mesh::{BufferUsage, ShaderLocation},
         texture::gl_use_texture_unit,
-        call_api_draw,
+        draw_buffer,
         draw::{DrawBuffer, DrawMode}
     },
     utils::to_abs_path,
@@ -104,7 +104,7 @@ impl TextRenderer {
                 );
                 mesh.unbind();
 
-                call_api_draw(
+                draw_buffer(
                     DrawBuffer::Arrays,
                     DrawMode::Triangles,
                     6

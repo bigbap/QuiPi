@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use egui::{
     ahash::AHashMap,
     ClippedPrimitive,
@@ -8,14 +10,14 @@ use egui::{
 use crate::{
     core::ShaderProgram,
     gfx::{
-        call_api_draw,
+        draw_buffer,
         texture::*,
         mesh::{
             ShaderLocation,
             BufferUsage
         },
         ElementArrayMesh,
-        draw::*
+        draw::*, canvas
     },
     gl_capabilities::{
         self,
@@ -27,7 +29,8 @@ use crate::{
 pub struct Renderer {
     textures: AHashMap<egui::TextureId, Box<dyn ITexture>>,
     shader: ShaderProgram,
-    projection: glm::Mat4,
+    width: f32,
+    height: f32
 }
 
 impl Renderer {
@@ -36,14 +39,13 @@ impl Renderer {
         height: f32
     ) -> Result<Self, Box<dyn std::error::Error>> {
         let shader = ShaderProgram::new("assets/shaders/egui")?;
-        let projection = glm::ortho(0.0, width, height, 0.0, 0.0, 0.2);
 
         Ok(Self {
             textures: AHashMap::default(),
             shader,
-            projection
+            width,
+            height
         })
-
     }
 
     pub fn render(
@@ -51,6 +53,16 @@ impl Renderer {
         ctx: &egui::Context,
         full_output: egui::FullOutput
     ) -> Result<(), Box<dyn std::error::Error>> {
+        let canvas = canvas::get_dimensions();
+        let projection = glm::ortho(
+            0.0,
+            canvas.width as f32,
+            canvas.height as f32,
+            0.0,
+            0.0,
+            0.2
+        );
+
         gl_capabilities::enable(GLCapability::FrameBufferSRGB);
         gl_capabilities::enable(GLCapability::AlphaBlending);
         gl_capabilities::enable(GLCapability::ScissorTest);
@@ -78,26 +90,24 @@ impl Renderer {
                     let clip_min_y = clip_rect.min.y;
                     let clip_max_x = clip_rect.max.x;
                     let clip_max_y = clip_rect.max.y;
-                    let clip_min_x = clip_min_x.clamp(0.0, 400.0);
-                    let clip_min_y = clip_min_y.clamp(0.0, 300.0);
-                    let clip_max_x = clip_max_x.clamp(clip_min_x, 400.0);
-                    let clip_max_y = clip_max_y.clamp(clip_min_y, 300.0);
+                    let clip_min_x = clip_min_x.clamp(0.0, self.width);
+                    let clip_min_y = clip_min_y.clamp(0.0, self.height);
+                    let clip_max_x = clip_max_x.clamp(clip_min_x, self.width);
+                    let clip_max_y = clip_max_y.clamp(clip_min_y, self.height);
                     let clip_min_x = clip_min_x.round() as i32;
                     let clip_min_y = clip_min_y.round() as i32;
                     let clip_max_x = clip_max_x.round() as i32;
                     let clip_max_y = clip_max_y.round() as i32;
 
                     // scissor Y coordinate is from the bottom
-                    unsafe {
-                        gl::Scissor(
-                            clip_min_x,
-                            600 - clip_max_y,
-                            clip_max_x - clip_min_x,
-                            clip_max_y - clip_min_y,
-                        );
-                    }
+                    define_scissor_rect(
+                        clip_min_x,
+                        canvas.height - clip_max_y,
+                        clip_max_x - clip_min_x,
+                        clip_max_y - clip_min_y,
+                    );
 
-                    self.draw_mesh(mesh)?;
+                    self.draw_mesh(mesh, &projection)?;
                 }
             }
         }
@@ -109,7 +119,11 @@ impl Renderer {
         Ok(())
     }
 
-    fn draw_mesh(&self, mesh: &Mesh) -> Result<(), Box<dyn std::error::Error>> {
+    fn draw_mesh(
+        &self,
+        mesh: &Mesh,
+        projection: &glm::Mat4
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let (points, colors, uv_coords) = parse_vertices(mesh);
         let mut m_mesh = ElementArrayMesh::new(
             mesh.indices.len(),
@@ -122,11 +136,11 @@ impl Renderer {
             .with_vbo::<2, f32>(ShaderLocation::Two, &uv_coords)?;
 
         self.shader.use_program();
-        self.shader.set_mat4("u_mvpMatrix", &self.projection);
+        self.shader.set_mat4("u_mvpMatrix", projection);
 
         m_mesh.vao.bind();
         gl_use_texture_unit(0);
-        call_api_draw(DrawBuffer::Elements, DrawMode::Triangles, m_mesh.vao.count());
+        draw_buffer(DrawBuffer::Elements, DrawMode::Triangles, m_mesh.vao.count());
         m_mesh.vao.unbind();
 
         Ok(())

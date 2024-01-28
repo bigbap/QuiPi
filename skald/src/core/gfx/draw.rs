@@ -13,7 +13,7 @@ pub enum DrawMode {
     Points
 }
 
-pub fn call_api_draw(
+pub fn draw_buffer(
     kind: DrawBuffer,
     mode: DrawMode,
     count: i32
@@ -21,6 +21,10 @@ pub fn call_api_draw(
     opengl::draw::draw(kind, mode, count);
 }
 
-pub fn call_api_clear(clr: (f32, f32, f32, f32)) {
+pub fn clear_buffer(clr: (f32, f32, f32, f32)) {
     opengl::buffer::clear_buffers(clr);
+}
+
+pub fn define_scissor_rect(x: i32, y: i32, width: i32, height: i32) {
+    opengl::functions::scissor(x, y, width, height);
 }

@@ -23,7 +23,7 @@ pub fn s_handle_input(
             win_event: WindowEvent::Resized(w, h),
             ..
         } => {
-            gfx::canvas::set_dimensions(&Canvas { x: 0, y: 0, width: w, height: h });
+            gfx::canvas::set_dimensions(Canvas { x: 0, y: 0, width: w, height: h });
         },
         Event::KeyDown { keycode: Some(Keycode::Escape), .. } => return Ok(None),
         Event::KeyDown { keycode: Some(Keycode::Space), .. } => {

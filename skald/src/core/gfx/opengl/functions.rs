@@ -15,3 +15,9 @@ pub fn get_viewport_dimensions() -> (i32, i32, i32, i32) {
         out.into()
     }
 }
+
+pub fn scissor(x: i32, y: i32, width: i32, height: i32) {
+    unsafe {
+        gl::Scissor(x, y, width, height);
+    }
+}

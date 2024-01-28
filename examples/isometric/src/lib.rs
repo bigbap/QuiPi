@@ -14,8 +14,8 @@ use skald::{
     utils::Timer,
     gfx::{
         gl_capabilities,
-        call_api_clear,
-        ShaderProgram
+        ShaderProgram,
+        clear_buffer
     },
     Registry,
     resources::{
@@ -159,7 +159,7 @@ impl Game for MyGame {
         }
 
         // render
-        call_api_clear((0.0, 0.0, 0.0, 1.0));
+        clear_buffer((0.0, 0.0, 0.0, 1.0));
 
         gl_capabilities::enable(GLCapability::AlphaBlending);
         gl_capabilities::enable(GLCapability::DepthTest);

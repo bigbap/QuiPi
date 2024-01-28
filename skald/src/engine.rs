@@ -72,7 +72,7 @@ pub fn run<G: Game>(
     
     let mut gui: Option<GUI> = None;
     if cfg!(debug_assertions) {
-        gui = Some(GUI::new(width as f32, height as f32)?);
+        gui = Some(GUI::new(250.0, 600.0)?);
     }
     game.init(gui)?;
 

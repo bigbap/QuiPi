@@ -14,7 +14,7 @@ use crate::{
         UniformVariable
     },
     gfx::{
-        call_api_draw,
+        draw_buffer,
         draw::DrawBuffer
     },
     systems::material
@@ -88,7 +88,7 @@ fn draw_node(
     if let Some(mesh) = &node.mesh {
         shader.program.use_program();
         mesh.vao.bind();
-        call_api_draw(
+        draw_buffer(
             match mesh.ebo {
                 Some(_) => DrawBuffer::Elements,
                 _ => DrawBuffer::Arrays
