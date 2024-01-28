@@ -3,7 +3,7 @@ use skald::{
     VersionedIndex,
     gfx::{
         ElementArrayMesh,
-        mesh::BufferUsage
+        mesh::{BufferUsage, ShaderLocation}
     },
     components::{
         CModelNode,
@@ -50,8 +50,8 @@ pub fn s_create_quad(
     )?;
     mesh
         .with_ebo(&obj_config.indices)?
-        .create_vbo_3_f32(0, obj_config.points.len(), Some(&obj_config.points))?
-        .create_vbo_4_f32(1, obj_config.colors.len(), Some(&obj_config.colors))?;
+        .with_vbo::<3, f32>(ShaderLocation::Zero, &obj_config.points)?
+        .with_vbo::<4, f32>(ShaderLocation::One, &obj_config.colors)?;
 
     let mut vel = (
         rand.range(0, 200) as f32,

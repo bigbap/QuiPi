@@ -16,7 +16,7 @@ use skald::{
     builders::camera::build_ortho_camera,
     gfx::{
         ElementArrayMesh,
-        mesh::BufferUsage
+        mesh::{BufferUsage, ShaderLocation}
     },
     utils::to_abs_path,
     systems::{
@@ -95,8 +95,8 @@ impl MyUI {
             )?;
             mesh
                 .with_ebo(&obj_config.indices)?
-                .create_vbo_3_f32(0, obj_config.points.len(), Some(&obj_config.points))?
-                .create_vbo_4_f32(1, obj_config.colors.len(), Some(&obj_config.colors))?;
+                .with_vbo::<3, f32>(ShaderLocation::Zero, &obj_config.points)?
+                .with_vbo::<4, f32>(ShaderLocation::One, &obj_config.colors)?;
 
             let pos = (
                 b_box.width() - (quad_config.width / 2.0),

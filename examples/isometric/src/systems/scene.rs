@@ -11,7 +11,7 @@ use skald::{
     gfx::{
         texture::*,
         ElementArrayMesh,
-        mesh::BufferUsage
+        mesh::{BufferUsage, ShaderLocation}
     },
     components::{
         CMaterial,
@@ -41,8 +41,8 @@ pub fn s_load_scene(
                 )?;
                 mesh
                     .with_ebo(&config.indices)?
-                    .create_vbo_3_f32(0, config.points.len(), Some(&config.points))?
-                    .create_vbo_2_f32(1, config.texture_coords.len(), Some(&config.texture_coords))?;
+                    .with_vbo::<3, f32>(ShaderLocation::Zero, &config.points)?
+                    .with_vbo::<2, f32>(ShaderLocation::One, &config.texture_coords)?;
 
                 let cube = registry.create_entity("cube")?
                     .with(CModelNode {

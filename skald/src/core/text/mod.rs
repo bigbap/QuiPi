@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use crate::{gfx::{
     ElementArrayMesh,
-    mesh::BufferUsage,
+    mesh::{BufferUsage, ShaderLocation},
     texture::gl_use_texture_unit,
     gl_draw, draw::{DrawBuffer, DrawMode}
 }, utils::to_abs_path};
@@ -37,7 +37,10 @@ impl TextRenderer {
         shader.set_mat4("projection", &glm::ortho(0.0, width, 0.0, height, 0.0, 0.2));
         
         let mut mesh = ElementArrayMesh::new(6, BufferUsage::DynamicDraw)?;
-        mesh.create_vbo::<4, f32>(0, 6 * 4, None)?;
+        mesh.with_empty_vbo::<4, f32>(
+            ShaderLocation::Zero,
+            6 * 4
+        )?;
 
         Ok(Self {
             shader,

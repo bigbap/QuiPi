@@ -9,6 +9,16 @@ use super::opengl::buffer::{
 
 pub use super::opengl::buffer::BufferUsage;
 
+#[derive(Debug, Clone, Copy)]
+pub enum ShaderLocation {
+    Zero,
+    One,
+    Two,
+    Three,
+    Four,
+    At(usize)
+}
+
 #[derive(Debug)]
 pub struct ElementArrayMesh {
     pub vao: VertexArray,
@@ -48,22 +58,47 @@ impl ElementArrayMesh {
     * S: number of elements to calculate the stride for. I.E. if it's a 2D texture coordinate, it should be 2
     *
     * location: location on the shader
+    */
+    pub fn with_vbo<const S: usize, T>(
+        &mut self,
+        location: ShaderLocation,
+        data: &[T]
+    ) -> Result<&mut Self, Box<dyn std::error::Error>> {
+        self.create_vbo::<S, T>(location, data.len(), data)?;
+
+        Ok(self)
+    }
+
+    /**
+    * S: number of elements to calculate the stride for. I.E. if it's a 2D texture coordinate, it should be 2
+    *
+    * location: location on the shader
     * buffer_length: length of the buffer. This is needed because you might want to allocate a buffer without
     * giving it data yet.
     */
-    pub fn create_vbo<const S: usize, T>(
+    pub fn with_empty_vbo<const S: usize, T>(
         &mut self,
-        location: usize,
+        location: ShaderLocation,
         buffer_length: usize,
-        data: Option<&[T]>
+    ) -> Result<&mut Self, Box<dyn std::error::Error>> {
+        self.create_vbo::<S, T>(location, buffer_length, &[])?;
+
+        Ok(self)
+    }
+
+    fn create_vbo<const S: usize, T>(
+        &mut self,
+        location: ShaderLocation,
+        buffer_length: usize,
+        data: &[T]
     ) -> Result<&mut Self, Box<dyn std::error::Error>> {
         self.vao.bind();
         if let Some(ebo) = &self.ebo { ebo.bind() }
         
         let stride = std::mem::size_of::<T>() * S;
         self.vbo_list.push(create_vbo::<T>(
-            data,
-            location,
+            Some(data),
+            location.unwrap(),
             S,
             buffer_length,
             stride,
@@ -75,32 +110,18 @@ impl ElementArrayMesh {
         
         Ok(self)
     }
+}
 
-    pub fn create_vbo_2_f32(
-        &mut self,
-        location: usize,
-        buffer_length: usize,
-        data: Option<&[f32]>
-    ) -> Result<&mut Self, Box<dyn std::error::Error>> {
-        self.create_vbo::<2, f32>(location, buffer_length, data)
-    }
-
-    pub fn create_vbo_3_f32(
-        &mut self,
-        location: usize,
-        buffer_length: usize,
-        data: Option<&[f32]>
-    ) -> Result<&mut Self, Box<dyn std::error::Error>> {
-        self.create_vbo::<3, f32>(location, buffer_length, data)
-    }
-
-    pub fn create_vbo_4_f32(
-        &mut self,
-        location: usize,
-        buffer_length: usize,
-        data: Option<&[f32]>
-    ) -> Result<&mut Self, Box<dyn std::error::Error>> {
-        self.create_vbo::<4, f32>(location, buffer_length, data)
+impl ShaderLocation {
+    fn unwrap(&self) -> usize {
+        match self {
+            Self::Zero => 0,
+            Self::One => 1,
+            Self::Two => 2,
+            Self::Three => 3,
+            Self::Four => 4,
+            Self::At(loc) => *loc
+        }
     }
 }
 
