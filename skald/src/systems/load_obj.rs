@@ -69,8 +69,6 @@ pub fn s_load_obj_file(
     rel_path: String
 ) -> Result<(Vec<tobj::Model>, Vec<tobj::Material>), ObjectError> {
     let full_path = to_abs_path(&rel_path)?;
-    println!("{full_path}");
-
     let (models, materials) = tobj::load_obj(
         full_path,
         &tobj::GPU_LOAD_OPTIONS

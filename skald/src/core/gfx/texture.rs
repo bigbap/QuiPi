@@ -1,4 +1,4 @@
-use std::io;
+use std::{io, fmt};
 use ft::Face;
 
 use crate::utils::to_abs_path;
@@ -15,7 +15,7 @@ use super::{
 
 pub use super::opengl::textures::use_texture_unit as gl_use_texture_unit;
 
-pub trait ITexture {
+pub trait ITexture: fmt::Debug {
     fn width(&self) -> i32;
     fn height(&self) -> i32;
     fn use_texture(&self, unit: i32);

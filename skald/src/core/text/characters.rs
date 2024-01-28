@@ -13,6 +13,7 @@ use crate::gfx::{
     }
 };
 
+#[derive(Debug)]
 pub struct Character {
     pub texture: Box<dyn ITexture>,
     pub size: glm::Vec2,
@@ -22,6 +23,7 @@ pub struct Character {
 
 pub fn load_char_textures(font: &str) -> FtResult<HashMap<char, Character>> {
     let library = ft::Library::init()?;
+
     let face = library.new_face(font, 0)?;
 
     gl_pixel_store::set_unpack_alignment(1);
@@ -29,6 +31,8 @@ pub fn load_char_textures(font: &str) -> FtResult<HashMap<char, Character>> {
     let mut map: HashMap<char, Character> = HashMap::new();
 
     for c in 0..128 {
+        face.set_char_size(40 * 64, 0, 50, 0)?;
+
         if let Err(e) = face.load_char(c, LoadFlag::RENDER) {
             #[cfg(debug_assertions)]
             println!("{}", e);
@@ -40,6 +44,7 @@ pub fn load_char_textures(font: &str) -> FtResult<HashMap<char, Character>> {
         let rows = face.glyph().bitmap().rows();
         let left = face.glyph().bitmap_left();
         let top = face.glyph().bitmap_top();
+
         let texture = texture::from_font(
             &face,
             width,

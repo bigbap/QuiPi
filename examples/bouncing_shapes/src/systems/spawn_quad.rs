@@ -23,8 +23,8 @@ pub fn s_spawn_quad(
     rand: &mut Random
 ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
     let config = CQuadConfig {
-        width: 256.0,
-        height: 256.0,
+        width: 128.0,
+        height: 128.0,
         center_x: 0.0,
         center_y: 0.0
     };
@@ -59,8 +59,6 @@ pub fn s_create_quad(
     );
     if rand.random() > 0.5 { vel.0 *= -1.0; }
     if rand.random() > 0.5 { vel.1 *= -1.0; }
-
-    println!("{:?}", vel);
     
     let quad = registry.create_entity("quad")?
         .with(CModelNode {
@@ -84,8 +82,6 @@ pub fn s_create_quad(
         })?
         .with(CModelMatrix::default())?
         .done()?;
-
-    println!("{}", registry.entity_count());
 
     Ok(quad)
 }

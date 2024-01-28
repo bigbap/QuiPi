@@ -1,33 +1,40 @@
 use std::collections::HashMap;
-use crate::gfx::{
+use crate::{gfx::{
     ElementArrayMesh,
     mesh::BufferUsage,
     texture::gl_use_texture_unit,
     gl_draw, draw::{DrawBuffer, DrawMode}
-};
+}, utils::to_abs_path};
 
 use super::ShaderProgram;
 
 mod characters;
 
+pub static DEFAULT_FONT: &str = "assets/fonts/FiraSansRegular.ttf";
+
+#[derive(Debug)]
 pub struct TextRenderer {
     shader: ShaderProgram,
     mesh: ElementArrayMesh,
     char_map: HashMap<char, characters::Character>,
+
+    pub color: glm::Vec3,
+    pub scale: f32,
 }
 
 impl TextRenderer {
     pub fn new(
         font: &str,
-        projection: glm::Mat4
+        width: f32,
+        height: f32
     ) -> Result<Self, Box<dyn std::error::Error>> {
-        let char_map = characters::load_char_textures(font)?;
+        let char_map = characters::load_char_textures(&to_abs_path(font)?)?;
         let shader = ShaderProgram::from_str(
             VERT_SHADER,
             FRAG_SHADER,
         )?;
 
-        shader.set_mat4("projection", &projection);
+        shader.set_mat4("projection", &glm::ortho(0.0, width, 0.0, height, 0.0, 0.2));
         
         let mut mesh = ElementArrayMesh::new(6, BufferUsage::DynamicDraw)?;
         mesh.create_vbo::<4, f32>(0, 6 * 4, None)?;
@@ -36,6 +43,9 @@ impl TextRenderer {
             shader,
             mesh,
             char_map,
+
+            color: glm::vec3(0.0, 0.0, 0.0),
+            scale: 1.0
         })
     }
 
@@ -43,11 +53,9 @@ impl TextRenderer {
         &self,
         text: String,
         mut pos: glm::Vec2,
-        color: glm::Vec3,
-        scale: f32
     ) {
         self.shader.use_program();
-        self.shader.set_float_3("textColor", (color.x, color.y, color.z));
+        self.shader.set_float_3("textColor", (self.color.x, self.color.y, self.color.z));
         
         gl_use_texture_unit(0);
 
@@ -56,11 +64,11 @@ impl TextRenderer {
         for c in text.chars() {
             let Some(ch) = self.char_map.get(&c) else { continue; };
 
-            let x_pos = pos.x + ch.bearing.x * scale;
-            let y_pos = pos.y - (ch.size.y - ch.bearing.y) * scale;
+            let x_pos = pos.x + ch.bearing.x * self.scale;
+            let y_pos = pos.y - (ch.size.y - ch.bearing.y) * self.scale;
 
-            let w = ch.size.x * scale;
-            let h = ch.size.y * scale;
+            let w = ch.size.x * self.scale;
+            let h = ch.size.y * self.scale;
 
             let vertices = [
                 x_pos,      y_pos + h,  0.0, 0.0,
@@ -88,7 +96,7 @@ impl TextRenderer {
                 );
             }
 
-            pos.x += (ch.advance >> 6) as f32 * scale;
+            pos.x += (ch.advance >> 6) as f32 * self.scale;
         }
 
         self.mesh.vao.unbind();
