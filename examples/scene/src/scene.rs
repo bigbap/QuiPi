@@ -2,7 +2,7 @@ use skald::{
     gfx::{
         texture,
         ElementArrayMesh,
-        mesh::BufferUsage
+        mesh::{BufferUsage, ShaderLocation}
     },
     VersionedIndex,
     Registry,
@@ -85,15 +85,13 @@ pub fn create_crates(
 
             mesh
                 .with_ebo(&config.indices)?
-                .create_vbo_3_f32(
-                    0,
-                    config.points.len(),
-                    Some(&config.points)
+                .with_vbo::<3, f32>(
+                    ShaderLocation::Zero,
+                    &config.points
                 )?
-                .create_vbo_2_f32(
-                    2,
-                    config.texture_coords.len(),
-                    Some(&config.texture_coords)
+                .with_vbo::<2, f32>(
+                    ShaderLocation::Two,
+                    &config.texture_coords
                 )?;
 
             let entity = registry.create_entity("crate")?
@@ -195,10 +193,9 @@ pub fn directional_light(
     )?;
     mesh
         .with_ebo(&model_config.indices)?
-        .create_vbo_3_f32(
-            0,
-            model_config.points.len(),
-            Some(&model_config.points)
+        .with_vbo::<3, f32>(
+            ShaderLocation::Zero,
+            &model_config.points
         )?;
 
     let light = registry.create_entity("light")?
@@ -277,10 +274,9 @@ pub fn point_light(
     )?;
     mesh
         .with_ebo(&model_config.indices)?
-        .create_vbo_3_f32(
-            0,
-            model_config.points.len(),
-            Some(&model_config.points)
+        .with_vbo::<3, f32>(
+            ShaderLocation::Zero,
+            &model_config.points
         )?;
 
     let light = registry.create_entity("light")?
@@ -349,10 +345,9 @@ pub fn spot_light(
     )?;
     mesh
         .with_ebo(&model_config.indices)?
-        .create_vbo_3_f32(
-            0,
-            model_config.points.len(),
-            Some(&model_config.points)
+        .with_vbo::<3, f32>(
+            ShaderLocation::Zero,
+            &model_config.points
         )?;
 
     registry.create_entity("light")?

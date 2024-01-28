@@ -161,12 +161,12 @@ impl Game for MyGame {
             )?;
         }
 
-        if let Some(grid) = &self.grid {
-            s_draw_grid(&self.registry, &self.camera, grid)?;
-        }
-
         if let Some(ui) = &self.ui {
             ui.draw()?;
+        }
+
+        if let Some(grid) = &self.grid {
+            s_draw_grid(&self.registry, &self.camera, grid)?;
         }
 
         Ok(Some(()))

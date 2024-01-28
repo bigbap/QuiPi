@@ -7,7 +7,7 @@ use crate::{
     },
     gfx::{
         ElementArrayMesh,
-        mesh::BufferUsage,
+        mesh::{BufferUsage, ShaderLocation},
     },
     VersionedIndex,
     resources::{
@@ -40,10 +40,9 @@ pub fn s_create_grid(
     let mut mesh = ElementArrayMesh::new(6, BufferUsage::StaticDraw)?;
     mesh
         .with_ebo(indices)?
-        .create_vbo_3_f32(
-            0,
-            vertices.len(),
-            Some(vertices)
+        .with_vbo::<3, f32>(
+            ShaderLocation::Zero,
+            vertices
         )?;
 
     build_axis(registry, mesh, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0))?;
