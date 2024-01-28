@@ -13,7 +13,8 @@ use skald::{
     Game,
     utils::Timer,
     gfx::{
-        gl_clear_buffers,
+        gl_capabilities,
+        call_api_clear,
         ShaderProgram
     },
     Registry,
@@ -42,7 +43,7 @@ use skald::{
         },
     },
     builders::camera::build_perspective_camera,
-    core::GUI
+    core::GUI, gl_capabilities::{GLCapability, BlendingFactor}
 };
 use ui::MyUI;
 
@@ -158,7 +159,11 @@ impl Game for MyGame {
         }
 
         // render
-        gl_clear_buffers(Some((0.0, 0.0, 0.0, 1.0)));
+        call_api_clear((0.0, 0.0, 0.0, 1.0));
+
+        gl_capabilities::enable(GLCapability::AlphaBlending);
+        gl_capabilities::enable(GLCapability::DepthTest);
+        gl_capabilities::blending_func(BlendingFactor::SrcAlpha, BlendingFactor::OneMinusSrcAlpha);
 
         if let Some(shader) = self.shader {
             s_draw_by_tag(

@@ -1,4 +1,3 @@
-use ::skald::GFXFlags;
 use isometric::{
     MyGame,
     WIDTH,
@@ -14,7 +13,6 @@ fn main() {
         WIDTH,
         HEIGHT,
         vec![],
-        vec![GFXFlags::DepthTest, GFXFlags::AlphaBlending]
     ) {
         eprintln!("Game ended unexpectedly: {}", e);
     };

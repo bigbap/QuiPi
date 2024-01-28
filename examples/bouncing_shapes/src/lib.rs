@@ -10,17 +10,13 @@ use skald::{
         shader::UniformVariable
     },
     gfx::{
-        gl_clear_buffers,
+        call_api_clear,
         ShaderProgram,
     },
     builders::camera::build_ortho_camera,
     math::random::Random,
     utils::{now_secs, Timer},
     systems::{
-        draw::{
-            DrawMode,
-            s_draw_by_tag
-        },
         mvp_matrices::s_set_view_matrix,
         rotation::s_rotate_camera
     },
@@ -153,23 +149,14 @@ impl skald::Game for MyGame {
         )?;
 
         // render
-        gl_clear_buffers(Some((0.0, 0.0, 0.0, 1.0)));
+        call_api_clear((0.2, 0.0, 0.0, 1.0));
 
-        s_draw_by_tag(
-            "quad",
+        s_draw_frame(
             &self.registry,
             &self.shader.unwrap(),
             &self.camera,
-            DrawMode::Triangles
+            self.text_renderer.as_ref().unwrap()
         )?;
-
-        let entity_count = self.registry.entity_count();
-        if let Some(text_renderer) = &self.text_renderer {
-            text_renderer.draw(
-                format!("entities: {}", entity_count),
-                glm::vec2(WIDTH as f32 - 120.0, HEIGHT as f32 - 30.0)
-            );
-        }
 
         // update gui
         if let Some(debug_gui) = &mut self.debug_gui {

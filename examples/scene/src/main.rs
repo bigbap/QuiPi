@@ -1,5 +1,4 @@
 use skald::Flags;
-use skald::GFXFlags;
 use scene::MyGame;
 
 use scene::WIDTH;
@@ -14,7 +13,6 @@ fn main() {
         WIDTH,
         HEIGHT,
         vec![Flags::HideMouse, Flags::RelativeMouseMode],
-        vec![GFXFlags::DepthTest, GFXFlags::AlphaBlending]
     ) {
         eprintln!("{e}")
     }

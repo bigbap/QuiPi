@@ -3,7 +3,6 @@ use bouncing_shapes::{
     WIDTH,
     HEIGHT
 };
-use skald::GFXFlags;
 
 fn main() {
     let mut game = MyGame::new().expect("There was a problem initializing the game.");
@@ -14,7 +13,6 @@ fn main() {
         WIDTH,
         HEIGHT,
         vec![],
-        vec![GFXFlags::AlphaBlending]
     ) {
         eprintln!("Game ended unexpectedly: {}", e);
     };

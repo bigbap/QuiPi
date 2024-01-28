@@ -1,12 +1,9 @@
 use std::time::Instant;
 
 use sdl2::video::GLProfile;
-use crate::{
-    gfx::{
-        self,
-        gl_flags::GFXFlags
-    },
-    core::GUI
+use crate::core::{
+    gfx,
+    GUI
 };
 
 #[derive(Debug)]
@@ -38,7 +35,6 @@ pub fn run<G: Game>(
     width: u32,
     height: u32,
     flags: Vec<Flags>,
-    gfx_flags: Vec<GFXFlags>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let sdl_ctx = sdl2::init()?;
     let video_subsystem = sdl_ctx.video()?;
@@ -65,8 +61,7 @@ pub fn run<G: Game>(
         &video_subsystem,
         width as i32,
         height as i32,
-        &gfx_flags
-    );
+    )?;
 
     for flag in flags.iter() {
         match flag {
@@ -77,7 +72,7 @@ pub fn run<G: Game>(
     
     let mut gui: Option<GUI> = None;
     if cfg!(debug_assertions) {
-        gui = Some(GUI::new()?);
+        gui = Some(GUI::new(width as f32, height as f32)?);
     }
     game.init(gui)?;
 
