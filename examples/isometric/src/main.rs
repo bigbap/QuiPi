@@ -5,8 +5,6 @@ use isometric::{
     HEIGHT
 };
 
-use skald;
-
 fn main() {
     let mut game = MyGame::new().expect("There was a problem initializing the game.");
 

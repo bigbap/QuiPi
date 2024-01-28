@@ -153,7 +153,7 @@ impl skald::Game for MyGame {
         )?;
 
         // render
-        gl_clear_buffers(Some((0.4, 0.0, 0.0, 1.0)));
+        gl_clear_buffers(Some((0.0, 0.0, 0.0, 1.0)));
 
         s_draw_by_tag(
             "quad",
@@ -167,7 +167,7 @@ impl skald::Game for MyGame {
         if let Some(text_renderer) = &self.text_renderer {
             text_renderer.draw(
                 format!("entities: {}", entity_count),
-                glm::vec2(25.0, HEIGHT as f32 - 30.0)
+                glm::vec2(WIDTH as f32 - 120.0, HEIGHT as f32 - 30.0)
             );
         }
 

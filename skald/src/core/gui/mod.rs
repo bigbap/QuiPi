@@ -1,6 +1,7 @@
 use egui::{
     epaint::Primitive,
-    Mesh, TextureId, TexturesDelta
+    Mesh,
+    ahash::AHashMap, ClippedPrimitive
 };
 
 use crate::{
@@ -11,6 +12,10 @@ use crate::{
         mesh::{
             BufferUsage,
             ShaderLocation
+        }, texture::{
+            ITexture,
+            gl_use_texture_unit,
+            from_buffer_rgba
         }
     },
     components::CCamera
@@ -20,8 +25,7 @@ use super::ShaderProgram;
 
 pub struct GUI {
     ctx: egui::Context,
-    mesh: Option<ElementArrayMesh>,
-    texture: Option<TextureId>,
+    textures: AHashMap<egui::TextureId, Box<dyn ITexture>>,
     shader: Option<ShaderProgram>,
     camera: CCamera
 }
@@ -29,12 +33,12 @@ pub struct GUI {
 impl GUI {
     pub fn new() -> Result<GUI, Box<dyn std::error::Error>> {
         let shader = ShaderProgram::new("assets/shaders/egui")?;
-        let camera = CCamera::new_orthographic(0.0, 800.0, 0.0, 600.0, 0.0, 0.2)?;
+        let camera = CCamera::new_orthographic(0.0, 800.0, 600.0, 0.0, 0.0, 0.2)?;
+        let ctx = egui::Context::default();
 
         Ok(Self {
-            ctx: egui::Context::default(),
-            mesh: None,
-            texture: None,
+            ctx,
+            textures: AHashMap::default(),
             shader: Some(shader),
             camera
         })
@@ -53,19 +57,82 @@ impl GUI {
             });
         });
 
-        let mut clipped_primatives = self.ctx.tessellate(
+        self.paint(full_output)?;
+
+        Ok(())
+    }
+
+    pub fn paint(
+        &mut self,
+        full_output: egui::FullOutput
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        unsafe {
+            gl::Enable(gl::FRAMEBUFFER_SRGB);
+            gl::Enable(gl::SCISSOR_TEST);
+            gl::Enable(gl::BLEND);
+        }
+
+        let primatives = self.ctx.tessellate(
             full_output.shapes,
             full_output.pixels_per_point
         );
 
-        if let Primitive::Mesh(mesh) = &mut clipped_primatives[0].primitive {
+        let t_delta = full_output.textures_delta;
+        for (texture_id, delta) in &t_delta.set {
+            self.upload_egui_texture(*texture_id, delta)?;
+        }
+
+        for ClippedPrimitive {
+            clip_rect,
+            primitive
+        } in primatives {
+            if let Primitive::Mesh(mesh) = &primitive {
+                if let Some(texture) = self.textures.get(&mesh.texture_id) {
+                    texture.use_texture(0);
+
+                    let clip_min_x = 1.0 * clip_rect.min.x;
+                    let clip_min_y = 1.0 * clip_rect.min.y;
+                    let clip_max_x = 1.0 * clip_rect.max.x;
+                    let clip_max_y = 1.0 * clip_rect.max.y;
+                    let clip_min_x = clip_min_x.clamp(0.0, 800.0);
+                    let clip_min_y = clip_min_y.clamp(0.0, 600.0);
+                    let clip_max_x = clip_max_x.clamp(clip_min_x, 800.0);
+                    let clip_max_y = clip_max_y.clamp(clip_min_y, 600.0);
+                    let clip_min_x = clip_min_x.round() as i32;
+                    let clip_min_y = clip_min_y.round() as i32;
+                    let clip_max_x = clip_max_x.round() as i32;
+                    let clip_max_y = clip_max_y.round() as i32;
+
+                    //scissor Y coordinate is from the bottom
+                    unsafe {
+                        gl::Scissor(
+                            clip_min_x,
+                            600 - clip_max_y,
+                            clip_max_x - clip_min_x,
+                            clip_max_y - clip_min_y,
+                        );
+                    }
+
+                    self.draw_mesh(mesh)?;
+                }
+            }
+        }
+
+        unsafe {
+            gl::Disable(gl::FRAMEBUFFER_SRGB);
+            gl::Disable(gl::SCISSOR_TEST);
+            // gl::Disable(gl::BLEND);
+        }
+
+        Ok(())
+    }
+
+    fn draw_mesh(&self, mesh: &Mesh) -> Result<(), Box<dyn std::error::Error>> {
+        if let Some(shader) = &self.shader {
             let (points, colors, uv_coords) = parse_vertices(mesh);
-
-            self.texture = Some(mesh.texture_id);
-
             let mut m_mesh = ElementArrayMesh::new(
                 mesh.indices.len(),
-                BufferUsage::StaticDraw
+                BufferUsage::StreamDraw
             )?;
             m_mesh
                 .with_ebo(&mesh.indices)?
@@ -73,41 +140,23 @@ impl GUI {
                 .with_vbo::<4, f32>(ShaderLocation::One, &colors)?
                 .with_vbo::<2, f32>(ShaderLocation::Two, &uv_coords)?;
 
-            self.mesh = Some(m_mesh);
+            shader.use_program();
+            shader.set_mat4("u_mvpMatrix", &self.camera.projection_matrix);
+
+            m_mesh.vao.bind();
+            gl_use_texture_unit(0);
+            gl_draw(DrawBuffer::Elements, DrawMode::Triangles, m_mesh.vao.count());
+            m_mesh.vao.unbind();
         }
-        self.paint(full_output.textures_delta);
 
         Ok(())
     }
 
-    pub fn paint(&mut self, t_delta: TexturesDelta) {
-        for (texture_id, delta) in t_delta.set {
-            self.upload_egui_texture(texture_id, &delta)
-        }
-
-        if let (Some(mesh), Some(shader)) = (&self.mesh, &self.shader) {
-            unsafe {
-                gl::Enable(gl::FRAMEBUFFER_SRGB);
-                gl::Enable(gl::SCISSOR_TEST);
-                gl::Enable(gl::BLEND);
-                gl::BlendFunc(gl::ONE, gl::ONE_MINUS_SRC_ALPHA);
-                
-                shader.use_program();
-                // shader.set_float_2("u_screenSize", (width, height));
-                shader.set_mat4("u_mvpMatrix", &self.camera.projection_matrix);
-
-                mesh.vao.bind();
-                gl_draw(DrawBuffer::Elements, DrawMode::Triangles, mesh.vao.count());
-                mesh.vao.unbind();
-
-                gl::Disable(gl::FRAMEBUFFER_SRGB);
-                gl::Disable(gl::SCISSOR_TEST);
-                gl::Disable(gl::BLEND);
-            }
-        }
-    }
-
-    fn upload_egui_texture(&mut self, id: egui::TextureId, delta: &egui::epaint::ImageDelta) {
+    fn upload_egui_texture(
+        &mut self,
+        id: egui::TextureId,
+        delta: &egui::epaint::ImageDelta
+    ) -> Result<(), Box<dyn std::error::Error>> {
         // Modeled after equi_sdl2_gl's upload_egui_texture.
         // https://github.com/ArjunNair/egui_sdl2_gl/blob/main/src/painter.rs
 
@@ -130,15 +179,36 @@ impl GUI {
                 .flat_map(|color| color.to_array())
                 .collect()
         };
+
+        let t_width = delta.image.width();
+        let t_height = delta.image.height();
+
+        if let (Some(patch_pos), Some(texture)) = (
+            delta.pos,
+            self.textures.get_mut(&id)
+        ) {
+            println!("got here");
+            
+        } else {
+            let texture = from_buffer_rgba(
+                t_width as i32,
+                t_height as i32,
+                &pixels
+            )?;
+
+            self.textures.insert(id, texture);
+        }
+
+        Ok(())
     }
 }
 
-fn parse_vertices(mesh: &mut Mesh) -> (Vec<f32>, Vec<f32>, Vec<f32>) {
+fn parse_vertices(mesh: &Mesh) -> (Vec<f32>, Vec<f32>, Vec<f32>) {
     let mut pos = Vec::<f32>::new();
     let mut color = Vec::<f32>::new();
     let mut uv_coords = Vec::<f32>::new();
 
-    for row in &mut mesh.vertices {
+    for row in &mesh.vertices {
         pos.push(row.pos.x);
         pos.push(row.pos.y);
 

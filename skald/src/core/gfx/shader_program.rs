@@ -190,6 +190,7 @@ fn link_program(
     for shader in shaders {
         unsafe {
             gl::DetachShader(id, *shader);
+            gl::DeleteShader(*shader);
         }
     }
 

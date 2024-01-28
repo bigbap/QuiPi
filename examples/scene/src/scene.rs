@@ -154,7 +154,9 @@ pub fn create_texture(
     registry: &mut Registry,
     image_file: &str,
 ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
-    registry.create_resource(Texture(texture::from_image(image_file)?))
+    registry.create_resource(
+        Texture(texture::from_image(image_file)?)
+    )
 }
 
 pub fn directional_light(

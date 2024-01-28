@@ -7,8 +7,7 @@ use super::{
         Texture,
         Format,
         Target,
-        ParameterNames,
-        ParameterValues
+        ParameterName, ParameterValue
     },
     image::Image
 };
@@ -53,6 +52,23 @@ pub enum TextureError {
     CouldntFindWavefrontTexture
 }
 
+pub fn from_buffer_rgba(
+    width: i32,
+    height: i32,
+    buffer: &[u8]
+) -> Result<Box<dyn ITexture>, TextureError> {
+    let texture = Texture::new(
+        width,
+        height,
+        Target::Texture2D
+    );
+
+    texture
+        .bind()
+        .add_image_data(Format::Rgba, Format::Rgba, buffer);
+
+    Ok(Box::new(texture))
+}
 
 pub fn from_wavefront_material(
     material: &tobj::Material,
@@ -66,7 +82,7 @@ pub fn from_wavefront_material(
 }
 
 pub fn from_image(
-    file_path: &str
+    file_path: &str,
 ) -> Result<Box<dyn ITexture>, TextureError> {
     let file_path = &to_abs_path(file_path)?;
     let format = get_format(file_path);
@@ -81,10 +97,10 @@ pub fn from_image(
     texture
         .bind()
         .add_image_data(Format::Rgba, format, &img.flipv())
-        .set_parameter(ParameterNames::WrapS, ParameterValues::ClampToEdge)
-        .set_parameter(ParameterNames::WrapT, ParameterValues::ClampToEdge)
-        .set_parameter(ParameterNames::MinFilter, ParameterValues::LinearMipmapLinear)
-        .set_parameter(ParameterNames::MagFilter, ParameterValues::Linear);
+        .set_parameter(ParameterName::WrapS, ParameterValue::ClampToEdge)
+        .set_parameter(ParameterName::WrapT, ParameterValue::ClampToEdge)
+        .set_parameter(ParameterName::MinFilter, ParameterValue::LinearMipmapLinear)
+        .set_parameter(ParameterName::MagFilter, ParameterValue::Linear);
 
     Ok(Box::new(texture))
 }
@@ -102,7 +118,14 @@ pub fn from_font(
 
     texture
         .bind()
-        .add_image_data(Format::Red, Format::Red, face.glyph().bitmap().buffer());
+        .add_image_data(
+            Format::Red,
+            Format::Red,
+            face
+                .glyph()
+                .bitmap()
+                .buffer(),
+        );
 
     Ok(Box::new(texture))
 }

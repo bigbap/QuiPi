@@ -33,9 +33,9 @@ vec4 linearFromSrgba(vec4 srgba) {
 }
 
 void main() {
-    // vec4 textureRgba = linearFromSrgba(texture(u_sampler, uvCoords) * 255.0);
-    // fragColor = color * textureRgba;
+    vec4 textureRgba = linearFromSrgba(texture(u_sampler, uvCoords) * 255.0);
+    fragColor = color * textureRgba;
 
-    fragColor = color;
+    // fragColor = color;
     // fragColor = vec4(color.w, color.w, color.w, 1.0);
 }

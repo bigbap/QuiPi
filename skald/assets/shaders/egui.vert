@@ -28,6 +28,5 @@ void main(){
     gl_Position = u_mvpMatrix * vec4(aPos, 0.0, 1.0);
 
     color = linearFromSrgba(aColor);
-    // color = aColor;
     uvCoords = aUVCoords;
 }
