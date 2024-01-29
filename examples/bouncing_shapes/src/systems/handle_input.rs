@@ -1,4 +1,3 @@
-use skald::gfx::canvas::Canvas;
 use skald::math::random::Random;
 use skald::{
     Registry,
@@ -23,7 +22,7 @@ pub fn s_handle_input(
             win_event: WindowEvent::Resized(w, h),
             ..
         } => {
-            gfx::canvas::set_dimensions(Canvas { x: 0, y: 0, width: w, height: h });
+            gfx::canvas::set_dimensions(0, 0, w, h);
         },
         Event::KeyDown { keycode: Some(Keycode::Escape), .. } => return Ok(None),
         Event::KeyDown { keycode: Some(Keycode::Space), .. } => {

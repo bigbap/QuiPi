@@ -13,9 +13,12 @@ use skald::{
     Game,
     utils::Timer,
     gfx::{
-        gl_capabilities,
+        opengl::{
+            capabilities::*,
+            buffer::clear_buffers,
+            draw::DrawMode
+        },
         ShaderProgram,
-        clear_buffer
     },
     Registry,
     resources::{
@@ -30,20 +33,13 @@ use skald::{
     },
     VersionedIndex,
     systems::{
-        mvp_matrices::*,
-        rotation::s_rotate_camera,
-        grid::{
-            Grid,
-            s_create_grid,
-            s_draw_grid
+        rendering::{
+            IRenderer,
+            Renderer,
         },
-        draw::{
-            s_draw_by_tag,
-            DrawMode
-        },
+        grid::Grid
     },
-    builders::camera::build_perspective_camera,
-    core::GUI, gl_capabilities::{GLCapability, BlendingFactor}
+    core::GUI,
 };
 use ui::MyUI;
 
@@ -54,10 +50,11 @@ pub struct MyGame {
     registry: Registry,
     timer: Timer,
     shader: Option<VersionedIndex>,
-    camera: VersionedIndex,
     grid: Option<Grid>,
     ui: Option<MyUI>,
-    debug_gui: Option<GUI>
+    debug_gui: Option<GUI>,
+
+    renderer3d: Renderer
 }
 
 impl MyGame {
@@ -68,9 +65,9 @@ impl MyGame {
         register_components(&mut registry);
         register_resources(&mut registry);
 
-        let camera = build_perspective_camera(
+        let renderer = Renderer::new(
             &mut registry,
-            45.0,
+            45.0, 
             CBoundingBox {
                 right: WIDTH as f32,
                 top: HEIGHT as f32,
@@ -89,17 +86,15 @@ impl MyGame {
             }
         )?;
 
-        s_rotate_camera(&mut registry, &camera);
-        s_set_view_matrix(&camera, &mut registry);
 
         Ok(Self {
             registry,
             shader: None,
-            camera,
             grid: None,
             ui: None,
             timer,
-            debug_gui: None
+            debug_gui: None,
+            renderer3d: renderer
         })
     }
 }
@@ -114,7 +109,7 @@ impl Game for MyGame {
             ]
         })?;
 
-        self.grid = Some(s_create_grid(&mut self.registry)?);
+        self.grid = Some(Grid::new(&mut self.registry)?);
         self.shader = Some(shader);
         
         let mut ui = MyUI::init()?;
@@ -139,7 +134,7 @@ impl Game for MyGame {
         for event in event_pump.poll_iter() {
             let response = handle_input::s_handle_input(
                 &mut self.registry,
-                &self.camera,
+                &self.renderer3d.camera(),
                 event
             )?;
             
@@ -148,7 +143,7 @@ impl Game for MyGame {
 
         // update camera
         s_update_camera(
-            &self.camera,
+            &self.renderer3d.camera(),
             &mut self.registry,
             delta
         )?;
@@ -159,18 +154,17 @@ impl Game for MyGame {
         }
 
         // render
-        clear_buffer((0.0, 0.0, 0.0, 1.0));
+        clear_buffers((0.0, 0.0, 0.0, 1.0));
 
-        gl_capabilities::enable(GLCapability::AlphaBlending);
-        gl_capabilities::enable(GLCapability::DepthTest);
-        gl_capabilities::blending_func(BlendingFactor::SrcAlpha, BlendingFactor::OneMinusSrcAlpha);
+        gl_enable(GLCapability::AlphaBlending);
+        gl_enable(GLCapability::DepthTest);
+        gl_blending_func(GLBlendingFactor::SrcAlpha, GLBlendingFactor::OneMinusSrcAlpha);
 
         if let Some(shader) = self.shader {
-            s_draw_by_tag(
+            self.renderer3d.draw_by_tag(
                 "cube",
                 &self.registry,
                 &shader,
-                &self.camera,
                 DrawMode::Triangles
             )?;
         }
@@ -180,7 +174,7 @@ impl Game for MyGame {
         }
 
         if let Some(grid) = &self.grid {
-            s_draw_grid(&self.registry, &self.camera, grid)?;
+            grid.draw(&self.registry)?;
         }
 
         Ok(Some(()))

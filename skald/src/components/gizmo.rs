@@ -9,22 +9,22 @@ pub struct CGizmo3D {
     world_up: glm::Vec3
 }
 
-impl CGizmo3D {
-    pub fn new(
-        front: glm::Vec3,
-        world_up: glm::Vec3
-    ) -> Self {
+impl Default for CGizmo3D {
+    fn default() -> Self {
         let mut gizmo = Self {
-            front,
+            front: glm::vec3(0.0, 0.0, -1.0),
             up: glm::vec3(0.0, 0.0, 0.0),
             right: glm::vec3(0.0, 0.0, 0.0),
-            world_up
+            world_up: glm::vec3(0.0, 1.0, 0.0)
         };
 
         gizmo.update_vectors();
+
         gizmo
     }
-    
+}
+
+impl CGizmo3D {
     pub fn update_vectors(&mut self) {
         self.right = glm::normalize(&glm::cross(&self.front, &self.world_up));
         self.up = glm::normalize(&glm::cross(&self.right, &self.front));

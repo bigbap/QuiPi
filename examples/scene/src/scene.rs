@@ -22,15 +22,10 @@ use skald::{
         CMaterial,
         CTransform,
         CRGBA,
-        CEulerAngles, CBoundingBox
     },
-    builders::camera::build_perspective_camera,
     systems::{
         material,
-        mvp_matrices::{
-            s_set_model_matrix,
-            s_set_view_matrix
-        },
+        mvp_matrices::s_set_model_matrix,
         load_obj::{
             s_load_obj_file,
             ObjectConfig
@@ -117,37 +112,6 @@ pub fn create_crates(
     }
 
     Ok(entities)
-}
-
-pub fn create_camera(
-    registry: &mut Registry,
-    width: f32,
-    height: f32
-) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
-    let camera = build_perspective_camera(
-        registry,
-        45.0,
-        CBoundingBox {
-            right: width,
-            top: height,
-            near: 0.1,
-            far: 100.0,
-            ..CBoundingBox::default()
-        },
-        CTransform {
-            translate: glm::vec3(0.0, 1.0, 6.0),
-            ..CTransform::default()
-        },
-        CEulerAngles {
-            pitch: 0.0,
-            yaw: 90.0,
-            roll: 0.0
-        }
-    )?;
-
-    s_set_view_matrix(&camera, registry);
-
-    Ok(camera)
 }
 
 pub fn create_texture(

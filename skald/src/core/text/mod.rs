@@ -4,15 +4,15 @@ use crate::{
         ElementArrayMesh,
         mesh::{BufferUsage, ShaderLocation},
         texture::gl_use_texture_unit,
-        draw_buffer,
-        draw::{DrawBuffer, DrawMode}
+        opengl::draw::{
+            gl_draw,
+            DrawBuffer,
+            DrawMode
+        },
+        canvas
     },
     utils::to_abs_path,
-    gl_capabilities::{
-        self,
-        GLCapability,
-        BlendingFactor
-    }
+    opengl::capabilities::*
 };
 
 use super::ShaderProgram;
@@ -33,17 +33,13 @@ pub struct TextRenderer {
 
 impl TextRenderer {
     pub fn new(
-        font: &str,
-        width: f32,
-        height: f32
+        font: &str
     ) -> Result<Self, Box<dyn std::error::Error>> {
         let char_map = characters::load_char_textures(&to_abs_path(font)?)?;
         let shader = ShaderProgram::from_str(
             VERT_SHADER,
             FRAG_SHADER,
         )?;
-
-        shader.set_mat4("projection", &glm::ortho(0.0, width, 0.0, height, 0.0, 0.2));
         
         let mut mesh = ElementArrayMesh::new(6, BufferUsage::DynamicDraw)?;
         mesh.with_empty_vbo::<4, f32>(
@@ -66,11 +62,20 @@ impl TextRenderer {
         text: String,
         mut pos: glm::Vec2,
     ) {
-        gl_capabilities::enable(GLCapability::AlphaBlending);
-        gl_capabilities::blending_func(BlendingFactor::SrcAlpha, BlendingFactor::OneMinusSrcAlpha);
+        gl_enable(GLCapability::AlphaBlending);
+        gl_blending_func(GLBlendingFactor::SrcAlpha, GLBlendingFactor::OneMinusSrcAlpha);
 
+        let (_x, _y, width, height) = canvas::get_dimensions();
         self.shader.use_program();
         self.shader.set_float_3("textColor", (self.color.x, self.color.y, self.color.z));
+        self.shader.set_mat4("projection", &glm::ortho(
+            0.0,
+            width as f32,
+            0.0,
+            height as f32,
+            0.0,
+            0.2
+        ));
         
         gl_use_texture_unit(0);
 
@@ -104,7 +109,7 @@ impl TextRenderer {
                 );
                 mesh.unbind();
 
-                draw_buffer(
+                gl_draw(
                     DrawBuffer::Arrays,
                     DrawMode::Triangles,
                     6
@@ -116,7 +121,7 @@ impl TextRenderer {
 
         self.mesh.vao.unbind();
 
-        gl_capabilities::disable(GLCapability::AlphaBlending);
+        gl_disable(GLCapability::AlphaBlending);
     }
 }
 

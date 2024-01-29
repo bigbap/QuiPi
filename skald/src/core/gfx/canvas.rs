@@ -1,29 +1,24 @@
 use super::opengl;
 
-#[derive(Debug)]
-pub struct Canvas {
-    pub x: i32,
-    pub y: i32,
-    pub width: i32,
-    pub height: i32
-}
-
-pub fn set_dimensions(canvas: Canvas) {
-    opengl::functions::set_viewport_dimensions(
-        canvas.x,
-        canvas.y,
-        canvas.width,
-        canvas.height
+pub fn set_dimensions(
+    x: i32,
+    y: i32,
+    width: i32,
+    height: i32
+) {
+    opengl::functions::gl_set_viewport_dimensions(
+        x,
+        y,
+        width,
+        height
     );
 }
 
-pub fn get_dimensions() -> Canvas {
-    let dims = opengl::functions::get_viewport_dimensions();
+/**
+* returns (x, y, width, height)  
+*/
+pub fn get_dimensions() -> (i32, i32, i32, i32) {
+    let dims = opengl::functions::gl_get_viewport_dimensions();
 
-    Canvas {
-        x: dims.0,
-        y: dims.1,
-        width: dims.2,
-        height: dims.3
-    }
+    (dims.0, dims.1, dims.2, dims.3)
 }

@@ -41,7 +41,7 @@ pub struct CDirection {
 /**
 * 3D velocity vector
 */
-#[derive(Debug, Component, Clone, Copy)]
+#[derive(Debug, Component, Clone, Copy, Default)]
 pub struct CVelocity {
     pub x: f32,
     pub y: f32,
@@ -52,7 +52,7 @@ pub struct CVelocity {
 * RGBA color
 * (f32, f32, f32, f32)
 */
-#[derive(Debug, Component)]
+#[derive(Debug, Component, Default)]
 pub struct CRGBA {
     pub r: f32,
     pub g: f32,
@@ -65,7 +65,7 @@ pub struct CRGBA {
 *
 * https://wiki.ogre3d.org/tiki-index.php?page=-Point+Light+Attenuation
 */
-#[derive(Debug, Component)]
+#[derive(Debug, Component, Default)]
 pub struct CAttenuation {
     pub constant: f32,
     pub linear: f32,
@@ -77,7 +77,7 @@ pub struct CAttenuation {
 *
 * https://learnopengl.com/Lighting/Light-casters
 */
-#[derive(Debug, Component)]
+#[derive(Debug, Component, Default)]
 pub struct CCutoff {
     pub inner_cutoff: f32,
     pub outer_cutoff: f32

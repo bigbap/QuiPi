@@ -1,9 +1,17 @@
-use crate::gfx::draw::{
-    DrawBuffer,
-    DrawMode
-};
+#[derive(Debug, Clone, Copy)]
+pub enum DrawBuffer {
+    Elements,
+    Arrays
+}
 
-pub fn draw(
+#[derive(Debug, Clone, Copy)]
+pub enum DrawMode {
+    Triangles,
+    Lines,
+    Points
+}
+
+pub fn gl_draw(
     kind: DrawBuffer,
     mode: DrawMode,
     count: i32

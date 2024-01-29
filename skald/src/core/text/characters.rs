@@ -6,7 +6,7 @@ use ft::{
 };
 
 use crate::gfx::{
-    gl_pixel_store,
+    opengl::pixel_store,
     texture::{
         self,
         ITexture
@@ -26,7 +26,7 @@ pub fn load_char_textures(font: &str) -> FtResult<HashMap<char, Character>> {
 
     let face = library.new_face(font, 0)?;
 
-    gl_pixel_store::set_unpack_alignment(1);
+    pixel_store::set_unpack_alignment(1);
 
     let mut map: HashMap<char, Character> = HashMap::new();
 

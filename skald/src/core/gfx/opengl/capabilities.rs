@@ -10,7 +10,7 @@ pub enum GLCapability {
     FrameBufferSRGB
 }
 
-pub fn enable(flag: GLCapability) {
+pub fn gl_enable(flag: GLCapability) {
     unsafe {
         gl::Enable(match flag {
             GLCapability::DepthTest             => gl::DEPTH_TEST,
@@ -26,7 +26,7 @@ pub fn enable(flag: GLCapability) {
     }
 }
 
-pub fn disable(flag: GLCapability) {
+pub fn gl_disable(flag: GLCapability) {
     unsafe {
         gl::Disable(match flag {
             GLCapability::DepthTest             => gl::DEPTH_TEST,
@@ -43,25 +43,25 @@ pub fn disable(flag: GLCapability) {
 }
 
 // blending
-pub enum BlendingFactor {
+pub enum GLBlendingFactor {
     SrcAlpha,
     OneMinusSrcAlpha,
     One,
 }
 
-pub fn blending_func(
-    s_factor: BlendingFactor,
-    d_factor: BlendingFactor
+pub fn gl_blending_func(
+    s_factor: GLBlendingFactor,
+    d_factor: GLBlendingFactor
 ) {
     unsafe { gl::BlendFunc(s_factor.unwrap(), d_factor.unwrap()) }
 }
 
-impl BlendingFactor {
+impl GLBlendingFactor {
     fn unwrap(&self) -> gl::types::GLenum {
         match self {
-            BlendingFactor::One                 => gl::ONE,
-            BlendingFactor::SrcAlpha            => gl::SRC_ALPHA,
-            BlendingFactor::OneMinusSrcAlpha    => gl::ONE_MINUS_SRC_ALPHA
+            GLBlendingFactor::One                 => gl::ONE,
+            GLBlendingFactor::SrcAlpha            => gl::SRC_ALPHA,
+            GLBlendingFactor::OneMinusSrcAlpha    => gl::ONE_MINUS_SRC_ALPHA
         }
     }
 }

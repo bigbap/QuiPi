@@ -13,21 +13,22 @@ use skald::{
         CModelNode,
         CTransform, CModelMatrix, CBoundingBox
     },
-    builders::camera::build_ortho_camera,
     gfx::{
         ElementArrayMesh,
-        mesh::{BufferUsage, ShaderLocation}
+        mesh::{
+            BufferUsage,
+            ShaderLocation
+        },
+        
+        opengl::draw::DrawMode
     },
     utils::to_abs_path,
     systems::{
-        draw::{
-            s_draw_by_tag,
-            DrawMode
+        rendering::{
+            Renderer2D,
+            IRenderer
         },
-        mvp_matrices::{
-            s_set_model_matrix,
-            s_set_view_matrix,
-        }
+        mvp_matrices::s_set_model_matrix
     }
 };
 
@@ -36,7 +37,7 @@ use crate::{WIDTH, HEIGHT};
 pub struct MyUI {
     registry: Registry,
     shader: VersionedIndex,
-    camera: VersionedIndex
+    renderer: Renderer2D
 }
 
 impl MyUI {
@@ -51,7 +52,7 @@ impl MyUI {
             vec![UniformVariable::MVPMatrix("mvpMatrix".to_string())]
         )?)?;
 
-        let camera = build_ortho_camera(
+        let renderer = Renderer2D::new(
             &mut registry,
             CBoundingBox {
                 right: WIDTH as f32,
@@ -60,18 +61,13 @@ impl MyUI {
                 ..CBoundingBox::default()
             },
             CTransform::default(),
-            CEulerAngles {
-                pitch: 0.0,
-                yaw: 0.0,
-                roll: 0.0
-            }
+            CEulerAngles::default()
         )?;
-        s_set_view_matrix(&camera, &mut registry);
 
         Ok(Self {
             registry,
             shader,
-            camera,
+            renderer
         })
     }
 
@@ -79,7 +75,9 @@ impl MyUI {
         &mut self,
         color: (f32, f32, f32, f32)
     ) -> Result<(), Box<dyn std::error::Error>> {
-        if let Some(b_box) = self.registry.get_component::<CBoundingBox>(&self.camera) {
+        let camera = self.renderer.camera();
+
+        if let Some(b_box) = self.registry.get_component::<CBoundingBox>(&camera) {
             let quad_config = CQuadConfig {
                 width: 300.0,
                 height: b_box.height(),
@@ -124,11 +122,10 @@ impl MyUI {
     }
 
     pub fn draw(&self) -> Result<(), Box<dyn std::error::Error>> {
-        s_draw_by_tag(
+        self.renderer.draw_by_tag(
             "quad",
             &self.registry,
             &self.shader,
-            &self.camera,
             DrawMode::Triangles
         )?;
 

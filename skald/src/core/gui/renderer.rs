@@ -10,20 +10,19 @@ use egui::{
 use crate::{
     core::ShaderProgram,
     gfx::{
-        draw_buffer,
+        opengl::{
+            draw::*,
+            functions::gl_scissor
+        },
         texture::*,
         mesh::{
             ShaderLocation,
             BufferUsage
         },
         ElementArrayMesh,
-        draw::*, canvas
+        canvas
     },
-    gl_capabilities::{
-        self,
-        GLCapability,
-        BlendingFactor
-    }
+    opengl::capabilities::*
 };
 
 pub struct Renderer {
@@ -53,20 +52,20 @@ impl Renderer {
         ctx: &egui::Context,
         full_output: egui::FullOutput
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let canvas = canvas::get_dimensions();
+        let (x, y, width, height) = canvas::get_dimensions();
         let projection = glm::ortho(
-            0.0,
-            canvas.width as f32,
-            canvas.height as f32,
-            0.0,
+            x as f32,
+            width as f32,
+            height as f32,
+            y as f32,
             0.0,
             0.2
         );
 
-        gl_capabilities::enable(GLCapability::FrameBufferSRGB);
-        gl_capabilities::enable(GLCapability::AlphaBlending);
-        gl_capabilities::enable(GLCapability::ScissorTest);
-        gl_capabilities::blending_func(BlendingFactor::One, BlendingFactor::OneMinusSrcAlpha);
+        gl_enable(GLCapability::FrameBufferSRGB);
+        gl_enable(GLCapability::AlphaBlending);
+        gl_enable(GLCapability::ScissorTest);
+        gl_blending_func(GLBlendingFactor::One, GLBlendingFactor::OneMinusSrcAlpha);
 
         let primatives = ctx.tessellate(
             full_output.shapes,
@@ -100,9 +99,9 @@ impl Renderer {
                     let clip_max_y = clip_max_y.round() as i32;
 
                     // scissor Y coordinate is from the bottom
-                    define_scissor_rect(
+                    gl_scissor(
                         clip_min_x,
-                        canvas.height - clip_max_y,
+                        height - clip_max_y,
                         clip_max_x - clip_min_x,
                         clip_max_y - clip_min_y,
                     );
@@ -112,9 +111,9 @@ impl Renderer {
             }
         }
 
-        gl_capabilities::disable(GLCapability::FrameBufferSRGB);
-        gl_capabilities::disable(GLCapability::AlphaBlending);
-        gl_capabilities::disable(GLCapability::ScissorTest);
+        gl_disable(GLCapability::FrameBufferSRGB);
+        gl_disable(GLCapability::AlphaBlending);
+        gl_disable(GLCapability::ScissorTest);
 
         Ok(())
     }
@@ -140,7 +139,7 @@ impl Renderer {
 
         m_mesh.vao.bind();
         gl_use_texture_unit(0);
-        draw_buffer(DrawBuffer::Elements, DrawMode::Triangles, m_mesh.vao.count());
+        gl_draw(DrawBuffer::Elements, DrawMode::Triangles, m_mesh.vao.count());
         m_mesh.vao.unbind();
 
         Ok(())

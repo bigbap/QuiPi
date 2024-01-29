@@ -10,15 +10,14 @@ use skald::{
         shader::UniformVariable
     },
     gfx::{
-        clear_buffer,
+        opengl::buffer::clear_buffers,
         ShaderProgram,
     },
-    builders::camera::build_ortho_camera,
     math::random::Random,
     utils::{now_secs, Timer},
-    systems::{
-        mvp_matrices::s_set_view_matrix,
-        rotation::s_rotate_camera
+    systems::rendering::{
+        IRenderer,
+        Renderer2D,
     },
     components::{
         register_components,
@@ -48,7 +47,7 @@ pub struct MyGame {
     rand: Random,
     
     shader: Option<VersionedIndex>,
-    camera: VersionedIndex,
+    renderer: Renderer2D,
     debug_gui: Option<GUI>,
     text_renderer: Option<TextRenderer>,
 }
@@ -61,7 +60,7 @@ impl MyGame {
         register_resources(&mut registry);
         register_components(&mut registry);
 
-        let camera = build_ortho_camera(
+        let renderer = Renderer2D::new(
             &mut registry,
             CBoundingBox {
                 right: WIDTH as f32,
@@ -81,8 +80,8 @@ impl MyGame {
             }
         )?;
 
-        s_rotate_camera(&mut registry, &camera);
-        s_set_view_matrix(&camera, &mut registry);
+        // s_rotate_camera(&mut registry, &renderer.camera());
+        renderer.update_view_matrix(&mut registry);
 
         Ok(MyGame {
             registry,
@@ -90,7 +89,7 @@ impl MyGame {
             text_renderer: None,
             timer: Timer::new()?,
             rand,
-            camera,
+            renderer,
             debug_gui: None
         })
     }
@@ -116,8 +115,6 @@ impl skald::Game for MyGame {
 
         let mut text = TextRenderer::new(
             DEFAULT_FONT,
-            WIDTH as f32,
-            HEIGHT as f32
         )?;
         text.color = glm::vec3(1.0, 1.0, 1.0);
         text.scale = 0.7;
@@ -149,12 +146,12 @@ impl skald::Game for MyGame {
         )?;
 
         // render
-        clear_buffer((0.2, 0.0, 0.0, 1.0));
+        clear_buffers((0.2, 0.0, 0.0, 1.0));
 
         s_draw_frame(
-            &self.registry,
+            &mut self.registry,
             &self.shader.unwrap(),
-            &self.camera,
+            &self.renderer,
             self.text_renderer.as_ref().unwrap()
         )?;
 

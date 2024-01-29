@@ -4,7 +4,6 @@ pub extern crate nalgebra_glm as glm;
 pub extern crate freetype as ft;
 // pub extern crate gltf;
 
-pub mod builders;
 pub mod core;
 pub mod engine;
 pub mod registry;
@@ -23,4 +22,4 @@ pub use core::EntityManager;
 pub use core::math;
 pub use engine::Flags;
 pub use engine::run;
-pub use core::gfx::gl_capabilities;
+pub use core::gfx::opengl;

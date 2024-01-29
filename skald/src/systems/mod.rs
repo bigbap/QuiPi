@@ -3,7 +3,7 @@ pub mod movement;
 pub mod rotation;
 pub mod material;
 pub mod print;
-pub mod draw;
 pub mod model;
 pub mod load_obj;
 pub mod grid;
+pub mod rendering;

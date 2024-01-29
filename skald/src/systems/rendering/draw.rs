@@ -1,26 +1,19 @@
 use crate::{
     VersionedIndex,
     components::{
-        CCamera,
-        CViewMatrix,
-        CModelMatrix,
-        CMaterial,
-        CRGBA,
-        CModelNode, CBoundingBox,
+        CBoundingBox, CCamera, CMaterial, CModelMatrix, CModelNode, CViewMatrix, CRGBA
     },
     Registry,
     resources::shader::{
         RShader,
         UniformVariable
     },
-    gfx::{
-        draw_buffer,
-        draw::DrawBuffer
-    },
-    systems::material
+    systems::material,
+    gfx::opengl::{
+        self,
+        draw::*
+    }
 };
-
-pub use crate::gfx::draw::DrawMode;
 
 /**
 * draw entities by tag
@@ -88,7 +81,7 @@ fn draw_node(
     if let Some(mesh) = &node.mesh {
         shader.program.use_program();
         mesh.vao.bind();
-        draw_buffer(
+        opengl::draw::gl_draw(
             match mesh.ebo {
                 Some(_) => DrawBuffer::Elements,
                 _ => DrawBuffer::Arrays
@@ -116,7 +109,7 @@ fn set_uniforms(
                     registry.get_component::<CViewMatrix>(camera),
                     registry.get_component::<CCamera>(camera),
                 ) {
-                    let mvp_matrix = c_camera.projection_matrix * view.0 * model.0;
+                    let mvp_matrix = c_camera.projection * view.0 * model.0;
 
                     shader.program.set_mat4(var, &mvp_matrix);
                 }
@@ -133,7 +126,7 @@ fn set_uniforms(
             },
             UniformVariable::ProjectionMatrix(var) => {
                 if let Some(c_camera) = registry.get_component::<CCamera>(camera) {
-                    shader.program.set_mat4(var, &c_camera.projection_matrix)
+                    shader.program.set_mat4(var, &c_camera.projection)
                 }
             },
             UniformVariable::NearPlane(var) => {

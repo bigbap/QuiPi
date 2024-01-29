@@ -9,7 +9,7 @@ pub struct CTransform {
     pub rotate: Option<glm::Vec3>,
     pub scale: Option<glm::Vec3>,
 
-    pub angle: f32
+    pub angle: f32,
 }
 
 impl Default for CTransform {

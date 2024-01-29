@@ -8,31 +8,37 @@ use skald::{
     },
     VersionedIndex,
     components::{
-        CMaterial,
         material::MaterialPart,
+        CBoundingBox,
+        CEulerAngles,
         CGizmo3D,
-        CVelocity, CTransform
+        CMaterial,
+        CTransform,
+        CVelocity
     },
     systems::{
-        movement::s_apply_velocity,
-        rotation::{
-            s_update_angles,
-            s_rotate_camera
-        },
-        draw::{
-            s_draw_by_tag,
-            s_draw_entity
-        },
-        mvp_matrices::*,
+        grid::*,
         load_obj::{
             ObjectConfig,
             s_load_obj_file
         },
-        grid::*
+        movement::s_apply_velocity,
+        rendering::{
+            IRenderer,
+            Renderer
+        },
+        rotation::{
+            s_update_angles,
+            s_rotate_camera
+        }
     },
     utils::Timer,
     core::GUI,
-    gfx::canvas::Canvas, gl_capabilities::{self, GLCapability, BlendingFactor},
+    gfx::opengl::{
+        draw::*,
+        capabilities::*,
+        buffer::clear_buffers
+    },
 };
 use sdl2::{
     EventPump,
@@ -60,10 +66,11 @@ pub struct MyGame {
     registry: skald::Registry,
     timer: Timer,
     grid: Option<Grid>,
+    renderer: Renderer,
    
     shader: Option<VersionedIndex>,
     light_shader: Option<VersionedIndex>,
-    camera: VersionedIndex,
+    // camera: VersionedIndex,
     direction_light: Option<Light>,
     point_light: Option<Light>,
     spot_light: Option<Light>,
@@ -80,20 +87,38 @@ impl MyGame {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
         let mut registry = create_registry()?;
         let timer = Timer::new()?;
-        let camera = create_camera(
+
+        let renderer = Renderer::new(
             &mut registry,
-            WIDTH as f32,
-            HEIGHT as f32
+            45.0,
+            CBoundingBox {
+                right: WIDTH as f32,
+                top: HEIGHT as f32,
+                near: 0.1,
+                far: 100.0,
+                ..CBoundingBox::default()
+            },
+            CTransform {
+                translate: glm::vec3(0.0, 1.0, 6.0),
+                ..CTransform::default()
+            },
+            CEulerAngles {
+                pitch: 0.0,
+                yaw: 90.0,
+                roll: 0.0
+            }
         )?;
+
+        renderer.update_view_matrix(&mut registry);
 
         Ok(Self {
             registry,
             timer,
             grid: None,
+            renderer,
 
             shader: None,
             light_shader: None,
-            camera,
             direction_light: None,
             point_light: None,
             spot_light: None,
@@ -141,7 +166,7 @@ impl skald::Game for MyGame {
         create_crates(
             &mut self.registry,
             shader,
-            self.camera,
+            self.renderer.camera(),
             CMaterial {
                 diffuse: MaterialPart::Texture(diffuse),
                 specular: MaterialPart::Texture(specular),
@@ -170,7 +195,7 @@ impl skald::Game for MyGame {
 
         self.shader = Some(shader);
         self.light_shader = Some(light_shader);
-        self.grid = Some(s_create_grid(&mut self.registry)?);
+        self.grid = Some(Grid::new(&mut self.registry)?);
         self.debug_gui = debug_gui;
 
         Ok(())
@@ -178,6 +203,7 @@ impl skald::Game for MyGame {
 
     fn handle_frame(&mut self, event_pump: &mut EventPump) -> Result<Option<()>, Box<dyn std::error::Error>> {
         let delta = self.timer.delta();
+        let camera = self.renderer.camera();
        
         let mut velocity = (0.0, 0.0); // index 0: x, index 1: z
         for event in event_pump.poll_iter() {
@@ -186,7 +212,7 @@ impl skald::Game for MyGame {
                 Event::Window {
                     win_event: WindowEvent::Resized(w, h),
                     ..
-                } => skald::gfx::canvas::set_dimensions(Canvas { x: 0, y: 0, width: w, height: h }),
+                } => skald::gfx::canvas::set_dimensions(0, 0, w, h),
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } => return Ok(None),
                 Event::KeyDown { keycode: Some(Keycode::Num1), repeat: false, .. } => {
                     self.direction_light_on = !self.direction_light_on;
@@ -209,7 +235,7 @@ impl skald::Game for MyGame {
 
                     s_update_angles(
                         &mut self.registry,
-                        &self.camera,
+                        &self.renderer.camera(),
                         xrel as f32 * sensitivity,
                         yrel as f32 * sensitivity,
                         -89.0,
@@ -218,32 +244,31 @@ impl skald::Game for MyGame {
     
                     s_rotate_camera(
                         &mut self.registry,
-                        &self.camera,
+                        &self.renderer.camera(),
                     );
                 },
                 _event => ()
             };
         }
 
-        let camera_velocity = self.registry.get_component_mut::<CVelocity>(&self.camera).unwrap();
+        let camera_velocity = self.registry.get_component_mut::<CVelocity>(&camera).unwrap();
         camera_velocity.x += velocity.0;
         camera_velocity.z += velocity.1;
         let velocity = glm::vec3(camera_velocity.x, camera_velocity.y, camera_velocity.z);
 
         s_apply_velocity(
             &mut self.registry,
-            &self.camera,
+            &camera,
             delta,
             velocity
         )?;
 
-        // s_set_projection_matrix(&self.camera, &mut self.registry);
-        s_set_view_matrix(&self.camera, &mut self.registry);
+        self.renderer.update_view_matrix(&mut self.registry);
 
-        let camera_pos = self.registry.get_component::<CTransform>(&self.camera).unwrap().translate;
-        let camera_dir = self.registry.get_component::<CGizmo3D>(&self.camera).unwrap().front;
+        let camera_pos = self.registry.get_component::<CTransform>(&camera).unwrap().translate;
+        let camera_dir = self.registry.get_component::<CGizmo3D>(&camera).unwrap().front;
 
-        skald::gfx::clear_buffer((0.02, 0.02, 0.02, 1.0));
+        clear_buffers((0.02, 0.02, 0.02, 1.0));
         
         let shader = self.registry.get_resource::<Shader>(&self.shader.unwrap()).unwrap();
         shader.program.set_int("dirLightOn", self.direction_light_on as i32);
@@ -252,33 +277,33 @@ impl skald::Game for MyGame {
         shader.program.set_float_3("spotLight.position", (camera_pos.x, camera_pos.y, camera_pos.z));
         shader.program.set_float_3("spotLight.direction", (camera_dir.x, camera_dir.y, camera_dir.z));
 
-        gl_capabilities::enable(GLCapability::AlphaBlending);
-        gl_capabilities::enable(GLCapability::DepthTest);
-        gl_capabilities::blending_func(BlendingFactor::SrcAlpha, BlendingFactor::OneMinusSrcAlpha);
+        gl_enable(GLCapability::AlphaBlending);
+        gl_enable(GLCapability::DepthTest);
+        gl_blending_func(GLBlendingFactor::SrcAlpha, GLBlendingFactor::OneMinusSrcAlpha);
         
-        s_draw_by_tag(
+        self.renderer.draw_by_tag(
             "light",
             &self.registry,
             &self.light_shader.unwrap(),
-            &self.camera,
-            skald::systems::draw::DrawMode::Triangles
+            DrawMode::Triangles
         )?;
 
         systems::update_entities("crate", &self.registry);
 
-        let entities = self.registry.get_entities_by_tag("crate");
-        for entity in entities {
-            s_draw_entity(
-                &entity,
-                &self.registry,
-                &self.camera,
-                shader,
-                skald::systems::draw::DrawMode::Triangles
-            );
+        if let Some(shader) = &self.shader {
+            let entities = self.registry.get_entities_by_tag("crate");
+            for entity in entities {
+                self.renderer.draw_entity(
+                    &entity,
+                    &self.registry,
+                    shader,
+                    DrawMode::Triangles
+                );
+            }
         }
 
-        if let Some(shader) = &self.grid {
-            s_draw_grid(&self.registry, &self.camera, shader)?;
+        if let Some(grid) = &self.grid {
+            grid.draw(&self.registry)?;
         }
 
         Ok(Some(()))

@@ -1,6 +1,6 @@
 use crate::Component;
 
-#[derive(Debug, Component, Default)]
+#[derive(Debug, Component, Default, Clone, Copy)]
 pub struct CBoundingBox {
     pub left: f32,
     pub right: f32,
