@@ -1,9 +1,9 @@
 use std::time::Instant;
 
 use sdl2::video::GLProfile;
-use crate::core::{
-    gfx,
-    GUI
+use crate::{
+    facades::egui::GUI,
+    systems
 };
 
 #[derive(Debug)]
@@ -57,7 +57,7 @@ pub fn run<G: Game>(
     debug_assert_eq!(gl_attr.context_profile(), GLProfile::Core);
     debug_assert_eq!(gl_attr.context_version(), (4, 5));
 
-    gfx::init(
+    systems::rendering::init(
         &video_subsystem,
         width as i32,
         height as i32,

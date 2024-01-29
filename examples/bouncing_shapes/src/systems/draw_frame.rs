@@ -1,9 +1,15 @@
 use skald::{
-    core::text::TextRenderer,
-    gfx::canvas::get_dimensions,
-    gfx::opengl::capabilities::*,
-    opengl::draw::DrawMode,
-    systems::rendering::Renderer2D,
+    facades::{
+        freetype::TextRenderer,
+        opengl::{
+            capabilities::*,
+            draw::DrawMode,
+        },
+    },
+    systems::rendering::{
+        Renderer2D,
+        canvas,
+    },
     Registry,
     VersionedIndex
 };
@@ -19,7 +25,7 @@ pub fn s_draw_frame(
     gl_enable(GLCapability::AlphaBlending);
     gl_blending_func(GLBlendingFactor::SrcAlpha, GLBlendingFactor::OneMinusSrcAlpha);
 
-    let (x, y, width, height) = get_dimensions();
+    let (x, y, width, height) = canvas::get_dimensions();
     renderer.update_projection_matrix(
         registry,
         Some(x as f32),

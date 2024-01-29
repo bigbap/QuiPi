@@ -9,10 +9,6 @@ use skald::{
         Shader,
         shader::UniformVariable
     },
-    gfx::{
-        opengl::buffer::clear_buffers,
-        ShaderProgram,
-    },
     math::random::Random,
     utils::{now_secs, Timer},
     systems::rendering::{
@@ -25,9 +21,13 @@ use skald::{
         CTransform,
         CBoundingBox
     },
-    core::{
-        GUI,
-        text::{
+    facades::{
+        opengl::{
+            buffer::clear_buffers,
+            shader::ShaderProgram,
+        },
+        egui::GUI,
+        freetype::{
             TextRenderer,
             DEFAULT_FONT
         },

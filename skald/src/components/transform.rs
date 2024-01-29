@@ -1,4 +1,4 @@
-use crate::Component;
+use crate::systems::ec_store::Component;
 
 /**
 * the model portion for a Model View Projection matrix

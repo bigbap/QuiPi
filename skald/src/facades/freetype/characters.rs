@@ -5,13 +5,11 @@ use ft::{
     FtResult
 };
 
-use crate::gfx::{
-    opengl::pixel_store,
-    texture::{
-        self,
-        ITexture
-    }
+use crate::facades::opengl::{
+    pixel_store,
+    textures::ITexture
 };
+use crate::systems::rendering::texture;
 
 #[derive(Debug)]
 pub struct Character {

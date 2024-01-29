@@ -1,7 +1,7 @@
 use skald::math::random::Random;
 use skald::{
     Registry,
-    gfx
+    systems::rendering::canvas
 };
 use sdl2::event::{
     Event,
@@ -22,7 +22,7 @@ pub fn s_handle_input(
             win_event: WindowEvent::Resized(w, h),
             ..
         } => {
-            gfx::canvas::set_dimensions(0, 0, w, h);
+            canvas::set_dimensions(0, 0, w, h);
         },
         Event::KeyDown { keycode: Some(Keycode::Escape), .. } => return Ok(None),
         Event::KeyDown { keycode: Some(Keycode::Space), .. } => {

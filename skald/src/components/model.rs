@@ -1,4 +1,4 @@
-use crate::gfx::ElementArrayMesh;
+use crate::systems::rendering::mesh::ElementArrayMesh;
 use crate::{Component, VersionedIndex};
 
 #[derive(Debug, Default, Component)]

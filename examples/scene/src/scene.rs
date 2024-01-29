@@ -1,8 +1,10 @@
 use skald::{
-    gfx::{
-        texture,
-        ElementArrayMesh,
-        mesh::{BufferUsage, ShaderLocation}
+    facades::{
+        obj_loaders::{
+            tobj_loader::s_load_obj_file,
+            ObjectConfig
+        },
+        opengl::buffer::BufferUsage
     },
     VersionedIndex,
     Registry,
@@ -26,9 +28,12 @@ use skald::{
     systems::{
         material,
         mvp_matrices::s_set_model_matrix,
-        load_obj::{
-            s_load_obj_file,
-            ObjectConfig
+        rendering::{
+            texture,
+            mesh::{
+                ElementArrayMesh,
+                ShaderLocation
+            }
         },
     }
 };

@@ -12,13 +12,14 @@ use systems::{
 use skald::{
     Game,
     utils::Timer,
-    gfx::{
+    facades::{
         opengl::{
             capabilities::*,
             buffer::clear_buffers,
-            draw::DrawMode
+            draw::DrawMode,
+            shader::ShaderProgram,
         },
-        ShaderProgram,
+        egui::GUI,
     },
     Registry,
     resources::{
@@ -39,7 +40,6 @@ use skald::{
         },
         grid::Grid
     },
-    core::GUI,
 };
 use ui::MyUI;
 

@@ -4,6 +4,7 @@ pub mod draw;
 pub mod functions;
 pub mod pixel_store;
 pub mod textures;
+pub mod shader;
 
 pub struct MyOpenGL {}
 

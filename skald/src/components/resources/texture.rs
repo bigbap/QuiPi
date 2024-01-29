@@ -1,6 +1,6 @@
 use crate::{
     Component,
-    gfx::texture::ITexture
+    facades::opengl::textures::ITexture
 };
 
 #[derive(Component)]

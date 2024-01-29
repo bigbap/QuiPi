@@ -8,21 +8,25 @@ use egui::{
 };
 
 use crate::{
-    core::ShaderProgram,
-    gfx::{
-        opengl::{
-            draw::*,
-            functions::gl_scissor
+    facades::opengl::{
+        draw::*,
+        functions::gl_scissor,
+        shader::ShaderProgram,
+        buffer::BufferUsage,
+        capabilities::*,
+        textures::{
+            ITexture,
+            gl_use_texture_unit,
         },
+    },
+    systems::rendering::{
         texture::*,
         mesh::{
             ShaderLocation,
-            BufferUsage
+            ElementArrayMesh,
         },
-        ElementArrayMesh,
         canvas
     },
-    opengl::capabilities::*
 };
 
 pub struct Renderer {

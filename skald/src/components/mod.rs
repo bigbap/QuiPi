@@ -9,6 +9,9 @@ pub mod quad;
 pub mod states;
 pub mod target;
 pub mod transform;
+pub mod resources;
+
+pub use resources::*;
 
 pub use bounding_box::CBoundingBox;
 pub use camera::CCamera;

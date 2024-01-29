@@ -13,20 +13,19 @@ use skald::{
         CModelNode,
         CTransform, CModelMatrix, CBoundingBox
     },
-    gfx::{
-        ElementArrayMesh,
-        mesh::{
-            BufferUsage,
-            ShaderLocation
-        },
-        
-        opengl::draw::DrawMode
+    facades::opengl::{
+        draw::DrawMode,
+        buffer::BufferUsage,
     },
     utils::to_abs_path,
     systems::{
         rendering::{
             Renderer2D,
-            IRenderer
+            IRenderer,
+            mesh::{
+                ElementArrayMesh,
+                ShaderLocation
+            },
         },
         mvp_matrices::s_set_model_matrix
     }

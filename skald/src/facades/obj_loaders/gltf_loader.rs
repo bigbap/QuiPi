@@ -1,5 +1,5 @@
 use gltf::Node;
-use crate::gfx::object_loader::ObjectConfig;
+use super::ObjectConfig;
 
 // TODO
 pub fn s_create_model_from_gltf(

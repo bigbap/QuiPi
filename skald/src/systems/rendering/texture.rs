@@ -1,24 +1,20 @@
-use std::{io, fmt};
+use std::io;
 use ft::Face;
 
+use crate::facades::opengl::textures::ITexture;
 use crate::utils::to_abs_path;
-use super::{
+use crate::facades::{
     opengl::textures::{
         Texture,
         Format,
         Target,
-        ParameterName, ParameterValue
+        ParameterName,
+        ParameterValue
     },
     image::Image
 };
 
-pub use super::opengl::textures::use_texture_unit as gl_use_texture_unit;
 
-pub trait ITexture: fmt::Debug {
-    fn width(&self) -> i32;
-    fn height(&self) -> i32;
-    fn use_texture(&self, unit: i32);
-}
 
 #[derive(Debug, thiserror::Error)]
 pub enum TextureError {

@@ -18,14 +18,11 @@ use skald::{
     },
     systems::{
         grid::*,
-        load_obj::{
-            ObjectConfig,
-            s_load_obj_file
-        },
         movement::s_apply_velocity,
         rendering::{
             IRenderer,
-            Renderer
+            Renderer,
+            canvas,
         },
         rotation::{
             s_update_angles,
@@ -33,8 +30,12 @@ use skald::{
         }
     },
     utils::Timer,
-    core::GUI,
-    gfx::opengl::{
+    facades::egui::GUI,
+    facades::obj_loaders::{
+        ObjectConfig,
+        tobj_loader::s_load_obj_file
+    },
+    facades::opengl::{
         draw::*,
         capabilities::*,
         buffer::clear_buffers
@@ -212,7 +213,7 @@ impl skald::Game for MyGame {
                 Event::Window {
                     win_event: WindowEvent::Resized(w, h),
                     ..
-                } => skald::gfx::canvas::set_dimensions(0, 0, w, h),
+                } => canvas::set_dimensions(0, 0, w, h),
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } => return Ok(None),
                 Event::KeyDown { keycode: Some(Keycode::Num1), repeat: false, .. } => {
                     self.direction_light_on = !self.direction_light_on;

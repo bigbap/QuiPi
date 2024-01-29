@@ -1,9 +1,10 @@
 use skald::{
     Registry,
     VersionedIndex,
-    gfx::{
+    facades::opengl::buffer::BufferUsage,
+    systems::rendering::mesh::{
         ElementArrayMesh,
-        mesh::{BufferUsage, ShaderLocation}
+        ShaderLocation
     },
     components::{
         CModelNode,
@@ -86,7 +87,7 @@ pub fn s_create_quad(
     Ok(quad)
 }
 
-pub fn s_create_circle(
+pub fn _s_create_circle(
     _registry: &mut Registry,
     parts: &[f32],
 ) {

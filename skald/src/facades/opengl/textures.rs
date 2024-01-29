@@ -1,4 +1,10 @@
-use crate::gfx::texture::ITexture;
+use std::fmt;
+
+pub trait ITexture: fmt::Debug {
+    fn width(&self) -> i32;
+    fn height(&self) -> i32;
+    fn use_texture(&self, unit: i32);
+}
 
 /**
 * Public API
@@ -153,7 +159,7 @@ impl ITexture for Texture {
     }
 }
 
-pub fn use_texture_unit(unit: i32) {
+pub fn gl_use_texture_unit(unit: i32) {
     unsafe {
         gl::ActiveTexture(gl::TEXTURE0 + unit as gl::types::GLuint);
     }

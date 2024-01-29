@@ -1,4 +1,4 @@
-use crate::Component;
+use crate::systems::ec_store::Component;
 
 #[derive(Debug, Component, PartialEq, Clone)]
 pub struct CTarget {

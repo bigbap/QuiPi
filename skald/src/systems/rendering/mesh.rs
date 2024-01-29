@@ -1,13 +1,12 @@
-use super::opengl::buffer::{
+use crate::facades::opengl::buffer::{
     VBO,
     EBO,
     VertexArray,
     Buffer,
     create_ebo,
     create_vbo,
+    BufferUsage
 };
-
-pub use super::opengl::buffer::BufferUsage;
 
 #[derive(Debug, Clone, Copy)]
 pub enum ShaderLocation {

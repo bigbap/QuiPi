@@ -1,21 +1,21 @@
 use std::collections::HashMap;
 use crate::{
-    gfx::{
-        ElementArrayMesh,
-        mesh::{BufferUsage, ShaderLocation},
-        texture::gl_use_texture_unit,
-        opengl::draw::{
-            gl_draw,
-            DrawBuffer,
-            DrawMode
+    systems::rendering::{
+        mesh::{
+            ElementArrayMesh,
+            ShaderLocation
         },
         canvas
     },
     utils::to_abs_path,
-    opengl::capabilities::*
+    facades::opengl::{
+        textures::gl_use_texture_unit,
+        capabilities::*,
+        draw::*,
+        buffer::BufferUsage,
+        shader::ShaderProgram,
+    }
 };
-
-use super::ShaderProgram;
 
 mod characters;
 

@@ -1,5 +1,4 @@
 use crate::{
-    Registry,
     components::{
         CBoundingBox,
         CEulerAngles,
@@ -7,23 +6,21 @@ use crate::{
         CModelNode,
         CTransform
     },
-    gfx::{
-        ElementArrayMesh,
-        mesh::{
-            BufferUsage,
-            ShaderLocation
-        },
-        opengl::draw::DrawMode,
-        canvas,
+    facades::opengl::{
+        draw::DrawMode,
+        buffer::BufferUsage,
     },
-    VersionedIndex,
     resources::{
         Shader,
         shader::UniformVariable
     },
+    systems::rendering::*,
     utils::to_abs_path,
-    systems::rendering::Renderer,
+    Registry,
+    VersionedIndex
 };
+
+use self::mesh::{ElementArrayMesh, ShaderLocation};
 
 const GRID_TAG: &str = "skald_grid_74872346";
 

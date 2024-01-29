@@ -1,6 +1,6 @@
 use crate::{
     EntityManager,
-    entity_manager::EMError,
+    ec_store::EMError,
     Component,
     VersionedIndex
 };

@@ -34,7 +34,7 @@ pub fn s_model_traversal<'a>(
 
 #[cfg(test)]
 mod tests {
-    use crate::entity_manager::CTag;
+    use crate::ec_store::CTag;
     use super::*;
 
     fn build_registry() -> Registry {
