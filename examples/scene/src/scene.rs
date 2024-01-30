@@ -1,11 +1,5 @@
 use quipi::{
-    facades::{
-        obj_loaders::{
-            tobj_loader::s_load_obj_file,
-            ObjectConfig
-        },
-        opengl::buffer::BufferUsage
-    },
+    wrappers::opengl::buffer::BufferUsage,
     VersionedIndex,
     Registry,
     resources::{
@@ -35,6 +29,10 @@ use quipi::{
                 ShaderLocation
             }
         },
+        assets::{
+            obj_loader::s_load_obj_file,
+            ObjectConfig
+        }
     }
 };
 

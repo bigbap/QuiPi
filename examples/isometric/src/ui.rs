@@ -13,7 +13,7 @@ use quipi::{
         CModelNode,
         CTransform, CModelMatrix, CBoundingBox
     },
-    facades::opengl::{
+    wrappers::opengl::{
         draw::DrawMode,
         buffer::BufferUsage,
     },

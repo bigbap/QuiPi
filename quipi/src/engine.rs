@@ -2,7 +2,7 @@ use std::time::Instant;
 
 use sdl2::video::GLProfile;
 use crate::{
-    facades::egui::GUI,
+    wrappers::egui::GUI,
     systems
 };
 

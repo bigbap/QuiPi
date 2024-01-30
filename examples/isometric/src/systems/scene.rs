@@ -8,16 +8,14 @@ use quipi::{
                 ShaderLocation
             }
         },
-        mvp_matrices::s_set_model_matrix
-    },
-    resources::Texture,
-    facades::{
-        opengl::buffer::BufferUsage,
-        obj_loaders::{
-            tobj_loader,
+        mvp_matrices::s_set_model_matrix,
+        assets::{
+            obj_loader,
             ObjectConfig
         }
     },
+    resources::Texture,
+    wrappers::opengl::buffer::BufferUsage,
     components::{
         CMaterial,
         material::MaterialPart,
@@ -31,7 +29,7 @@ use quipi::{
 pub fn s_load_scene(
     registry: &mut Registry
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let (models, _) = tobj_loader::s_load_obj_file(to_abs_path("assets/objects/cube.obj")?)?;
+    let (models, _) = obj_loader::s_load_obj_file(to_abs_path("assets/objects/cube.obj")?)?;
     let obj_configs = ObjectConfig::from_obj(models)?;
     let texture = Texture(from_image(&to_abs_path("assets/objects/textures/tex.png")?)?);
 

@@ -1,14 +1,12 @@
 use quipi::{
-    facades::{
-        freetype::TextRenderer,
-        opengl::{
-            capabilities::*,
-            draw::DrawMode,
-        },
+    wrappers::opengl::{
+        capabilities::*,
+        draw::DrawMode,
     },
     systems::rendering::{
         Renderer2D,
         canvas,
+        text::TextRenderer
     },
     Registry,
     VersionedIndex

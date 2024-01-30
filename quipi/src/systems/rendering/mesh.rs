@@ -1,4 +1,4 @@
-use crate::facades::opengl::buffer::{
+use crate::wrappers::opengl::buffer::{
     VBO,
     EBO,
     VertexArray,

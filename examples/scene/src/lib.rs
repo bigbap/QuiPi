@@ -27,15 +27,15 @@ use quipi::{
         rotation::{
             s_update_angles,
             s_rotate_camera
+        },
+        assets::{
+            ObjectConfig,
+            obj_loader::s_load_obj_file
         }
     },
     utils::Timer,
-    facades::egui::GUI,
-    facades::obj_loaders::{
-        ObjectConfig,
-        tobj_loader::s_load_obj_file
-    },
-    facades::opengl::{
+    wrappers::egui::GUI,
+    wrappers::opengl::{
         draw::*,
         capabilities::*,
         buffer::clear_buffers

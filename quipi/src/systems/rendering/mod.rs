@@ -1,5 +1,5 @@
 use crate::{
-    facades::opengl::MyOpenGL,
+    wrappers::opengl::MyOpenGL,
     Registry,
     VersionedIndex
 };
@@ -9,6 +9,7 @@ pub mod renderer_2d;
 pub mod canvas;
 pub mod mesh;
 pub mod texture;
+pub mod text;
 
 pub use renderer::Renderer;
 pub use renderer_2d::Renderer2D;

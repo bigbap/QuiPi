@@ -1,6 +1,6 @@
 use crate::{
     Component,
-    facades::obj_loaders::ObjectConfig
+    systems::assets::ObjectConfig
 };
 
 #[derive(Debug, Component)]

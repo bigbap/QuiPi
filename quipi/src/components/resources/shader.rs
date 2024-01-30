@@ -1,5 +1,5 @@
 use crate::Component;
-use crate::facades::opengl::shader::ShaderProgram;
+use crate::wrappers::opengl::shader::ShaderProgram;
 
 #[derive(Debug)]
 pub enum UniformVariable {

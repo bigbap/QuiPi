@@ -1,7 +1,7 @@
 use quipi::{
     Registry,
     VersionedIndex,
-    facades::opengl::buffer::BufferUsage,
+    wrappers::opengl::buffer::BufferUsage,
     systems::rendering::mesh::{
         ElementArrayMesh,
         ShaderLocation

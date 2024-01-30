@@ -6,7 +6,7 @@ use crate::{
         CModelNode,
         CTransform
     },
-    facades::opengl::{
+    wrappers::opengl::{
         draw::DrawMode,
         buffer::BufferUsage,
     },

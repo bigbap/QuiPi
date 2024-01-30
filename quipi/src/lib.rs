@@ -9,7 +9,7 @@ pub mod engine;
 pub mod registry;
 pub mod components;
 pub mod systems;
-pub mod facades;
+pub mod wrappers;
 
 pub use components::resources;
 pub use engine::Flags;

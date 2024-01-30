@@ -1,6 +1,6 @@
 use crate::{
     components::*,
-    facades::opengl::draw::DrawMode,
+    wrappers::opengl::draw::DrawMode,
     systems::rendering::{
         draw::s_draw_by_tag,
         draw::s_draw_entity,

@@ -1,4 +1,4 @@
-use crate::facades::opengl;
+use crate::wrappers::opengl;
 
 pub fn set_dimensions(
     x: i32,

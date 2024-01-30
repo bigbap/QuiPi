@@ -9,7 +9,7 @@ use crate::{
         UniformVariable
     },
     systems::material,
-    facades::opengl::{
+    wrappers::opengl::{
         self,
         draw::*
     }

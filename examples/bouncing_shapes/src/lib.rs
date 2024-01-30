@@ -14,6 +14,10 @@ use quipi::{
     systems::rendering::{
         IRenderer,
         Renderer2D,
+        text::{
+            TextRenderer,
+            DEFAULT_FONT
+        }
     },
     components::{
         register_components,
@@ -21,16 +25,12 @@ use quipi::{
         CTransform,
         CBoundingBox
     },
-    facades::{
+    wrappers::{
         opengl::{
             buffer::clear_buffers,
             shader::ShaderProgram,
         },
         egui::GUI,
-        freetype::{
-            TextRenderer,
-            DEFAULT_FONT
-        },
     }
 };
 

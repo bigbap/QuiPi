@@ -1,5 +1,6 @@
-pub mod tobj_loader;
+pub mod obj_loader;
 pub mod gltf_loader;
+pub mod image;
 
 #[derive(Debug, Default)]
 pub struct ObjectConfig {

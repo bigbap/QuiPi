@@ -8,7 +8,7 @@ use crate::{
         canvas
     },
     utils::to_abs_path,
-    facades::opengl::{
+    wrappers::opengl::{
         textures::gl_use_texture_unit,
         capabilities::*,
         draw::*,

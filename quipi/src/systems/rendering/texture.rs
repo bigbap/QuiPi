@@ -1,19 +1,18 @@
 use std::io;
 use ft::Face;
 
-use crate::facades::opengl::textures::ITexture;
-use crate::utils::to_abs_path;
-use crate::facades::{
-    opengl::textures::{
+use crate::{
+    systems::assets::image::Image,
+    utils::to_abs_path,
+    wrappers::opengl::textures::{
+        ITexture,
         Texture,
         Format,
         Target,
         ParameterName,
         ParameterValue
     },
-    image::Image
 };
-
 
 
 #[derive(Debug, thiserror::Error)]

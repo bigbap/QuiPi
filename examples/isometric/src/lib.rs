@@ -12,7 +12,7 @@ use systems::{
 use quipi::{
     Game,
     utils::Timer,
-    facades::{
+    wrappers::{
         opengl::{
             capabilities::*,
             buffer::clear_buffers,

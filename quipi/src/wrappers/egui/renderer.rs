@@ -8,7 +8,7 @@ use egui::{
 };
 
 use crate::{
-    facades::opengl::{
+    wrappers::opengl::{
         draw::*,
         functions::gl_scissor,
         shader::ShaderProgram,
