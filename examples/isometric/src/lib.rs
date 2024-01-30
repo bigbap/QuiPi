@@ -148,16 +148,11 @@ impl Game for MyGame {
             delta
         )?;
 
-        // update debug gui
-        if let Some(debug_gui) = &mut self.debug_gui {
-            debug_gui.update()?;
-        }
-
         // render
         clear_buffers((0.0, 0.0, 0.0, 1.0));
 
-        gl_enable(GLCapability::AlphaBlending);
         gl_enable(GLCapability::DepthTest);
+        gl_enable(GLCapability::AlphaBlending);
         gl_blending_func(GLBlendingFactor::SrcAlpha, GLBlendingFactor::OneMinusSrcAlpha);
 
         if let Some(shader) = self.shader {
@@ -175,6 +170,11 @@ impl Game for MyGame {
 
         if let Some(grid) = &self.grid {
             grid.draw(&self.registry)?;
+        }
+
+        // update debug gui
+        if let Some(debug_gui) = &mut self.debug_gui {
+            debug_gui.update()?;
         }
 
         Ok(Some(()))

@@ -41,7 +41,7 @@ impl CTransform {
             None => matrix,
             Some(rotate) => {
                 // TODO: change this to use quaternions.
-                glm::rotate(&matrix, self.angle, &glm::normalize(&rotate))
+                glm::rotate(&matrix, self.angle, &glm::normalize(rotate))
             }
         };
         match self.scale {

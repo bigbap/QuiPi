@@ -31,9 +31,9 @@ pub fn load_char_textures(font: &str) -> FtResult<HashMap<char, Character>> {
     for c in 0..128 {
         face.set_char_size(40 * 64, 0, 50, 0)?;
 
-        if let Err(e) = face.load_char(c, LoadFlag::RENDER) {
+        if let Err(_e) = face.load_char(c, LoadFlag::RENDER) {
             #[cfg(debug_assertions)]
-            println!("{}", e);
+            println!("{}", _e);
 
             continue
         }
@@ -47,9 +47,9 @@ pub fn load_char_textures(font: &str) -> FtResult<HashMap<char, Character>> {
             &face,
             width,
             rows
-        ).map_err(|e| {
+        ).map_err(|_e| {
             #[cfg(debug_assertions)]
-            println!("{:?}", e);
+            println!("{:?}", _e);
 
             ft::Error::Unknown
         })?;
