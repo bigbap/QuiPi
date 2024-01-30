@@ -63,10 +63,14 @@ impl Renderer {
             .with(CViewMatrix::default())?
             .done()?;
 
-        Ok(Self {
+        let renderer = Self {
             camera,
             camera_params
-        })
+        };
+
+        renderer.update_view_matrix(registry);
+
+        Ok(renderer)
     }
 
     pub fn update_projection_matrix(

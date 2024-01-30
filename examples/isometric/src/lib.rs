@@ -109,7 +109,7 @@ impl Game for MyGame {
             ]
         })?;
 
-        self.grid = Some(Grid::new(&mut self.registry)?);
+        self.grid = Some(Grid::new(&mut self.registry,)?);
         self.shader = Some(shader);
         
         let mut ui = MyUI::init()?;
@@ -169,7 +169,7 @@ impl Game for MyGame {
         }
 
         if let Some(grid) = &self.grid {
-            grid.draw(&self.registry)?;
+            grid.draw(&self.registry, &self.renderer3d)?;
         }
 
         // update debug gui

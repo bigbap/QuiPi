@@ -1,7 +1,5 @@
 use crate::{
     components::{
-        CBoundingBox,
-        CEulerAngles,
         CModelMatrix,
         CModelNode,
         CTransform
@@ -25,13 +23,12 @@ use self::mesh::{ElementArrayMesh, ShaderLocation};
 const GRID_TAG: &str = "quipi_grid_74872346";
 
 pub struct Grid {
-    renderer: Renderer,
     shader: VersionedIndex
 }
 
 impl Grid {
     pub fn new(
-        registry: &mut Registry
+        registry: &mut Registry,
     ) -> Result<Self, Box<dyn std::error::Error>>{
         let indices = &[0, 1, 2, 2, 3, 0];
         let vertices = &[
@@ -61,21 +58,7 @@ impl Grid {
             ]
         )?)?;
 
-        let (_x, _y, width, height) = canvas::get_dimensions();
         Ok(Self {
-            renderer: Renderer::new(
-                registry,
-                width as f32 / height as f32,
-                CBoundingBox {
-                    right: width as f32,
-                    top: height as f32,
-                    near: 0.1,
-                    far: 100.0,
-                    ..CBoundingBox::default()
-                },
-                CTransform::default(),
-                CEulerAngles::default()
-            )?,
             shader
         })
     }
@@ -83,11 +66,12 @@ impl Grid {
     pub fn draw(
         &self,
         registry: &Registry,
+        renderer: &Renderer
     ) -> Result<(), Box<dyn std::error::Error>> {
         let grid = registry.get_entities_by_tag(GRID_TAG);
 
         for line in grid {
-            self.renderer.draw_entity(
+            renderer.draw_entity(
                 &line,
                 registry,
                 &self.shader,

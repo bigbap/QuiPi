@@ -304,7 +304,7 @@ impl quipi::Game for MyGame {
         }
 
         if let Some(grid) = &self.grid {
-            grid.draw(&self.registry)?;
+            grid.draw(&self.registry, &self.renderer)?;
         }
 
         Ok(Some(()))
