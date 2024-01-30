@@ -1,4 +1,4 @@
-use skald::Registry;
+use quipi::Registry;
 
 pub fn update_entities(
     _tag: &str,

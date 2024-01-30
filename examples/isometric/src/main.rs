@@ -7,7 +7,7 @@ use isometric::{
 fn main() {
     let mut game = MyGame::new().expect("There was a problem initializing the game.");
 
-    if let Err(e) = skald::run(
+    if let Err(e) = quipi::run(
         &mut game,
         "Examples - Isometric",
         WIDTH,

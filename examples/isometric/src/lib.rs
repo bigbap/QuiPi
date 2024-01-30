@@ -1,4 +1,4 @@
-pub extern crate skald;
+pub extern crate quipi;
 pub extern crate nalgebra_glm as glm;
 
 mod systems;
@@ -9,7 +9,7 @@ use systems::{
     update_camera::s_update_camera
 };
 
-use skald::{
+use quipi::{
     Game,
     utils::Timer,
     facades::{

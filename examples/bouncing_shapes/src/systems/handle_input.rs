@@ -1,5 +1,5 @@
-use skald::math::random::Random;
-use skald::{
+use quipi::math::random::Random;
+use quipi::{
     Registry,
     systems::rendering::canvas
 };

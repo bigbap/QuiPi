@@ -22,7 +22,7 @@ use crate::{
 
 use self::mesh::{ElementArrayMesh, ShaderLocation};
 
-const GRID_TAG: &str = "skald_grid_74872346";
+const GRID_TAG: &str = "quipi_grid_74872346";
 
 pub struct Grid {
     renderer: Renderer,

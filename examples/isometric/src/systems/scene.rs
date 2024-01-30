@@ -1,4 +1,4 @@
-use skald::{
+use quipi::{
     Registry,
     systems::{
         rendering::{

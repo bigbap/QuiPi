@@ -1,7 +1,7 @@
-extern crate skald;
+extern crate quipi;
 extern crate nalgebra_glm as glm;
 
-use skald::{
+use quipi::{
     Registry,
     VersionedIndex,
     resources::{
@@ -95,7 +95,7 @@ impl MyGame {
     }
 }
 
-impl skald::Game for MyGame {
+impl quipi::Game for MyGame {
     fn init(&mut self, debug_gui: Option<GUI>) -> Result<(), Box<dyn std::error::Error>> {
         let shader = ShaderProgram::new("assets/shaders/shape")?;
         let shader_id = self.registry.create_resource(Shader {

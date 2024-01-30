@@ -1,7 +1,7 @@
-extern crate skald;
+extern crate quipi;
 extern crate nalgebra_glm as glm;
 
-use skald::{
+use quipi::{
     resources::{
         Shader,
         shader::UniformVariable
@@ -64,7 +64,7 @@ type Light = VersionedIndex;
 const CAMERA_SPEED: f32 = 5.0;
 
 pub struct MyGame {
-    registry: skald::Registry,
+    registry: quipi::Registry,
     timer: Timer,
     grid: Option<Grid>,
     renderer: Renderer,
@@ -134,7 +134,7 @@ impl MyGame {
     }
 }
 
-impl skald::Game for MyGame {
+impl quipi::Game for MyGame {
     fn init(&mut self, debug_gui: Option<GUI>) -> Result<(), Box<dyn std::error::Error>> {
         let shader = self.registry.create_resource(
             Shader::new(

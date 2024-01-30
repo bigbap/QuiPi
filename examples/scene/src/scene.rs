@@ -1,4 +1,4 @@
-use skald::{
+use quipi::{
     facades::{
         obj_loaders::{
             tobj_loader::s_load_obj_file,

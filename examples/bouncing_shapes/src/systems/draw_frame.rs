@@ -1,4 +1,4 @@
-use skald::{
+use quipi::{
     facades::{
         freetype::TextRenderer,
         opengl::{

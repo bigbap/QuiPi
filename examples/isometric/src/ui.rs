@@ -1,4 +1,4 @@
-use skald::{
+use quipi::{
     VersionedIndex,
     Registry,
     resources::{

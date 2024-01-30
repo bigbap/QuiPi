@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
-    "skald",
+    "quipi",
     "examples/scene",
     "examples/bouncing_shapes",
     "examples/isometric"
