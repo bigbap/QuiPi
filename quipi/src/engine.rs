@@ -1,9 +1,8 @@
-use std::time::Instant;
+use sdl2::EventPump;
 
-use sdl2::video::GLProfile;
 use crate::{
-    wrappers::egui::GUI,
-    systems
+    systems::{self, rendering::text::{DEFAULT_FONT, TextRenderer}},
+    wrappers::sdl2::window::QuiPiWindow, core::time::Timer
 };
 
 #[derive(Debug)]
@@ -12,85 +11,93 @@ pub enum Flags {
     RelativeMouseMode,
 }
 
-pub trait Game {
+pub trait QuiPiApp {
     /// game.init() is called by the engine, after all the Sdl and
     /// openGl setup is done.
     /// 
     /// Use this method to set up your game. If you do anything
     /// that uses the 'gl::' crate before this method gets called
     /// by the engine, you will get a 'function not loaded error'
-    fn init(&mut self, gui: Option<GUI>) -> Result<(), Box<dyn std::error::Error>>;
+    fn init(&mut self) -> Result<(), Box<dyn std::error::Error>>;
     
     /// This method is called by the engine every frame.
     /// This is where you will do all your game specific logic.
     fn handle_frame(
         &mut self,
-        event_pump: &mut sdl2::EventPump
-    ) -> Result<Option<()>, Box<dyn std::error::Error>>;
+        frame_state: FrameState
+    ) -> Result<bool, Box<dyn std::error::Error>>;
 }
 
-pub fn run<G: Game>(
+pub fn run<G: QuiPiApp>(
     game: &mut G,
     title: &str,
     width: u32,
     height: u32,
     flags: Vec<Flags>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let sdl_ctx = sdl2::init()?;
-    let video_subsystem = sdl_ctx.video()?;
-
-    let gl_attr = video_subsystem.gl_attr();
-    gl_attr.set_context_profile(GLProfile::Core);
-    gl_attr.set_context_version(4, 5);
-
-    #[cfg(debug_assertions)]
-    gl_attr.set_context_flags().debug().set();
-
-    let window = video_subsystem.window(title, width, height)
-        .opengl()
-        .resizable()
-        .build()?;
-
-
-    let _gl_ctx = window.gl_create_context()?;
-
-    debug_assert_eq!(gl_attr.context_profile(), GLProfile::Core);
-    debug_assert_eq!(gl_attr.context_version(), (4, 5));
+    let mut window_api = QuiPiWindow::init()?;
+    let window = window_api.opengl_window(
+        title,
+        width,
+        height,
+        (4, 5)
+    )?;
 
     systems::rendering::init(
-        &video_subsystem,
+        &window_api,
         width as i32,
         height as i32,
     )?;
 
     for flag in flags.iter() {
         match flag {
-            Flags::HideMouse => sdl_ctx.mouse().show_cursor(false),
-            Flags::RelativeMouseMode => sdl_ctx.mouse().set_relative_mouse_mode(true),
+            Flags::HideMouse => window_api.ctx.mouse().show_cursor(false),
+            Flags::RelativeMouseMode => window_api.ctx.mouse().set_relative_mouse_mode(true),
         }
     }
     
-    let mut gui: Option<GUI> = None;
-    if cfg!(debug_assertions) {
-        gui = Some(GUI::new(250.0, 600.0)?);
-    }
-    game.init(gui)?;
+    game.init()?;
 
-    let timer = Instant::now();
-    let mut last_frame = timer.elapsed().as_millis();
-    let mut event_pump = sdl_ctx.event_pump()?;
+
+    let mut text = TextRenderer::new(DEFAULT_FONT)?;
+    text.color = glm::vec3(1.0, 1.0, 1.0);
+    text.scale = 0.7;
+
+    let mut timer = Timer::new()?;
+    let mut last_frame = timer.ticks();
+    let mut event_pump = window_api.ctx.event_pump()?;
     'running: loop {
         // limit fps to 60
-        if timer.elapsed().as_millis() - last_frame < 1000 / 60 {
+        let ticks = timer.ticks();
+        if ticks - last_frame < 1000 / 60 {
             continue;
         }
-        last_frame = timer.elapsed().as_millis();
+        last_frame = ticks;
+
+        let delta = timer.delta();
 
         if game.handle_frame(
-            &mut event_pump
-        )?.is_none() {
-            break 'running
+            FrameState {
+                event_pump: &mut event_pump,
+                text_render: &text,
+                quit: false,
+                delta: delta / 1000.0
+            }
+        )? {
+            break 'running;
         }
+
+        if cfg!(debug_assertions) {
+            text.draw(
+                format!("ms: {}", delta),
+                glm::vec2(25.0, 50.0)
+            );
+            text.draw(
+                format!("fps: {}", 1000.0 / delta),
+                glm::vec2(25.0, 25.0)
+            );
+        }
+
 
         window.gl_swap_window();
     }
@@ -98,3 +105,9 @@ pub fn run<G: Game>(
     Ok(())
 }
 
+pub struct FrameState<'a> {
+    pub event_pump: &'a mut EventPump,
+    pub text_render: &'a TextRenderer,
+    pub quit: bool,
+    pub delta: f32
+}

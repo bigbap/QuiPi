@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "quipi",
+    "quipi_sandbox",
     "examples/scene",
     "examples/bouncing_shapes",
     "examples/isometric"

@@ -6,6 +6,7 @@ use quipi::{
         CBoundingBox,
     },
     systems::mvp_matrices::s_set_model_matrix,
+    FrameState,
 };
 
 use crate::{
@@ -14,8 +15,8 @@ use crate::{
 };
 
 pub fn s_update(
+    frame_state: &mut FrameState,
     registry: &mut Registry,
-    delta: f32,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let quads = registry.get_entities_by_tag("quad");
 
@@ -27,7 +28,7 @@ pub fn s_update(
         let scale = transform.scale.unwrap();
 
         let vel = glm::vec3(vel.x, vel.y, 0.0);
-        let translate = transform.translate + (vel * delta);
+        let translate = transform.translate + (vel * frame_state.delta);
         let (colided_x, colided_y) = check_screen_collision(
             translate,
             b_box.right * scale.x,

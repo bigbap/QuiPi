@@ -33,16 +33,13 @@ use quipi::{
             obj_loader::s_load_obj_file
         }
     },
-    utils::Timer,
-    wrappers::egui::GUI,
     wrappers::opengl::{
         draw::*,
         capabilities::*,
         buffer::clear_buffers
-    },
+    }, FrameState,
 };
 use sdl2::{
-    EventPump,
     keyboard::Keycode,
     event::{
         Event,
@@ -65,13 +62,11 @@ const CAMERA_SPEED: f32 = 5.0;
 
 pub struct MyGame {
     registry: quipi::Registry,
-    timer: Timer,
     grid: Option<Grid>,
     renderer: Renderer,
    
     shader: Option<VersionedIndex>,
     light_shader: Option<VersionedIndex>,
-    // camera: VersionedIndex,
     direction_light: Option<Light>,
     point_light: Option<Light>,
     spot_light: Option<Light>,
@@ -81,13 +76,11 @@ pub struct MyGame {
     spot_light_on: bool,
 
     _has_control: bool,
-    debug_gui: Option<GUI>
 }
 
 impl MyGame {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
         let mut registry = create_registry()?;
-        let timer = Timer::new()?;
 
         let renderer = Renderer::new(
             &mut registry,
@@ -114,7 +107,6 @@ impl MyGame {
 
         Ok(Self {
             registry,
-            timer,
             grid: None,
             renderer,
 
@@ -129,13 +121,12 @@ impl MyGame {
             spot_light_on: true,
             
             _has_control: true,
-            debug_gui: None
         })
     }
 }
 
-impl quipi::Game for MyGame {
-    fn init(&mut self, debug_gui: Option<GUI>) -> Result<(), Box<dyn std::error::Error>> {
+impl quipi::QuiPiApp for MyGame {
+    fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let shader = self.registry.create_resource(
             Shader::new(
                 "assets/shaders/lighting",
@@ -197,24 +188,24 @@ impl quipi::Game for MyGame {
         self.shader = Some(shader);
         self.light_shader = Some(light_shader);
         self.grid = Some(Grid::new(&mut self.registry)?);
-        self.debug_gui = debug_gui;
 
         Ok(())
     }
 
-    fn handle_frame(&mut self, event_pump: &mut EventPump) -> Result<Option<()>, Box<dyn std::error::Error>> {
-        let delta = self.timer.delta();
+    fn handle_frame(
+        &mut self,
+        frame_state: FrameState
+    ) -> Result<bool, Box<dyn std::error::Error>> {
         let camera = self.renderer.camera();
        
         let mut velocity = (0.0, 0.0); // index 0: x, index 1: z
-        for event in event_pump.poll_iter() {
+        for event in frame_state.event_pump.poll_iter() {
             match event {
-                Event::Quit {..} => return Ok(None),
+                Event::Quit {..}|Event::KeyDown { keycode: Some(Keycode::Escape), .. } => return Ok(true),
                 Event::Window {
                     win_event: WindowEvent::Resized(w, h),
                     ..
                 } => canvas::set_dimensions(0, 0, w, h),
-                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => return Ok(None),
                 Event::KeyDown { keycode: Some(Keycode::Num1), repeat: false, .. } => {
                     self.direction_light_on = !self.direction_light_on;
                 },
@@ -260,7 +251,7 @@ impl quipi::Game for MyGame {
         s_apply_velocity(
             &mut self.registry,
             &camera,
-            delta,
+            frame_state.delta,
             velocity
         )?;
 
@@ -307,6 +298,6 @@ impl quipi::Game for MyGame {
             grid.draw(&self.registry, &self.renderer)?;
         }
 
-        Ok(Some(()))
+        Ok(frame_state.quit)
     }
 }

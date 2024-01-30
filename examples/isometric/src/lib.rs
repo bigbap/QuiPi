@@ -10,16 +10,12 @@ use systems::{
 };
 
 use quipi::{
-    Game,
-    utils::Timer,
-    wrappers::{
-        opengl::{
-            capabilities::*,
-            buffer::clear_buffers,
-            draw::DrawMode,
-            shader::ShaderProgram,
-        },
-        egui::GUI,
+    QuiPiApp,
+    wrappers::opengl::{
+        capabilities::*,
+        buffer::clear_buffers,
+        draw::DrawMode,
+        shader::ShaderProgram,
     },
     Registry,
     resources::{
@@ -39,7 +35,7 @@ use quipi::{
             Renderer,
         },
         grid::Grid
-    },
+    }, FrameState,
 };
 use ui::MyUI;
 
@@ -48,11 +44,9 @@ pub static HEIGHT: u32 = 900;
 
 pub struct MyGame {
     registry: Registry,
-    timer: Timer,
     shader: Option<VersionedIndex>,
     grid: Option<Grid>,
     ui: Option<MyUI>,
-    debug_gui: Option<GUI>,
 
     renderer3d: Renderer
 }
@@ -60,7 +54,6 @@ pub struct MyGame {
 impl MyGame {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
         let mut registry = Registry::init()?;
-        let timer = Timer::new()?;
 
         register_components(&mut registry);
         register_resources(&mut registry);
@@ -92,15 +85,13 @@ impl MyGame {
             shader: None,
             grid: None,
             ui: None,
-            timer,
-            debug_gui: None,
             renderer3d: renderer
         })
     }
 }
 
-impl Game for MyGame {
-    fn init(&mut self, debug_gui: Option<GUI>) -> Result<(), Box<dyn std::error::Error>> {
+impl QuiPiApp for MyGame {
+    fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let shader = ShaderProgram::new("assets/shaders/simple")?;
         let shader = self.registry.create_resource(Shader {
             program: shader,
@@ -116,7 +107,6 @@ impl Game for MyGame {
         ui.create_quad((0.0, 0.0, 0.0, 0.5))?;
 
         self.ui = Some(ui);
-        self.debug_gui = debug_gui;
 
         scene::s_load_scene(
             &mut self.registry
@@ -127,25 +117,19 @@ impl Game for MyGame {
 
     fn handle_frame(
         &mut self,
-        event_pump: &mut sdl2::EventPump
-    ) -> Result<Option<()>, Box<dyn std::error::Error>> {
-        let delta = self.timer.delta();
-
-        for event in event_pump.poll_iter() {
-            let response = handle_input::s_handle_input(
-                &mut self.registry,
-                &self.renderer3d.camera(),
-                event
-            )?;
-            
-            if response.is_none() { return Ok(None) }
-        }
+        mut frame_state: FrameState
+    ) -> Result<bool, Box<dyn std::error::Error>> {
+        handle_input::s_handle_input(
+            &mut frame_state,
+            &mut self.registry,
+            &self.renderer3d.camera(),
+        )?;
 
         // update camera
         s_update_camera(
             &self.renderer3d.camera(),
             &mut self.registry,
-            delta
+            frame_state.delta
         )?;
 
         // render
@@ -172,11 +156,6 @@ impl Game for MyGame {
             grid.draw(&self.registry, &self.renderer3d)?;
         }
 
-        // update debug gui
-        if let Some(debug_gui) = &mut self.debug_gui {
-            debug_gui.update()?;
-        }
-
-        Ok(Some(()))
+        Ok(frame_state.quit)
     }
 }

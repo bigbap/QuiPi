@@ -6,19 +6,15 @@ use quipi::{
     systems::rendering::{
         Renderer2D,
         canvas,
-        text::TextRenderer
     },
     Registry,
     VersionedIndex
 };
 
-// use crate::{WIDTH, HEIGHT};
-
 pub fn s_draw_frame(
     registry: &mut Registry,
     shader: &VersionedIndex,
     renderer: &Renderer2D,
-    text_renderer: &TextRenderer
 ) -> Result<(), Box<dyn std::error::Error>> {
     gl_enable(GLCapability::AlphaBlending);
     gl_blending_func(GLBlendingFactor::SrcAlpha, GLBlendingFactor::OneMinusSrcAlpha);
@@ -38,12 +34,6 @@ pub fn s_draw_frame(
         shader,
         DrawMode::Triangles
     )?;
-
-    let entity_count = registry.entity_count();
-    text_renderer.draw(
-        format!("entities: {}", entity_count),
-        glm::vec2(width as f32 - 120.0, height as f32 - 30.0)
-    );
 
     Ok(())
 }

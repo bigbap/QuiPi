@@ -20,5 +20,6 @@ pub use systems::ec_store::EntityManager;
 pub use systems::ec_store::VersionedIndex;
 pub use core::math;
 pub use core::utils;
-pub use engine::Game;
+pub use engine::QuiPiApp;
+pub use engine::FrameState;
 pub use registry::Registry;

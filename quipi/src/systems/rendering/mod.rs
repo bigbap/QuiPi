@@ -1,5 +1,5 @@
 use crate::{
-    wrappers::opengl::MyOpenGL,
+    wrappers::{opengl::MyOpenGL, sdl2::window::QuiPiWindow},
     Registry,
     VersionedIndex
 };
@@ -13,7 +13,6 @@ pub mod text;
 
 pub use renderer::Renderer;
 pub use renderer_2d::Renderer2D;
-use sdl2::VideoSubsystem;
 
 mod draw;
 mod matrices;
@@ -24,11 +23,11 @@ pub trait IRenderer {
 }
 
 pub fn init(
-    video_subsystem: &VideoSubsystem,
+    window_api: &QuiPiWindow,
     width: i32,
     height: i32,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let _opengl = MyOpenGL::init(video_subsystem)?;
+    let _opengl = MyOpenGL::init(window_api)?;
 
     canvas::set_dimensions(0, 0, width, height);
 

@@ -1,0 +1,13 @@
+[package]
+name = "quipi_sandbox"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+nalgebra-glm = "*"
+quipi = { path = "../quipi" }
+
+[build-dependencies]
+walkdir = "2.4"

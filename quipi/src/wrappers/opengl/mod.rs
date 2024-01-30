@@ -1,3 +1,5 @@
+use super::sdl2::window::QuiPiWindow;
+
 pub mod buffer;
 pub mod capabilities;
 pub mod draw;
@@ -10,9 +12,11 @@ pub struct MyOpenGL {}
 
 impl MyOpenGL {
     pub fn init(
-        video_subsystem: &sdl2::VideoSubsystem
+        window_api: &QuiPiWindow
     ) -> Result<Self, Box<dyn std::error::Error>> {
-        gl::load_with(|name| video_subsystem.gl_get_proc_address(name) as *const _);
+        gl::load_with(
+            |name| window_api.video_subsystem.gl_get_proc_address(name) as *const _
+        );
 
         let mut flags: gl::types::GLint = 0;
         unsafe {
