@@ -7,6 +7,8 @@ use sdl2::{
     Sdl
 };
 
+use super::events::EventQueue;
+
 pub struct QuiPiWindow {
     pub ctx: Sdl,
     pub video_subsystem: VideoSubsystem,
@@ -50,6 +52,12 @@ impl QuiPiWindow {
         debug_assert_eq!(gl_attr.context_version(), (gl_version.0, gl_version.1));
 
         Ok(window)
+    }
+
+    pub fn get_event_queue(&mut self) -> Result<EventQueue, Box<dyn std::error::Error>> {
+        let mut event_pump = self.ctx.event_pump()?;
+        
+        Ok(EventQueue::new(event_pump))
     }
 }
 

@@ -2,7 +2,7 @@ use sdl2::EventPump;
 
 use crate::{
     systems::{self, rendering::text::{DEFAULT_FONT, TextRenderer}},
-    wrappers::sdl2::window::QuiPiWindow, core::time::Timer
+    wrappers::sdl2::{window::QuiPiWindow, events::EventQueue}, core::time::Timer
 };
 
 #[derive(Debug)]
@@ -65,20 +65,24 @@ pub fn run<G: QuiPiApp>(
 
     let mut timer = Timer::new()?;
     let mut last_frame = timer.ticks();
-    let mut event_pump = window_api.ctx.event_pump()?;
     'running: loop {
-        // limit fps to 60
         let ticks = timer.ticks();
-        if ticks - last_frame < 1000 / 60 {
-            continue;
+
+        if !cfg!(debug_assertions) {
+            // limit fps to 60
+            if ticks - last_frame < 1000 / 60 {
+                continue;
+            }
         }
+
         last_frame = ticks;
 
         let delta = timer.delta();
 
         if game.handle_frame(
             FrameState {
-                event_pump: &mut event_pump,
+                event_pump: &mut window_api.ctx.event_pump()?,
+                // event_queue: &mut window_api.get_event_queue()?,
                 text_render: &text,
                 quit: false,
                 delta: delta / 1000.0
@@ -107,6 +111,7 @@ pub fn run<G: QuiPiApp>(
 
 pub struct FrameState<'a> {
     pub event_pump: &'a mut EventPump,
+    // pub event_queue: &'a mut EventQueue,
     pub text_render: &'a TextRenderer,
     pub quit: bool,
     pub delta: f32

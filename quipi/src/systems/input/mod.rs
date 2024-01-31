@@ -3,7 +3,7 @@ pub struct Input {
 }
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, Copy)]
-pub enum KeyState {
+pub enum KeyCode {
     Esc(bool),
     A(bool),
     B(bool),
