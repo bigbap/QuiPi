@@ -4,7 +4,10 @@ use egui::{
     ahash::AHashMap,
     ClippedPrimitive,
     epaint::Primitive,
-    Mesh
+    Mesh,
+    Rect,
+    vec2,
+    Pos2
 };
 
 use crate::{
@@ -32,22 +35,25 @@ use crate::{
 pub struct Renderer {
     textures: AHashMap<egui::TextureId, Box<dyn ITexture>>,
     shader: ShaderProgram,
-    width: f32,
-    height: f32
+    pub screen_rect: Rect,
+    pub scale: f32,
 }
 
 impl Renderer {
     pub fn new(
-        width: f32,
-        height: f32
+        scale: f32
     ) -> Result<Self, Box<dyn std::error::Error>> {
         let shader = ShaderProgram::new("assets/shaders/egui")?;
+
+        let (_x, _y, width, height) = canvas::get_dimensions();
+        let rect = vec2(width as f32, height as f32) / scale;
+        let screen_rect = Rect::from_min_size(Pos2::new(0f32, 0f32), rect);
 
         Ok(Self {
             textures: AHashMap::default(),
             shader,
-            width,
-            height
+            scale,
+            screen_rect
         })
     }
 
@@ -81,6 +87,7 @@ impl Renderer {
             self.upload_egui_texture(*texture_id, delta)?;
         }
 
+        let (self_x, self_y) = (self.screen_rect.width(), self.screen_rect.height());
         for ClippedPrimitive {
             clip_rect,
             primitive
@@ -89,14 +96,14 @@ impl Renderer {
                 if let Some(texture) = self.textures.get(&mesh.texture_id) {
                     texture.use_texture(0);
 
-                    let clip_min_x = clip_rect.min.x;
-                    let clip_min_y = clip_rect.min.y;
-                    let clip_max_x = clip_rect.max.x;
-                    let clip_max_y = clip_rect.max.y;
-                    let clip_min_x = clip_min_x.clamp(0.0, self.width);
-                    let clip_min_y = clip_min_y.clamp(0.0, self.height);
-                    let clip_max_x = clip_max_x.clamp(clip_min_x, self.width);
-                    let clip_max_y = clip_max_y.clamp(clip_min_y, self.height);
+                    let clip_min_x = self.scale * clip_rect.min.x;
+                    let clip_min_y = self.scale * clip_rect.min.y;
+                    let clip_max_x = self.scale * clip_rect.max.x;
+                    let clip_max_y = self.scale * clip_rect.max.y;
+                    let clip_min_x = clip_min_x.clamp(0.0, self_x);
+                    let clip_min_y = clip_min_y.clamp(0.0, self_y);
+                    let clip_max_x = clip_max_x.clamp(clip_min_x, width as f32);
+                    let clip_max_y = clip_max_y.clamp(clip_min_y, height as f32);
                     let clip_min_x = clip_min_x.round() as i32;
                     let clip_min_y = clip_min_y.round() as i32;
                     let clip_max_x = clip_max_x.round() as i32;

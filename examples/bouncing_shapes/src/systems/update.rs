@@ -6,7 +6,7 @@ use quipi::{
         CBoundingBox,
     },
     systems::mvp_matrices::s_set_model_matrix,
-    FrameState,
+    AppState,
 };
 
 use crate::{
@@ -15,7 +15,7 @@ use crate::{
 };
 
 pub fn s_update(
-    frame_state: &mut FrameState,
+    frame_state: &AppState,
     registry: &mut Registry,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let quads = registry.get_entities_by_tag("quad");
