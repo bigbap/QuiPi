@@ -1,5 +1,5 @@
 pub struct EventQueue {
-    event_pump: sdl2::EventPump
+    pub event_pump: sdl2::EventPump
 }
 
 impl EventQueue {

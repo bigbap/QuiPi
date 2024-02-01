@@ -12,7 +12,6 @@ fn main() {
         "Bouncing Shapes",
         WIDTH,
         HEIGHT,
-        vec![],
     ) {
         eprintln!("Game ended unexpectedly: {}", e);
     };

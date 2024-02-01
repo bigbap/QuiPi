@@ -27,9 +27,9 @@ use quipi::{
             buffer::clear_buffers,
             shader::ShaderProgram,
         },
-        egui::GUI,
+        egui::GUI, sdl2::window::QuiPiWindow,
     },
-    FrameState
+    AppState, FrameResponse
 };
 
 pub static WIDTH: u32 = 1600;
@@ -82,7 +82,10 @@ impl MyGame {
 }
 
 impl quipi::QuiPiApp for MyGame {
-    fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    fn init(
+        &mut self,
+        _winapi: &QuiPiWindow
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let shader = ShaderProgram::new("assets/shaders/shape")?;
         let shader_id = self.registry.create_resource(Shader {
             program: shader,
@@ -98,7 +101,7 @@ impl quipi::QuiPiApp for MyGame {
         
         let mut gui: Option<GUI> = None;
         if cfg!(debug_assertions) {
-            gui = Some(GUI::new(250.0, 600.0)?);
+            gui = Some(GUI::new(1.0)?);
         }
 
         self.shader = Some(shader_id);
@@ -109,16 +112,21 @@ impl quipi::QuiPiApp for MyGame {
 
     fn handle_frame(
         &mut self,
-        mut frame_state: FrameState
-    ) -> Result<bool, Box<dyn std::error::Error>> {
-        s_handle_input(
-            &mut frame_state,
+        app_state: &mut AppState
+    ) -> Result<FrameResponse, Box<dyn std::error::Error>> {
+        // handle input
+        let frame_response = s_handle_input(
+            app_state,
             &mut self.registry,
             &mut self.rand
         )?;
 
+        if frame_response == FrameResponse::RelinquishInput {
+            return Ok(frame_response)
+        }
+
         s_update(
-            &mut frame_state,
+            app_state,
             &mut self.registry,
         )?;
 
@@ -131,20 +139,23 @@ impl quipi::QuiPiApp for MyGame {
             &self.renderer,
         )?;
 
-        // update gui
-        if let Some(debug_gui) = &mut self.debug_gui {
-            debug_gui.update()?;
-        }
+        // // update gui
+        // if let Some(debug_gui) = &mut self.debug_gui {
+        //     debug_gui.update()?;
+        // }
 
         // draw the entity count
         let (_x, _y, width, height) = canvas::get_dimensions();
         let entity_count = self.registry.entity_count();
-        frame_state.text_render.draw(
+        app_state.text_render.color = glm::vec3(1.0, 1.0, 1.0);
+        app_state.text_render.scale = 0.7;
+        app_state.text_render.draw(
             format!("entities: {}", entity_count),
             glm::vec2(width as f32 - 120.0, height as f32 - 30.0)
         );
 
-        Ok(frame_state.quit)
+
+        Ok(frame_response)
     }
 }
 

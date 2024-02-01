@@ -7,7 +7,6 @@ layout (location = 1) in vec4 aColor;
 layout (location = 2) in vec2 aUVCoords; 
 
 uniform vec2 u_screenSize;
-uniform mat4 u_mvpMatrix;
 
 out vec4 color;
 out vec2 uvCoords;
@@ -25,7 +24,12 @@ vec4 linearFromSrgba(vec4 srgba) {
 }
 
 void main(){
-    gl_Position = u_mvpMatrix * vec4(aPos, 0.0, 1.0);
+    gl_Position = vec4(
+        2.0 * aPos.x / u_screenSize.x - 1.0,
+        1.0 - 2.0 * aPos.y / u_screenSize.y,
+        0.0,
+        1.0
+    );
 
     color = linearFromSrgba(aColor);
     uvCoords = aUVCoords;
