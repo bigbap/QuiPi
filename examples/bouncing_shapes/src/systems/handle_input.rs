@@ -1,5 +1,5 @@
 use quipi::FrameResponse;
-use quipi::engine::AppState;
+use quipi::engine::{AppState, InputOwner};
 use quipi::math::random::Random;
 use quipi::{
     Registry,
@@ -18,6 +18,10 @@ pub fn s_handle_input(
     registry: &mut Registry,
     rand: &mut Random
 ) -> Result<FrameResponse, Box<dyn std::error::Error>> {
+    if app_state.input_owner != InputOwner::App {
+        return Ok(FrameResponse::Ignore);
+    }
+
     for event in app_state.winapi.get_event_queue()?.poll_iter() {
         match event {
             Event::Quit {..} => {

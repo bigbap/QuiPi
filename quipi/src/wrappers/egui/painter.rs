@@ -32,45 +32,52 @@ use crate::{
     },
 };
 
-pub struct Renderer {
+pub struct Painter {
     textures: AHashMap<egui::TextureId, Box<dyn ITexture>>,
     shader: ShaderProgram,
     pub screen_rect: Rect,
-    pub scale: f32,
+    pub pixels_per_point: f32,
+    pub gl_sync_fence: gl::types::GLsync,
 }
 
-impl Renderer {
+impl Painter {
     pub fn new(
         scale: f32
     ) -> Result<Self, Box<dyn std::error::Error>> {
         let shader = ShaderProgram::new("assets/shaders/egui")?;
 
+        let pixels_per_point = scale;
         let (_x, _y, width, height) = canvas::get_dimensions();
-        let rect = vec2(width as f32, height as f32) / scale;
-        let screen_rect = Rect::from_min_size(Pos2::new(0f32, 0f32), rect);
+        let rect = vec2(width as f32, height as f32) / pixels_per_point;
+        let screen_rect = Rect::from_min_size(Default::default(), rect);
 
         Ok(Self {
             textures: AHashMap::default(),
             shader,
-            scale,
-            screen_rect
+            pixels_per_point,
+            screen_rect,
+            gl_sync_fence: unsafe { gl::FenceSync(gl::SYNC_GPU_COMMANDS_COMPLETE, 0) },
         })
     }
 
-    pub fn render(
+    pub fn update_screen_rect(&mut self) {
+        let (_x, _y, width, height) = canvas::get_dimensions();
+        let rect = vec2(width as f32, height as f32) / self.pixels_per_point;
+        self.screen_rect = Rect::from_min_size(Default::default(), rect);
+    }
+
+    pub fn paint(
         &mut self,
         ctx: &egui::Context,
         full_output: egui::FullOutput
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let (x, y, width, height) = canvas::get_dimensions();
-        let projection = glm::ortho(
-            x as f32,
-            width as f32,
-            height as f32,
-            y as f32,
-            0.0,
-            0.2
-        );
+        unsafe {
+            gl::PixelStorei(gl::UNPACK_ROW_LENGTH, 0);
+            gl::PixelStorei(gl::UNPACK_ALIGNMENT, 4);
+        }
+
+        let (_x, _y, width, height) = canvas::get_dimensions();
+        let pixels_per_point = self.pixels_per_point;
 
         gl_enable(GLCapability::FrameBufferSRGB);
         gl_enable(GLCapability::AlphaBlending);
@@ -96,10 +103,11 @@ impl Renderer {
                 if let Some(texture) = self.textures.get(&mesh.texture_id) {
                     texture.use_texture(0);
 
-                    let clip_min_x = self.scale * clip_rect.min.x;
-                    let clip_min_y = self.scale * clip_rect.min.y;
-                    let clip_max_x = self.scale * clip_rect.max.x;
-                    let clip_max_y = self.scale * clip_rect.max.y;
+                    let clip_min_x = pixels_per_point * clip_rect.min.x;
+                    let clip_min_y = pixels_per_point * clip_rect.min.y;
+                    let clip_max_x = pixels_per_point * clip_rect.max.x;
+                    let clip_max_y = pixels_per_point * clip_rect.max.y;
+
                     let clip_min_x = clip_min_x.clamp(0.0, self_x);
                     let clip_min_y = clip_min_y.clamp(0.0, self_y);
                     let clip_max_x = clip_max_x.clamp(clip_min_x, width as f32);
@@ -117,7 +125,7 @@ impl Renderer {
                         clip_max_y - clip_min_y,
                     );
 
-                    self.draw_mesh(mesh, &projection)?;
+                    self.draw_mesh(mesh)?;
                 }
             }
         }
@@ -132,7 +140,6 @@ impl Renderer {
     fn draw_mesh(
         &self,
         mesh: &Mesh,
-        projection: &glm::Mat4
     ) -> Result<(), Box<dyn std::error::Error>> {
         let (points, colors, uv_coords) = parse_vertices(mesh);
         let mut m_mesh = ElementArrayMesh::new(
@@ -146,7 +153,7 @@ impl Renderer {
             .with_vbo::<2, f32>(ShaderLocation::Two, &uv_coords)?;
 
         self.shader.use_program();
-        self.shader.set_mat4("u_mvpMatrix", projection);
+        self.shader.set_float_2("u_screenSize", (self.screen_rect.width(), self.screen_rect.height()));
 
         m_mesh.vao.bind();
         gl_use_texture_unit(0);

@@ -30,7 +30,7 @@ impl Timer {
 
         self.last_tick = ticks;
 
-        delta as f32
+        delta as f32 / 1000.0
     }
 }
 

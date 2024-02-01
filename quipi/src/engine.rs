@@ -52,30 +52,35 @@ pub fn run<G: QuiPiApp>(
     
     game.init(&winapi)?;
 
-    let text = TextRenderer::new(DEFAULT_FONT)?;
+    let mut text = TextRenderer::new(DEFAULT_FONT)?;
     let mut gui = GUI::new(1.0)?;
     let mut timer = Timer::new()?;
 
     let mut app_state = AppState {
         input_owner: InputOwner::App,
         winapi: &mut winapi,
-        text_render: &text,
-        delta: timer.delta() / 1000.0
+        text_render: &mut text,
+        delta: timer.delta()
     };
+
     'running: loop {
-        let delta = timer.delta();
-
-        gui.update(&app_state)?;
-
         match game.handle_frame(&mut app_state)? {
             FrameResponse::Quit => break 'running,
-            FrameResponse::RelinquishInput => (),
+            FrameResponse::RelinquishInput => app_state.input_owner = InputOwner::Editor,
             FrameResponse::Ignore => ()
         }
 
-        print_debug(&text, delta);
+        match gui.update(&mut app_state)? {
+            FrameResponse::Quit => break 'running,
+            FrameResponse::RelinquishInput => app_state.input_owner = InputOwner::App,
+            FrameResponse::Ignore => ()
+        }
+
+        print_debug(&app_state, app_state.delta);
 
         window.gl_swap_window();
+
+        app_state.delta = timer.delta();
     }
 
     Ok(())
@@ -84,11 +89,11 @@ pub fn run<G: QuiPiApp>(
 pub struct AppState<'a> {
     pub input_owner: InputOwner,
     pub winapi: &'a mut QuiPiWindow,
-    pub text_render: &'a TextRenderer,
+    pub text_render: &'a mut TextRenderer,
     pub delta: f32
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, PartialEq, Eq)]
 pub enum FrameResponse {
     Quit,
     RelinquishInput,
@@ -101,16 +106,16 @@ pub enum InputOwner {
     Editor
 }
 
-fn print_debug(text: &TextRenderer, delta: f32) {
+fn print_debug(app_state: &AppState, delta: f32) {
     if cfg!(debug_assertions) {
         // text.color = glm::vec3(1.0, 1.0, 1.0);
         // text.scale = 0.7;
-        text.draw(
-            format!("ms: {}", delta),
+        app_state.text_render.draw(
+            format!("ms: {}", delta * 1000.0),
             glm::vec2(25.0, 50.0)
         );
-        text.draw(
-            format!("fps: {}", 1000.0 / delta),
+        app_state.text_render.draw(
+            format!("fps: {}", 1.0 / delta),
             glm::vec2(25.0, 25.0)
         );
     }

@@ -1,19 +1,28 @@
-use crate::engine::{
-    AppState,
-    InputOwner
+use egui::RawInput;
+use sdl2::{event::Event, keyboard::Keycode};
+
+use crate::{
+    engine::{
+        AppState,
+        InputOwner
+    },
+    wrappers::egui::input::parse_event,
+    FrameResponse
 };
 use self::{
-    renderer::Renderer,
+    painter::Painter,
     // input::parse_input
 };
 
-mod renderer;
+mod painter;
 mod input;
 
 pub struct GUI {
     ctx: egui::Context,
 
-    renderer: Renderer
+    painter: Painter,
+
+    raw_input: RawInput
 }
 
 impl GUI {
@@ -21,43 +30,55 @@ impl GUI {
         scale: f32
     ) -> Result<GUI, Box<dyn std::error::Error>> {
         let ctx = egui::Context::default();
+        let painter = Painter::new(scale)?;
+        let raw_input = egui::RawInput {
+            screen_rect: Some(painter.screen_rect),
+            ..RawInput::default()
+        };
 
         Ok(Self {
             ctx,
-            renderer: Renderer::new(scale)?
+            painter,
+            raw_input
         })
     }
 
     pub fn update(
         &mut self,
-        app_state: &AppState
-    ) -> Result<(), Box<dyn std::error::Error>> {
+        app_state: &mut AppState
+    ) -> Result<FrameResponse, Box<dyn std::error::Error>> {
         if app_state.input_owner != InputOwner::Editor {
-            return Ok(())
+            return Ok(FrameResponse::Ignore)
         }
 
-        // let raw_input = egui::RawInput::default();
-        let raw_input = egui::RawInput {
-            screen_rect: Some(self.renderer.screen_rect),
-            ..Default::default()
-        };
-
-        self.ctx.begin_frame(raw_input);
-        egui::CentralPanel::default().show(&self.ctx, |ui| {
+        self.ctx.begin_frame(self.raw_input.take());
+        egui::SidePanel::left(egui::Id::new(1234)).show(&self.ctx, |ui| {
             ui.add(egui::Label::new("Hello World!"));
-            ui.label("A shorter and more convenient way to\nadd a label.");
+            ui.label("This is a label");
             if ui.button("Click me").clicked() {
                 println!("egui was clicked");
             }
         });
         let full_output = self.ctx.end_frame();
 
-        self.renderer.render(
+        self.painter.paint(
             &self.ctx,
             full_output
         )?;
 
-        Ok(())
+        for event in app_state.winapi.get_event_queue()?.poll_iter() {
+            match event {
+                Event::Quit { .. } => return Ok(FrameResponse::Quit),
+                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => return Ok(FrameResponse::RelinquishInput),
+                _ => {
+                    if let Some(parsed) = parse_event(&event) {
+                        self.raw_input.events.push(parsed);
+                    }
+                }
+            }
+        }
+
+        Ok(FrameResponse::Ignore)
     }
 }
 

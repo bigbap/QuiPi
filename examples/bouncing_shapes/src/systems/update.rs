@@ -23,7 +23,7 @@ pub fn s_update(
     for quad in quads {
         let Some(vel)       = registry.get_component::<CVelocity>(&quad)    else { continue };
         let Some(transform) = registry.get_component::<CTransform>(&quad)   else { continue };
-        let Some(b_box)      = registry.get_component::<CBoundingBox>(&quad)  else { continue };
+        let Some(b_box)     = registry.get_component::<CBoundingBox>(&quad) else { continue };
         
         let scale = transform.scale.unwrap();
 
@@ -58,8 +58,6 @@ fn check_screen_collision(
 
     let colided_x = pos.x <= (0.0 + offset_x) || pos.x >= (WIDTH as f32 - offset_x);
     let colided_y = pos.y >= (HEIGHT as f32 - offset_y) || pos.y <= (0.0 + offset_y);
-
-    // println!("{:?}", pos);
 
     (colided_x, colided_y)
 }

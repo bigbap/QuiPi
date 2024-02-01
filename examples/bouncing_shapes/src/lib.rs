@@ -84,7 +84,7 @@ impl MyGame {
 impl quipi::QuiPiApp for MyGame {
     fn init(
         &mut self,
-        winapi: &QuiPiWindow
+        _winapi: &QuiPiWindow
     ) -> Result<(), Box<dyn std::error::Error>> {
         let shader = ShaderProgram::new("assets/shaders/shape")?;
         let shader_id = self.registry.create_resource(Shader {
@@ -114,6 +114,17 @@ impl quipi::QuiPiApp for MyGame {
         &mut self,
         app_state: &mut AppState
     ) -> Result<FrameResponse, Box<dyn std::error::Error>> {
+        // handle input
+        let frame_response = s_handle_input(
+            app_state,
+            &mut self.registry,
+            &mut self.rand
+        )?;
+
+        if frame_response == FrameResponse::RelinquishInput {
+            return Ok(frame_response)
+        }
+
         s_update(
             app_state,
             &mut self.registry,
@@ -136,17 +147,13 @@ impl quipi::QuiPiApp for MyGame {
         // draw the entity count
         let (_x, _y, width, height) = canvas::get_dimensions();
         let entity_count = self.registry.entity_count();
+        app_state.text_render.color = glm::vec3(1.0, 1.0, 1.0);
+        app_state.text_render.scale = 0.7;
         app_state.text_render.draw(
             format!("entities: {}", entity_count),
             glm::vec2(width as f32 - 120.0, height as f32 - 30.0)
         );
 
-        // handle input
-        let frame_response = s_handle_input(
-            app_state,
-            &mut self.registry,
-            &mut self.rand
-        )?;
 
         Ok(frame_response)
     }

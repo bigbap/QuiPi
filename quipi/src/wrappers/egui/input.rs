@@ -1,17 +1,26 @@
-use sdl2::{event::Event, keyboard::Keycode};
+use sdl2::{
+    event::Event,
+    keyboard::{Keycode, Mod},
+};
 
-use crate::wrappers::sdl2::window::QuiPiWindow;
+pub fn parse_event(
+    event: &Event
+) -> Option<egui::Event> {
+    let mut parsed = None;
 
-pub fn parse_input(
-    window_api: &mut QuiPiWindow
-) -> egui::RawInput {
-    for event in window_api.get_event_queue().unwrap().poll_iter() {
-        match event {
-            Event::KeyDown { keycode: Some(Keycode::Escape), .. } => (),
-            Event::KeyDown { keycode: Some(Keycode::A), repeat: false, .. } => (),
-            Event::KeyDown { keycode: Some(Keycode::S), repeat: false, .. } => (),
-            _ => ()
-        }
+    match event {
+        Event::KeyDown { keycode, keymod, repeat, .. } =>
+            parse_key(*keycode, *keymod, *repeat),
+        Event::KeyUp { keycode, keymod, repeat, .. } =>
+            parse_key(*keycode, *keymod, *repeat),
+        _ => ()
     }
-    egui::RawInput::default()
+
+    parsed
 }
+
+fn parse_key(
+    keycode: Option<Keycode>,
+    keymod: Mod,
+    repeat: bool
+) {}
