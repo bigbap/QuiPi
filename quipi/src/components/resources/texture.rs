@@ -1,7 +1,7 @@
 use crate::{
     Component,
-    wrappers::opengl::textures::ITexture
+    wrappers::opengl::textures::Texture
 };
 
 #[derive(Component)]
-pub struct RTexture(pub Box<dyn ITexture>);
+pub struct RTexture(pub Texture);

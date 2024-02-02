@@ -1,5 +1,5 @@
 use egui::RawInput;
-use sdl2::{event::Event, keyboard::Keycode};
+use sdl2::{event::{Event, WindowEvent}, keyboard::Keycode};
 
 use crate::{
     engine::{
@@ -7,7 +7,7 @@ use crate::{
         InputOwner
     },
     wrappers::egui::input::parse_event,
-    FrameResponse
+    FrameResponse, systems::rendering::canvas::set_dimensions
 };
 use self::{
     painter::Painter,
@@ -19,9 +19,7 @@ mod input;
 
 pub struct GUI {
     ctx: egui::Context,
-
     painter: Painter,
-
     raw_input: RawInput
 }
 
@@ -52,13 +50,23 @@ impl GUI {
         }
 
         self.ctx.begin_frame(self.raw_input.take());
-        egui::SidePanel::left(egui::Id::new(1234)).show(&self.ctx, |ui| {
-            ui.add(egui::Label::new("Hello World!"));
-            ui.label("This is a label");
-            if ui.button("Click me").clicked() {
-                println!("egui was clicked");
-            }
-        });
+        egui::Window::new("my window").resizable(false)
+            .show(&self.ctx, |ui| {
+                ui.add(egui::Label::new("Hello World!"));
+                ui.label("This is a label");
+                if ui.button("Click me").clicked() {
+                    println!("egui was clicked");
+                }
+            });
+        egui::Window::new("my window 2").resizable(false)
+            .show(&self.ctx, |ui| {
+                ui.horizontal_wrapped(|ui| {
+                    ui.spacing_mut().item_spacing.x = 0.0; // remove spacing between widgets
+                    // `radio_value` also works for enums, integers, and more.
+                    ui.radio_value(&mut app_state.input_owner, InputOwner::App, "Off");
+                    ui.radio_value(&mut app_state.input_owner, InputOwner::Editor, "On");
+                });
+            });
         let full_output = self.ctx.end_frame();
 
         self.painter.paint(
@@ -70,8 +78,16 @@ impl GUI {
             match event {
                 Event::Quit { .. } => return Ok(FrameResponse::Quit),
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } => return Ok(FrameResponse::RelinquishInput),
+                Event::Window { win_event, .. } => match win_event {
+                    WindowEvent::Resized(width, height) | WindowEvent::SizeChanged(width, height) => {
+                        set_dimensions(0, 0, width, height);
+                        self.painter.update_screen_rect();
+                        self.raw_input.screen_rect = Some(self.painter.screen_rect);
+                    },
+                    _ => ()
+                },
                 _ => {
-                    if let Some(parsed) = parse_event(&event) {
+                    if let Some(parsed) = parse_event(&event, &self.painter) {
                         self.raw_input.events.push(parsed);
                     }
                 }

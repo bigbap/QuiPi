@@ -1,11 +1,3 @@
-use std::fmt;
-
-pub trait ITexture: fmt::Debug {
-    fn width(&self) -> i32;
-    fn height(&self) -> i32;
-    fn use_texture(&self, unit: i32);
-}
-
 /**
 * Public API
 */
@@ -131,6 +123,21 @@ impl Texture {
 
         self
     }
+
+    pub fn width(&self) -> i32 {
+        self.width
+    }
+
+    pub fn height(&self) -> i32 {
+        self.height
+    }
+
+    pub fn use_texture(&self, unit: i32) {
+        unsafe {
+            gl::ActiveTexture(gl::TEXTURE0 + unit as gl::types::GLuint);
+            gl::BindTexture(self.target, self.id);
+        }
+    }
 }
 
 impl Drop for Texture {
@@ -138,23 +145,6 @@ impl Drop for Texture {
         unsafe {
             gl::BindTexture(self.target, 0);
             gl::DeleteTextures(1, [self.id].as_ptr());
-        }
-    }
-}
-
-impl ITexture for Texture {
-    fn width(&self) -> i32 {
-        self.width
-    }
-
-    fn height(&self) -> i32 {
-        self.height
-    }
-
-    fn use_texture(&self, unit: i32) {
-        unsafe {
-            gl::ActiveTexture(gl::TEXTURE0 + unit as gl::types::GLuint);
-            gl::BindTexture(self.target, self.id);
         }
     }
 }

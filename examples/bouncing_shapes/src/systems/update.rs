@@ -7,6 +7,7 @@ use quipi::{
     },
     systems::mvp_matrices::s_set_model_matrix,
     AppState,
+    engine::InputOwner,
 };
 
 use crate::{
@@ -18,6 +19,10 @@ pub fn s_update(
     frame_state: &AppState,
     registry: &mut Registry,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    if frame_state.input_owner != InputOwner::App {
+        return Ok(())
+    }
+
     let quads = registry.get_entities_by_tag("quad");
 
     for quad in quads {
