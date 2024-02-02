@@ -1,3 +1,5 @@
+use sdl2::event::Event;
+
 use crate::{
     systems::{
         self,
@@ -8,7 +10,8 @@ use crate::{
     },
     wrappers::{
         sdl2::window::QuiPiWindow,
-        egui::GUI
+        egui::GUI,
+        opengl::buffer::clear_buffers
     },
     core::time::Timer
 };
@@ -56,23 +59,42 @@ pub fn run<G: QuiPiApp>(
     let mut gui = GUI::new(1.0)?;
     let mut timer = Timer::new()?;
 
+    gui.add_ui_region("My GUI Window", false, |ui| {
+        ui.add(egui::Label::new("Hello World!"));
+        ui.label("This is a label");
+        if ui.button("Click me").clicked() {
+            println!("egui was clicked");
+        }
+    });
+
+    gui.add_ui_region("My GUI Window 2", false, |ui| {
+        let mut some_bool = true;
+        ui.horizontal_wrapped(|ui| {
+            ui.spacing_mut().item_spacing.x = 0.0; // remove spacing between widgets
+            // `radio_value` also works for enums, integers, and more.
+            ui.radio_value(&mut some_bool, false, "Off");
+            ui.radio_value(&mut some_bool, true, "On");
+        });
+    });
+
     let mut app_state = AppState {
-        input_owner: InputOwner::App,
-        winapi: &mut winapi,
+        editor_mode: false,
+        events: vec![],
         text_render: &mut text,
-        delta: timer.delta()
+        delta: timer.delta(),
     };
 
     'running: loop {
+        clear_buffers((0.4, 0.4, 0.4, 1.0));
+        app_state.events = winapi.get_event_queue()?;
+
         match game.handle_frame(&mut app_state)? {
             FrameResponse::Quit => break 'running,
-            FrameResponse::RelinquishInput => app_state.input_owner = InputOwner::Editor,
             FrameResponse::Ignore => ()
         }
 
         match gui.update(&mut app_state)? {
             FrameResponse::Quit => break 'running,
-            FrameResponse::RelinquishInput => app_state.input_owner = InputOwner::App,
             FrameResponse::Ignore => ()
         }
 
@@ -87,21 +109,26 @@ pub fn run<G: QuiPiApp>(
 }
 
 pub struct AppState<'a> {
-    pub input_owner: InputOwner,
-    pub winapi: &'a mut QuiPiWindow,
+    pub editor_mode: bool,
+    pub events: Vec<Event>,
     pub text_render: &'a mut TextRenderer,
-    pub delta: f32
+    pub delta: f32,
+}
+
+#[derive(Debug, Default)]
+pub struct QPMouseState {
+    pub pos: glm::Vec2,
+    pub rel_pos: glm::Vec2,
 }
 
 #[derive(Default, Debug, PartialEq, Eq)]
 pub enum FrameResponse {
     Quit,
-    RelinquishInput,
     #[default] Ignore
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum InputOwner {
+pub enum AppMode {
     App,
     Editor
 }

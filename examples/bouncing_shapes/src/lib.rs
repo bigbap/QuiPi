@@ -23,10 +23,7 @@ use quipi::{
         CBoundingBox
     },
     wrappers::{
-        opengl::{
-            buffer::clear_buffers,
-            shader::ShaderProgram,
-        },
+        opengl::shader::ShaderProgram,
         egui::GUI, sdl2::window::QuiPiWindow,
     },
     AppState, FrameResponse
@@ -121,18 +118,12 @@ impl quipi::QuiPiApp for MyGame {
             &mut self.rand
         )?;
 
-        if frame_response == FrameResponse::RelinquishInput {
-            return Ok(frame_response)
-        }
-
         s_update(
             app_state,
             &mut self.registry,
         )?;
 
         // render
-        clear_buffers((0.2, 0.1, 0.0, 1.0));
-
         s_draw_frame(
             &mut self.registry,
             &self.shader.unwrap(),

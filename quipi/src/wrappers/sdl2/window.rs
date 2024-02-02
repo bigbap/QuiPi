@@ -4,13 +4,14 @@ use sdl2::{
         GLProfile, GLContext,
     },
     VideoSubsystem,
-    Sdl, EventPump
+    Sdl,
+    event::Event
 };
 
 pub struct QuiPiWindow {
     pub ctx: Sdl,
     pub video_subsystem: VideoSubsystem,
-    pub gl_ctx: Option<GLContext>
+    pub gl_ctx: Option<GLContext>,
 }
 
 impl QuiPiWindow {
@@ -21,7 +22,7 @@ impl QuiPiWindow {
         Ok(Self {
             ctx: sdl_ctx,
             video_subsystem,
-            gl_ctx: None
+            gl_ctx: None,
         })
     }
 
@@ -52,10 +53,14 @@ impl QuiPiWindow {
         Ok(window)
     }
 
-    pub fn get_event_queue(&mut self) -> Result<EventPump, Box<dyn std::error::Error>> {
-        Ok(self.ctx.event_pump()?)
+    pub fn get_event_queue(&self) -> Result<Vec<Event>, Box<dyn std::error::Error>> {
+        let mut events: Vec<Event> = vec![];
         
-        // Ok(EventQueue::new(event_pump))
+        for event in self.ctx.event_pump()?.poll_iter() {
+            events.push(event);
+        }
+        
+        Ok(events)
     }
 
     pub fn relative_mouse_mode(&self, on: bool) {

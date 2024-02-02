@@ -33,6 +33,7 @@ pub fn parse_event(
         ))),
         KeyDown { keycode, keymod, repeat, .. } => parse_key(*keycode, *keymod, *repeat, true),
         KeyUp { keycode, keymod, repeat, .. } => parse_key(*keycode, *keymod, *repeat, false),
+        TextInput { text, .. } => Some(egui::Event::Text(text.to_string())),
         _ => None
     }
 }

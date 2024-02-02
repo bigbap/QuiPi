@@ -1,26 +1,41 @@
-use egui::RawInput;
-use sdl2::{event::{Event, WindowEvent}, keyboard::Keycode};
+use egui::{
+    RawInput,
+    Pos2,
+    Ui
+};
+use sdl2::{
+    event::{
+        Event,
+        WindowEvent
+    },
+    keyboard::Keycode
+};
 
 use crate::{
-    engine::{
-        AppState,
-        InputOwner
+    engine::AppState,
+    wrappers::egui::{
+        painter::Painter,
+        input::parse_event,
     },
-    wrappers::egui::input::parse_event,
-    FrameResponse, systems::rendering::canvas::set_dimensions
-};
-use self::{
-    painter::Painter,
-    // input::parse_input
+    FrameResponse,
+    systems::rendering::canvas::set_dimensions
 };
 
 mod painter;
 mod input;
 
+pub struct UiRegion {
+    pub name: String,
+    pub resizable: bool,
+    pub cb: Box<dyn Fn(&mut Ui)>
+}
+
 pub struct GUI {
     ctx: egui::Context,
     painter: Painter,
-    raw_input: RawInput
+    raw_input: RawInput,
+
+    windows: Vec<UiRegion>
 }
 
 impl GUI {
@@ -29,44 +44,46 @@ impl GUI {
     ) -> Result<GUI, Box<dyn std::error::Error>> {
         let ctx = egui::Context::default();
         let painter = Painter::new(scale)?;
-        let raw_input = egui::RawInput {
-            screen_rect: Some(painter.screen_rect),
-            ..RawInput::default()
-        };
+        let raw_input = egui::RawInput::default();
 
         Ok(Self {
             ctx,
             painter,
-            raw_input
+            raw_input,
+            windows: vec![]
         })
+    }
+
+    pub fn add_ui_region(
+        &mut self,
+        name: &str,
+        resizable: bool,
+        cb: impl Fn(&mut Ui) + 'static
+    ) {
+        self.windows.push(UiRegion {
+            name: name.to_string(),
+            resizable,
+            cb: Box::new(cb)
+        });
     }
 
     pub fn update(
         &mut self,
         app_state: &mut AppState
     ) -> Result<FrameResponse, Box<dyn std::error::Error>> {
-        if app_state.input_owner != InputOwner::Editor {
+        if !app_state.editor_mode {
             return Ok(FrameResponse::Ignore)
         }
 
+        let _pos = self.ctx.input(|i| i.pointer.hover_pos()).unwrap_or(Pos2::new(-1.0, -1.0));
         self.ctx.begin_frame(self.raw_input.take());
-        egui::Window::new("my window").resizable(false)
-            .show(&self.ctx, |ui| {
-                ui.add(egui::Label::new("Hello World!"));
-                ui.label("This is a label");
-                if ui.button("Click me").clicked() {
-                    println!("egui was clicked");
-                }
-            });
-        egui::Window::new("my window 2").resizable(false)
-            .show(&self.ctx, |ui| {
-                ui.horizontal_wrapped(|ui| {
-                    ui.spacing_mut().item_spacing.x = 0.0; // remove spacing between widgets
-                    // `radio_value` also works for enums, integers, and more.
-                    ui.radio_value(&mut app_state.input_owner, InputOwner::App, "Off");
-                    ui.radio_value(&mut app_state.input_owner, InputOwner::Editor, "On");
-                });
-            });
+        
+        for UiRegion { name, resizable, cb, ..} in self.windows.iter() {
+            egui::Window::new(name)
+                .resizable(*resizable)
+                .show(&self.ctx, cb);
+        }
+
         let full_output = self.ctx.end_frame();
 
         self.painter.paint(
@@ -74,26 +91,37 @@ impl GUI {
             full_output
         )?;
 
-        for event in app_state.winapi.get_event_queue()?.poll_iter() {
+        self.handle_input(app_state)
+    }
+
+    fn handle_input(
+        &mut self,
+        app_state: &mut AppState
+    ) -> Result<FrameResponse, Box<dyn std::error::Error>> {
+        for event in app_state.events.iter() {
             match event {
                 Event::Quit { .. } => return Ok(FrameResponse::Quit),
-                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => return Ok(FrameResponse::RelinquishInput),
+                Event::KeyDown { keycode: Some(Keycode::F12), .. } => {
+                    app_state.editor_mode = false;
+
+                    return Ok(FrameResponse::Ignore);
+                },
                 Event::Window { win_event, .. } => match win_event {
                     WindowEvent::Resized(width, height) | WindowEvent::SizeChanged(width, height) => {
-                        set_dimensions(0, 0, width, height);
+                        set_dimensions(0, 0, *width, *height);
                         self.painter.update_screen_rect();
                         self.raw_input.screen_rect = Some(self.painter.screen_rect);
                     },
                     _ => ()
                 },
                 _ => {
-                    if let Some(parsed) = parse_event(&event, &self.painter) {
+                    if let Some(parsed) = parse_event(event, &self.painter) {
                         self.raw_input.events.push(parsed);
                     }
                 }
             }
         }
-
+        
         Ok(FrameResponse::Ignore)
     }
 }
