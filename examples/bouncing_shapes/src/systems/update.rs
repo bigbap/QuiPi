@@ -6,7 +6,8 @@ use quipi::{
         CBoundingBox,
     },
     systems::mvp_matrices::s_set_model_matrix,
-    AppState, engine::InputOwner,
+    AppState,
+    engine::InputOwner,
 };
 
 use crate::{
