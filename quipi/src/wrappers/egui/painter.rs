@@ -207,6 +207,8 @@ impl Painter {
                 &pixels
             )?;
 
+            
+
             self.textures.insert(id, texture);
         }
 

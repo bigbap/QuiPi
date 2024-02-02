@@ -1,5 +1,5 @@
 use egui::RawInput;
-use sdl2::{event::Event, keyboard::Keycode};
+use sdl2::{event::{Event, WindowEvent}, keyboard::Keycode};
 
 use crate::{
     engine::{
@@ -7,7 +7,7 @@ use crate::{
         InputOwner
     },
     wrappers::egui::input::parse_event,
-    FrameResponse
+    FrameResponse, systems::rendering::canvas::set_dimensions
 };
 use self::{
     painter::Painter,
@@ -70,6 +70,14 @@ impl GUI {
             match event {
                 Event::Quit { .. } => return Ok(FrameResponse::Quit),
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } => return Ok(FrameResponse::RelinquishInput),
+                Event::Window { win_event, .. } => match win_event {
+                    WindowEvent::Resized(width, height) | WindowEvent::SizeChanged(width, height) => {
+                        set_dimensions(0, 0, width, height);
+                        self.painter.update_screen_rect();
+                        self.raw_input.screen_rect = Some(self.painter.screen_rect);
+                    },
+                    _ => ()
+                },
                 _ => {
                     if let Some(parsed) = parse_event(&event) {
                         self.raw_input.events.push(parsed);
