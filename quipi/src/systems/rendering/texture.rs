@@ -5,7 +5,6 @@ use crate::{
     systems::assets::image::Image,
     utils::to_abs_path,
     wrappers::opengl::textures::{
-        ITexture,
         Texture,
         Format,
         Target,
@@ -51,7 +50,7 @@ pub fn from_buffer_rgba(
     width: i32,
     height: i32,
     buffer: &[u8]
-) -> Result<Box<dyn ITexture>, TextureError> {
+) -> Result<Texture, TextureError> {
     let texture = Texture::new(
         width,
         height,
@@ -62,12 +61,12 @@ pub fn from_buffer_rgba(
         .bind()
         .add_image_data(Format::Rgba, Format::Rgba, buffer);
 
-    Ok(Box::new(texture))
+    Ok(texture)
 }
 
 pub fn from_wavefront_material(
     material: &tobj::Material,
-) -> Result<Box<dyn ITexture>, TextureError> {
+) -> Result<Texture, TextureError> {
 
     if let Some(map_kd) = &material.diffuse_texture {
         return from_image(map_kd);
@@ -78,7 +77,7 @@ pub fn from_wavefront_material(
 
 pub fn from_image(
     file_path: &str,
-) -> Result<Box<dyn ITexture>, TextureError> {
+) -> Result<Texture, TextureError> {
     let file_path = &to_abs_path(file_path)?;
     let format = get_format(file_path);
     let img = Image::from_file(file_path)?;
@@ -97,14 +96,14 @@ pub fn from_image(
         .set_parameter(ParameterName::MinFilter, ParameterValue::LinearMipmapLinear)
         .set_parameter(ParameterName::MagFilter, ParameterValue::Linear);
 
-    Ok(Box::new(texture))
+    Ok(texture)
 }
 
 pub fn from_font(
     face: &Face,
     width: i32,
     height: i32
-) -> Result<Box<dyn ITexture>, TextureError>{
+) -> Result<Texture, TextureError>{
     let texture = Texture::new(
         width,
         height,
@@ -122,7 +121,7 @@ pub fn from_font(
                 .buffer(),
         );
 
-    Ok(Box::new(texture))
+    Ok(texture)
 }
 
 fn get_format(path: &str) -> Format {

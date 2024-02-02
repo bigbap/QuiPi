@@ -7,13 +7,13 @@ use ft::{
 
 use crate::wrappers::opengl::{
     pixel_store,
-    textures::ITexture
+    textures::Texture
 };
 use crate::systems::rendering::texture;
 
 #[derive(Debug)]
 pub struct Character {
-    pub texture: Box<dyn ITexture>,
+    pub texture: Texture,
     pub size: glm::Vec2,
     pub bearing: glm::Vec2,
     pub advance: i32

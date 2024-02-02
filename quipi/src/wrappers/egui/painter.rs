@@ -7,7 +7,6 @@ use egui::{
     Mesh,
     Rect,
     vec2,
-    Pos2
 };
 
 use crate::{
@@ -18,8 +17,8 @@ use crate::{
         buffer::BufferUsage,
         capabilities::*,
         textures::{
-            ITexture,
             gl_use_texture_unit,
+            Texture, ParameterName, ParameterValue
         },
     },
     systems::rendering::{
@@ -33,7 +32,7 @@ use crate::{
 };
 
 pub struct Painter {
-    textures: AHashMap<egui::TextureId, Box<dyn ITexture>>,
+    textures: AHashMap<egui::TextureId, Texture>,
     shader: ShaderProgram,
     pub screen_rect: Rect,
     pub pixels_per_point: f32,
@@ -207,7 +206,12 @@ impl Painter {
                 &pixels
             )?;
 
-            
+            texture.bind()
+                .set_parameter(ParameterName::WrapS, ParameterValue::ClampToEdge)
+                .set_parameter(ParameterName::WrapT, ParameterValue::ClampToEdge)
+                .set_parameter(ParameterName::MinFilter, ParameterValue::Linear)
+                .set_parameter(ParameterName::MagFilter, ParameterValue::Linear);
+
 
             self.textures.insert(id, texture);
         }
