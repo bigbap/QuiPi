@@ -55,7 +55,7 @@ impl QuiPiApp for QuiPiSandbox {
         &mut self,
         window: &QuiPiWindow
     ) -> Result<(), SandboxError> {
-        let mut scene = load_scene("main")?;
+        let mut scene = load_scene("main", SchemaScene::default())?;
         scene.clr_color = CRGBA { r: 0.2, g: 0.2, b: 0.2, a: 1.0 };
         scene.build(&mut self.registry)?;
         self.scene = Some(scene);

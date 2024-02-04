@@ -77,7 +77,7 @@ impl IPrefab<SchemaRectInstance> for SchemaRect {
 
         Ok(
             registry.create_entity(&self.tag)?
-                .with(CMesh::new(self.to_obj_config(instance), instance.usage)?)?
+                .with(CMesh::new(self.to_obj_config(instance), self.usage)?)?
                 .with(CBoundingBox {
                     right: self.width,
                     bottom: self.height,
@@ -135,10 +135,19 @@ impl Default for SchemaRect {
     }
 }
 
-#[derive(Debug, Default, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SchemaRectInstance {
-    pub usage: BufferUsage,
     pub transform: CTransform,
     pub velocity: CVelocity,
     pub color: CRGBA,
+}
+
+impl Default for SchemaRectInstance {
+    fn default() -> Self {
+        Self {
+            transform: CTransform::default(),
+            velocity: CVelocity::default(),
+            color: CRGBA { r: 0.1, g: 0.1, b: 0.1, a: 1.0 }
+        }
+    }
 }

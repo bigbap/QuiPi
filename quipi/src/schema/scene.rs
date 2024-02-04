@@ -1,7 +1,7 @@
 use serde::{Serialize, Deserialize};
 
 use crate::{
-    components::{CRGBA, CPrefab},
+    components::{CRGBA, CPrefab, CTransform},
     Registry,
     VersionedIndex,
 };
@@ -11,7 +11,7 @@ use super::{
     SchemaRect,
     SchemaError,
     ISchema,
-    SchemaShader,
+    SchemaShader, rect::SchemaRectInstance,
 };
 
 pub const DEFAULT_SCENE_TAG: &str = "default_scene";
@@ -33,7 +33,21 @@ impl Default for SchemaScene {
         let shader = SchemaShader::default();
 
         let mut camera = SchemaCamera::default();
-        let rect = SchemaRect::default();
+        let rect_instance = SchemaRectInstance {
+            transform: CTransform {
+                translate: glm::vec3(
+                    camera.params.right / 2.0,
+                    camera.params.top / 2.0,
+                    0.0
+                ),
+                ..CTransform::default()
+            },
+            ..SchemaRectInstance::default()
+        };
+        let rect = SchemaRect {
+            instances: vec![rect_instance],
+            ..SchemaRect::default()
+        };
 
         camera.entities.push(rect.tag.clone());
 
