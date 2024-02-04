@@ -1,5 +1,7 @@
 use quipi::FrameResponse;
 use quipi::engine::AppState;
+use quipi::schema::SchemaScene;
+use quipi::systems::scene::save_scene;
 use quipi::{
     Registry,
     systems::rendering::canvas
@@ -15,7 +17,8 @@ use super::spawner::RectSpawner;
 pub fn s_handle_input(
     app_state: &mut AppState,
     registry: &mut Registry,
-    spawner: &mut RectSpawner
+    spawner: &mut RectSpawner,
+    scene: &mut SchemaScene
 ) -> Result<FrameResponse, Box<dyn std::error::Error>> {
     for event in app_state.events.iter() {
         match event {
@@ -30,8 +33,13 @@ pub fn s_handle_input(
             Event::KeyDown { keycode, .. } => {
                 if app_state.editor_mode { continue; }
                 match keycode {
-                    Some(Keycode::Space) => { spawner.spawn(registry)?; },
-                    Some(Keycode::W) => (), // placeholder
+                    Some(Keycode::Space) => {
+                        spawner.spawn(scene, registry)?;
+                    },
+                    Some(Keycode::S) => {
+                        println!("saving");
+                        save_scene("bouncing_shapes", scene)?;
+                    },
                     _ => ()
                 }
             },

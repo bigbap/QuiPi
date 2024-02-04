@@ -1,5 +1,6 @@
 pub mod bounding_box;
 pub mod camera;
+pub mod children;
 pub mod color;
 pub mod distance;
 pub mod drawable;
@@ -20,6 +21,7 @@ pub use resources::*;
 
 pub use bounding_box::CBoundingBox;
 pub use camera::CCamera;
+pub use children::CChildren;
 pub use drawable::CMesh;
 pub use drawable::CShader;
 pub use material::CMaterial;
@@ -103,6 +105,7 @@ pub fn register_components(registry: &mut Registry) {
         .register_component::<CAttenuation>()
         .register_component::<CBoundingBox>()
         .register_component::<CRGBA>()
+        .register_component::<CChildren>()
         .register_component::<CCutoff>()
         .register_component::<CDirection>()
         .register_component::<CDistance>()

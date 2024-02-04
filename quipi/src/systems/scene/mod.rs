@@ -23,7 +23,8 @@ pub fn save_scene(
 }
 
 pub fn load_scene(
-    name: &str
+    name: &str,
+    default: SchemaScene
 ) -> Result<SchemaScene, Box<dyn std::error::Error>> {
     let path = to_abs_path(&format!("assets/scenes/{}.yaml", name))?; 
     if let Ok(file) = File::open(path) {
@@ -32,5 +33,5 @@ pub fn load_scene(
         return Ok(serde_yaml::from_reader(reader)?);
     }
     
-    Ok(SchemaScene::default())
+    Ok(default)
 }

@@ -29,7 +29,7 @@ pub fn s_update(
         let Some(transform) = registry.get_component::<CTransform>(&quad)   else { continue };
         let Some(b_box)     = registry.get_component::<CBoundingBox>(&quad) else { continue };
         
-        let scale = transform.scale.unwrap();
+        let scale = transform.scale.unwrap_or(glm::vec3(1.0, 1.0, 1.0));
 
         let vel = glm::vec3(vel.x, vel.y, 0.0);
         let translate = transform.translate + (vel * frame_state.delta);

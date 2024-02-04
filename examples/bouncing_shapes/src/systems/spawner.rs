@@ -1,43 +1,35 @@
 use quipi::{
     VersionedIndex,
-    schema::SchemaRect,
+    schema::{
+        SchemaScene,
+        rect::SchemaRectInstance, IPrefab
+    },
     Registry,
-    math::random::Random, utils::now_secs, components::CTransform,
+    math::random::Random,
+    utils::now_secs, components::{CRGBA, CTransform, CBoundingBox, CVelocity}, wrappers::opengl::buffer::BufferUsage,
 };
 
-use crate::{WIDTH, HEIGHT};
-
 pub struct RectSpawner {
-    shader: VersionedIndex,
-    schema: SchemaRect,
+    camera: VersionedIndex,
     rand: Random
 }
 
 impl RectSpawner {
-    pub fn new(
-        shader: &VersionedIndex,
-    ) -> Result<RectSpawner, Box<dyn std::error::Error>> {
-        let schema = SchemaRect {
-            transform: CTransform {
-                translate: glm::vec3(WIDTH as f32 * 0.5, HEIGHT as f32 * 0.5, 0.0),
-                scale: Some(glm::vec3(0.2, 0.2, 0.0)),
-                ..CTransform::default()
-            },
-            ..SchemaRect::default()
-        };
-
+    pub fn new(camera: VersionedIndex) -> Result<RectSpawner, Box<dyn std::error::Error>> {
         Ok(Self {
-            shader: *shader,
-            schema,
+            camera,
             rand: Random::from_seed(now_secs()?)
         })
     }
 
     pub fn spawn(
         &mut self,
+        scene: &mut SchemaScene,
         registry: &mut Registry,
-    ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
-        let mut this_schema = self.schema.clone();
+    ) -> Result<Option<VersionedIndex>, Box<dyn std::error::Error>> {
+        let Some(b_box) = registry.get_component::<CBoundingBox>(&self.camera) else {
+            return Ok(None);
+        };
 
         let mut vel = (
             self.rand.range(0, 200) as f32,
@@ -46,15 +38,34 @@ impl RectSpawner {
         if self.rand.random() > 0.5 { vel.0 *= -1.0; }
         if self.rand.random() > 0.5 { vel.1 *= -1.0; }
 
-        this_schema.velocity.x = vel.0;
-        this_schema.velocity.y = vel.1;
-        this_schema.color = glm::vec4(
-            self.rand.random(),
-            self.rand.random(),
-            self.rand.random(),
-            0.5
-        );
+        let velocity = CVelocity { x: vel.0, y: vel.1, z: 0.0 };
+        let color = CRGBA {
+            r: self.rand.random(),
+            g: self.rand.random(),
+            b: self.rand.random(),
+            a: 0.5
+        };
 
-        this_schema.build_rect(registry, &self.shader)
+        let s_factor = self.rand.range(50, 100) as f32 / 100.0;
+        let instance = SchemaRectInstance {
+            transform: CTransform {
+                translate: glm::vec3(
+                    b_box.right / 2.0,
+                    b_box.top / 2.0,
+                    0.0
+                ),
+                scale: Some(glm::vec3(s_factor, s_factor, s_factor)),
+                ..CTransform::default()
+            },
+            color,
+            velocity,
+            usage: BufferUsage::StaticDraw
+        };
+
+        let Some(this_schema) = scene.rects.get_mut(0) else { return Ok(None) };
+        let id = this_schema.build_instance(registry, &instance)?;
+        this_schema.instances.push(instance);
+
+        Ok(Some(id))
     }
 }

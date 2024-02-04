@@ -4,20 +4,13 @@ extern crate nalgebra_glm as glm;
 use quipi::{
     Registry,
     VersionedIndex,
-    resources::{
-        register_resources,
-        Shader,
-        shader::UniformVariable
-    },
-    systems::rendering::canvas,
+    resources::register_resources,
+    systems::{rendering::canvas, scene::load_scene},
     components::{
         register_components,
-        CTransform,
+        CTransform, CRGBA,
     },
-    wrappers::{
-        opengl::shader::ShaderProgram,
-        sdl2::window::QuiPiWindow,
-    },
+    wrappers::sdl2::window::QuiPiWindow,
     AppState,
     FrameResponse,
     schema::{
@@ -26,12 +19,11 @@ use quipi::{
             CameraParams,
             CameraKind, DEFAULT_CAMERA_TAG
         },
-        scene::{
-            DEFAULT_SHADER,
-            DEFAULT_SHADER_TAG,
-            DEFAULT_SHADER_UNIFORM
-        },
-        rect::DEFAULT_RECT_TAG
+        rect::DEFAULT_RECT_TAG,
+        ISchema,
+        SchemaScene,
+        SchemaShader,
+        SchemaRect
     }
 };
 
@@ -48,8 +40,9 @@ use systems::{
 pub struct MyGame {
     registry: Registry,
 
-    camera: VersionedIndex,
     spawner: Option<RectSpawner>,
+    scene: SchemaScene,
+    camera: VersionedIndex
 }
 
 impl MyGame {
@@ -58,14 +51,17 @@ impl MyGame {
 
         register_resources(&mut registry);
         register_components(&mut registry);
-
-        let camera = camera_schema()
-            .build_camera(&mut registry)?;
+        
+        let scene = load_scene(
+            "bouncing_shapes",
+            scene_schema()
+        )?;
 
         Ok(MyGame {
             registry,
-            camera,
-            spawner: None
+            spawner: None,
+            scene,
+            camera: VersionedIndex::invalid()
         })
     }
 }
@@ -75,20 +71,14 @@ impl quipi::QuiPiApp for MyGame {
         &mut self,
         _winapi: &QuiPiWindow
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let shader = ShaderProgram::new(DEFAULT_SHADER)?;
-        let shader_id = self.registry.create_resource(DEFAULT_SHADER_TAG, Shader {
-            program: shader,
-            uniforms: vec![
-                UniformVariable::MVPMatrix(DEFAULT_SHADER_UNIFORM.to_string())
-            ]
-        })?;
+        self.scene.build(&mut self.registry)?;
 
-        let mut spawner = RectSpawner::new(&shader_id)?;
+        self.camera = self.registry.get_entities_by_tag(
+            &self.scene.cameras.first().unwrap().tag
+        ).first().unwrap().to_owned();
 
-        create_shapes(&mut self.registry, &mut spawner)?;
+        self.spawner = Some(RectSpawner::new(self.camera)?);
 
-        self.spawner = Some(spawner);
-        
         Ok(())
     }
 
@@ -100,7 +90,8 @@ impl quipi::QuiPiApp for MyGame {
         let frame_response = s_handle_input(
             app_state,
             &mut self.registry,
-            self.spawner.as_mut().unwrap()
+            self.spawner.as_mut().unwrap(),
+            &mut self.scene
         )?;
 
         s_update(
@@ -128,15 +119,14 @@ impl quipi::QuiPiApp for MyGame {
     }
 }
 
-fn create_shapes(
-    registry: &mut Registry,
-    spawner: &mut RectSpawner
-) -> Result<(), Box<dyn std::error::Error>> {
-    for _ in 0..10 {
-        spawner.spawn(registry)?;
+fn scene_schema() -> SchemaScene {
+    SchemaScene {
+        tag: "bouncing_shapes".to_string(),
+        clr_color: CRGBA { r: 0.3, g: 0.1, b: 0.2, a: 1.0 },
+        cameras: vec![camera_schema()],
+        rects: vec![rect_schema()],
+        shaders: vec![shader_schema()]
     }
-
-    Ok(())
 }
 
 fn camera_schema() -> SchemaCamera {
@@ -155,4 +145,12 @@ fn camera_schema() -> SchemaCamera {
         transform: CTransform::default(),
         entities: vec![DEFAULT_RECT_TAG.to_string()]
     }
+}
+
+fn shader_schema() -> SchemaShader {
+    SchemaShader::default()
+}
+
+fn rect_schema() -> SchemaRect {
+    SchemaRect::default()
 }

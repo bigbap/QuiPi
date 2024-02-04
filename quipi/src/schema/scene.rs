@@ -1,13 +1,7 @@
-use std::collections::HashMap;
-
 use serde::{Serialize, Deserialize};
 
 use crate::{
     components::{CRGBA, CPrefab},
-    resources::{
-        Shader,
-        shader::UniformVariable
-    },
     Registry,
     VersionedIndex,
 };
@@ -16,12 +10,11 @@ use super::{
     SchemaCamera,
     SchemaRect,
     SchemaError,
-    ISchema
+    ISchema,
+    SchemaShader,
 };
 
 pub const DEFAULT_SCENE_TAG: &str = "default_scene";
-pub const DEFAULT_SHADER: &str = "default";
-pub const DEFAULT_SHADER_UNIFORM: &str = "mvpMatrix";
 
 /**
 * SCENE CONFIG
@@ -31,24 +24,16 @@ pub struct SchemaScene {
     pub tag: String,
     pub clr_color: CRGBA,
     pub cameras: Vec<SchemaCamera>,
-    pub shaders: HashMap<String, Vec<UniformVariable>>,
+    pub shaders: Vec<SchemaShader>,
     pub rects: Vec<SchemaRect>,
 }
 
 impl Default for SchemaScene {
     fn default() -> Self {
-        let mut shaders = HashMap::<String, Vec<UniformVariable>>::new();
-        shaders.insert(DEFAULT_SHADER.to_string(), vec![
-            UniformVariable::MVPMatrix(DEFAULT_SHADER_UNIFORM.to_string())
-        ]);
+        let shader = SchemaShader::default();
 
         let mut camera = SchemaCamera::default();
-        let mut rect = SchemaRect::default();
-        rect.transform.translate = glm::vec3(
-            camera.params.right / 2.0,
-            camera.params.top / 2.0,
-            0.0
-        );
+        let rect = SchemaRect::default();
 
         camera.entities.push(rect.tag.clone());
 
@@ -56,7 +41,7 @@ impl Default for SchemaScene {
             tag: DEFAULT_SCENE_TAG.to_string(),
             clr_color: CRGBA { r: 0.3, g: 0.3, b: 0.3, a: 1.0 },
             cameras: vec![camera],
-            shaders,
+            shaders: vec![shader],
             rects: vec![rect]
         }
     }
@@ -73,11 +58,8 @@ impl ISchema for SchemaScene {
         }
 
         // 2. build shaders
-        for (key, uniforms) in self.shaders.iter() {
-            registry.create_resource(
-                key,
-                Shader::new(key, uniforms.to_vec())?
-            )?;
+        for shader in self.shaders.iter() {
+            shader.build(registry)?;
         }
 
         // 3. build rects
@@ -87,6 +69,7 @@ impl ISchema for SchemaScene {
 
         Ok(registry.create_entity(&self.tag)?
             .with(CPrefab { schema: Box::new(self.to_owned()) })?
-            .done()?)
+            .done()?
+        )
     }
 }

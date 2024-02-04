@@ -1,10 +1,12 @@
 pub mod camera;
 pub mod scene;
 pub mod rect;
+pub mod shader;
 
 pub use camera::SchemaCamera;
 pub use scene::SchemaScene;
 pub use rect::SchemaRect;
+pub use shader::SchemaShader;
 
 use std::fmt::Debug;
 use crate::{
@@ -14,9 +16,14 @@ use crate::{
 };
 
 pub trait ISchema {
-    fn build(
+    fn build(&self, registry: &mut Registry) -> Result<VersionedIndex, SchemaError>;
+}
+
+pub trait IPrefab<T> {
+    fn build_instance(
         &self,
-        registry: &mut Registry
+        registry: &mut Registry,
+        instance: &T
     ) -> Result<VersionedIndex, SchemaError>;
 }
 

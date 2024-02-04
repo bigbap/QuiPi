@@ -5,12 +5,12 @@ use serde::{Serialize, Deserialize};
 
 pub static mut BUFFER_FLAGS: u32 = gl::COLOR_BUFFER_BIT;
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Copy)]
 pub enum BufferUsage {
     StreamDraw,
     StreamRead,
     StreamCopy,
-    StaticDraw,
+    #[default] StaticDraw,
     StaticRead,
     StaticCopy,
     DynamicDraw,

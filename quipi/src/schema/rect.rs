@@ -8,7 +8,8 @@ use crate::{
         CModelMatrix,
         CVelocity,
         CBoundingBox,
-        CShader, CPrefab
+        CShader,
+        CRGBA, CChildren,
     },
     VersionedIndex,
     Registry,
@@ -16,9 +17,9 @@ use crate::{
 };
 
 use super::{
-    scene::DEFAULT_SHADER,
-    ISchema,
-    SchemaError
+    shader::DEFAULT_SHADER,
+    SchemaError,
+    IPrefab, ISchema,
 };
 
 pub const DEFAULT_RECT_TAG: &str = "default_rect";
@@ -26,15 +27,12 @@ pub const DEFAULT_RECT_TAG: &str = "default_rect";
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SchemaRect {
     pub tag: String,
+    pub instances: Vec<SchemaRectInstance>,
 
     pub width: f32,
     pub height: f32,
     pub center_x: f32,
     pub center_y: f32,
-    pub color: glm::Vec4,
-
-    pub transform: CTransform,
-    pub velocity: CVelocity,
     pub shader: String,
 
     pub usage: BufferUsage
@@ -45,29 +43,57 @@ impl ISchema for SchemaRect {
         &self,
         registry: &mut Registry,
     ) -> Result<VersionedIndex, SchemaError> {
+        let mut children = CChildren {
+            list: Vec::<VersionedIndex>::with_capacity(self.instances.len())
+        };
+
+        for instance in self.instances.iter() {
+            children.list.push(
+                self.build_instance(
+                    registry,
+                    instance
+                )?
+            );
+        }
+
+        Ok(registry.create_entity(&format!("parent_{}", DEFAULT_RECT_TAG))?
+            .with(children)?
+            .done()?
+        )
+    }
+}
+
+impl IPrefab<SchemaRectInstance> for SchemaRect {
+    fn build_instance(
+        &self,
+        registry: &mut Registry,
+        instance: &SchemaRectInstance
+    ) -> Result<VersionedIndex, SchemaError> {
         let Some(shader) = registry.get_resource_by_tag(&self.shader) else {
             return Err(SchemaError::ShaderNotFound)
         };
-        let model = self.transform.to_matrix();
+        
+        let model = instance.transform.to_matrix();
 
-        Ok(registry.create_entity(DEFAULT_RECT_TAG)?
-            .with(CMesh::new(self.to_obj_config(), self.usage)?)?
-            .with(CBoundingBox {
-                right: self.width,
-                bottom: self.height,
-                ..CBoundingBox::default()
-            })?
-            .with(self.velocity)?
-            .with(self.transform)?
-            .with(CShader { shader })?
-            .with(CModelMatrix(model))?
-            .with(CPrefab { schema: Box::new(self.to_owned()) })?
-            .done()?)
+        Ok(
+            registry.create_entity(&self.tag)?
+                .with(CMesh::new(self.to_obj_config(instance), instance.usage)?)?
+                .with(CBoundingBox {
+                    right: self.width,
+                    bottom: self.height,
+                    ..CBoundingBox::default()
+                })?
+                .with(instance.velocity)?
+                .with(instance.transform)?
+                .with(CShader { shader })?
+                .with(CModelMatrix(model))?
+                .done()?
+        )
     }
 }
 
 impl SchemaRect {
-    pub fn to_obj_config(&self) -> ObjectConfig {
+    pub fn to_obj_config(&self, instance: &SchemaRectInstance) -> ObjectConfig {
         let points: Vec<f32> = vec![
             self.center_x - (self.width / 2.0), self.center_y + (self.height / 2.0), 0.0, // top left
             self.center_x + (self.width / 2.0), self.center_y + (self.height / 2.0), 0.0, // top right
@@ -75,10 +101,10 @@ impl SchemaRect {
             self.center_x - (self.width / 2.0), self.center_y - (self.height / 2.0), 0.0 // bottom left
         ];
         let colors: Vec<f32> = vec![
-            self.color.x, self.color.y, self.color.z, self.color.w,
-            self.color.x, self.color.y, self.color.z, self.color.w,
-            self.color.x, self.color.y, self.color.z, self.color.w,
-            self.color.x, self.color.y, self.color.z, self.color.w,
+            instance.color.r, instance.color.g, instance.color.b, instance.color.a,
+            instance.color.r, instance.color.g, instance.color.b, instance.color.a,
+            instance.color.r, instance.color.g, instance.color.b, instance.color.a,
+            instance.color.r, instance.color.g, instance.color.b, instance.color.a,
         ];
         let indices = vec![
             0, 1, 2,
@@ -98,15 +124,21 @@ impl Default for SchemaRect {
     fn default() -> Self {
         Self {
             tag: DEFAULT_RECT_TAG.to_string(),
+            instances: vec![SchemaRectInstance::default()],
             center_x: 0.0,
             center_y: 0.0,
             width: 200.0,
             height: 200.0,
-            color: glm::vec4(0.8, 0.8, 0.8, 1.0),
-            transform: CTransform::default(),
-            velocity: CVelocity::default(),
             shader: DEFAULT_SHADER.to_string(),
             usage: BufferUsage::StaticDraw
         }
     }
+}
+
+#[derive(Debug, Default, Serialize, Deserialize, Clone)]
+pub struct SchemaRectInstance {
+    pub usage: BufferUsage,
+    pub transform: CTransform,
+    pub velocity: CVelocity,
+    pub color: CRGBA,
 }

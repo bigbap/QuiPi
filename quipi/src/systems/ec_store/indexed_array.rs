@@ -14,6 +14,17 @@ pub struct VersionedIndex {
     version: u64
 }
 
+impl VersionedIndex {
+    pub fn invalid() -> Self {
+        // hopefully we never get this far :S
+        // TODO: come up with a better solution for this
+        Self {
+            index: usize::MAX,
+            version: u64::MAX
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 enum AllocatorEntry {
     Occupied { version: u64 },
