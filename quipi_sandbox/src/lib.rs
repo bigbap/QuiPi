@@ -1,38 +1,30 @@
-use std::collections::HashMap;
-
 use quipi::{
     engine::QuiPiApp,
     Registry,
-    core::{
-        random::Random,
-        time::now_secs
-    },
-    resources::{
-        register_resources,
-        Shader
-    },
+    resources::register_resources,
     components::{
         register_components,
-        CEulerAngles,
+        CRGBA
     },
-    systems::scene::{
-        save_scene,
-        load_scene
+    systems::{
+        scene::load_scene,
+        rendering::canvas,
     },
-    wrappers::{
-        opengl::shader::ShaderProgram,
-        sdl2::window::QuiPiWindow
-    },
+    wrappers::sdl2::window::QuiPiWindow,
     AppState,
     FrameResponse,
-    sdl2::{
-        event::Event,
-        keyboard::Keycode
-    }, schema::SchemaScene
+    schema::{
+        SchemaScene,
+        ISchema
+    },
 };
 
 extern crate quipi;
 extern crate nalgebra_glm as glm;
+
+mod input;
+mod draw;
+mod update;
 
 pub static WIDTH: u32 = 1600;
 pub static HEIGHT: u32 = 900;
@@ -41,22 +33,18 @@ pub type SandboxError = Box<dyn std::error::Error>;
 
 pub struct QuiPiSandbox {
     registry: quipi::Registry,
-    rand: Random,
-
     scene: Option<SchemaScene>,
 }
 
 impl QuiPiSandbox {
     pub fn new() -> Result<Self, SandboxError> {
         let mut registry = Registry::init()?;
-        let rand = Random::from_seed(now_secs()?);
 
         register_resources(&mut registry);
         register_components(&mut registry);
 
         Ok(Self {
             registry,
-            rand,
             scene: None,
         })
     }
@@ -67,39 +55,12 @@ impl QuiPiApp for QuiPiSandbox {
         &mut self,
         window: &QuiPiWindow
     ) -> Result<(), SandboxError> {
-        let scene = load_scene("start")?;
-
-        scene.build_scene(&mut self.registry)?;
-
-        // for (key, value) in scene.shaders.iter() {
-        //     let shader = ShaderProgram::new(key)?;
-        //
-        //     self.registry.create_resource(key, Shader {
-        //         program: shader,
-        //         uniforms: value.to_vec()
-        //     })?;
-        // }
-
-        // for camera in scene.cameras.iter() {
-        //     let renderer = Renderer2D::new(
-        //         &mut self.registry,
-        //         &camera.tag,
-        //         camera.params,
-        //         camera.transform.clone(),
-        //         CEulerAngles::default()
-        //     )?;
-        //     renderer.update_view_matrix(&mut self.registry);
-        //
-        //     self.renderers.insert(camera.tag.clone(), Box::new(renderer));
-        // }
-
-        // for entity in scene.entities.iter() {
-        //     self.registry.create_entity(&entity.tag.tag)?
-        // }
+        let mut scene = load_scene("main")?;
+        scene.clr_color = CRGBA { r: 0.2, g: 0.2, b: 0.2, a: 1.0 };
+        scene.build(&mut self.registry)?;
+        self.scene = Some(scene);
 
         window.relative_mouse_mode(false);
-
-        self.scene = Some(scene);
 
         Ok(())
     }
@@ -108,22 +69,31 @@ impl QuiPiApp for QuiPiSandbox {
         &mut self,
         app_state: &mut AppState
     ) -> Result<FrameResponse, SandboxError> {
-        
-
-        for event in app_state.events.iter() {
-            match event {
-                Event::Quit { .. } => {
-                    if let Some(scene) = &self.scene {
-                        save_scene("start", scene)?;
-                    }
-
-                    return Ok(FrameResponse::Quit)
-                },
-                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => app_state.editor_mode = !app_state.editor_mode,
-                _ => ()
-            }
+        if let Some(scene) = &self.scene {
+            app_state.clear_color = scene.clr_color;
         }
 
-        Ok(FrameResponse::None)
+        update::update_frame(&mut self.registry);
+
+        draw::draw_frame(&mut self.registry)?;
+        draw_debug_info(&self.registry, app_state);
+
+        input::handle_input(app_state, &self.scene)
     }
 }
+
+fn draw_debug_info(
+    registry: &Registry,
+    app_state: &mut AppState
+) {
+    // draw the entity count
+    let (_x, _y, width, height) = canvas::get_dimensions();
+    let entity_count = registry.entity_count();
+    app_state.text_render.color = glm::vec3(1.0, 1.0, 1.0);
+    app_state.text_render.scale = 0.7;
+    app_state.text_render.draw(
+        format!("entities: {}", entity_count),
+        glm::vec2(width as f32 - 120.0, height as f32 - 30.0)
+    );
+}
+

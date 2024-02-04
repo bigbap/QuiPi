@@ -52,7 +52,7 @@ impl Registry {
     pub fn with(
         &mut self,
         cmp: impl Component + 'static
-    ) -> Result<&mut Self, Box<dyn std::error::Error>> {
+    ) -> Result<&mut Self, RegistryError> {
         self.entities.add_component(&self.currently_building.unwrap(), cmp);
 
         Ok(self)
@@ -61,7 +61,7 @@ impl Registry {
     pub fn try_with(
         &mut self,
         cmp: Option<impl Component + 'static>
-    ) -> Result<&mut Self, Box<dyn std::error::Error>> {
+    ) -> Result<&mut Self, RegistryError> {
         if let Some(cmp) = cmp {
             self.entities.add_component(&self.currently_building.unwrap(), cmp);
         }
@@ -143,6 +143,10 @@ impl Registry {
 
     pub fn get_resource<C: Component + 'static>(&self, entity: &VersionedIndex) -> Option<&C> {
         self.resources.get_component::<C>(entity)
+    }
+
+    pub fn get_resource_by_tag(&self, tag: &str) -> Option<VersionedIndex> {
+        self.resources.get_entities_by_tag(tag).get(0).cloned()
     }
 
     pub fn delete_resource(&mut self, resource: VersionedIndex) -> Result<(), Box<dyn std::error::Error>> {

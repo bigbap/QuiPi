@@ -1,7 +1,14 @@
 use crate::{
     VersionedIndex,
     components::{
-        CBoundingBox, CCamera, CMaterial, CModelMatrix, CModelNode, CViewMatrix, CRGBA, CShader, CMesh
+        CBoundingBox,
+        CCamera,
+        CMaterial,
+        CModelMatrix,
+        CViewMatrix,
+        CRGBA,
+        CShader,
+        CMesh
     },
     Registry,
     resources::shader::{

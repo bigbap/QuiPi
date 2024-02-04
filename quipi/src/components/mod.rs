@@ -1,11 +1,13 @@
 pub mod bounding_box;
 pub mod camera;
+pub mod color;
 pub mod distance;
 pub mod drawable;
 pub mod gizmo;
 pub mod material;
 pub mod matrices;
 pub mod model;
+pub mod prefab;
 pub mod shapes;
 pub mod speed;
 pub mod states;
@@ -27,10 +29,12 @@ pub use distance::CDistance;
 pub use matrices::CModelMatrix;
 pub use matrices::CViewMatrix;
 pub use model::CModelNode;
+pub use prefab::CPrefab;
 pub use shapes::CRect;
 pub use shapes::CShape;
 pub use speed::CSpeed;
 pub use states::CMouseBtnState;
+pub use color::CRGBA;
 pub use target::CTarget;
 pub use unique_id::CUniqueId;
 
@@ -58,18 +62,6 @@ pub struct CVelocity {
     pub x: f32,
     pub y: f32,
     pub z: f32
-}
-
-/**
-* RGBA color
-* (f32, f32, f32, f32)
-*/
-#[derive(Debug, Component, Default, Serialize, Deserialize)]
-pub struct CRGBA {
-    pub r: f32,
-    pub g: f32,
-    pub b: f32,
-    pub a: f32
 }
 
 /**
@@ -121,12 +113,13 @@ pub fn register_components(registry: &mut Registry) {
         .register_component::<CModelMatrix>()
         .register_component::<CModelNode>()
         .register_component::<CMouseBtnState>()
-        .register_component::<CSpeed>()
-        .register_component::<CTransform>()
+        .register_component::<CPrefab>()
         .register_component::<CRect>()
         .register_component::<CShader>()
         .register_component::<CShape>()
+        .register_component::<CSpeed>()
         .register_component::<CTarget>()
+        .register_component::<CTransform>()
         .register_component::<CVelocity>()
         .register_component::<CViewMatrix>()
         .register_component::<CUniqueId>();

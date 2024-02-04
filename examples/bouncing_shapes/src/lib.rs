@@ -18,12 +18,20 @@ use quipi::{
         opengl::shader::ShaderProgram,
         sdl2::window::QuiPiWindow,
     },
-    AppState, FrameResponse, schema::{
+    AppState,
+    FrameResponse,
+    schema::{
         SchemaCamera,
         camera::{
             CameraParams,
-            CameraKind
-        }, SchemaRect
+            CameraKind, DEFAULT_CAMERA_TAG
+        },
+        scene::{
+            DEFAULT_SHADER,
+            DEFAULT_SHADER_TAG,
+            DEFAULT_SHADER_UNIFORM
+        },
+        rect::DEFAULT_RECT_TAG
     }
 };
 
@@ -67,25 +75,15 @@ impl quipi::QuiPiApp for MyGame {
         &mut self,
         _winapi: &QuiPiWindow
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let shader = ShaderProgram::new("default")?;
-        let shader_id = self.registry.create_resource("default", Shader {
+        let shader = ShaderProgram::new(DEFAULT_SHADER)?;
+        let shader_id = self.registry.create_resource(DEFAULT_SHADER_TAG, Shader {
             program: shader,
             uniforms: vec![
-                UniformVariable::MVPMatrix("mvpMatrix".to_string())
+                UniformVariable::MVPMatrix(DEFAULT_SHADER_UNIFORM.to_string())
             ]
         })?;
 
-        let mut spawner = RectSpawner::new(
-            &shader_id,
-            SchemaRect {
-                transform: CTransform {
-                    translate: glm::vec3(WIDTH as f32 * 0.5, HEIGHT as f32 * 0.5, 0.0),
-                    scale: Some(glm::vec3(0.2, 0.2, 0.0)),
-                    ..CTransform::default()
-                },
-                ..SchemaRect::default()
-            }
-        )?;
+        let mut spawner = RectSpawner::new(&shader_id)?;
 
         create_shapes(&mut self.registry, &mut spawner)?;
 
@@ -143,7 +141,7 @@ fn create_shapes(
 
 fn camera_schema() -> SchemaCamera {
     SchemaCamera {
-        tag: "camera".to_string(),
+        tag: DEFAULT_CAMERA_TAG.to_string(),
         params: CameraParams {
             kind: CameraKind::Cam2D,
             left: 0.0,
@@ -155,6 +153,6 @@ fn camera_schema() -> SchemaCamera {
             ..CameraParams::default()
         },
         transform: CTransform::default(),
-        entities: vec!["rect".to_string()]
+        entities: vec![DEFAULT_RECT_TAG.to_string()]
     }
 }

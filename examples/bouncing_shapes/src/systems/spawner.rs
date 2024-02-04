@@ -2,8 +2,10 @@ use quipi::{
     VersionedIndex,
     schema::SchemaRect,
     Registry,
-    math::random::Random, utils::now_secs,
+    math::random::Random, utils::now_secs, components::CTransform,
 };
+
+use crate::{WIDTH, HEIGHT};
 
 pub struct RectSpawner {
     shader: VersionedIndex,
@@ -14,8 +16,16 @@ pub struct RectSpawner {
 impl RectSpawner {
     pub fn new(
         shader: &VersionedIndex,
-        schema: SchemaRect
     ) -> Result<RectSpawner, Box<dyn std::error::Error>> {
+        let schema = SchemaRect {
+            transform: CTransform {
+                translate: glm::vec3(WIDTH as f32 * 0.5, HEIGHT as f32 * 0.5, 0.0),
+                scale: Some(glm::vec3(0.2, 0.2, 0.0)),
+                ..CTransform::default()
+            },
+            ..SchemaRect::default()
+        };
+
         Ok(Self {
             shader: *shader,
             schema,

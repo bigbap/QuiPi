@@ -15,7 +15,7 @@ use crate::{
         egui::GUI,
         opengl::buffer::clear_buffers
     },
-    core::time::Timer, utils::to_abs_path
+    core::time::Timer, utils::to_abs_path, components::CRGBA
 };
 
 pub trait QuiPiApp {
@@ -82,6 +82,7 @@ pub fn run<G: QuiPiApp>(
     });
 
     let mut app_state = AppState {
+        clear_color: CRGBA::default(),
         editor_mode: false,
         events: vec![],
         text_render: &mut text,
@@ -89,7 +90,7 @@ pub fn run<G: QuiPiApp>(
     };
 
     'running: loop {
-        clear_buffers((0.4, 0.4, 0.4, 1.0));
+        clear_buffers(app_state.clear_color.to_tuple());
         app_state.events = winapi.get_event_queue()?;
 
         match game.handle_frame(&mut app_state)? {
@@ -115,6 +116,7 @@ pub fn run<G: QuiPiApp>(
 }
 
 pub struct AppState<'a> {
+    pub clear_color: CRGBA,
     pub editor_mode: bool,
     pub events: Vec<Event>,
     pub text_render: &'a mut TextRenderer,

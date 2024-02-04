@@ -31,7 +31,6 @@ impl Default for CViewMatrix {
 
 impl CViewMatrix {
     pub fn update_view_matrix(
-        &mut self,
         camera: &VersionedIndex,
         registry: &mut Registry
     ) {
@@ -51,7 +50,9 @@ impl CViewMatrix {
                 &gizmo.up
             );
 
-            self.0 = matrix;
+            if let Some(view) = registry.get_component_mut::<CViewMatrix>(camera) {
+                view.0 = matrix;
+            }
         }
     }
 }

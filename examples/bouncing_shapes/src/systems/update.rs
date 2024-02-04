@@ -6,6 +6,7 @@ use quipi::{
         CBoundingBox, CModelMatrix,
     },
     AppState,
+    schema::rect::DEFAULT_RECT_TAG,
 };
 
 use crate::{
@@ -21,7 +22,7 @@ pub fn s_update(
         return Ok(())
     }
 
-    let quads = registry.get_entities_by_tag("rect");
+    let quads = registry.get_entities_by_tag(DEFAULT_RECT_TAG);
 
     for quad in quads {
         let Some(vel)       = registry.get_component::<CVelocity>(&quad)    else { continue };

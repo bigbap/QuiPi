@@ -6,6 +6,7 @@ use quipi::{
     systems::rendering::draw::s_draw_by_tag,
     Registry,
     VersionedIndex,
+    schema::rect::DEFAULT_RECT_TAG,
 };
 
 pub fn s_draw_frame(
@@ -16,7 +17,7 @@ pub fn s_draw_frame(
     gl_blending_func(GLBlendingFactor::SrcAlpha, GLBlendingFactor::OneMinusSrcAlpha);
 
     s_draw_by_tag(
-        "rect",
+        DEFAULT_RECT_TAG,
         registry,
         camera,
         DrawMode::Triangles
