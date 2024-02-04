@@ -1,9 +1,11 @@
 #![allow(clippy::new_without_default)]
 #![allow(clippy::upper_case_acronyms)]
 
+use serde::{Serialize, Deserialize};
+
 pub static mut BUFFER_FLAGS: u32 = gl::COLOR_BUFFER_BIT;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 pub enum BufferUsage {
     StreamDraw,
     StreamRead,

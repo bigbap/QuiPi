@@ -1,8 +1,13 @@
+use crate::systems::assets::ObjectConfig;
 use crate::systems::rendering::mesh::ElementArrayMesh;
 use crate::{Component, VersionedIndex};
 
+// clean this component
 #[derive(Debug, Default, Component)]
 pub struct CModelNode {
     pub mesh: Option<ElementArrayMesh>,
-    pub children: Vec<VersionedIndex>
+    pub data: ObjectConfig,
+
+    pub shader: String,
+    pub children: Option<Vec<VersionedIndex>>
 }

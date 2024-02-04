@@ -1,6 +1,7 @@
+use serde::{Serialize, Deserialize};
 use crate::Component;
 
-#[derive(Debug, Component, Default, Clone, Copy)]
+#[derive(Debug, Component, Default, Clone, Copy, Serialize, Deserialize)]
 pub struct CBoundingBox {
     pub left: f32,
     pub right: f32,

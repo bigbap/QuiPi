@@ -1,7 +1,9 @@
+use serde::{Serialize, Deserialize};
+
 use crate::Component;
 use crate::wrappers::opengl::shader::ShaderProgram;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum UniformVariable {
     MVPMatrix(String),
     ModelMatrix(String),

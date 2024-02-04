@@ -1,14 +1,10 @@
 use egui::{
     RawInput,
-    Pos2,
     Ui
 };
-use sdl2::{
-    event::{
-        Event,
-        WindowEvent
-    },
-    keyboard::Keycode
+use sdl2::event::{
+    Event,
+    WindowEvent
 };
 
 use crate::{
@@ -72,18 +68,15 @@ impl GUI {
         app_state: &mut AppState
     ) -> Result<FrameResponse, Box<dyn std::error::Error>> {
         if !app_state.editor_mode {
-            return Ok(FrameResponse::Ignore)
+            return Ok(FrameResponse::None);
         }
 
-        let _pos = self.ctx.input(|i| i.pointer.hover_pos()).unwrap_or(Pos2::new(-1.0, -1.0));
         self.ctx.begin_frame(self.raw_input.take());
-        
         for UiRegion { name, resizable, cb, ..} in self.windows.iter() {
             egui::Window::new(name)
                 .resizable(*resizable)
                 .show(&self.ctx, cb);
         }
-
         let full_output = self.ctx.end_frame();
 
         self.painter.paint(
@@ -101,11 +94,6 @@ impl GUI {
         for event in app_state.events.iter() {
             match event {
                 Event::Quit { .. } => return Ok(FrameResponse::Quit),
-                Event::KeyDown { keycode: Some(Keycode::F12), .. } => {
-                    app_state.editor_mode = false;
-
-                    return Ok(FrameResponse::Ignore);
-                },
                 Event::Window { win_event, .. } => match win_event {
                     WindowEvent::Resized(width, height) | WindowEvent::SizeChanged(width, height) => {
                         set_dimensions(0, 0, *width, *height);
@@ -122,7 +110,7 @@ impl GUI {
             }
         }
         
-        Ok(FrameResponse::Ignore)
+        Ok(FrameResponse::None)
     }
 }
 

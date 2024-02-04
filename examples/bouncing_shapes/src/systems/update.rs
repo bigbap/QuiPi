@@ -3,9 +3,8 @@ use quipi::{
     components::{
         CVelocity,
         CTransform,
-        CBoundingBox,
+        CBoundingBox, CModelMatrix,
     },
-    systems::mvp_matrices::s_set_model_matrix,
     AppState,
 };
 
@@ -22,7 +21,7 @@ pub fn s_update(
         return Ok(())
     }
 
-    let quads = registry.get_entities_by_tag("quad");
+    let quads = registry.get_entities_by_tag("rect");
 
     for quad in quads {
         let Some(vel)       = registry.get_component::<CVelocity>(&quad)    else { continue };
@@ -41,12 +40,14 @@ pub fn s_update(
 
         let Some(transform) = registry.get_component_mut::<CTransform>(&quad) else { continue };
         transform.translate = translate;
+        let matrix = transform.to_matrix();
 
         let Some(vel) = registry.get_component_mut::<CVelocity>(&quad) else { continue };
         if colided_x { vel.x *= -1.0 }
         if colided_y { vel.y *= -1.0 }
 
-        s_set_model_matrix(&quad, registry);
+        let Some(model) = registry.get_component_mut::<CModelMatrix>(&quad) else { continue };
+        model.update_model_matrix(matrix);
     }
 
     Ok(())

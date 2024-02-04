@@ -13,8 +13,9 @@ pub fn s_model_traversal<'a>(
     let mut result = vec![];
 
     while let Some((node, id)) = stack.pop() {
-        if !node.children.is_empty() {
-            let mut children = node.children.clone();
+        let mut children = node.children.clone().unwrap_or(vec![]);
+
+        if !children.is_empty() {
             children.reverse();
 
             let mut children = children
@@ -51,7 +52,7 @@ mod tests {
     ) -> VersionedIndex {
         registry.create_entity(tag).unwrap()
             .with(CModelNode {
-                children: vec![],
+                children: None,
                 ..CModelNode::default()
             }).unwrap()
             .done().unwrap()
@@ -72,16 +73,16 @@ mod tests {
         let level1_3_3 = build_node("level1_3_3", &mut registry);
 
         let node = registry.get_component_mut::<CModelNode>(&level1_1).unwrap();
-        node.children = vec![level1_1_1];
+        node.children = Some(vec![level1_1_1]);
 
         let node = registry.get_component_mut::<CModelNode>(&level1_2).unwrap();
-        node.children = vec![level1_2_1, level1_2_2];
+        node.children = Some(vec![level1_2_1, level1_2_2]);
 
         let node = registry.get_component_mut::<CModelNode>(&level1_3).unwrap();
-        node.children = vec![level1_3_1, level1_3_2, level1_3_3];
+        node.children = Some(vec![level1_3_1, level1_3_2, level1_3_3]);
 
         let node = registry.get_component_mut::<CModelNode>(&level1).unwrap();
-        node.children = vec![level1_1, level1_2, level1_3];
+        node.children = Some(vec![level1_1, level1_2, level1_3]);
         
         let mut check_against = vec![
             "level1".to_string(),

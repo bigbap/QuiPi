@@ -1,16 +1,18 @@
+use serde::{Serialize, Deserialize};
+
 use crate::{
     VersionedIndex,
     Component
 };
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
 pub enum MaterialPart {
     Texture(VersionedIndex),
     Value(f32, f32, f32),
     #[default] None
 }
 
-#[derive(Component, Debug, Clone)]
+#[derive(Component, Debug, Clone, Serialize, Deserialize)]
 pub struct CMaterial {
     pub ambient: MaterialPart,
     pub diffuse: MaterialPart,

@@ -12,7 +12,6 @@ fn main() {
         "Bouncing Shapes",
         WIDTH,
         HEIGHT,
-        vec![],
     ) {
         eprintln!("QuiPi Sandbox ended unexpectedly: {}", e);
     };

@@ -1,5 +1,4 @@
 pub mod assets;
-pub mod mvp_matrices;
 pub mod movement;
 pub mod rotation;
 pub mod material;
@@ -12,3 +11,4 @@ pub mod audio;
 pub mod input;
 pub mod events;
 pub mod physics;
+pub mod scene;

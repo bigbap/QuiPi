@@ -43,7 +43,7 @@ impl Painter {
     pub fn new(
         scale: f32
     ) -> Result<Self, Box<dyn std::error::Error>> {
-        let shader = ShaderProgram::new("assets/shaders/egui")?;
+        let shader = ShaderProgram::new("egui")?;
 
         let pixels_per_point = scale;
         let (_x, _y, width, height) = canvas::get_dimensions();

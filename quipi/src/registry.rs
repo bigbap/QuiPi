@@ -58,6 +58,17 @@ impl Registry {
         Ok(self)
     }
 
+    pub fn try_with(
+        &mut self,
+        cmp: Option<impl Component + 'static>
+    ) -> Result<&mut Self, Box<dyn std::error::Error>> {
+        if let Some(cmp) = cmp {
+            self.entities.add_component(&self.currently_building.unwrap(), cmp);
+        }
+
+        Ok(self)
+    }
+
     pub fn with_factory<C: Component + 'static>(
         &mut self,
         fac: impl Fn(&mut Self) -> Result<C, Box<dyn std::error::Error>>
@@ -114,8 +125,12 @@ impl Registry {
         self
     }
 
-    pub fn create_resource(&mut self, res: impl Component + 'static) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
-        let resource = self.resources.create_entity("resource")?;
+    pub fn create_resource(
+        &mut self,
+        tag: &str,
+        res: impl Component + 'static
+    ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
+        let resource = self.resources.create_entity(tag)?;
 
         self.resources.add_component(&resource, res);
 

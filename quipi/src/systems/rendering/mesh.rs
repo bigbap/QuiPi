@@ -91,6 +91,10 @@ impl ElementArrayMesh {
         buffer_length: usize,
         data: &[T]
     ) -> Result<&mut Self, Box<dyn std::error::Error>> {
+        if buffer_length == 0 && data.len() == 0 {
+            return Ok(self);
+        }
+
         self.vao.bind();
         if let Some(ebo) = &self.ebo { ebo.bind() }
         

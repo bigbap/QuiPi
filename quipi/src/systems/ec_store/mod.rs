@@ -10,11 +10,18 @@ pub trait Component {
 }
 
 use anymap2::AnyMap;
-use std::rc::Rc;
+use serde::Deserialize;
+use serde::Serialize;
 
-#[derive(Debug, Component, Clone)]
+#[derive(Debug, Component, Clone, Serialize, Deserialize)]
 pub struct CTag {
-    pub tag: Rc<str>
+    pub tag: String
+}
+
+impl Default for CTag {
+    fn default() -> Self {
+        Self { tag: "default".to_string() }
+    }
 }
 
 type EntityMap<C> = IndexedArray<C>;

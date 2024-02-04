@@ -69,7 +69,7 @@ impl ShaderProgram {
     }
 
     pub fn from_file(name: &str) -> Result<Self, ShaderError> {
-        let name = &to_abs_path(name)?;
+        let name = &to_abs_path(&format!("assets/shaders/{}", name))?;
         let vert = shader_to_cstring(&format!("{name}.vert"))?;
         let frag = shader_to_cstring(&format!("{name}.frag"))?;
 

@@ -1,8 +1,10 @@
+use uuid::Uuid;
+
 use crate::{
     components::{
         CModelMatrix,
         CModelNode,
-        CTransform
+        CTransform, CShader
     },
     wrappers::opengl::{
         draw::DrawMode,
@@ -20,11 +22,11 @@ use crate::{
 
 use self::mesh::{ElementArrayMesh, ShaderLocation};
 
+use super::rendering::draw::s_draw_entity;
+
 const GRID_TAG: &str = "quipi_grid_74872346";
 
-pub struct Grid {
-    shader: VersionedIndex
-}
+pub struct Grid {}
 
 impl Grid {
     pub fn new(
@@ -46,9 +48,8 @@ impl Grid {
                 vertices
             )?;
 
-        build_axis(registry, mesh, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0))?;
-
-        let shader = registry.create_resource(Shader::new(
+        let id = Uuid::new_v4().to_string();
+        let shader = registry.create_resource(&id, Shader::new(
             &to_abs_path("assets/shaders/grid")?,
             vec![
                 UniformVariable::ProjectionMatrix("projection".to_string()),
@@ -58,25 +59,34 @@ impl Grid {
             ]
         )?)?;
 
-        Ok(Self {
-            shader
-        })
+        build_axis(
+            registry,
+            shader,
+            mesh,
+            glm::vec3(0.0, 0.0, 0.0),
+            glm::vec3(0.0, 0.0, 0.0)
+        )?;
+
+        Ok(Self {})
     }
 
     pub fn draw(
         &self,
         registry: &Registry,
-        renderer: &Renderer
+        camera: &VersionedIndex
     ) -> Result<(), Box<dyn std::error::Error>> {
         let grid = registry.get_entities_by_tag(GRID_TAG);
 
         for line in grid {
-            renderer.draw_entity(
-                &line,
-                registry,
-                &self.shader,
-                DrawMode::Triangles
-            );
+            if let Some(shader_id) = registry.get_component::<CShader>(&line) {
+                s_draw_entity(
+                    &line,
+                    registry,
+                    camera,
+                    shader_id,
+                    DrawMode::Triangles
+                );
+            }
         }
 
         Ok(())
@@ -85,6 +95,7 @@ impl Grid {
 
 fn build_axis(
     registry: &mut Registry,
+    shader: VersionedIndex,
     mesh: ElementArrayMesh,
     translate: glm::Vec3,
     scale: glm::Vec3
@@ -100,6 +111,7 @@ fn build_axis(
             mesh: Some(mesh),
             ..CModelNode::default()
         })?
+        .with(CShader { shader })?
         .with(transform)?
         .with(model_matrix)?
         .done()?;

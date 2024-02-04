@@ -1,7 +1,7 @@
 use crate::{
     VersionedIndex,
     components::{
-        CBoundingBox, CCamera, CMaterial, CModelMatrix, CModelNode, CViewMatrix, CRGBA
+        CBoundingBox, CCamera, CMaterial, CModelMatrix, CModelNode, CViewMatrix, CRGBA, CShader, CMesh
     },
     Registry,
     resources::shader::{
@@ -31,18 +31,19 @@ use crate::{
 pub fn s_draw_by_tag(
     tag: &str,
     registry: &Registry,
-    shader_id: &VersionedIndex,
+    // shader_id: &VersionedIndex,
     camera_id: &VersionedIndex,
     mode: DrawMode
 ) -> Result<(), Box<dyn std::error::Error>> {
-    if let Some(shader) = registry.get_resource::<RShader>(shader_id) {
-        let entities = registry.get_entities_by_tag(tag);
-        for entity in entities.iter() {
+    let entities = registry.get_entities_by_tag(tag);
+
+    for entity in entities.iter() {
+        if let Some(shader_id) = registry.get_component::<CShader>(entity) {
             s_draw_entity(
                 entity,
                 registry,
                 camera_id,
-                shader,
+                shader_id,
                 mode
             );
         }
@@ -55,26 +56,28 @@ pub fn s_draw_entity(
     entity: &VersionedIndex,
     registry: &Registry,
     camera: &VersionedIndex,
-    shader: &RShader,
+    shader: &CShader,
     mode: DrawMode
 ) {
-    // TODO: this can be optimized to have textures per tag instead of per entity
-    bind_textures(entity, registry, shader);
+    if let Some(shader) = registry.get_resource::<RShader>(&shader.shader) {
+        // TODO: this can be optimized to have textures per tag instead of per entity
+        bind_textures(entity, registry, shader);
 
-    if let Some(root) = registry.get_component::<CModelNode>(entity) {
-        set_uniforms(
-            entity,
-            registry,
-            shader,
-            camera
-        );
-    
-        draw_node(root, shader, mode);
+        if let Some(mesh) = registry.get_component::<CMesh>(entity) {
+            set_uniforms(
+                entity,
+                registry,
+                shader,
+                camera
+            );
+
+            draw_node(mesh, shader, mode);
+        }
     }
 }
 
 fn draw_node(
-    node: &CModelNode,
+    node: &CMesh,
     shader: &RShader,
     mode: DrawMode
 ) {

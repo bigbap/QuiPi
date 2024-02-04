@@ -1,66 +1,57 @@
-use crate::Component;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Clone, Copy)]
-pub struct PerspectiveParams {
-    pub aspect: f32,
-    pub fov: f32,
-    pub near: f32,
-    pub far: f32
-}
+use crate::{
+    Component,
+    schema::camera::{
+        CameraParams,
+        CameraKind
+    },
+};
 
-#[derive(Debug, Clone, Copy)]
-pub struct OrthographicParams {
-    pub left: f32,
-    pub right: f32,
-    pub bottom: f32,
-    pub top: f32,
-    pub near: f32,
-    pub far: f32,
-}
 
-#[derive(Debug, Clone, Copy)]
-pub enum CameraParams {
-    Perspective(PerspectiveParams),
-    Orthographic(OrthographicParams)
-}
-
-#[derive(Debug, Component)]
+#[derive(Debug, Component, Serialize, Deserialize)]
 pub struct CCamera {
-    pub projection: glm::Mat4
+    pub projection: glm::Mat4,
+    pub params: CameraParams
 }
 
 impl Default for CCamera {
     fn default() -> Self {
+        let params = CameraParams::default();
         Self {
-            projection: glm::identity()
+            projection: CCamera::calc_projection_matrix(&params),
+            params
         }
     }
 }
 
 impl CCamera {
-    pub fn new(params: &CameraParams) -> Result<Self, Box<dyn std::error::Error>> {
-        let mut camera = Self::default();
-
-        camera.update_projection_matrix(params);
+    pub fn new(params: CameraParams) -> Result<Self, Box<dyn std::error::Error>> {
+        let camera = Self {
+            projection: CCamera::calc_projection_matrix(&params),
+            params
+        };
 
         Ok(camera)
     }
 
-    pub fn update_projection_matrix(&mut self, params: &CameraParams) {
-        self.projection = match params {
-            CameraParams::Perspective(params) => {
-                glm::perspective(params.aspect, params.fov, params.near, params.far)
-            },
-            CameraParams::Orthographic(params) => {
-                glm::ortho(
-                    params.left,
-                    params.right,
-                    params.bottom,
-                    params.top,
-                    params.near,
-                    params.far
-                )
-            }
-        };
+    pub fn calc_projection_matrix(params: &CameraParams) -> glm::Mat4 {
+        match params.kind {
+            CameraKind::Cam2D => glm::ortho(
+                params.left,
+                params.right,
+                params.bottom,
+                params.top,
+                params.near,
+                params.far
+            ),
+            CameraKind::Cam3D => glm::perspective(
+                params.aspect,
+                params.fov,
+                params.near,
+                params.far
+            )
+        }
     }
 }
+

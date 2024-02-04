@@ -1,9 +1,11 @@
+use serde::{Serialize, Deserialize};
+
 use crate::systems::ec_store::Component;
 
 /**
 * the model portion for a Model View Projection matrix
 */
-#[derive(Debug, Component, PartialEq, Clone)]
+#[derive(Debug, Component, PartialEq, Clone, Copy, Serialize, Deserialize)]
 pub struct CTransform {
     pub translate: glm::Vec3,
     pub rotate: Option<glm::Vec3>,
@@ -50,3 +52,4 @@ impl CTransform {
         }
     }
 }
+

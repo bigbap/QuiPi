@@ -9,24 +9,22 @@ use quipi::{
         Shader,
         shader::UniformVariable
     },
-    math::random::Random,
-    utils::now_secs,
-    systems::rendering::{
-        IRenderer,
-        Renderer2D,
-        canvas
-    },
+    systems::rendering::canvas,
     components::{
         register_components,
-        CEulerAngles,
         CTransform,
-        CBoundingBox
     },
     wrappers::{
         opengl::shader::ShaderProgram,
-        egui::GUI, sdl2::window::QuiPiWindow,
+        sdl2::window::QuiPiWindow,
     },
-    AppState, FrameResponse
+    AppState, FrameResponse, schema::{
+        SchemaCamera,
+        camera::{
+            CameraParams,
+            CameraKind
+        }, SchemaRect
+    }
 };
 
 pub static WIDTH: u32 = 1600;
@@ -34,46 +32,32 @@ pub static HEIGHT: u32 = 900;
 
 mod systems;
 
-use systems::*;
+use systems::{
+    *,
+    spawner::RectSpawner
+};
 
 pub struct MyGame {
     registry: Registry,
-    rand: Random,
-    
-    shader: Option<VersionedIndex>,
-    renderer: Renderer2D,
-    debug_gui: Option<GUI>,
+
+    camera: VersionedIndex,
+    spawner: Option<RectSpawner>,
 }
 
 impl MyGame {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
         let mut registry = Registry::init()?;
-        let rand = Random::from_seed(now_secs()?);
 
         register_resources(&mut registry);
         register_components(&mut registry);
 
-        let renderer = Renderer2D::new(
-            &mut registry,
-            CBoundingBox {
-                right: WIDTH as f32,
-                top: HEIGHT as f32,
-                near: 0.0,
-                far: 0.2,
-                ..CBoundingBox::default()
-            },
-            CTransform::default(),
-            CEulerAngles::default()
-        )?;
-
-        renderer.update_view_matrix(&mut registry);
+        let camera = camera_schema()
+            .build_camera(&mut registry)?;
 
         Ok(MyGame {
             registry,
-            shader: None,
-            rand,
-            renderer,
-            debug_gui: None
+            camera,
+            spawner: None
         })
     }
 }
@@ -83,26 +67,29 @@ impl quipi::QuiPiApp for MyGame {
         &mut self,
         _winapi: &QuiPiWindow
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let shader = ShaderProgram::new("assets/shaders/shape")?;
-        let shader_id = self.registry.create_resource(Shader {
+        let shader = ShaderProgram::new("default")?;
+        let shader_id = self.registry.create_resource("default", Shader {
             program: shader,
             uniforms: vec![
                 UniformVariable::MVPMatrix("mvpMatrix".to_string())
             ]
         })?;
 
-        create_shapes(
-            &mut self.registry,
-            &mut self.rand
-        );
-        
-        let mut gui: Option<GUI> = None;
-        if cfg!(debug_assertions) {
-            gui = Some(GUI::new(1.0)?);
-        }
+        let mut spawner = RectSpawner::new(
+            &shader_id,
+            SchemaRect {
+                transform: CTransform {
+                    translate: glm::vec3(WIDTH as f32 * 0.5, HEIGHT as f32 * 0.5, 0.0),
+                    scale: Some(glm::vec3(0.2, 0.2, 0.0)),
+                    ..CTransform::default()
+                },
+                ..SchemaRect::default()
+            }
+        )?;
 
-        self.shader = Some(shader_id);
-        self.debug_gui = gui;
+        create_shapes(&mut self.registry, &mut spawner)?;
+
+        self.spawner = Some(spawner);
         
         Ok(())
     }
@@ -115,7 +102,7 @@ impl quipi::QuiPiApp for MyGame {
         let frame_response = s_handle_input(
             app_state,
             &mut self.registry,
-            &mut self.rand
+            self.spawner.as_mut().unwrap()
         )?;
 
         s_update(
@@ -126,14 +113,8 @@ impl quipi::QuiPiApp for MyGame {
         // render
         s_draw_frame(
             &mut self.registry,
-            &self.shader.unwrap(),
-            &self.renderer,
+            &self.camera
         )?;
-
-        // // update gui
-        // if let Some(debug_gui) = &mut self.debug_gui {
-        //     debug_gui.update()?;
-        // }
 
         // draw the entity count
         let (_x, _y, width, height) = canvas::get_dimensions();
@@ -145,17 +126,35 @@ impl quipi::QuiPiApp for MyGame {
             glm::vec2(width as f32 - 120.0, height as f32 - 30.0)
         );
 
-
         Ok(frame_response)
     }
 }
 
 fn create_shapes(
     registry: &mut Registry,
-    rand: &mut Random
-) {
+    spawner: &mut RectSpawner
+) -> Result<(), Box<dyn std::error::Error>> {
     for _ in 0..10 {
-        let _ = s_spawn_quad(registry, rand);
+        spawner.spawn(registry)?;
     }
+
+    Ok(())
 }
 
+fn camera_schema() -> SchemaCamera {
+    SchemaCamera {
+        tag: "camera".to_string(),
+        params: CameraParams {
+            kind: CameraKind::Cam2D,
+            left: 0.0,
+            right: WIDTH as f32,
+            bottom: 0.0,
+            top: HEIGHT as f32,
+            near: 0.0,
+            far: 0.2,
+            ..CameraParams::default()
+        },
+        transform: CTransform::default(),
+        entities: vec!["rect".to_string()]
+    }
+}

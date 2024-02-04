@@ -1,5 +1,8 @@
 use crate::{
-    wrappers::{opengl::MyOpenGL, sdl2::window::QuiPiWindow},
+    wrappers::{
+        opengl::MyOpenGL,
+        sdl2::window::QuiPiWindow
+    },
     Registry,
     VersionedIndex
 };
@@ -10,12 +13,10 @@ pub mod canvas;
 pub mod mesh;
 pub mod texture;
 pub mod text;
+pub mod draw;
 
-pub use renderer::Renderer;
-pub use renderer_2d::Renderer2D;
-
-mod draw;
-mod matrices;
+// pub use renderer::Renderer;
+// pub use renderer_2d::Renderer2D;
 
 pub trait IRenderer {
     fn camera(&self) -> VersionedIndex;

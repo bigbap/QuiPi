@@ -1,3 +1,5 @@
+use std::fs;
+
 use sdl2::event::Event;
 
 use crate::{
@@ -13,7 +15,7 @@ use crate::{
         egui::GUI,
         opengl::buffer::clear_buffers
     },
-    core::time::Timer
+    core::time::Timer, utils::to_abs_path
 };
 
 pub trait QuiPiApp {
@@ -39,6 +41,8 @@ pub fn run<G: QuiPiApp>(
     width: u32,
     height: u32,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    boilerplate()?;
+
     let mut winapi = QuiPiWindow::init()?;
     let window = winapi.opengl_window(
         title,
@@ -90,12 +94,14 @@ pub fn run<G: QuiPiApp>(
 
         match game.handle_frame(&mut app_state)? {
             FrameResponse::Quit => break 'running,
-            FrameResponse::Ignore => ()
+            FrameResponse::Restart => { timer.delta(); },
+            FrameResponse::None => ()
         }
 
         match gui.update(&mut app_state)? {
             FrameResponse::Quit => break 'running,
-            FrameResponse::Ignore => ()
+            FrameResponse::Restart => { timer.delta(); },
+            FrameResponse::None => ()
         }
 
         print_debug(&app_state, app_state.delta);
@@ -121,10 +127,11 @@ pub struct QPMouseState {
     pub rel_pos: glm::Vec2,
 }
 
-#[derive(Default, Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum FrameResponse {
     Quit,
-    #[default] Ignore
+    None,
+    Restart
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -148,3 +155,13 @@ fn print_debug(app_state: &AppState, delta: f32) {
     }
 }
 
+fn boilerplate() -> Result<(), Box<dyn std::error::Error>> {
+    let asset_path = to_abs_path("assets")?;
+    
+    fs::create_dir_all(format!("{}/scenes", asset_path))?;
+    fs::create_dir_all(format!("{}/shaders", asset_path))?;
+    fs::create_dir_all(format!("{}/objects", asset_path))?;
+    fs::create_dir_all(format!("{}/fonts", asset_path))?;
+
+    Ok(())
+}

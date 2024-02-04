@@ -2,6 +2,7 @@ pub extern crate sdl2;
 pub extern crate gl;
 pub extern crate nalgebra_glm as glm;
 pub extern crate freetype as ft;
+pub extern crate serde;
 // pub extern crate gltf;
 
 pub mod core;
@@ -10,6 +11,7 @@ pub mod registry;
 pub mod components;
 pub mod systems;
 pub mod wrappers;
+pub mod schema;
 
 pub use components::resources;
 pub use engine::run;

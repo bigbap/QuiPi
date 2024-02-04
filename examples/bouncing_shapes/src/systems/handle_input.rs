@@ -1,6 +1,5 @@
 use quipi::FrameResponse;
 use quipi::engine::AppState;
-use quipi::math::random::Random;
 use quipi::{
     Registry,
     systems::rendering::canvas
@@ -11,28 +10,28 @@ use sdl2::event::{
 };
 use sdl2::keyboard::Keycode;
 
-use super::s_spawn_quad;
+use super::spawner::RectSpawner;
 
 pub fn s_handle_input(
     app_state: &mut AppState,
     registry: &mut Registry,
-    rand: &mut Random
+    spawner: &mut RectSpawner
 ) -> Result<FrameResponse, Box<dyn std::error::Error>> {
     for event in app_state.events.iter() {
         match event {
             Event::Quit {..} => {
                 return Ok(FrameResponse::Quit);
             },
+            Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
+                if cfg!(debug_assertions) {
+                    app_state.editor_mode = !app_state.editor_mode;
+                }
+            },
             Event::KeyDown { keycode, .. } => {
                 if app_state.editor_mode { continue; }
                 match keycode {
-                    Some(Keycode::F11) => {
-                        if cfg!(debug_assertions) {
-                            app_state.editor_mode = true;
-                        }
-                    },
-                    Some(Keycode::Space) => { s_spawn_quad(registry, rand)?; },
-                    Some(Keycode::Escape) => return Ok(FrameResponse::Quit),
+                    Some(Keycode::Space) => { spawner.spawn(registry)?; },
+                    Some(Keycode::W) => (), // placeholder
                     _ => ()
                 }
             },
@@ -46,5 +45,5 @@ pub fn s_handle_input(
         };
     }
 
-    Ok(FrameResponse::Ignore)
+    Ok(FrameResponse::None)
 }
