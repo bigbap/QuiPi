@@ -13,25 +13,16 @@ use crate::{
         painter::Painter,
         input::parse_event,
     },
-    FrameResponse,
     systems::rendering::canvas::set_dimensions
 };
 
 mod painter;
 mod input;
 
-pub struct UiRegion {
-    pub name: String,
-    pub resizable: bool,
-    pub cb: Box<dyn Fn(&mut Ui)>
-}
-
 pub struct GUI {
     ctx: egui::Context,
     painter: Painter,
     raw_input: RawInput,
-
-    windows: Vec<UiRegion>
 }
 
 impl GUI {
@@ -46,37 +37,33 @@ impl GUI {
             ctx,
             painter,
             raw_input,
-            windows: vec![]
         })
     }
 
-    pub fn add_ui_region(
+    pub fn begin_frame(&mut self) {
+        self.ctx.begin_frame(self.raw_input.take());
+    }
+    pub fn add_panel_top(
         &mut self,
         name: &str,
-        resizable: bool,
-        cb: impl Fn(&mut Ui) + 'static
+        cb: impl FnOnce(&mut Ui)
     ) {
-        self.windows.push(UiRegion {
-            name: name.to_string(),
-            resizable,
-            cb: Box::new(cb)
-        });
+        egui::TopBottomPanel::top(name.to_string())
+            .show(&self.ctx, cb);
     }
-
-    pub fn update(
+    pub fn add_window(
         &mut self,
-        app_state: &mut AppState
-    ) -> Result<FrameResponse, Box<dyn std::error::Error>> {
-        if !app_state.editor_mode {
-            return Ok(FrameResponse::None);
-        }
-
-        self.ctx.begin_frame(self.raw_input.take());
-        for UiRegion { name, resizable, cb, ..} in self.windows.iter() {
-            egui::Window::new(name)
-                .resizable(*resizable)
-                .show(&self.ctx, cb);
-        }
+        name: &str,
+        cb: impl FnOnce(&mut Ui)
+    ) {
+        egui::Window::new(name.to_string())
+            .resizable(true)
+            .show(&self.ctx, cb);
+    }
+    pub fn end_frame(
+        &mut self,
+        app_state: &AppState
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let full_output = self.ctx.end_frame();
 
         self.painter.paint(
@@ -89,11 +76,10 @@ impl GUI {
 
     fn handle_input(
         &mut self,
-        app_state: &mut AppState
-    ) -> Result<FrameResponse, Box<dyn std::error::Error>> {
+        app_state: &AppState
+    ) -> Result<(), Box<dyn std::error::Error>> {
         for event in app_state.events.iter() {
             match event {
-                Event::Quit { .. } => return Ok(FrameResponse::Quit),
                 Event::Window { win_event, .. } => match win_event {
                     WindowEvent::Resized(width, height) | WindowEvent::SizeChanged(width, height) => {
                         set_dimensions(0, 0, *width, *height);
@@ -110,7 +96,7 @@ impl GUI {
             }
         }
         
-        Ok(FrameResponse::None)
+        Ok(())
     }
 }
 

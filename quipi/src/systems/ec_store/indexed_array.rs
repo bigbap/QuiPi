@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use serde::{Serialize, Deserialize};
 
 /// https://github.com/fitzgen/generational-arena/blob/master/src/lib.rs
@@ -12,6 +14,12 @@ use serde::{Serialize, Deserialize};
 pub struct VersionedIndex {
     index: usize,
     version: u64
+}
+
+impl Display for VersionedIndex {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "index: {}, version: {}", self.index, self.version)
+    }
 }
 
 impl VersionedIndex {

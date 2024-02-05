@@ -1,4 +1,4 @@
-use egui::{Modifiers, Pos2, pos2, Key};
+use egui::{Modifiers, Pos2, pos2, Key, vec2};
 use sdl2::{
     event::Event::{ self, * },
     keyboard::{
@@ -31,6 +31,11 @@ pub fn parse_event(
             *x as f32 / painter.pixels_per_point,
             *y as f32 / painter.pixels_per_point
         ))),
+        MouseWheel { x, y, .. } => {
+            let delta = vec2(*x as f32 * 15.0, *y as f32 * 15.0);
+
+            Some(egui::Event::Scroll(delta))
+        },
         KeyDown { keycode, keymod, repeat, .. } => parse_key(*keycode, *keymod, *repeat, true),
         KeyUp { keycode, keymod, repeat, .. } => parse_key(*keycode, *keymod, *repeat, false),
         TextInput { text, .. } => Some(egui::Event::Text(text.to_string())),

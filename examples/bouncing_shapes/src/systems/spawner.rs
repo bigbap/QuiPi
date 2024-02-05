@@ -6,7 +6,7 @@ use quipi::{
     },
     Registry,
     math::random::Random,
-    utils::now_secs, components::{CRGBA, CTransform, CBoundingBox, CVelocity}, wrappers::opengl::buffer::BufferUsage,
+    utils::now_secs, components::{CRGBA, CTransform, CBoundingBox, CVelocity},
 };
 
 pub struct RectSpawner {
@@ -46,7 +46,7 @@ impl RectSpawner {
             a: 0.5
         };
 
-        let s_factor = self.rand.range(50, 100) as f32 / 100.0;
+        let s_factor = self.rand.range(25, 50) as f32 / 100.0;
         let instance = SchemaRectInstance {
             transform: CTransform {
                 translate: glm::vec3(
@@ -59,7 +59,6 @@ impl RectSpawner {
             },
             color,
             velocity,
-            usage: BufferUsage::StaticDraw
         };
 
         let Some(this_schema) = scene.rects.get_mut(0) else { return Ok(None) };

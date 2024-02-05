@@ -37,7 +37,7 @@ pub struct EntityManager {
     entity_allocator: VersionedIndexAllocator,
     component_maps: AnyMap,
 
-    entities: Vec<Option<VersionedIndex>>
+    entities: Vec<VersionedIndex>
 }
 
 impl EntityManager {
@@ -45,7 +45,7 @@ impl EntityManager {
         let mut entity_manager = Self {
             entity_allocator: VersionedIndexAllocator::default(),
             component_maps: AnyMap::new(),
-            entities: Vec::<Option<VersionedIndex>>::new()
+            entities: Vec::<VersionedIndex>::new()
         };
 
         entity_manager.register_component::<CTag>();
@@ -61,7 +61,7 @@ impl EntityManager {
         let entity = self.entity_allocator.allocate();
 
         self.add_component(&entity, CTag { tag: tag.into() });
-        self.entities.push(Some(entity));
+        self.entities.push(entity);
 
         Ok(entity)
     }
@@ -125,17 +125,13 @@ impl EntityManager {
 
         let mut result = Vec::<VersionedIndex>::new();
         for entity in &self.entities {
-            if entity.is_none() { continue; }
-            
-            let entity = entity.unwrap();
-
             if !self.entity_allocator.validate(&entity) {
                 continue;
             }
 
             if let Some(c_tag) = tag_map.get(&entity) {
                 if *c_tag.tag == *tag {
-                    result.push(entity);
+                    result.push(*entity);
                 }
             };
         }
@@ -144,7 +140,7 @@ impl EntityManager {
     }
 
     pub fn reset(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        for entity in self.entities.iter().flatten() {
+        for entity in self.entities.iter() {
             self.entity_allocator.deallocate(*entity);
         }
 
@@ -163,6 +159,18 @@ impl EntityManager {
 
     pub fn count(&self) -> usize {
         self.entity_allocator.valid_count()
+    }
+
+    pub fn get_valid_entities(&mut self) -> Vec<VersionedIndex> {
+        let mut result = Vec::<VersionedIndex>::new();
+
+        for entity in self.entities.iter() {
+            if self.entity_allocator.validate(&entity) {
+                result.push(*entity);
+            }
+        }
+
+        result
     }
 }
 

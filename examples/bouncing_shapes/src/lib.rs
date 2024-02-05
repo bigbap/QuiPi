@@ -86,6 +86,8 @@ impl quipi::QuiPiApp for MyGame {
         &mut self,
         app_state: &mut AppState
     ) -> Result<FrameResponse, Box<dyn std::error::Error>> {
+        app_state.clear_color = self.scene.clr_color;
+
         // handle input
         let frame_response = s_handle_input(
             app_state,
@@ -117,12 +119,20 @@ impl quipi::QuiPiApp for MyGame {
 
         Ok(frame_response)
     }
+
+    fn handle_editor(
+        &mut self,
+        app_state: &AppState,
+        editor: &mut quipi::systems::editor::SceneEditor
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        editor.update(&mut self.registry, app_state)
+    }
 }
 
 fn scene_schema() -> SchemaScene {
     SchemaScene {
         tag: "bouncing_shapes".to_string(),
-        clr_color: CRGBA { r: 0.3, g: 0.1, b: 0.2, a: 1.0 },
+        clr_color: CRGBA { r: 0.0, g: 0.3, b: 0.5, a: 1.0 },
         cameras: vec![camera_schema()],
         rects: vec![rect_schema()],
         shaders: vec![shader_schema()]
@@ -152,5 +162,8 @@ fn shader_schema() -> SchemaShader {
 }
 
 fn rect_schema() -> SchemaRect {
-    SchemaRect::default()
+    SchemaRect {
+        instances: vec![],
+        ..SchemaRect::default()
+    }
 }

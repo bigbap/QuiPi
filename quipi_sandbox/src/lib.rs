@@ -80,6 +80,14 @@ impl QuiPiApp for QuiPiSandbox {
 
         input::handle_input(app_state, &self.scene)
     }
+
+    fn handle_editor(
+        &mut self,
+        app_state: &AppState,
+        editor: &mut quipi::systems::editor::SceneEditor
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        editor.update(&mut self.registry, app_state)
+    }
 }
 
 fn draw_debug_info(

@@ -101,6 +101,14 @@ impl Registry {
         Ok(())
     }
 
+    pub fn get_valid_entities(&mut self) -> Vec<VersionedIndex> {
+        self.entities.get_valid_entities()
+    }
+
+    pub fn reset_entities(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        self.entities.reset()
+    }
+
     // components
 
     pub fn register_component<C: Component + 'static>(&mut self) -> &mut Self {

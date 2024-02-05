@@ -1,4 +1,5 @@
 pub mod assets;
+pub mod editor;
 pub mod movement;
 pub mod rotation;
 pub mod material;
