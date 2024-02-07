@@ -1,3 +1,5 @@
+use core::fmt;
+
 use serde::{Serialize, Deserialize};
 
 /// https://github.com/fitzgen/generational-arena/blob/master/src/lib.rs
@@ -12,6 +14,12 @@ use serde::{Serialize, Deserialize};
 pub struct VersionedIndex {
     index: usize,
     version: u64
+}
+
+impl fmt::Display for VersionedIndex {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}.{}", self.index, self.version)
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -78,7 +86,7 @@ impl VersionedIndexAllocator {
         }
     }
 
-    pub fn length(&self) -> usize { self.length }
+    pub fn length(&self) -> usize { self.entries.len() }
     pub fn valid_count(&self) -> usize {
         self.entries
             .iter()

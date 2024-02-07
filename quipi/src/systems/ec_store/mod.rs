@@ -25,6 +25,8 @@ pub struct EntityManager {
     component_maps: AnyMap,
 
     entities: Vec<VersionedIndex>,
+
+    to_delete: Vec<VersionedIndex>,
 }
 
 impl EntityManager {
@@ -33,6 +35,7 @@ impl EntityManager {
             entity_allocator: VersionedIndexAllocator::default(),
             component_maps: AnyMap::new(),
             entities: Vec::<VersionedIndex>::new(),
+            to_delete: Vec::<VersionedIndex>::new(),
         };
 
         Ok(entity_manager)
@@ -52,8 +55,16 @@ impl EntityManager {
         Ok(entity)
     }
 
-    pub fn delete(&mut self, entity: VersionedIndex) {
-        self.entity_allocator.deallocate(entity);
+    pub fn set_to_delete(&mut self, entity: VersionedIndex) {
+        self.to_delete.push(entity);
+    }
+
+    pub fn flush(&mut self) {
+        for entity in self.to_delete.iter_mut() {
+            self.entity_allocator.deallocate(*entity);
+        }
+
+        self.to_delete.clear();
     }
 
     pub fn add<C: Component + PartialEq + 'static>(

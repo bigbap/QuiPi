@@ -1,7 +1,13 @@
 use quipi::{
     components::{
-        CBoundingBox, CModelMatrix, CTag, CTransform, CVelocity
-    }, schemas::rect::DEFAULT_RECT_TAG, AppState, Registry
+        CBoundingBox,
+        CModelMatrix,
+        CTag,
+        CTransform,
+        CVelocity
+    },
+    schemas::rect::DEFAULT_RECT_TAG,
+    FrameState, Registry
 };
 
 use crate::{
@@ -9,10 +15,7 @@ use crate::{
     WIDTH
 };
 
-pub fn s_update(
-    frame_state: &AppState,
-    registry: &mut Registry,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub fn s_update(registry: &mut Registry, frame_state: &mut FrameState) -> Result<(), Box<dyn std::error::Error>> {
     if frame_state.editor_mode {
         return Ok(())
     }

@@ -22,6 +22,6 @@ pub use systems::ec_store::VersionedIndex;
 pub use core::math;
 pub use core::utils;
 pub use engine::QuiPiApp;
-pub use engine::AppState;
+pub use engine::FrameState;
 pub use engine::FrameResponse;
 pub use registry::Registry;

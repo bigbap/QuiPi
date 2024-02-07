@@ -3,18 +3,21 @@
 use egui::Vec2;
 
 use crate::{
-    wrappers::egui::GUI,
-    Registry,
-    AppState,
-    VersionedIndex,
+    components::CTag,
     schemas::{
-        SchemaRect,
+        rect::{
+            SchemaRectInstance,
+            DEFAULT_RECT_TAG
+        },
         IPrefab,
-        rect::SchemaRectInstance
-    }, components::CName,
+        SchemaRect
+    },
+    wrappers::egui::GUI,
+    FrameState,
+    Registry,
+    VersionedIndex
 };
 
-#[cfg(debug_assertions)]
 pub struct SceneEditor {
     gui: GUI,
 
@@ -32,7 +35,7 @@ impl SceneEditor {
     pub fn update(
         &mut self,
         registry: &mut Registry,
-        app_state: &AppState
+        app_state: &mut FrameState
     ) -> Result<(), Box<dyn std::error::Error>> {
         self.gui.begin_frame();
         self.entity_list(registry);
@@ -56,7 +59,7 @@ impl SceneEditor {
     }
 
     fn entity_list(&mut self, registry: &mut Registry) {
-        let entities = registry.entities.query_all::<CName>();
+        let entities = registry.entities.query::<CTag>(CTag { tag: DEFAULT_RECT_TAG.to_string() });
 
         self.gui.add_window("Entities", |ui| {
             ui.set_width(200.0);
@@ -75,11 +78,15 @@ impl SceneEditor {
 
             egui::ScrollArea::vertical().show(ui, |ui| {
                 for entity in entities.iter() {
-                    let name = registry.entities.get::<CName>(entity).unwrap();
+                    // let name = registry.entities.get::<CName>(entity).unwrap();
+                    // let name = name.name.clone();
 
                     ui.horizontal(|ui| {
                         ui.set_width(ui.available_width());
-                        ui.radio_value(&mut self.active_entity, Some(*entity), name.name.clone());
+                        ui.radio_value(&mut self.active_entity, Some(*entity), entity.to_string());
+                        if ui.button("del").clicked() {
+                            registry.entities.set_to_delete(*entity);
+                        }
                     });
                     ui.allocate_space(Vec2::new(0.0, 5.0));
                 }
@@ -87,13 +94,14 @@ impl SceneEditor {
         });
     }
 
-    fn debug(&mut self, app_state: &AppState, registry: &Registry) {
+    fn debug(&mut self, app_state: &FrameState, registry: &Registry) {
         self.gui.add_window("Debug Info", |ui| {
             ui.set_width(200.0);
             ui.label(format!("fps: {}", app_state.debug_info.fps));
             ui.label(format!("ms: {}", app_state.debug_info.ms));
             ui.separator();
             ui.label(format!("entity count: {}", registry.entities.count()));
+            ui.label(format!("allocator size: {}", registry.entities.allocator_size()));
         })
     }
 }

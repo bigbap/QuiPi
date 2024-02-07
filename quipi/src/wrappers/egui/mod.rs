@@ -8,12 +8,12 @@ use sdl2::event::{
 };
 
 use crate::{
-    engine::AppState,
+    systems::rendering::canvas::set_dimensions,
     wrappers::egui::{
-        painter::Painter,
         input::parse_event,
+        painter::Painter
     },
-    systems::rendering::canvas::set_dimensions
+    FrameState
 };
 
 mod painter;
@@ -62,7 +62,7 @@ impl GUI {
     }
     pub fn end_frame(
         &mut self,
-        app_state: &AppState
+        frame_state: &FrameState
     ) -> Result<(), Box<dyn std::error::Error>> {
         let full_output = self.ctx.end_frame();
 
@@ -71,12 +71,12 @@ impl GUI {
             full_output
         )?;
 
-        self.handle_input(app_state)
+        self.handle_input(frame_state)
     }
 
     fn handle_input(
         &mut self,
-        app_state: &AppState
+        app_state: &FrameState
     ) -> Result<(), Box<dyn std::error::Error>> {
         for event in app_state.events.iter() {
             match event {
