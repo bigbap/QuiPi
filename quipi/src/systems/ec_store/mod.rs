@@ -10,19 +10,6 @@ pub trait Component {
 }
 
 use anymap2::AnyMap;
-use serde::Deserialize;
-use serde::Serialize;
-
-#[derive(Debug, Component, Clone, Serialize, Deserialize)]
-pub struct CTag {
-    pub tag: String
-}
-
-impl Default for CTag {
-    fn default() -> Self {
-        Self { tag: "default".to_string() }
-    }
-}
 
 type EntityMap<C> = IndexedArray<C>;
 
@@ -37,40 +24,50 @@ pub struct EntityManager {
     entity_allocator: VersionedIndexAllocator,
     component_maps: AnyMap,
 
-    entities: Vec<VersionedIndex>
+    entities: Vec<VersionedIndex>,
+
+    to_delete: Vec<VersionedIndex>,
 }
 
 impl EntityManager {
     pub fn new() -> Result<Self, EMError> {
-        let mut entity_manager = Self {
+        let entity_manager = Self {
             entity_allocator: VersionedIndexAllocator::default(),
             component_maps: AnyMap::new(),
-            entities: Vec::<VersionedIndex>::new()
+            entities: Vec::<VersionedIndex>::new(),
+            to_delete: Vec::<VersionedIndex>::new(),
         };
-
-        entity_manager.register_component::<CTag>();
 
         Ok(entity_manager)
     }
 
-    pub fn register_component<C: Component + 'static>(&mut self) {
+    pub fn register_component<C: Component + PartialEq + 'static>(&mut self) -> &mut Self {
         self.component_maps.insert(EntityMap::<C>::default());
+
+        self
     }
 
-    pub fn create_entity(&mut self, tag: &str) -> Result<VersionedIndex, EMError> {
+    pub fn create(&mut self) -> Result<VersionedIndex, EMError> {
         let entity = self.entity_allocator.allocate();
 
-        self.add_component(&entity, CTag { tag: tag.into() });
         self.entities.push(entity);
 
         Ok(entity)
     }
 
-    pub fn delete_entity(&mut self, entity: VersionedIndex) {
-        self.entity_allocator.deallocate(entity);
+    pub fn set_to_delete(&mut self, entity: VersionedIndex) {
+        self.to_delete.push(entity);
     }
 
-    pub fn add_component<C: Component + 'static>(
+    pub fn flush(&mut self) {
+        for entity in self.to_delete.iter_mut() {
+            self.entity_allocator.deallocate(*entity);
+        }
+
+        self.to_delete.clear();
+    }
+
+    pub fn add<C: Component + PartialEq + 'static>(
         &mut self,
         entity: &VersionedIndex,
         component: C
@@ -78,12 +75,12 @@ impl EntityManager {
         match self.component_maps.get_mut::<EntityMap<C>>() {
             None => (),
             Some(cmp_map) => {
-                cmp_map.set(entity, component)
+                cmp_map.set(&entity, component)
             }
         }
     }
 
-    pub fn get_component<C: Component + 'static>(
+    pub fn get<C: Component + PartialEq + 'static>(
         &self,
         entity: &VersionedIndex
     ) -> Option<&C> {
@@ -100,7 +97,7 @@ impl EntityManager {
         }
     }
 
-    pub fn get_component_mut<C: Component + 'static>(
+    pub fn get_mut<C: Component + PartialEq + 'static>(
         &mut self,
         entity: &VersionedIndex
     ) -> Option<&mut C> {
@@ -117,21 +114,24 @@ impl EntityManager {
         }
     }
 
-    pub fn get_entities_by_tag(
+    pub fn query_all<C: Component + PartialEq + 'static>(
         &self,
-        tag: &str
     ) -> Vec<VersionedIndex> {
-        let Some(tag_map) = self.component_maps.get::<EntityMap<CTag>>() else { return vec![] };
+        let Some(cmp_map) = self.component_maps.get::<EntityMap<C>>() else { return vec![] };
+        
+        cmp_map.get_entities(&self.entity_allocator)
+    }
+
+    pub fn query<C: Component + PartialEq + 'static>(&self, filter: C) -> Vec<VersionedIndex> {
+        let Some(cmp_map) = self.component_maps.get::<EntityMap<C>>() else { return vec![] };
+        let all_entities = cmp_map.get_entities(&self.entity_allocator);
 
         let mut result = Vec::<VersionedIndex>::new();
-        for entity in &self.entities {
-            if !self.entity_allocator.validate(&entity) {
-                continue;
-            }
 
-            if let Some(c_tag) = tag_map.get(&entity) {
-                if *c_tag.tag == *tag {
-                    result.push(*entity);
+        for entity in all_entities {
+            if let Some(cmp) = cmp_map.get(&entity) {
+                if *cmp == filter {
+                    result.push(entity);
                 }
             };
         }
@@ -165,7 +165,7 @@ impl EntityManager {
         let mut result = Vec::<VersionedIndex>::new();
 
         for entity in self.entities.iter() {
-            if self.entity_allocator.validate(&entity) {
+            if self.entity_allocator.validate(entity) {
                 result.push(*entity);
             }
         }

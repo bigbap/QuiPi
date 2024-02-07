@@ -10,9 +10,7 @@ pub use shader::SchemaShader;
 
 use std::fmt::Debug;
 use crate::{
-    Registry,
-    VersionedIndex,
-    registry::RegistryError
+    ec_store::EMError, registry::RegistryError, Registry, VersionedIndex
 };
 
 pub trait ISchema {
@@ -37,6 +35,12 @@ pub enum SchemaError {
     RegistryError(
         #[from]
         RegistryError
+    ),
+
+    #[error("EC Store error")]
+    ECStoreError(
+        #[from]
+        EMError
     ),
 
     #[error("Other error")]

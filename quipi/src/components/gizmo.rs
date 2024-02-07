@@ -2,7 +2,7 @@ use serde::{Serialize, Deserialize};
 
 use crate::Component;
 
-#[derive(Debug, Component, Serialize, Deserialize)]
+#[derive(Debug, Component, Serialize, Deserialize, PartialEq)]
 pub struct CGizmo3D {
     pub front: glm::Vec3,
     pub up: glm::Vec3,

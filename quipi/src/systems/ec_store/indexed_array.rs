@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use core::fmt;
 
 use serde::{Serialize, Deserialize};
 
@@ -16,20 +16,9 @@ pub struct VersionedIndex {
     version: u64
 }
 
-impl Display for VersionedIndex {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "index: {}, version: {}", self.index, self.version)
-    }
-}
-
-impl VersionedIndex {
-    pub fn invalid() -> Self {
-        // hopefully we never get this far :S
-        // TODO: come up with a better solution for this
-        Self {
-            index: usize::MAX,
-            version: u64::MAX
-        }
+impl fmt::Display for VersionedIndex {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}.{}", self.index, self.version)
     }
 }
 
@@ -97,7 +86,7 @@ impl VersionedIndexAllocator {
         }
     }
 
-    pub fn length(&self) -> usize { self.length }
+    pub fn length(&self) -> usize { self.entries.len() }
     pub fn valid_count(&self) -> usize {
         self.entries
             .iter()
@@ -170,7 +159,7 @@ impl<T> IndexedArray<T> {
         let i = index.index;
 
         if i >= self.0.len() {
-            self.0.resize_with(i + 1, || None);
+            self.0.resize_with(i + 4, || None);
         }
 
         self.0[i] = Some(Entry {
@@ -201,6 +190,36 @@ impl<T> IndexedArray<T> {
             }
         }
     }
+
+    /// TODO: write test
+    pub fn get_entities(
+        &self,
+        allocator: &VersionedIndexAllocator
+    ) -> Vec<VersionedIndex> {
+        self.0.iter()
+            .enumerate()
+            .filter_map(|(i, wrapped)| match wrapped {
+                Some(entry) => {
+                    let index = VersionedIndex {
+                        index: i,
+                        version: entry.version
+                    };
+
+                    match allocator.validate(&index) {
+                        true => Some(index),
+                        false => None
+                    }
+                },
+                None => None
+            })
+            .collect()
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct IndexedEntry<T> {
+    pub index: VersionedIndex,
+    pub entry: T
 }
 
 #[cfg(test)]

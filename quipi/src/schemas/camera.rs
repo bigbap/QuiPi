@@ -7,10 +7,12 @@ use crate::{
         CCamera,
         CBoundingBox,
         CGizmo3D,
-        CVelocity, CViewMatrix, CPrefab
+        CVelocity,
+        CViewMatrix,
+        CTag
     },
     VersionedIndex,
-    Registry
+    Registry,
 };
 
 use super::{ISchema, SchemaError};
@@ -19,16 +21,16 @@ pub const DEFAULT_CAMERA_TAG: &str = "default_camera";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SchemaCamera {
-    pub tag: String,
+    pub tag: CTag,
     pub params: CameraParams,
     pub transform: CTransform,
-    pub entities: Vec<String>
+    pub entities: Vec<CTag>
 }
 
 impl Default for SchemaCamera {
     fn default() -> Self {
         Self {
-            tag: DEFAULT_CAMERA_TAG.to_string(),
+            tag: CTag { tag: DEFAULT_CAMERA_TAG.to_string() },
             params: CameraParams::default(),
             transform: CTransform::default(),
             entities: vec![],
@@ -41,21 +43,22 @@ impl ISchema for SchemaCamera {
         &self,
         registry: &mut Registry
     ) -> Result<VersionedIndex, SchemaError> {
-        let camera = registry.create_entity(&self.tag)?
-            .with(CCamera::new(self.params)?)?
-            .with(CBoundingBox {
-                left: self.params.left,
-                right: self.params.right,
-                bottom: self.params.bottom,
-                top: self.params.top,
-                ..CBoundingBox::default()
-            })?
-            .with(CGizmo3D::default())?
-            .with(self.transform)?
-            .with(CVelocity::default())?
-            .with(CViewMatrix::default())?
-            .with(CPrefab { schema: Box::new(self.to_owned()) })?
-            .done()?;
+        let b_box = CBoundingBox {
+            left: self.params.left,
+            right: self.params.right,
+            bottom: self.params.bottom,
+            top: self.params.top,
+            ..CBoundingBox::default()
+        };
+
+        let camera = registry.entities.create()?;
+        registry.entities.add(&camera, self.tag.clone());
+        registry.entities.add(&camera, CCamera::new(self.params)?);
+        registry.entities.add(&camera, b_box);
+        registry.entities.add(&camera, CGizmo3D::default());
+        registry.entities.add(&camera, self.transform);
+        registry.entities.add(&camera, CVelocity::default());
+        registry.entities.add(&camera, CViewMatrix::default());
 
         CViewMatrix::update_view_matrix(&camera, registry);
 
@@ -63,13 +66,13 @@ impl ISchema for SchemaCamera {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
 pub enum CameraKind {
     Cam3D,
     Cam2D
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
 pub struct CameraParams {
     pub kind: CameraKind,
     pub fov: f32,

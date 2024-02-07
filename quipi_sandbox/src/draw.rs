@@ -1,19 +1,12 @@
 use quipi::{
-    Registry,
-    wrappers::opengl::{
+    components::CTag, schemas::{
+        camera::DEFAULT_CAMERA_TAG, rect::DEFAULT_RECT_TAG
+    }, systems::rendering::draw::s_draw_by_tag, wrappers::opengl::{
         capabilities::{
-            GLCapability,
-            gl_enable,
-            gl_blending_func,
-            GLBlendingFactor
+            gl_blending_func, gl_enable, GLBlendingFactor, GLCapability
         },
         draw::DrawMode
-    },
-    schema::{
-        rect::DEFAULT_RECT_TAG,
-        camera::DEFAULT_CAMERA_TAG
-    },
-    systems::rendering::draw::s_draw_by_tag
+    }, Registry
 };
 
 pub fn draw_frame(
@@ -22,7 +15,7 @@ pub fn draw_frame(
     gl_enable(GLCapability::AlphaBlending);
     gl_blending_func(GLBlendingFactor::SrcAlpha, GLBlendingFactor::OneMinusSrcAlpha);
 
-    let cameras = registry.get_entities_by_tag(DEFAULT_CAMERA_TAG);
+    let cameras = registry.entities.query::<CTag>(CTag { tag: DEFAULT_CAMERA_TAG.to_string() });
     for camera in cameras {
         s_draw_by_tag(
             DEFAULT_RECT_TAG,

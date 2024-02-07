@@ -3,18 +3,13 @@ use std::fs;
 use sdl2::event::Event;
 
 use crate::{
-    systems::{
-        self,
-        rendering::text::{
-            DEFAULT_FONT,
-            TextRenderer
-        }, editor::SceneEditor
-    },
-    wrappers::{
-        sdl2::window::QuiPiWindow,
-        opengl::buffer::clear_buffers
-    },
-    core::time::Timer, utils::to_abs_path, components::CRGBA
+    components::{register_components, CRGBA}, core::time::Timer, resources::register_resources, systems::{
+        self, editor::SceneEditor, rendering::text::{
+            TextRenderer, DEFAULT_FONT
+        }
+    }, utils::to_abs_path, wrappers::{
+        opengl::buffer::clear_buffers, sdl2::window::QuiPiWindow
+    }, Registry
 };
 
 pub trait QuiPiApp {
@@ -24,21 +19,19 @@ pub trait QuiPiApp {
     /// Use this method to set up your game. If you do anything
     /// that uses the 'gl::' crate before this method gets called
     /// by the engine, you will get a 'function not loaded error'
-    fn init(&mut self, winapi: &QuiPiWindow) -> Result<(), Box<dyn std::error::Error>>;
+    fn init(
+        &mut self,
+        registry: &mut Registry,
+        winapi: &QuiPiWindow
+    ) -> Result<(), Box<dyn std::error::Error>>;
     
     /// This method is called by the engine every frame.
     /// This is where you will do all your game specific logic.
     fn handle_frame(
         &mut self,
-        frame_state: &mut AppState
+        registry: &mut Registry,
+        frame_state: &mut FrameState
     ) -> Result<FrameResponse, Box<dyn std::error::Error>>;
-
-    /// TODO
-    fn handle_editor(
-        &mut self,
-        app_state: &AppState,
-        editor: &mut SceneEditor
-    ) -> Result<(), Box<dyn std::error::Error>>;
 }
 
 pub fn run<G: QuiPiApp>(
@@ -47,7 +40,7 @@ pub fn run<G: QuiPiApp>(
     width: u32,
     height: u32,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    boilerplate()?;
+    let mut registry = setup()?;
 
     let mut winapi = QuiPiWindow::init()?;
     let window = winapi.opengl_window(
@@ -63,14 +56,13 @@ pub fn run<G: QuiPiApp>(
         height as i32,
     )?;
     
-    game.init(&winapi)?;
+    game.init(&mut registry, &winapi)?;
 
     let mut text = TextRenderer::new(DEFAULT_FONT)?;
     let mut scene_editor = SceneEditor::new()?;
     let mut timer = Timer::new()?;
 
-
-    let mut app_state = AppState {
+    let mut app_state = FrameState {
         clear_color: CRGBA::default(),
         editor_mode: false,
         events: vec![],
@@ -80,19 +72,22 @@ pub fn run<G: QuiPiApp>(
     };
 
     'running: loop {
+        registry.entities.flush();
+        registry.resources.flush();
+
         clear_buffers(app_state.clear_color.to_tuple());
         app_state.events = winapi.get_event_queue()?;
 
         set_debug_info(&mut app_state);
 
-        match game.handle_frame(&mut app_state)? {
+        match game.handle_frame(&mut registry, &mut app_state)? {
             FrameResponse::Quit => break 'running,
             FrameResponse::Restart => { timer.delta(); },
             FrameResponse::None => ()
         }
         
-        if app_state.editor_mode {
-            game.handle_editor(&app_state, &mut scene_editor)?;
+        if app_state.editor_mode && cfg!(debug_assertions) {
+            scene_editor.update(&mut registry, &mut app_state)?;
         }
 
         window.gl_swap_window();
@@ -103,7 +98,7 @@ pub fn run<G: QuiPiApp>(
     Ok(())
 }
 
-pub struct AppState<'a> {
+pub struct FrameState<'a> {
     pub clear_color: CRGBA,
     pub editor_mode: bool,
     pub events: Vec<Event>,
@@ -137,12 +132,12 @@ pub enum AppMode {
     Editor
 }
 
-fn set_debug_info(app_state: &mut AppState) {
+fn set_debug_info(app_state: &mut FrameState) {
     app_state.debug_info.fps = 1.0 / app_state.delta;
     app_state.debug_info.ms = app_state.delta * 1000.0;
 }
 
-fn boilerplate() -> Result<(), Box<dyn std::error::Error>> {
+fn setup() -> Result<Registry, Box<dyn std::error::Error>> {
     let asset_path = to_abs_path("assets")?;
     
     fs::create_dir_all(format!("{}/scenes", asset_path))?;
@@ -150,5 +145,10 @@ fn boilerplate() -> Result<(), Box<dyn std::error::Error>> {
     fs::create_dir_all(format!("{}/objects", asset_path))?;
     fs::create_dir_all(format!("{}/fonts", asset_path))?;
 
-    Ok(())
+    let mut registry = Registry::init()?;
+
+    register_components(&mut registry);
+    register_resources(&mut registry);
+
+    Ok(registry)
 }

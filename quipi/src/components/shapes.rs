@@ -5,13 +5,13 @@ use crate::{
     systems::assets::ObjectConfig
 };
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub enum Shape {
     Rect(CRect),
     Mesh(String) // path to object file
 }
 
-#[derive(Debug, Component, Serialize, Deserialize, Clone)]
+#[derive(Debug, Component, Serialize, Deserialize, Clone, PartialEq)]
 pub struct CShape(pub Shape);
 
 impl Default for CShape {
@@ -20,7 +20,7 @@ impl Default for CShape {
     }
 }
 
-#[derive(Debug, Component, Serialize, Deserialize, Clone)]
+#[derive(Debug, Component, Serialize, Deserialize, Clone, PartialEq)]
 pub struct CRect {
     pub width: f32,
     pub height: f32,

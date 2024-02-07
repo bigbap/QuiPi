@@ -11,7 +11,7 @@ use crate::{
     wrappers::opengl::buffer::BufferUsage
 };
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, PartialEq)]
 pub struct CMesh {
     pub mesh: Option<ElementArrayMesh>,
     pub data: ObjectConfig,
@@ -40,8 +40,7 @@ impl CMesh {
     }
 }
 
-// shader_tag is used during serialization
-#[derive(Debug, Component)]
+#[derive(Debug, Component, Clone, Copy, PartialEq)]
 pub struct CShader {
     pub shader: VersionedIndex,
 }

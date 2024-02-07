@@ -2,14 +2,14 @@ use serde::{Serialize, Deserialize};
 
 use crate::{
     Component,
-    schema::camera::{
+    schemas::camera::{
         CameraParams,
         CameraKind
     },
 };
 
 
-#[derive(Debug, Component, Serialize, Deserialize)]
+#[derive(Debug, Component, Serialize, Deserialize, PartialEq)]
 pub struct CCamera {
     pub projection: glm::Mat4,
     pub params: CameraParams

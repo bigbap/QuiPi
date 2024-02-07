@@ -1,12 +1,13 @@
 use quipi::{
-    Registry,
     components::{
-        CVelocity,
+        CBoundingBox,
+        CModelMatrix,
+        CTag,
         CTransform,
-        CBoundingBox, CModelMatrix,
+        CVelocity
     },
-    AppState,
-    schema::rect::DEFAULT_RECT_TAG,
+    schemas::rect::DEFAULT_RECT_TAG,
+    FrameState, Registry
 };
 
 use crate::{
@@ -14,20 +15,17 @@ use crate::{
     WIDTH
 };
 
-pub fn s_update(
-    frame_state: &AppState,
-    registry: &mut Registry,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub fn s_update(registry: &mut Registry, frame_state: &mut FrameState) -> Result<(), Box<dyn std::error::Error>> {
     if frame_state.editor_mode {
         return Ok(())
     }
 
-    let quads = registry.get_entities_by_tag(DEFAULT_RECT_TAG);
+    let quads = registry.entities.query::<CTag>(CTag { tag: DEFAULT_RECT_TAG.to_string() });
 
     for quad in quads {
-        let Some(vel)       = registry.get_component::<CVelocity>(&quad)    else { continue };
-        let Some(transform) = registry.get_component::<CTransform>(&quad)   else { continue };
-        let Some(b_box)     = registry.get_component::<CBoundingBox>(&quad) else { continue };
+        let Some(vel)       = registry.entities.get::<CVelocity>(&quad)    else { continue };
+        let Some(transform) = registry.entities.get::<CTransform>(&quad)   else { continue };
+        let Some(b_box)     = registry.entities.get::<CBoundingBox>(&quad) else { continue };
         
         let scale = transform.scale.unwrap_or(glm::vec3(1.0, 1.0, 1.0));
 
@@ -39,15 +37,15 @@ pub fn s_update(
             b_box.bottom * scale.y
         );
 
-        let Some(transform) = registry.get_component_mut::<CTransform>(&quad) else { continue };
+        let Some(transform) = registry.entities.get_mut::<CTransform>(&quad) else { continue };
         transform.translate = translate;
         let matrix = transform.to_matrix();
 
-        let Some(vel) = registry.get_component_mut::<CVelocity>(&quad) else { continue };
+        let Some(vel) = registry.entities.get_mut::<CVelocity>(&quad) else { continue };
         if colided_x { vel.x *= -1.0 }
         if colided_y { vel.y *= -1.0 }
 
-        let Some(model) = registry.get_component_mut::<CModelMatrix>(&quad) else { continue };
+        let Some(model) = registry.entities.get_mut::<CModelMatrix>(&quad) else { continue };
         model.update_model_matrix(matrix);
     }
 

@@ -6,7 +6,7 @@ use crate::Component;
 * RGBA color
 * (f32, f32, f32, f32)
 */
-#[derive(Debug, Component, Default, Serialize, Deserialize, Clone, Copy)]
+#[derive(Debug, Component, Default, Serialize, Deserialize, Clone, Copy, PartialEq)]
 pub struct CRGBA {
     pub r: f32,
     pub g: f32,

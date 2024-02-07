@@ -5,10 +5,10 @@ pub mod color;
 pub mod distance;
 pub mod drawable;
 pub mod gizmo;
+pub mod identifiers;
 pub mod material;
 pub mod matrices;
 pub mod model;
-pub mod prefab;
 pub mod shapes;
 pub mod speed;
 pub mod states;
@@ -24,6 +24,8 @@ pub use camera::CCamera;
 pub use children::CChildren;
 pub use drawable::CMesh;
 pub use drawable::CShader;
+pub use identifiers::CName;
+pub use identifiers::CTag;
 pub use material::CMaterial;
 pub use gizmo::CGizmo3D;
 pub use transform::CTransform;
@@ -31,7 +33,6 @@ pub use distance::CDistance;
 pub use matrices::CModelMatrix;
 pub use matrices::CViewMatrix;
 pub use model::CModelNode;
-pub use prefab::CPrefab;
 pub use shapes::CRect;
 pub use shapes::CShape;
 pub use speed::CSpeed;
@@ -49,7 +50,7 @@ use serde::{Deserialize, Serialize};
 /**
 * 3D direction vector
 */
-#[derive(Debug, Component, Clone, Copy, Default, Serialize, Deserialize)]
+#[derive(Debug, Component, Clone, Copy, Default, Serialize, Deserialize, PartialEq)]
 pub struct CDirection {
     pub x: f32,
     pub y: f32,
@@ -59,7 +60,7 @@ pub struct CDirection {
 /**
 * 3D velocity vector
 */
-#[derive(Debug, Component, Clone, Copy, Default, Serialize, Deserialize)]
+#[derive(Debug, Component, Clone, Copy, Default, Serialize, Deserialize, PartialEq)]
 pub struct CVelocity {
     pub x: f32,
     pub y: f32,
@@ -71,7 +72,7 @@ pub struct CVelocity {
 *
 * https://wiki.ogre3d.org/tiki-index.php?page=-Point+Light+Attenuation
 */
-#[derive(Debug, Component, Default, Serialize, Deserialize)]
+#[derive(Debug, Component, Clone, Copy, Default, Serialize, Deserialize, PartialEq)]
 pub struct CAttenuation {
     pub constant: f32,
     pub linear: f32,
@@ -83,7 +84,7 @@ pub struct CAttenuation {
 *
 * https://learnopengl.com/Lighting/Light-casters
 */
-#[derive(Debug, Component, Default, Serialize, Deserialize)]
+#[derive(Debug, Component, Clone, Copy, Default, Serialize, Deserialize, PartialEq)]
 pub struct CCutoff {
     pub inner_cutoff: f32,
     pub outer_cutoff: f32
@@ -92,7 +93,7 @@ pub struct CCutoff {
 /**
 * https://en.wikipedia.org/wiki/Euler_angles
 */
-#[derive(Debug, Component, Default, Serialize, Deserialize)]
+#[derive(Debug, Component, Clone, Copy, Default, Serialize, Deserialize, PartialEq)]
 pub struct CEulerAngles {
     pub pitch: f32,
     pub yaw: f32,
@@ -100,7 +101,7 @@ pub struct CEulerAngles {
 }
 
 pub fn register_components(registry: &mut Registry) {
-    registry
+    registry.entities
         .register_component::<CCamera>()
         .register_component::<CAttenuation>()
         .register_component::<CBoundingBox>()
@@ -116,11 +117,12 @@ pub fn register_components(registry: &mut Registry) {
         .register_component::<CModelMatrix>()
         .register_component::<CModelNode>()
         .register_component::<CMouseBtnState>()
-        .register_component::<CPrefab>()
+        .register_component::<CName>()
         .register_component::<CRect>()
         .register_component::<CShader>()
         .register_component::<CShape>()
         .register_component::<CSpeed>()
+        .register_component::<CTag>()
         .register_component::<CTarget>()
         .register_component::<CTransform>()
         .register_component::<CVelocity>()

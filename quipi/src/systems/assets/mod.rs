@@ -4,7 +4,7 @@ pub mod obj_loader;
 pub mod gltf_loader;
 pub mod image;
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
 pub struct ObjectConfig {
     pub points: Vec<f32>,
     pub normals: Vec<f32>,

@@ -30,7 +30,7 @@ pub enum ShaderError {
     LinkingError
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct ShaderProgram {
     pub id: gl::types::GLuint,
 
