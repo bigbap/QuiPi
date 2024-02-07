@@ -51,15 +51,14 @@ impl ISchema for SchemaCamera {
             ..CBoundingBox::default()
         };
 
-        registry.entities.start_create()?;
-        registry.entities.add(self.tag.clone());
-        registry.entities.add(CCamera::new(self.params)?);
-        registry.entities.add(b_box);
-        registry.entities.add(CGizmo3D::default());
-        registry.entities.add(self.transform);
-        registry.entities.add(CVelocity::default());
-        registry.entities.add(CViewMatrix::default());
-        let camera = registry.entities.end_create()?;
+        let camera = registry.entities.create()?;
+        registry.entities.add(&camera, self.tag.clone());
+        registry.entities.add(&camera, CCamera::new(self.params)?);
+        registry.entities.add(&camera, b_box);
+        registry.entities.add(&camera, CGizmo3D::default());
+        registry.entities.add(&camera, self.transform);
+        registry.entities.add(&camera, CVelocity::default());
+        registry.entities.add(&camera, CViewMatrix::default());
 
         CViewMatrix::update_view_matrix(&camera, registry);
 
@@ -67,13 +66,13 @@ impl ISchema for SchemaCamera {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
 pub enum CameraKind {
     Cam3D,
     Cam2D
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
 pub struct CameraParams {
     pub kind: CameraKind,
     pub fov: f32,

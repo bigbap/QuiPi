@@ -85,9 +85,8 @@ impl ISchema for SchemaScene {
             rect.build(registry)?;
         }
 
-        registry.entities.start_create()?;
-        registry.entities.add(self.tag.clone());
-        let entity = registry.entities.end_create()?;
+        let entity = registry.entities.create()?;
+        registry.entities.add(&entity, self.tag.clone());
 
         Ok(entity)
     }

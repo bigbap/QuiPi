@@ -5,14 +5,14 @@ use crate::{
     Component
 };
 
-#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq)]
 pub enum MaterialPart {
     Texture(VersionedIndex),
     Value(f32, f32, f32),
     #[default] None
 }
 
-#[derive(Component, Debug, Clone, Serialize, Deserialize)]
+#[derive(Component, Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct CMaterial {
     pub ambient: MaterialPart,
     pub diffuse: MaterialPart,

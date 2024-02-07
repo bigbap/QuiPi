@@ -2,29 +2,13 @@ extern crate quipi;
 extern crate nalgebra_glm as glm;
 
 use quipi::{
-    Registry,
-    VersionedIndex,
-    resources::register_resources,
-    systems::{rendering::canvas, scene::load_scene},
     components::{
-        register_components,
-        CTransform, CRGBA,
-    },
-    wrappers::sdl2::window::QuiPiWindow,
-    AppState,
-    FrameResponse,
-    schema::{
-        SchemaCamera,
+        register_components, CTag, CTransform, CRGBA
+    }, resources::register_resources, schemas::{
         camera::{
-            CameraParams,
-            CameraKind, DEFAULT_CAMERA_TAG
-        },
-        rect::DEFAULT_RECT_TAG,
-        ISchema,
-        SchemaScene,
-        SchemaShader,
-        SchemaRect
-    }
+            CameraKind, CameraParams, DEFAULT_CAMERA_TAG
+        }, rect::DEFAULT_RECT_TAG, ISchema, SchemaCamera, SchemaRect, SchemaScene, SchemaShader
+    }, systems::{rendering::canvas, scene::load_scene}, wrappers::sdl2::window::QuiPiWindow, AppState, FrameResponse, Registry, VersionedIndex
 };
 
 pub static WIDTH: u32 = 1600;
@@ -42,7 +26,7 @@ pub struct MyGame {
 
     spawner: Option<RectSpawner>,
     scene: SchemaScene,
-    camera: VersionedIndex
+    camera: Option<VersionedIndex>
 }
 
 impl MyGame {
@@ -61,7 +45,7 @@ impl MyGame {
             registry,
             spawner: None,
             scene,
-            camera: VersionedIndex::invalid()
+            camera: None
         })
     }
 }
@@ -73,11 +57,11 @@ impl quipi::QuiPiApp for MyGame {
     ) -> Result<(), Box<dyn std::error::Error>> {
         self.scene.build(&mut self.registry)?;
 
-        self.camera = self.registry.get_entities_by_tag(
-            &self.scene.cameras.first().unwrap().tag
-        ).first().unwrap().to_owned();
+        self.camera = Some(self.registry.entities.query::<CTag>(
+            self.scene.cameras.first().unwrap().tag.clone()
+        ).first().unwrap().to_owned());
 
-        self.spawner = Some(RectSpawner::new(self.camera)?);
+        self.spawner = Some(RectSpawner::new(self.camera.unwrap())?);
 
         Ok(())
     }
@@ -104,12 +88,12 @@ impl quipi::QuiPiApp for MyGame {
         // render
         s_draw_frame(
             &mut self.registry,
-            &self.camera
+            &self.camera.unwrap()
         )?;
 
         // draw the entity count
         let (_x, _y, width, height) = canvas::get_dimensions();
-        let entity_count = self.registry.entity_count();
+        let entity_count = self.registry.entities.count();
         app_state.text_render.color = glm::vec3(1.0, 1.0, 1.0);
         app_state.text_render.scale = 0.7;
         app_state.text_render.draw(
@@ -131,7 +115,7 @@ impl quipi::QuiPiApp for MyGame {
 
 fn scene_schema() -> SchemaScene {
     SchemaScene {
-        tag: "bouncing_shapes".to_string(),
+        tag: CTag { tag: "bouncing_shapes".to_string() },
         clr_color: CRGBA { r: 0.0, g: 0.3, b: 0.5, a: 1.0 },
         cameras: vec![camera_schema()],
         rects: vec![rect_schema()],
@@ -141,7 +125,7 @@ fn scene_schema() -> SchemaScene {
 
 fn camera_schema() -> SchemaCamera {
     SchemaCamera {
-        tag: DEFAULT_CAMERA_TAG.to_string(),
+        tag: CTag { tag:DEFAULT_CAMERA_TAG.to_string() },
         params: CameraParams {
             kind: CameraKind::Cam2D,
             left: 0.0,
@@ -153,7 +137,7 @@ fn camera_schema() -> SchemaCamera {
             ..CameraParams::default()
         },
         transform: CTransform::default(),
-        entities: vec![DEFAULT_RECT_TAG.to_string()]
+        entities: vec![CTag { tag: DEFAULT_RECT_TAG.to_string() }]
     }
 }
 

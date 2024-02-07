@@ -41,22 +41,19 @@ pub struct SchemaRect {
 impl ISchema for SchemaRect {
     fn build(
         &self,
-        registry: &'static mut Registry,
+        registry: &mut Registry,
     ) -> Result<VersionedIndex, SchemaError> {
         let mut instances = Vec::<VersionedIndex>::with_capacity(self.instances.len());
         for params in self.instances.iter() {
-            let instance = self.build_instance(registry, params)?;
-
-            instances.push(instance.clone());
+            instances.push(self.build_instance(registry, params)?);
         }
 
-        let name = CName::new(DEFAULT_RECT_TAG, registry);
+        let name = CName { name: DEFAULT_RECT_TAG.to_string() };
         let children = CChildren { list: instances };
 
-        registry.entities.start_create()?;
-        registry.entities.add(name);
-        registry.entities.add(children);
-        let entity = registry.entities.end_create()?;
+        let entity = registry.entities.create()?;
+        registry.entities.add(&entity, name);
+        registry.entities.add(&entity, children);
 
         Ok(entity)
     }
@@ -68,7 +65,7 @@ impl IPrefab<SchemaRectInstance> for SchemaRect {
         registry: &mut Registry,
         instance: &SchemaRectInstance
     ) -> Result<VersionedIndex, SchemaError> {
-        let filter = CName::new(&self.shader, registry);
+        let filter = CName { name: self.shader.clone() };
         let binding = registry.resources.query::<CName>(filter);
         let Some(shader) = binding.first() else {
             return Err(SchemaError::ShaderNotFound)
@@ -81,15 +78,14 @@ impl IPrefab<SchemaRectInstance> for SchemaRect {
             ..CBoundingBox::default()
         };
 
-        registry.entities.start_create()?;
-        registry.entities.add(self.tag.clone());
-        registry.entities.add(CMesh::new(self.to_obj_config(instance), self.usage)?);
-        registry.entities.add(b_box);
-        registry.entities.add(instance.velocity);
-        registry.entities.add(instance.transform);
-        registry.entities.add(CShader { shader: *shader });
-        registry.entities.add(CModelMatrix(model));
-        let entity = registry.entities.end_create()?;
+        let entity = registry.entities.create()?;
+        registry.entities.add(&entity, self.tag.clone());
+        registry.entities.add(&entity, CMesh::new(self.to_obj_config(instance), self.usage)?);
+        registry.entities.add(&entity, b_box);
+        registry.entities.add(&entity, instance.velocity);
+        registry.entities.add(&entity, instance.transform);
+        registry.entities.add(&entity, CShader { shader: *shader });
+        registry.entities.add(&entity, CModelMatrix(model));
 
         Ok(entity)
     }

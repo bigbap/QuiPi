@@ -50,10 +50,11 @@ mod tests {
         tag: &str,
         registry: &mut Registry
     ) -> VersionedIndex {
-        registry.entities.start_create().unwrap();
-        registry.entities.add(CTag { tag: tag.to_string() });
-        registry.entities.add(CModelNode { children: None, ..CModelNode::default() });
-        registry.entities.end_create().unwrap()
+        let entity = registry.entities.create().unwrap();
+        registry.entities.add(&entity, CTag { tag: tag.to_string() });
+        registry.entities.add(&entity, CModelNode { children: None, ..CModelNode::default() });
+
+        entity
     }
 
     #[test]

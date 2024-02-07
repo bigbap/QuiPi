@@ -4,7 +4,7 @@ use quipi::{
         event::Event,
         keyboard::{Keycode, Mod}
     },
-    schema::SchemaScene,
+    schemas::SchemaScene,
     systems::scene::save_scene,
     FrameResponse
 };

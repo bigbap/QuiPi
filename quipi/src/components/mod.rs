@@ -50,7 +50,7 @@ use serde::{Deserialize, Serialize};
 /**
 * 3D direction vector
 */
-#[derive(Debug, Component, Clone, Copy, Default, Serialize, Deserialize)]
+#[derive(Debug, Component, Clone, Copy, Default, Serialize, Deserialize, PartialEq)]
 pub struct CDirection {
     pub x: f32,
     pub y: f32,
@@ -60,7 +60,7 @@ pub struct CDirection {
 /**
 * 3D velocity vector
 */
-#[derive(Debug, Component, Clone, Copy, Default, Serialize, Deserialize)]
+#[derive(Debug, Component, Clone, Copy, Default, Serialize, Deserialize, PartialEq)]
 pub struct CVelocity {
     pub x: f32,
     pub y: f32,
@@ -72,7 +72,7 @@ pub struct CVelocity {
 *
 * https://wiki.ogre3d.org/tiki-index.php?page=-Point+Light+Attenuation
 */
-#[derive(Debug, Component, Default, Serialize, Deserialize)]
+#[derive(Debug, Component, Clone, Copy, Default, Serialize, Deserialize, PartialEq)]
 pub struct CAttenuation {
     pub constant: f32,
     pub linear: f32,
@@ -84,7 +84,7 @@ pub struct CAttenuation {
 *
 * https://learnopengl.com/Lighting/Light-casters
 */
-#[derive(Debug, Component, Default, Serialize, Deserialize)]
+#[derive(Debug, Component, Clone, Copy, Default, Serialize, Deserialize, PartialEq)]
 pub struct CCutoff {
     pub inner_cutoff: f32,
     pub outer_cutoff: f32
@@ -93,7 +93,7 @@ pub struct CCutoff {
 /**
 * https://en.wikipedia.org/wiki/Euler_angles
 */
-#[derive(Debug, Component, Default, Serialize, Deserialize)]
+#[derive(Debug, Component, Clone, Copy, Default, Serialize, Deserialize, PartialEq)]
 pub struct CEulerAngles {
     pub pitch: f32,
     pub yaw: f32,

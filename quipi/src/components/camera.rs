@@ -9,7 +9,7 @@ use crate::{
 };
 
 
-#[derive(Debug, Component, Serialize, Deserialize)]
+#[derive(Debug, Component, Serialize, Deserialize, PartialEq)]
 pub struct CCamera {
     pub projection: glm::Mat4,
     pub params: CameraParams

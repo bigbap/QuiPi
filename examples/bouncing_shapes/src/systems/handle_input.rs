@@ -1,6 +1,6 @@
 use quipi::FrameResponse;
 use quipi::engine::AppState;
-use quipi::schema::SchemaScene;
+use quipi::schemas::SchemaScene;
 use quipi::systems::scene::save_scene;
 use quipi::{
     Registry,

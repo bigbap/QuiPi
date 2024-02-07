@@ -65,7 +65,8 @@ impl SceneEditor {
             if ui.button("create entity").clicked() {
                 let schema = SchemaRect::default();
 
-                if let Err(e) = schema.build_instance(registry, &SchemaRectInstance::default()) {
+                let default = SchemaRectInstance::default();
+                if let Err(e) = schema.build_instance(registry, &default) {
                     println!("could not add entity: {}", e);
                 }
             }
@@ -78,7 +79,7 @@ impl SceneEditor {
 
                     ui.horizontal(|ui| {
                         ui.set_width(ui.available_width());
-                        ui.radio_value(&mut self.active_entity, Some(*entity), name.get());
+                        ui.radio_value(&mut self.active_entity, Some(*entity), name.name.clone());
                     });
                     ui.allocate_space(Vec2::new(0.0, 5.0));
                 }

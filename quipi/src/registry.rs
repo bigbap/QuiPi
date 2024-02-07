@@ -1,7 +1,6 @@
 use crate::{
     EntityManager,
-    ec_store::EMError,
-    VersionedIndex
+    ec_store::EMError
 };
 
 #[derive(Debug, thiserror::Error)]
@@ -20,8 +19,6 @@ pub enum RegistryError {
 pub struct Registry {
     pub entities: EntityManager,
     pub resources: EntityManager,
-
-    currently_building: Option<VersionedIndex>,
 }
 
 impl Registry {
@@ -32,7 +29,6 @@ impl Registry {
         Ok(Self {
             entities,
             resources,
-            currently_building: None,
         })
     }
 }
@@ -65,25 +61,24 @@ mod tests {
         registry
     }
 
-    // #[test]
-    // fn registry_create_entities() {
-    //     let mut registry = create_registry();
+    #[test]
+    fn registry_create_entities() {
+        let mut registry = create_registry();
 
-    //     let player = registry.create_entity().unwrap()
-    //         .with(DrawComponent { shader_id: Some(1234) }).unwrap()
-    //         .with(TransformComponent {
-    //             translate: glm::vec3(1.0, 1.0, 1.0),
-    //             ..TransformComponent::default()
-    //         }).unwrap()
-    //         .done().unwrap();
+        let player = registry.entities.create().unwrap();
+        registry.entities.add(&player, DrawComponent { shader_id: Some(1234) });
+        registry.entities.add(&player, TransformComponent {
+            translate: glm::vec3(1.0, 1.0, 1.0),
+            ..TransformComponent::default()
+        });
 
-    //     assert_eq!(
-    //         *registry.entities.get_component::<DrawComponent>(&player).unwrap(),
-    //         DrawComponent { shader_id: Some(1234) }
-    //     );
-    //     assert_eq!(
-    //         *registry.entities.get_component::<TransformComponent>(&player).unwrap(),
-    //         TransformComponent { translate: glm::vec3(1.0, 1.0, 1.0), ..TransformComponent::default() }
-    //     );
-    // }
+        assert_eq!(
+            *registry.entities.get::<DrawComponent>(&player).unwrap(),
+            DrawComponent { shader_id: Some(1234) }
+        );
+        assert_eq!(
+            *registry.entities.get::<TransformComponent>(&player).unwrap(),
+            TransformComponent { translate: glm::vec3(1.0, 1.0, 1.0), ..TransformComponent::default() }
+        );
+    }
 }

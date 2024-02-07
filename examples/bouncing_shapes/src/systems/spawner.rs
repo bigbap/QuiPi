@@ -1,6 +1,6 @@
 use quipi::{
     VersionedIndex,
-    schema::{
+    schemas::{
         SchemaScene,
         rect::SchemaRectInstance, IPrefab
     },
@@ -27,7 +27,7 @@ impl RectSpawner {
         scene: &mut SchemaScene,
         registry: &mut Registry,
     ) -> Result<Option<VersionedIndex>, Box<dyn std::error::Error>> {
-        let Some(b_box) = registry.get_component::<CBoundingBox>(&self.camera) else {
+        let Some(b_box) = registry.entities.get::<CBoundingBox>(&self.camera) else {
             return Ok(None);
         };
 

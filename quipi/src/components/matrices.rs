@@ -2,7 +2,7 @@ use crate::{Component, Registry, VersionedIndex};
 
 use super::{CTransform, CGizmo3D};
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, PartialEq)]
 pub struct CModelMatrix(pub glm::Mat4);
 
 impl Default for CModelMatrix {
@@ -20,7 +20,7 @@ impl CModelMatrix {
     }
 }
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, PartialEq)]
 pub struct CViewMatrix(pub glm::Mat4);
 
 impl Default for CViewMatrix {

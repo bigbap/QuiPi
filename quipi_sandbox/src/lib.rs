@@ -13,7 +13,7 @@ use quipi::{
     wrappers::sdl2::window::QuiPiWindow,
     AppState,
     FrameResponse,
-    schema::{
+    schemas::{
         SchemaScene,
         ISchema
     },
@@ -96,7 +96,7 @@ fn draw_debug_info(
 ) {
     // draw the entity count
     let (_x, _y, width, height) = canvas::get_dimensions();
-    let entity_count = registry.entity_count();
+    let entity_count = registry.entities.count();
     app_state.text_render.color = glm::vec3(1.0, 1.0, 1.0);
     app_state.text_render.scale = 0.7;
     app_state.text_render.draw(

@@ -3,7 +3,7 @@ use serde::{Serialize, Deserialize};
 use crate::Component;
 use crate::wrappers::opengl::shader::ShaderProgram;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub enum UniformVariable {
     MVPMatrix(String),
     ModelMatrix(String),
@@ -14,7 +14,7 @@ pub enum UniformVariable {
     FarPlane(String),
 }
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, PartialEq)]
 pub struct RShader {
     pub program: ShaderProgram,
     pub uniforms: Vec<UniformVariable>

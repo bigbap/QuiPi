@@ -25,8 +25,6 @@ pub struct EntityManager {
     component_maps: AnyMap,
 
     entities: Vec<VersionedIndex>,
-
-    currently_building: Option<VersionedIndex>,
 }
 
 impl EntityManager {
@@ -35,31 +33,21 @@ impl EntityManager {
             entity_allocator: VersionedIndexAllocator::default(),
             component_maps: AnyMap::new(),
             entities: Vec::<VersionedIndex>::new(),
-            currently_building: None
         };
 
         Ok(entity_manager)
     }
 
-    pub fn register_component<C: Component + 'static>(&mut self) -> &mut Self {
+    pub fn register_component<C: Component + PartialEq + 'static>(&mut self) -> &mut Self {
         self.component_maps.insert(EntityMap::<C>::default());
 
         self
     }
 
-    pub fn start_create(&mut self) -> Result<(), EMError> {
+    pub fn create(&mut self) -> Result<VersionedIndex, EMError> {
         let entity = self.entity_allocator.allocate();
-        self.currently_building = Some(entity);
 
         self.entities.push(entity);
-
-        Ok(())
-    }
-
-    pub fn end_create(&mut self) -> Result<VersionedIndex, EMError> {
-        let entity = self.currently_building.expect("There was a problem creating a new entity");
-
-        self.currently_building = None;
 
         Ok(entity)
     }
@@ -68,21 +56,20 @@ impl EntityManager {
         self.entity_allocator.deallocate(entity);
     }
 
-    pub fn add<C: Component + 'static>(
+    pub fn add<C: Component + PartialEq + 'static>(
         &mut self,
+        entity: &VersionedIndex,
         component: C
     ) {
-        if let Some(entity) = self.currently_building {
-            match self.component_maps.get_mut::<EntityMap<C>>() {
-                None => (),
-                Some(cmp_map) => {
-                    cmp_map.set(&entity, component)
-                }
+        match self.component_maps.get_mut::<EntityMap<C>>() {
+            None => (),
+            Some(cmp_map) => {
+                cmp_map.set(&entity, component)
             }
         }
     }
 
-    pub fn get<C: Component + 'static>(
+    pub fn get<C: Component + PartialEq + 'static>(
         &self,
         entity: &VersionedIndex
     ) -> Option<&C> {
@@ -99,7 +86,7 @@ impl EntityManager {
         }
     }
 
-    pub fn get_mut<C: Component + 'static>(
+    pub fn get_mut<C: Component + PartialEq + 'static>(
         &mut self,
         entity: &VersionedIndex
     ) -> Option<&mut C> {
@@ -167,7 +154,7 @@ impl EntityManager {
         let mut result = Vec::<VersionedIndex>::new();
 
         for entity in self.entities.iter() {
-            if self.entity_allocator.validate(&entity) {
+            if self.entity_allocator.validate(entity) {
                 result.push(*entity);
             }
         }

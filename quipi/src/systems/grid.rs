@@ -11,7 +11,7 @@ use crate::{
         buffer::BufferUsage,
     },
     resources::{
-        Shader,
+        RShader,
         shader::UniformVariable
     },
     systems::rendering::*,
@@ -48,7 +48,7 @@ impl Grid {
                 vertices
             )?;
 
-        let shader = Shader::new(
+        let shader = RShader::new(
             &to_abs_path("assets/shaders/grid")?,
             vec![
                 UniformVariable::ProjectionMatrix("projection".to_string()),
@@ -60,14 +60,13 @@ impl Grid {
 
         let id = Uuid::new_v4().to_string();
 
-        registry.resources.start_create()?;
-        registry.resources.add(CName::new(&id, registry));
-        registry.resources.add(shader);
-        let shader = registry.resources.end_create()?;
+        let res = registry.resources.create()?;
+        registry.resources.add(&res, CName { name: id });
+        registry.resources.add(&res, shader);
 
         build_axis(
             registry,
-            shader,
+            res,
             mesh,
             glm::vec3(0.0, 0.0, 0.0),
             glm::vec3(0.0, 0.0, 0.0)
@@ -78,7 +77,7 @@ impl Grid {
 
     pub fn draw(
         &self,
-        registry: &'static Registry,
+        registry: &Registry,
         camera: &VersionedIndex
     ) -> Result<(), Box<dyn std::error::Error>> {
         let grid = registry.entities.query::<CTag>(CTag { tag: GRID_TAG.to_string() });
@@ -117,14 +116,12 @@ fn build_axis(
         ..CModelNode::default()
     };
 
-    registry.entities.start_create()?;
-    registry.entities.add(CTag { tag: GRID_TAG.to_string() });
-    registry.entities.add(mesh);
-    registry.entities.add(CShader { shader });
-    registry.entities.add(transform);
-    registry.entities.add(model_matrix);
-    registry.entities.end_create()?;
-
+    let entity = registry.entities.create()?;
+    registry.entities.add(&entity, CTag { tag: GRID_TAG.to_string() });
+    registry.entities.add(&entity, mesh);
+    registry.entities.add(&entity, CShader { shader });
+    registry.entities.add(&entity, transform);
+    registry.entities.add(&entity, model_matrix);
 
     Ok(())
 }

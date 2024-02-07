@@ -18,7 +18,7 @@ pub enum ShaderLocation {
     At(usize)
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct ElementArrayMesh {
     pub vao: VertexArray,
     pub ebo: Option<Buffer<EBO>>,
@@ -91,7 +91,7 @@ impl ElementArrayMesh {
         buffer_length: usize,
         data: &[T]
     ) -> Result<&mut Self, Box<dyn std::error::Error>> {
-        if buffer_length == 0 && data.len() == 0 {
+        if buffer_length == 0 && data.is_empty() {
             return Ok(self);
         }
 

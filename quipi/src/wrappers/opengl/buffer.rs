@@ -5,7 +5,7 @@ use serde::{Serialize, Deserialize};
 
 pub static mut BUFFER_FLAGS: u32 = gl::COLOR_BUFFER_BIT;
 
-#[derive(Debug, Default, Serialize, Deserialize, Clone, Copy)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Copy, PartialEq)]
 pub enum BufferUsage {
     StreamDraw,
     StreamRead,
@@ -22,7 +22,7 @@ pub trait BufferType {
     const BUFFER_TYPE: gl::types::GLuint;
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Buffer<B> where B: BufferType {
     id: gl::types::GLuint,
     _marker: ::std::marker::PhantomData<B>
@@ -92,19 +92,19 @@ impl<B> Buffer<B> where B: BufferType {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct VBO;
 impl BufferType for VBO {
     const BUFFER_TYPE: gl::types::GLuint = gl::ARRAY_BUFFER;
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct EBO;
 impl BufferType for EBO {
     const BUFFER_TYPE: gl::types::GLuint = gl::ELEMENT_ARRAY_BUFFER;
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct VertexArray {
     id: gl::types::GLuint,
     count: i32

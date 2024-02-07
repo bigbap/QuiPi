@@ -14,13 +14,13 @@ use crate::{
 };
 
 pub trait ISchema {
-    fn build(&self, registry: &'static mut Registry) -> Result<VersionedIndex, SchemaError>;
+    fn build(&self, registry: &mut Registry) -> Result<VersionedIndex, SchemaError>;
 }
 
 pub trait IPrefab<T> {
     fn build_instance(
         &self,
-        registry: &'static mut Registry,
+        registry: &mut Registry,
         instance: &T
     ) -> Result<VersionedIndex, SchemaError>;
 }

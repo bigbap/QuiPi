@@ -44,9 +44,9 @@ pub fn s_draw_by_tag(
     let entities = registry.entities.query::<CTag>(CTag { tag: tag.to_string() });
 
     for entity in entities.iter() {
-        if let Some(shader_id) = registry.entities.get::<CShader>(&entity) {
+        if let Some(shader_id) = registry.entities.get::<CShader>(entity) {
             s_draw_entity(
-                &entity,
+                entity,
                 registry,
                 camera_id,
                 shader_id,

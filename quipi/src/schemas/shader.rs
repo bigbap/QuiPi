@@ -2,7 +2,7 @@ use serde::{Serialize, Deserialize};
 
 use crate::{
     resources::{
-        Shader,
+        RShader,
         shader::UniformVariable
     },
     VersionedIndex, components::CName
@@ -36,10 +36,9 @@ impl ISchema for SchemaShader {
         &self,
         registry: &mut crate::Registry
     ) -> Result<VersionedIndex, SchemaError> {
-        registry.resources.start_create()?;
-        registry.resources.add(CName::new(&self.name, registry));
-        registry.resources.add(Shader::new(&self.name, self.uniforms.to_vec())?);
-        let res = registry.resources.end_create()?;
+        let res = registry.resources.create()?;
+        registry.resources.add(&res, CName { name: self.name.clone() });
+        registry.resources.add(&res, RShader::new(&self.name, self.uniforms.to_vec())?);
 
         Ok(res)
     }
