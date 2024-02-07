@@ -101,7 +101,7 @@ pub struct CEulerAngles {
 }
 
 pub fn register_components(registry: &mut Registry) {
-    registry
+    registry.entities
         .register_component::<CCamera>()
         .register_component::<CAttenuation>()
         .register_component::<CBoundingBox>()

@@ -35,8 +35,8 @@ impl CViewMatrix {
         registry: &mut Registry
     ) {
         if let (Some(transform), Some(gizmo)) = (
-            registry.get_component::<CTransform>(camera),
-            registry.get_component::<CGizmo3D>(camera),
+            registry.entities.get::<CTransform>(camera),
+            registry.entities.get::<CGizmo3D>(camera),
         ) {
             let position = glm::vec3(
                 transform.translate.x,
@@ -50,7 +50,7 @@ impl CViewMatrix {
                 &gizmo.up
             );
 
-            if let Some(view) = registry.get_component_mut::<CViewMatrix>(camera) {
+            if let Some(view) = registry.entities.get_mut::<CViewMatrix>(camera) {
                 view.0 = matrix;
             }
         }

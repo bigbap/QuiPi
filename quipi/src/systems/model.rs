@@ -20,7 +20,7 @@ pub fn s_model_traversal<'a>(
 
             let mut children = children
                 .iter()
-                .filter_map(|child| registry.get_component::<CModelNode>(child)
+                .filter_map(|child| registry.entities.get::<CModelNode>(child)
                     .map(|c_node| (c_node, *child)))
                 .collect();
 
@@ -35,13 +35,13 @@ pub fn s_model_traversal<'a>(
 
 #[cfg(test)]
 mod tests {
-    use crate::ec_store::CTag;
+    use crate::components::CTag;
     use super::*;
 
     fn build_registry() -> Registry {
         let mut registry = Registry::init().unwrap();
 
-        registry.register_component::<CModelNode>();
+        registry.entities.register_component::<CModelNode>();
 
         registry
     }
@@ -50,12 +50,10 @@ mod tests {
         tag: &str,
         registry: &mut Registry
     ) -> VersionedIndex {
-        registry.create_entity(tag).unwrap()
-            .with(CModelNode {
-                children: None,
-                ..CModelNode::default()
-            }).unwrap()
-            .done().unwrap()
+        registry.entities.start_create().unwrap();
+        registry.entities.add(CTag { tag: tag.to_string() });
+        registry.entities.add(CModelNode { children: None, ..CModelNode::default() });
+        registry.entities.end_create().unwrap()
     }
 
     #[test]
@@ -72,16 +70,16 @@ mod tests {
         let level1_3_2 = build_node("level1_3_2", &mut registry);
         let level1_3_3 = build_node("level1_3_3", &mut registry);
 
-        let node = registry.get_component_mut::<CModelNode>(&level1_1).unwrap();
+        let node = registry.entities.get_mut::<CModelNode>(&level1_1).unwrap();
         node.children = Some(vec![level1_1_1]);
 
-        let node = registry.get_component_mut::<CModelNode>(&level1_2).unwrap();
+        let node = registry.entities.get_mut::<CModelNode>(&level1_2).unwrap();
         node.children = Some(vec![level1_2_1, level1_2_2]);
 
-        let node = registry.get_component_mut::<CModelNode>(&level1_3).unwrap();
+        let node = registry.entities.get_mut::<CModelNode>(&level1_3).unwrap();
         node.children = Some(vec![level1_3_1, level1_3_2, level1_3_3]);
 
-        let node = registry.get_component_mut::<CModelNode>(&level1).unwrap();
+        let node = registry.entities.get_mut::<CModelNode>(&level1).unwrap();
         node.children = Some(vec![level1_1, level1_2, level1_3]);
         
         let mut check_against = vec![
@@ -97,11 +95,11 @@ mod tests {
             "level1_1_1".to_string(),
         ];
 
-        let root = registry.get_component::<CModelNode>(&level1).unwrap();
+        let root = registry.entities.get::<CModelNode>(&level1).unwrap();
         let result = s_model_traversal(&registry, level1, root);
 
         for (id, _node) in result {
-            let tag = registry.get_component::<CTag>(&id).unwrap();
+            let tag = registry.entities.get::<CTag>(&id).unwrap();
             let next_tag = check_against.pop().unwrap();
 
             assert_eq!(next_tag, tag.tag.to_string());

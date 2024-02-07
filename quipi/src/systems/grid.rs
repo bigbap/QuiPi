@@ -48,8 +48,7 @@ impl Grid {
                 vertices
             )?;
 
-        let id = Uuid::new_v4().to_string();
-        let shader = registry.create_resource(CName::new(&id, registry), Shader::new(
+        let shader = Shader::new(
             &to_abs_path("assets/shaders/grid")?,
             vec![
                 UniformVariable::ProjectionMatrix("projection".to_string()),
@@ -57,7 +56,14 @@ impl Grid {
                 UniformVariable::NearPlane("near".to_string()),
                 UniformVariable::FarPlane("far".to_string())
             ]
-        )?)?;
+        )?;
+
+        let id = Uuid::new_v4().to_string();
+
+        registry.resources.start_create()?;
+        registry.resources.add(CName::new(&id, registry));
+        registry.resources.add(shader);
+        let shader = registry.resources.end_create()?;
 
         build_axis(
             registry,
@@ -75,11 +81,10 @@ impl Grid {
         registry: &'static Registry,
         camera: &VersionedIndex
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let grid = registry.query_entities::<CTag>(|i| i.entry.tag == GRID_TAG);
+        let grid = registry.entities.query::<CTag>(CTag { tag: GRID_TAG.to_string() });
 
         for line in grid {
-            let line = line.index;
-            if let Some(shader_id) = registry.get_component::<CShader>(&line) {
+            if let Some(shader_id) = registry.entities.get::<CShader>(&line) {
                 s_draw_entity(
                     &line,
                     registry,
@@ -107,16 +112,19 @@ fn build_axis(
         ..CTransform::default()
     };
     let model_matrix = CModelMatrix(transform.to_matrix());
-    registry.create_entity()?
-        .with(CTag { tag: GRID_TAG.to_string() })?
-        .with(CModelNode {
-            mesh: Some(mesh),
-            ..CModelNode::default()
-        })?
-        .with(CShader { shader })?
-        .with(transform)?
-        .with(model_matrix)?
-        .done()?;
+    let mesh = CModelNode {
+        mesh: Some(mesh),
+        ..CModelNode::default()
+    };
+
+    registry.entities.start_create()?;
+    registry.entities.add(CTag { tag: GRID_TAG.to_string() });
+    registry.entities.add(mesh);
+    registry.entities.add(CShader { shader });
+    registry.entities.add(transform);
+    registry.entities.add(model_matrix);
+    registry.entities.end_create()?;
+
 
     Ok(())
 }

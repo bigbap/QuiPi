@@ -43,58 +43,55 @@ impl ISchema for SchemaRect {
         &self,
         registry: &'static mut Registry,
     ) -> Result<VersionedIndex, SchemaError> {
-        let name = CName::new(DEFAULT_RECT_TAG, registry);
-        let mut children = CChildren {
-            list: Vec::<VersionedIndex>::with_capacity(self.instances.len())
-        };
+        let mut instances = Vec::<VersionedIndex>::with_capacity(self.instances.len());
+        for params in self.instances.iter() {
+            let instance = self.build_instance(registry, params)?;
 
-        for instance in self.instances.iter() {
-            children.list.push(
-                self.build_instance(
-                    registry,
-                    instance
-                )?
-            );
+            instances.push(instance.clone());
         }
 
-        Ok(registry.create_entity()?
-            .with(name)?
-            .with(children)?
-            .done()?
-        )
+        let name = CName::new(DEFAULT_RECT_TAG, registry);
+        let children = CChildren { list: instances };
+
+        registry.entities.start_create()?;
+        registry.entities.add(name);
+        registry.entities.add(children);
+        let entity = registry.entities.end_create()?;
+
+        Ok(entity)
     }
 }
 
 impl IPrefab<SchemaRectInstance> for SchemaRect {
     fn build_instance(
         &self,
-        registry: &'static mut Registry,
+        registry: &mut Registry,
         instance: &SchemaRectInstance
     ) -> Result<VersionedIndex, SchemaError> {
-        let binding = registry.query_resources::<CName>(
-            |i| i.entry.get() == self.shader
-        );
+        let filter = CName::new(&self.shader, registry);
+        let binding = registry.resources.query::<CName>(filter);
         let Some(shader) = binding.first() else {
             return Err(SchemaError::ShaderNotFound)
         };
         
         let model = instance.transform.to_matrix();
+        let b_box = CBoundingBox {
+            right: self.rect.width,
+            bottom: self.rect.height,
+            ..CBoundingBox::default()
+        };
 
-        Ok(
-            registry.create_entity()?
-                .with(self.tag.clone())?
-                .with(CMesh::new(self.to_obj_config(instance), self.usage)?)?
-                .with(CBoundingBox {
-                    right: self.rect.width,
-                    bottom: self.rect.height,
-                    ..CBoundingBox::default()
-                })?
-                .with(instance.velocity)?
-                .with(instance.transform)?
-                .with(CShader { shader: shader.index })?
-                .with(CModelMatrix(model))?
-                .done()?
-        )
+        registry.entities.start_create()?;
+        registry.entities.add(self.tag.clone());
+        registry.entities.add(CMesh::new(self.to_obj_config(instance), self.usage)?);
+        registry.entities.add(b_box);
+        registry.entities.add(instance.velocity);
+        registry.entities.add(instance.transform);
+        registry.entities.add(CShader { shader: *shader });
+        registry.entities.add(CModelMatrix(model));
+        let entity = registry.entities.end_create()?;
+
+        Ok(entity)
     }
 }
 

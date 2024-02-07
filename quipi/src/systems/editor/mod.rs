@@ -56,7 +56,7 @@ impl SceneEditor {
     }
 
     fn entity_list(&mut self, registry: &mut Registry) {
-        let entities = registry.query_entities::<CName>(|_| true);
+        let entities = registry.entities.query_all::<CName>();
 
         self.gui.add_window("Entities", |ui| {
             ui.set_width(200.0);
@@ -74,9 +74,11 @@ impl SceneEditor {
 
             egui::ScrollArea::vertical().show(ui, |ui| {
                 for entity in entities.iter() {
+                    let name = registry.entities.get::<CName>(entity).unwrap();
+
                     ui.horizontal(|ui| {
                         ui.set_width(ui.available_width());
-                        ui.radio_value(&mut self.active_entity, Some(entity.index), entity.entry.get());
+                        ui.radio_value(&mut self.active_entity, Some(*entity), name.get());
                     });
                     ui.allocate_space(Vec2::new(0.0, 5.0));
                 }
@@ -90,7 +92,7 @@ impl SceneEditor {
             ui.label(format!("fps: {}", app_state.debug_info.fps));
             ui.label(format!("ms: {}", app_state.debug_info.ms));
             ui.separator();
-            ui.label(format!("entity count: {}", registry.entity_count()));
+            ui.label(format!("entity count: {}", registry.entities.count()));
         })
     }
 }

@@ -24,8 +24,8 @@ pub fn s_apply_velocity(
     velocity: glm::Vec3
 ) -> Result<(), Box<dyn std::error::Error>> {
     if let (Some(gizmo), Some(_)) = (
-        registry.get_component::<CGizmo3D>(entity),
-        registry.get_component::<CTransform>(entity)
+        registry.entities.get::<CGizmo3D>(entity),
+        registry.entities.get::<CTransform>(entity)
     ) {
         let mut change_vec = glm::vec3(0.0, 0.0, 0.0);
 
@@ -33,7 +33,7 @@ pub fn s_apply_velocity(
         change_vec += gizmo.up * velocity.y * delta;
         change_vec += gizmo.right * velocity.x * delta;
 
-        let transform = registry.get_component_mut::<CTransform>(entity).unwrap();
+        let transform = registry.entities.get_mut::<CTransform>(entity).unwrap();
         transform.translate.x += change_vec.x;
         transform.translate.y += change_vec.y;
         transform.translate.z += change_vec.z;
@@ -47,10 +47,10 @@ pub fn s_apply_follow_target(
     entity: &VersionedIndex
 ) -> Result<(), Box<dyn std::error::Error>> {
     if let (Some(_), Some(distance), Some(target), Some(angles)) = (
-        registry.get_component::<CTransform>(entity),
-        registry.get_component::<CDistance>(entity),
-        registry.get_component::<CTarget>(entity),
-        registry.get_component::<CEulerAngles>(entity),
+        registry.entities.get::<CTransform>(entity),
+        registry.entities.get::<CDistance>(entity),
+        registry.entities.get::<CTarget>(entity),
+        registry.entities.get::<CEulerAngles>(entity),
     ) {
         let pos = glm::vec3(
             target.x + distance.0 * angles.yaw.cos() * angles.pitch.sin(),
@@ -58,7 +58,7 @@ pub fn s_apply_follow_target(
             target.z + distance.0 * angles.yaw.sin() * angles.pitch.sin()
         );
 
-        let transform = registry.get_component_mut::<CTransform>(entity).unwrap();
+        let transform = registry.entities.get_mut::<CTransform>(entity).unwrap();
         transform.translate.x = pos.x;
         transform.translate.y = pos.y;
         transform.translate.z = pos.z;

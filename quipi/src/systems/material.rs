@@ -1,7 +1,5 @@
 use crate::{
-    Registry,
-    components::material::MaterialPart,
-    resources::Texture
+    components::material::MaterialPart, resources::Texture, Registry
 };
 
 pub fn s_get_texture<'a>(
@@ -9,7 +7,7 @@ pub fn s_get_texture<'a>(
     registry: &'a Registry
 ) -> Option<&'a Texture> {
     match part {
-        MaterialPart::Texture(texture_id) => match registry.get_resource(texture_id) {
+        MaterialPart::Texture(texture_id) => match registry.resources.get::<Texture>(texture_id) {
             Some(texture) => Some(texture),
             None => None
         },

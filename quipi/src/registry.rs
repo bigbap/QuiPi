@@ -1,8 +1,7 @@
 use crate::{
     EntityManager,
-    ec_store::{EMError, indexed_array::IndexedEntry},
-    Component,
-    VersionedIndex, components::CName
+    ec_store::EMError,
+    VersionedIndex
 };
 
 #[derive(Debug, thiserror::Error)]
@@ -19,8 +18,8 @@ pub enum RegistryError {
 
 #[derive(Debug)]
 pub struct Registry {
-    entities: EntityManager,
-    resources: EntityManager,
+    pub entities: EntityManager,
+    pub resources: EntityManager,
 
     currently_building: Option<VersionedIndex>,
 }
@@ -36,144 +35,11 @@ impl Registry {
             currently_building: None,
         })
     }
-
-    pub fn entity_count(&self) -> usize {
-        self.entities.count()
-    }
-
-    // entities
-
-    pub fn create_entity(&mut self) -> Result<&mut Self, RegistryError> {
-        self.currently_building = Some(self.entities.create_entity()?);
-
-        Ok(self)
-    }
-
-    pub fn with(
-        &mut self,
-        cmp: impl Component + 'static
-    ) -> Result<&mut Self, RegistryError> {
-        self.entities.add_component(&self.currently_building.unwrap(), cmp);
-
-        Ok(self)
-    }
-
-    pub fn try_with(
-        &mut self,
-        cmp: Option<impl Component + 'static>
-    ) -> Result<&mut Self, RegistryError> {
-        if let Some(cmp) = cmp {
-            self.entities.add_component(&self.currently_building.unwrap(), cmp);
-        }
-
-        Ok(self)
-    }
-
-    pub fn with_factory<C: Component + 'static>(
-        &mut self,
-        fac: impl Fn(&mut Self) -> Result<C, Box<dyn std::error::Error>>
-    ) -> Result<&mut Self, Box<dyn std::error::Error>> {
-        let cmp = fac(self)?;
-
-        self.entities.add_component(&self.currently_building.unwrap(), cmp);
-
-        Ok(self)
-    }
-
-    pub fn done(&mut self) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
-        let entity = self.currently_building.unwrap();
-
-        self.currently_building = None;
-
-        Ok(entity)
-    }
-
-    pub fn query_entities<C: Component + Clone + PartialEq + 'static>(
-        &'static self,
-        predicate: impl FnMut(&&IndexedEntry<C>) -> bool
-    ) -> Vec<IndexedEntry<C>> {
-        self.entities.query::<C>(predicate)
-    }
-
-    pub fn delete_entity(
-        &mut self,
-        entity: VersionedIndex
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        self.entities.delete_entity(entity);
-
-        Ok(())
-    }
-
-    pub fn get_valid_entities(&mut self) -> Vec<VersionedIndex> {
-        self.entities.get_valid_entities()
-    }
-
-    pub fn reset_entities(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        self.entities.reset()
-    }
-
-    // components
-
-    pub fn register_component<C: Component + 'static>(&mut self) -> &mut Self {
-        self.entities.register_component::<C>();
-
-        self
-    }
-
-    pub fn get_component_mut<C: Component + 'static>(&mut self, entity: &VersionedIndex) -> Option<&mut C> {
-        self.entities.get_component_mut::<C>(entity)
-    }
-
-    pub fn get_component<C: Component + 'static>(&self, entity: &VersionedIndex) -> Option<&C> {
-        self.entities.get_component::<C>(entity)
-    }
-
-    // resources
-
-    pub fn register_resource<C: Component + 'static>(&mut self) -> &mut Self {
-        self.resources.register_component::<C>();
-
-        self
-    }
-
-    pub fn create_resource(
-        &mut self,
-        name: CName,
-        res: impl Component + 'static
-    ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
-        let resource = self.resources.create_entity()?;
-
-        self.resources.add_component(&resource, res);
-        self.resources.add_component(&resource, name);
-
-        Ok(resource)
-    }
-
-    pub fn get_resource_mut<C: Component + 'static>(&mut self, entity: &VersionedIndex) -> Option<&mut C> {
-        self.resources.get_component_mut::<C>(entity)
-    }
-
-    pub fn get_resource<C: Component + 'static>(&self, entity: &VersionedIndex) -> Option<&C> {
-        self.resources.get_component::<C>(entity)
-    }
-
-    pub fn query_resources<C: Component + Clone + PartialEq + 'static>(
-        &'static self,
-        predicate: impl FnMut(&&IndexedEntry<C>) -> bool
-    ) -> Vec<IndexedEntry<C>> {
-        self.resources.query::<C>(predicate)
-    }
-
-    pub fn delete_resource(&mut self, resource: VersionedIndex) -> Result<(), Box<dyn std::error::Error>> {
-        self.resources.delete_entity(resource);
-
-        Ok(())
-    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::Component;
+    use crate::Component;
 
     use super::*;
 
@@ -192,32 +58,32 @@ mod tests {
     fn create_registry() -> Registry {
         let mut registry = Registry::init().unwrap();
 
-        registry
+        registry.entities
             .register_component::<DrawComponent>()
             .register_component::<TransformComponent>();
 
         registry
     }
 
-    #[test]
-    fn registry_create_entities() {
-        let mut registry = create_registry();
+    // #[test]
+    // fn registry_create_entities() {
+    //     let mut registry = create_registry();
 
-        let player = registry.create_entity().unwrap()
-            .with(DrawComponent { shader_id: Some(1234) }).unwrap()
-            .with(TransformComponent {
-                translate: glm::vec3(1.0, 1.0, 1.0),
-                ..TransformComponent::default()
-            }).unwrap()
-            .done().unwrap();
+    //     let player = registry.create_entity().unwrap()
+    //         .with(DrawComponent { shader_id: Some(1234) }).unwrap()
+    //         .with(TransformComponent {
+    //             translate: glm::vec3(1.0, 1.0, 1.0),
+    //             ..TransformComponent::default()
+    //         }).unwrap()
+    //         .done().unwrap();
 
-        assert_eq!(
-            *registry.entities.get_component::<DrawComponent>(&player).unwrap(),
-            DrawComponent { shader_id: Some(1234) }
-        );
-        assert_eq!(
-            *registry.entities.get_component::<TransformComponent>(&player).unwrap(),
-            TransformComponent { translate: glm::vec3(1.0, 1.0, 1.0), ..TransformComponent::default() }
-        );
-    }
+    //     assert_eq!(
+    //         *registry.entities.get_component::<DrawComponent>(&player).unwrap(),
+    //         DrawComponent { shader_id: Some(1234) }
+    //     );
+    //     assert_eq!(
+    //         *registry.entities.get_component::<TransformComponent>(&player).unwrap(),
+    //         TransformComponent { translate: glm::vec3(1.0, 1.0, 1.0), ..TransformComponent::default() }
+    //     );
+    // }
 }

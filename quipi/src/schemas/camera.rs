@@ -43,21 +43,23 @@ impl ISchema for SchemaCamera {
         &self,
         registry: &mut Registry
     ) -> Result<VersionedIndex, SchemaError> {
-        let camera = registry.create_entity()?
-            .with(self.tag.clone())?
-            .with(CCamera::new(self.params)?)?
-            .with(CBoundingBox {
-                left: self.params.left,
-                right: self.params.right,
-                bottom: self.params.bottom,
-                top: self.params.top,
-                ..CBoundingBox::default()
-            })?
-            .with(CGizmo3D::default())?
-            .with(self.transform)?
-            .with(CVelocity::default())?
-            .with(CViewMatrix::default())?
-            .done()?;
+        let b_box = CBoundingBox {
+            left: self.params.left,
+            right: self.params.right,
+            bottom: self.params.bottom,
+            top: self.params.top,
+            ..CBoundingBox::default()
+        };
+
+        registry.entities.start_create()?;
+        registry.entities.add(self.tag.clone());
+        registry.entities.add(CCamera::new(self.params)?);
+        registry.entities.add(b_box);
+        registry.entities.add(CGizmo3D::default());
+        registry.entities.add(self.transform);
+        registry.entities.add(CVelocity::default());
+        registry.entities.add(CViewMatrix::default());
+        let camera = registry.entities.end_create()?;
 
         CViewMatrix::update_view_matrix(&camera, registry);
 

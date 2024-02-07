@@ -185,9 +185,9 @@ impl<T> IndexedArray<T> {
 
     /// TODO: write test
     pub fn get_entities(
-        &'static self,
+        &self,
         allocator: &VersionedIndexAllocator
-    ) -> Vec<IndexedEntry<T>> {
+    ) -> Vec<VersionedIndex> {
         self.0.iter()
             .enumerate()
             .filter_map(|(i, wrapped)| match wrapped {
@@ -198,10 +198,7 @@ impl<T> IndexedArray<T> {
                     };
 
                     match allocator.validate(&index) {
-                        true => Some(IndexedEntry {
-                            index,
-                            entry: &entry.value
-                        }),
+                        true => Some(index),
                         false => None
                     }
                 },
@@ -212,9 +209,9 @@ impl<T> IndexedArray<T> {
 }
 
 #[derive(Debug, Clone)]
-pub struct IndexedEntry<T: 'static> {
+pub struct IndexedEntry<T> {
     pub index: VersionedIndex,
-    pub entry: &'static T
+    pub entry: T
 }
 
 #[cfg(test)]

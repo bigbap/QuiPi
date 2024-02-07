@@ -11,9 +11,6 @@ pub trait Component {
 
 use anymap2::AnyMap;
 
-use self::indexed_array::IndexedEntry;
-
-
 type EntityMap<C> = IndexedArray<C>;
 
 #[derive(Debug, thiserror::Error)]
@@ -27,7 +24,9 @@ pub struct EntityManager {
     entity_allocator: VersionedIndexAllocator,
     component_maps: AnyMap,
 
-    entities: Vec<VersionedIndex>
+    entities: Vec<VersionedIndex>,
+
+    currently_building: Option<VersionedIndex>,
 }
 
 impl EntityManager {
@@ -35,42 +34,55 @@ impl EntityManager {
         let entity_manager = Self {
             entity_allocator: VersionedIndexAllocator::default(),
             component_maps: AnyMap::new(),
-            entities: Vec::<VersionedIndex>::new()
+            entities: Vec::<VersionedIndex>::new(),
+            currently_building: None
         };
 
         Ok(entity_manager)
     }
 
-    pub fn register_component<C: Component + 'static>(&mut self) {
+    pub fn register_component<C: Component + 'static>(&mut self) -> &mut Self {
         self.component_maps.insert(EntityMap::<C>::default());
+
+        self
     }
 
-    pub fn create_entity(&mut self) -> Result<VersionedIndex, EMError> {
+    pub fn start_create(&mut self) -> Result<(), EMError> {
         let entity = self.entity_allocator.allocate();
+        self.currently_building = Some(entity);
 
         self.entities.push(entity);
+
+        Ok(())
+    }
+
+    pub fn end_create(&mut self) -> Result<VersionedIndex, EMError> {
+        let entity = self.currently_building.expect("There was a problem creating a new entity");
+
+        self.currently_building = None;
 
         Ok(entity)
     }
 
-    pub fn delete_entity(&mut self, entity: VersionedIndex) {
+    pub fn delete(&mut self, entity: VersionedIndex) {
         self.entity_allocator.deallocate(entity);
     }
 
-    pub fn add_component<C: Component + 'static>(
+    pub fn add<C: Component + 'static>(
         &mut self,
-        entity: &VersionedIndex,
         component: C
     ) {
-        match self.component_maps.get_mut::<EntityMap<C>>() {
-            None => (),
-            Some(cmp_map) => {
-                cmp_map.set(entity, component)
+        if let Some(entity) = self.currently_building {
+            match self.component_maps.get_mut::<EntityMap<C>>() {
+                None => (),
+                Some(cmp_map) => {
+                    cmp_map.set(&entity, component)
+                }
             }
         }
     }
 
-    pub fn get_component<C: Component + 'static>(
+    pub fn get<C: Component + 'static>(
         &self,
         entity: &VersionedIndex
     ) -> Option<&C> {
@@ -87,7 +99,7 @@ impl EntityManager {
         }
     }
 
-    pub fn get_component_mut<C: Component + 'static>(
+    pub fn get_mut<C: Component + 'static>(
         &mut self,
         entity: &VersionedIndex
     ) -> Option<&mut C> {
@@ -104,17 +116,29 @@ impl EntityManager {
         }
     }
 
-    pub fn query<C: Component + Clone + PartialEq + 'static>(
-        &'static self,
-        predicate: impl FnMut(&&IndexedEntry<C>) -> bool 
-    ) -> Vec<IndexedEntry<C>> {
+    pub fn query_all<C: Component + PartialEq + 'static>(
+        &self,
+    ) -> Vec<VersionedIndex> {
         let Some(cmp_map) = self.component_maps.get::<EntityMap<C>>() else { return vec![] };
         
         cmp_map.get_entities(&self.entity_allocator)
-            .iter()
-            .filter(predicate)
-            .cloned()
-            .collect()
+    }
+
+    pub fn query<C: Component + PartialEq + 'static>(&self, filter: C) -> Vec<VersionedIndex> {
+        let Some(cmp_map) = self.component_maps.get::<EntityMap<C>>() else { return vec![] };
+        let all_entities = cmp_map.get_entities(&self.entity_allocator);
+
+        let mut result = Vec::<VersionedIndex>::new();
+
+        for entity in all_entities {
+            if let Some(cmp) = cmp_map.get(&entity) {
+                if *cmp == filter {
+                    result.push(entity);
+                }
+            };
+        }
+
+        result
     }
 
     pub fn reset(&mut self) -> Result<(), Box<dyn std::error::Error>> {

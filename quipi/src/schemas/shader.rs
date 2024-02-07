@@ -36,13 +36,10 @@ impl ISchema for SchemaShader {
         &self,
         registry: &mut crate::Registry
     ) -> Result<VersionedIndex, SchemaError> {
-        let res = registry.create_resource(
-            CName::new(&self.name, registry),
-            Shader::new(
-                &self.name,
-                self.uniforms.to_vec()
-            )?
-        )?;
+        registry.resources.start_create()?;
+        registry.resources.add(CName::new(&self.name, registry));
+        registry.resources.add(Shader::new(&self.name, self.uniforms.to_vec())?);
+        let res = registry.resources.end_create()?;
 
         Ok(res)
     }
