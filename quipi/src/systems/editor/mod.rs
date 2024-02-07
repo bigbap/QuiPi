@@ -7,18 +7,18 @@ use crate::{
     Registry,
     AppState,
     VersionedIndex,
-    schema::{
+    schemas::{
         SchemaRect,
         IPrefab,
         rect::SchemaRectInstance
-    },
+    }, components::CName,
 };
 
 #[cfg(debug_assertions)]
 pub struct SceneEditor {
     gui: GUI,
 
-    active_entity: Option<VersionedIndex>
+    active_entity: Option<VersionedIndex>,
 }
 
 impl SceneEditor {
@@ -56,7 +56,7 @@ impl SceneEditor {
     }
 
     fn entity_list(&mut self, registry: &mut Registry) {
-        let entities = registry.get_valid_entities();
+        let entities = registry.query_entities::<CName>(|_| true);
 
         self.gui.add_window("Entities", |ui| {
             ui.set_width(200.0);
@@ -76,7 +76,7 @@ impl SceneEditor {
                 for entity in entities.iter() {
                     ui.horizontal(|ui| {
                         ui.set_width(ui.available_width());
-                        ui.radio_value(&mut self.active_entity, Some(*entity), entity.to_string());
+                        ui.radio_value(&mut self.active_entity, Some(entity.index), entity.entry.get());
                     });
                     ui.allocate_space(Vec2::new(0.0, 5.0));
                 }
@@ -90,7 +90,6 @@ impl SceneEditor {
             ui.label(format!("fps: {}", app_state.debug_info.fps));
             ui.label(format!("ms: {}", app_state.debug_info.ms));
             ui.separator();
-            ui.label(format!("selected entity: {}", self.active_entity.unwrap_or_default()));
             ui.label(format!("entity count: {}", registry.entity_count()));
         })
     }

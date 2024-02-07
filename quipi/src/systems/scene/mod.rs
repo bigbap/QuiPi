@@ -7,7 +7,7 @@ use std::{
 };
 use crate::{
     utils::to_abs_path,
-    schema::SchemaScene
+    schemas::SchemaScene
 };
 
 pub fn save_scene(

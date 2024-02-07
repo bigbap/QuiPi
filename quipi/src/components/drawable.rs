@@ -1,3 +1,5 @@
+use serde::{Serialize, Deserialize};
+
 use crate::{
     Component,
     systems::{
@@ -40,7 +42,6 @@ impl CMesh {
     }
 }
 
-// shader_tag is used during serialization
 #[derive(Debug, Component)]
 pub struct CShader {
     pub shader: VersionedIndex,

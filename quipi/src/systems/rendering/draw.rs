@@ -8,7 +8,7 @@ use crate::{
         CViewMatrix,
         CRGBA,
         CShader,
-        CMesh
+        CMesh, CTag
     },
     Registry,
     resources::shader::{
@@ -38,16 +38,16 @@ use crate::{
 pub fn s_draw_by_tag(
     tag: &str,
     registry: &Registry,
-    // shader_id: &VersionedIndex,
     camera_id: &VersionedIndex,
     mode: DrawMode
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let entities = registry.get_entities_by_tag(tag);
+    let entities = registry.query_entities::<CTag>(|t| t.entry.tag == tag);
 
     for entity in entities.iter() {
-        if let Some(shader_id) = registry.get_component::<CShader>(entity) {
+        let entity = entity.index;
+        if let Some(shader_id) = registry.get_component::<CShader>(&entity) {
             s_draw_entity(
-                entity,
+                &entity,
                 registry,
                 camera_id,
                 shader_id,

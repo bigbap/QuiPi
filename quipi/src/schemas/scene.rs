@@ -1,7 +1,11 @@
 use serde::{Serialize, Deserialize};
 
 use crate::{
-    components::{CRGBA, CPrefab, CTransform},
+    components::{
+        CRGBA,
+        CTransform,
+        CTag
+    },
     Registry,
     VersionedIndex,
 };
@@ -21,7 +25,7 @@ pub const DEFAULT_SCENE_TAG: &str = "default_scene";
 */
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SchemaScene {
-    pub tag: String,
+    pub tag: CTag,
     pub clr_color: CRGBA,
     pub cameras: Vec<SchemaCamera>,
     pub shaders: Vec<SchemaShader>,
@@ -52,7 +56,7 @@ impl Default for SchemaScene {
         camera.entities.push(rect.tag.clone());
 
         Self {
-            tag: DEFAULT_SCENE_TAG.to_string(),
+            tag: CTag { tag: DEFAULT_SCENE_TAG.to_string() },
             clr_color: CRGBA { r: 0.3, g: 0.3, b: 0.3, a: 1.0 },
             cameras: vec![camera],
             shaders: vec![shader],
@@ -81,8 +85,8 @@ impl ISchema for SchemaScene {
             rect.build(registry)?;
         }
 
-        Ok(registry.create_entity(&self.tag)?
-            .with(CPrefab { schema: Box::new(self.to_owned()) })?
+        Ok(registry.create_entity()?
+            .with(self.tag.clone())?
             .done()?
         )
     }

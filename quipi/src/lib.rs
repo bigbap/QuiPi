@@ -11,7 +11,7 @@ pub mod registry;
 pub mod components;
 pub mod systems;
 pub mod wrappers;
-pub mod schema;
+pub mod schemas;
 
 pub use components::resources;
 pub use engine::run;

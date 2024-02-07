@@ -1,6 +1,6 @@
 use crate::{
     Component,
-    schema::ISchema
+    schemas::ISchema
 };
 
 #[derive(Component)]

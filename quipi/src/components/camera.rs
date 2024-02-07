@@ -2,7 +2,7 @@ use serde::{Serialize, Deserialize};
 
 use crate::{
     Component,
-    schema::camera::{
+    schemas::camera::{
         CameraParams,
         CameraKind
     },

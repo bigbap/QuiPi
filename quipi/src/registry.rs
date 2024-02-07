@@ -1,8 +1,8 @@
 use crate::{
     EntityManager,
-    ec_store::EMError,
+    ec_store::{EMError, indexed_array::IndexedEntry},
     Component,
-    VersionedIndex
+    VersionedIndex, components::CName
 };
 
 #[derive(Debug, thiserror::Error)]
@@ -43,8 +43,8 @@ impl Registry {
 
     // entities
 
-    pub fn create_entity(&mut self, tag: &str) -> Result<&mut Self, RegistryError> {
-        self.currently_building = Some(self.entities.create_entity(tag)?);
+    pub fn create_entity(&mut self) -> Result<&mut Self, RegistryError> {
+        self.currently_building = Some(self.entities.create_entity()?);
 
         Ok(self)
     }
@@ -88,8 +88,11 @@ impl Registry {
         Ok(entity)
     }
 
-    pub fn get_entities_by_tag(&self, tag: &str) -> Vec<VersionedIndex> {
-        self.entities.get_entities_by_tag(tag)
+    pub fn query_entities<C: Component + Clone + PartialEq + 'static>(
+        &'static self,
+        predicate: impl FnMut(&&IndexedEntry<C>) -> bool
+    ) -> Vec<IndexedEntry<C>> {
+        self.entities.query::<C>(predicate)
     }
 
     pub fn delete_entity(
@@ -135,12 +138,13 @@ impl Registry {
 
     pub fn create_resource(
         &mut self,
-        tag: &str,
+        name: CName,
         res: impl Component + 'static
     ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
-        let resource = self.resources.create_entity(tag)?;
+        let resource = self.resources.create_entity()?;
 
         self.resources.add_component(&resource, res);
+        self.resources.add_component(&resource, name);
 
         Ok(resource)
     }
@@ -153,8 +157,11 @@ impl Registry {
         self.resources.get_component::<C>(entity)
     }
 
-    pub fn get_resource_by_tag(&self, tag: &str) -> Option<VersionedIndex> {
-        self.resources.get_entities_by_tag(tag).get(0).cloned()
+    pub fn query_resources<C: Component + Clone + PartialEq + 'static>(
+        &'static self,
+        predicate: impl FnMut(&&IndexedEntry<C>) -> bool
+    ) -> Vec<IndexedEntry<C>> {
+        self.resources.query::<C>(predicate)
     }
 
     pub fn delete_resource(&mut self, resource: VersionedIndex) -> Result<(), Box<dyn std::error::Error>> {
@@ -196,7 +203,7 @@ mod tests {
     fn registry_create_entities() {
         let mut registry = create_registry();
 
-        let player = registry.create_entity("player").unwrap()
+        let player = registry.create_entity().unwrap()
             .with(DrawComponent { shader_id: Some(1234) }).unwrap()
             .with(TransformComponent {
                 translate: glm::vec3(1.0, 1.0, 1.0),

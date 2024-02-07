@@ -7,10 +7,12 @@ use crate::{
         CCamera,
         CBoundingBox,
         CGizmo3D,
-        CVelocity, CViewMatrix, CPrefab
+        CVelocity,
+        CViewMatrix,
+        CTag
     },
     VersionedIndex,
-    Registry
+    Registry,
 };
 
 use super::{ISchema, SchemaError};
@@ -19,16 +21,16 @@ pub const DEFAULT_CAMERA_TAG: &str = "default_camera";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SchemaCamera {
-    pub tag: String,
+    pub tag: CTag,
     pub params: CameraParams,
     pub transform: CTransform,
-    pub entities: Vec<String>
+    pub entities: Vec<CTag>
 }
 
 impl Default for SchemaCamera {
     fn default() -> Self {
         Self {
-            tag: DEFAULT_CAMERA_TAG.to_string(),
+            tag: CTag { tag: DEFAULT_CAMERA_TAG.to_string() },
             params: CameraParams::default(),
             transform: CTransform::default(),
             entities: vec![],
@@ -41,7 +43,8 @@ impl ISchema for SchemaCamera {
         &self,
         registry: &mut Registry
     ) -> Result<VersionedIndex, SchemaError> {
-        let camera = registry.create_entity(&self.tag)?
+        let camera = registry.create_entity()?
+            .with(self.tag.clone())?
             .with(CCamera::new(self.params)?)?
             .with(CBoundingBox {
                 left: self.params.left,
@@ -54,7 +57,6 @@ impl ISchema for SchemaCamera {
             .with(self.transform)?
             .with(CVelocity::default())?
             .with(CViewMatrix::default())?
-            .with(CPrefab { schema: Box::new(self.to_owned()) })?
             .done()?;
 
         CViewMatrix::update_view_matrix(&camera, registry);

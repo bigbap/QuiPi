@@ -5,7 +5,7 @@ use crate::{
         Shader,
         shader::UniformVariable
     },
-    VersionedIndex
+    VersionedIndex, components::CName
 };
 
 use super::{ISchema, SchemaError};
@@ -36,14 +36,14 @@ impl ISchema for SchemaShader {
         &self,
         registry: &mut crate::Registry
     ) -> Result<VersionedIndex, SchemaError> {
-        Ok(
-            registry.create_resource(
+        let res = registry.create_resource(
+            CName::new(&self.name, registry),
+            Shader::new(
                 &self.name,
-                Shader::new(
-                    &self.name,
-                    self.uniforms.to_vec()
-                )?
+                self.uniforms.to_vec()
             )?
-        )
+        )?;
+
+        Ok(res)
     }
 }

@@ -10,19 +10,9 @@ pub trait Component {
 }
 
 use anymap2::AnyMap;
-use serde::Deserialize;
-use serde::Serialize;
 
-#[derive(Debug, Component, Clone, Serialize, Deserialize)]
-pub struct CTag {
-    pub tag: String
-}
+use self::indexed_array::IndexedEntry;
 
-impl Default for CTag {
-    fn default() -> Self {
-        Self { tag: "default".to_string() }
-    }
-}
 
 type EntityMap<C> = IndexedArray<C>;
 
@@ -42,13 +32,11 @@ pub struct EntityManager {
 
 impl EntityManager {
     pub fn new() -> Result<Self, EMError> {
-        let mut entity_manager = Self {
+        let entity_manager = Self {
             entity_allocator: VersionedIndexAllocator::default(),
             component_maps: AnyMap::new(),
             entities: Vec::<VersionedIndex>::new()
         };
-
-        entity_manager.register_component::<CTag>();
 
         Ok(entity_manager)
     }
@@ -57,10 +45,9 @@ impl EntityManager {
         self.component_maps.insert(EntityMap::<C>::default());
     }
 
-    pub fn create_entity(&mut self, tag: &str) -> Result<VersionedIndex, EMError> {
+    pub fn create_entity(&mut self) -> Result<VersionedIndex, EMError> {
         let entity = self.entity_allocator.allocate();
 
-        self.add_component(&entity, CTag { tag: tag.into() });
         self.entities.push(entity);
 
         Ok(entity)
@@ -117,26 +104,17 @@ impl EntityManager {
         }
     }
 
-    pub fn get_entities_by_tag(
-        &self,
-        tag: &str
-    ) -> Vec<VersionedIndex> {
-        let Some(tag_map) = self.component_maps.get::<EntityMap<CTag>>() else { return vec![] };
-
-        let mut result = Vec::<VersionedIndex>::new();
-        for entity in &self.entities {
-            if !self.entity_allocator.validate(&entity) {
-                continue;
-            }
-
-            if let Some(c_tag) = tag_map.get(&entity) {
-                if *c_tag.tag == *tag {
-                    result.push(*entity);
-                }
-            };
-        }
-
-        result
+    pub fn query<C: Component + Clone + PartialEq + 'static>(
+        &'static self,
+        predicate: impl FnMut(&&IndexedEntry<C>) -> bool 
+    ) -> Vec<IndexedEntry<C>> {
+        let Some(cmp_map) = self.component_maps.get::<EntityMap<C>>() else { return vec![] };
+        
+        cmp_map.get_entities(&self.entity_allocator)
+            .iter()
+            .filter(predicate)
+            .cloned()
+            .collect()
     }
 
     pub fn reset(&mut self) -> Result<(), Box<dyn std::error::Error>> {
