@@ -53,3 +53,22 @@ impl CTransform {
     }
 }
 
+/**
+* 3D direction vector
+*/
+#[derive(Debug, Component, Clone, Copy, Default, Serialize, Deserialize, PartialEq)]
+pub struct CDirection {
+    pub x: f32,
+    pub y: f32,
+    pub z: f32
+}
+
+/**
+* https://en.wikipedia.org/wiki/Euler_angles
+*/
+#[derive(Debug, Component, Clone, Copy, Default, Serialize, Deserialize, PartialEq)]
+pub struct CEulerAngles {
+    pub pitch: f32,
+    pub yaw: f32,
+    pub roll: f32
+}

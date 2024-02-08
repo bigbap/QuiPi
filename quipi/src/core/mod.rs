@@ -1,3 +1,4 @@
+pub mod collections;
 pub mod utils;
 pub mod math;
 

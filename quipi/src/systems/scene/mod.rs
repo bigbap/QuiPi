@@ -5,10 +5,59 @@ use std::{
     },
     io::BufReader
 };
+
 use crate::{
+    components::{
+        CName,
+        CTag,
+        CTransform,
+        CVelocity,
+        CCamera,
+        CBoundingBox,
+        CRect,
+        CRGBA,
+        CEulerAngles,
+        CGizmo3D,
+        CDirection,
+    },
+    get_components,
+    schemas::SchemaScene,
     utils::to_abs_path,
-    schemas::SchemaScene
+    Registry
 };
+
+pub fn save_entities(
+    name: &str,
+    registry: &mut Registry
+) -> Result<(), Box<dyn std::error::Error>> {
+    let mut to_save = String::new();
+    for entity in registry.entities.get_valid_entities() {
+        let list = get_components!(
+            registry.entities,
+            &entity,
+            CName,
+            CTag,
+            CTransform,
+            CVelocity,
+            CCamera,
+            CBoundingBox,
+            CRect,
+            CRGBA,
+            CEulerAngles,
+            CGizmo3D,
+            CDirection,
+            CDirection,
+        );
+
+        to_save.push_str(&serde_yaml::to_string(&list)?);
+    }
+
+    let path = to_abs_path(&format!("assets/scenes/{}.yaml", name))?; 
+
+    fs::write(path, to_save)?;
+
+    Ok(())
+}
 
 pub fn save_scene(
     name: &str,

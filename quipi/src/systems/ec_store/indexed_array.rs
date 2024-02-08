@@ -150,7 +150,7 @@ pub struct IndexedArray<T>(Vec<Option<Entry<T>>>);
 
 impl<T> Default for IndexedArray<T> {
     fn default() -> Self {
-        Self(Vec::<Option<Entry<T>>>::new())
+        Self(Vec::<Option<Entry<T>>>::with_capacity(4))
     }
 }
 

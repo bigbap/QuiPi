@@ -2,10 +2,10 @@
 mod ecs_tests {
     use super::super::*;
 
-    #[derive(Component, PartialEq)]
+    #[derive(Component, Debug, PartialEq)]
     struct DrawComponent {}
 
-    #[derive(Component, PartialEq)]
+    #[derive(Component, Debug, PartialEq)]
     struct TransformComponent {}
 
     #[test]

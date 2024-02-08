@@ -3,5 +3,5 @@ use crate::{
     wrappers::opengl::textures::Texture
 };
 
-#[derive(Component, PartialEq)]
+#[derive(Component, Debug, PartialEq)]
 pub struct RTexture(pub Texture);

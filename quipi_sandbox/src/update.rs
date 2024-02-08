@@ -3,9 +3,7 @@ use quipi::{
         CModelMatrix,
         CTag,
         CTransform
-    },
-    schemas::rect::DEFAULT_RECT_TAG,
-    Registry
+    }, get_components, schemas::rect::DEFAULT_RECT_TAG, Registry
 };
 
 pub fn update_frame(
@@ -13,6 +11,10 @@ pub fn update_frame(
 ) {
     for entity in registry.entities.query(CTag { tag: DEFAULT_RECT_TAG.to_string() }) {
         let Some(transform) = registry.entities.get::<CTransform>(&entity) else { continue; };
+
+        let lst = get_components!(&registry.entities, &entity, CTransform,);
+
+        println!("{:?}", lst);
 
         let model = transform.to_matrix();
 

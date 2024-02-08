@@ -6,6 +6,7 @@ pub mod distance;
 pub mod drawable;
 pub mod gizmo;
 pub mod identifiers;
+pub mod lights;
 pub mod material;
 pub mod matrices;
 pub mod model;
@@ -26,8 +27,12 @@ pub use drawable::CMesh;
 pub use drawable::CShader;
 pub use identifiers::CName;
 pub use identifiers::CTag;
+pub use lights::CAttenuation;
+pub use lights::CCutoff;
 pub use material::CMaterial;
 pub use gizmo::CGizmo3D;
+pub use transform::CDirection;
+pub use transform::CEulerAngles;
 pub use transform::CTransform;
 pub use distance::CDistance;
 pub use matrices::CModelMatrix;
@@ -36,69 +41,15 @@ pub use model::CModelNode;
 pub use shapes::CRect;
 pub use shapes::CShape;
 pub use speed::CSpeed;
+pub use speed::CVelocity;
 pub use states::CMouseBtnState;
 pub use color::CRGBA;
 pub use target::CTarget;
 pub use unique_id::CUniqueId;
 
-use crate::{
-    Registry,
-    Component,
-};
-use serde::{Deserialize, Serialize};
-
-/**
-* 3D direction vector
-*/
-#[derive(Debug, Component, Clone, Copy, Default, Serialize, Deserialize, PartialEq)]
-pub struct CDirection {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32
-}
-
-/**
-* 3D velocity vector
-*/
-#[derive(Debug, Component, Clone, Copy, Default, Serialize, Deserialize, PartialEq)]
-pub struct CVelocity {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32
-}
-
-/**
-* used to reduce the intensity of light over time
-*
-* https://wiki.ogre3d.org/tiki-index.php?page=-Point+Light+Attenuation
-*/
-#[derive(Debug, Component, Clone, Copy, Default, Serialize, Deserialize, PartialEq)]
-pub struct CAttenuation {
-    pub constant: f32,
-    pub linear: f32,
-    pub quadratic: f32,
-}
-
-/**
-* used to smooth the edges around a spot light
-*
-* https://learnopengl.com/Lighting/Light-casters
-*/
-#[derive(Debug, Component, Clone, Copy, Default, Serialize, Deserialize, PartialEq)]
-pub struct CCutoff {
-    pub inner_cutoff: f32,
-    pub outer_cutoff: f32
-}
-
-/**
-* https://en.wikipedia.org/wiki/Euler_angles
-*/
-#[derive(Debug, Component, Clone, Copy, Default, Serialize, Deserialize, PartialEq)]
-pub struct CEulerAngles {
-    pub pitch: f32,
-    pub yaw: f32,
-    pub roll: f32
-}
+use crate::Component;
+use crate::Registry;
+use crate::VersionedIndex;
 
 pub fn register_components(registry: &mut Registry) {
     registry.entities
