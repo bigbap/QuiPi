@@ -5,12 +5,9 @@ use egui::Vec2;
 use crate::{
     components::CTag,
     schemas::{
-        rect::{
-            SchemaRectInstance,
-            DEFAULT_RECT_TAG
-        },
-        IPrefab,
-        SchemaRect
+        entity::DEFAULT_RECT_TAG,
+        ISchema,
+        SchemaEntity2D
     },
     wrappers::egui::GUI,
     FrameState,
@@ -61,26 +58,27 @@ impl SceneEditor {
     fn entity_list(&mut self, registry: &mut Registry) {
         let entities = registry.entities.query::<CTag>(CTag { tag: DEFAULT_RECT_TAG.to_string() });
 
-        self.gui.add_window("Entities", |ui| {
+        self.gui.add_window("Scene", |ui| {
             ui.set_width(200.0);
             ui.separator();
 
-            if ui.button("create entity").clicked() {
-                let schema = SchemaRect::default();
+            ui.horizontal(|ui| {
+                if ui.button("create entity").clicked() {
+                    let schema = SchemaEntity2D::default();
 
-                let default = SchemaRectInstance::default();
-                if let Err(e) = schema.build_instance(registry, &default) {
-                    println!("could not add entity: {}", e);
+                    if let Err(e) = schema.build(registry) {
+                        println!("could not add entity: {}", e);
+                    }
                 }
-            }
+                if ui.button("save scene").clicked() {
+                    println!("saving scene..");
+                }
+            });
 
             ui.separator();
 
             egui::ScrollArea::vertical().show(ui, |ui| {
                 for entity in entities.iter() {
-                    // let name = registry.entities.get::<CName>(entity).unwrap();
-                    // let name = name.name.clone();
-
                     ui.horizontal(|ui| {
                         ui.set_width(ui.available_width());
                         ui.radio_value(&mut self.active_entity, Some(*entity), entity.to_string());

@@ -12,6 +12,12 @@ use crate::{
 };
 
 #[derive(Debug, Component, PartialEq)]
+pub struct CDrawable {
+    pub shader: VersionedIndex,
+    pub texture: Option<VersionedIndex>,
+}
+
+#[derive(Debug, Component, PartialEq)]
 pub struct CMesh {
     pub mesh: Option<ElementArrayMesh>,
     pub data: ObjectConfig,
@@ -39,9 +45,3 @@ impl CMesh {
         })
     }
 }
-
-#[derive(Debug, Component, Clone, Copy, PartialEq)]
-pub struct CShader {
-    pub shader: VersionedIndex,
-}
-

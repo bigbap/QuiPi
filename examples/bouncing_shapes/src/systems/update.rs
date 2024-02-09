@@ -6,7 +6,7 @@ use quipi::{
         CTransform,
         CVelocity
     },
-    schemas::rect::DEFAULT_RECT_TAG,
+    schemas::entity::DEFAULT_RECT_TAG,
     FrameState, Registry
 };
 

@@ -9,9 +9,25 @@ use quipi::{
     },
     schemas::{
         camera::{
-            CameraKind, CameraParams, DEFAULT_CAMERA_TAG
-        }, rect::DEFAULT_RECT_TAG, ISchema, SchemaCamera, SchemaRect, SchemaScene, SchemaShader
-    }, systems::{rendering::canvas, scene::load_scene}, wrappers::sdl2::window::QuiPiWindow, FrameState, FrameResponse, Registry, VersionedIndex
+            CameraKind,
+            CameraParams,
+            DEFAULT_CAMERA_TAG
+        },
+        entity::DEFAULT_RECT_TAG,
+        ISchema,
+        SchemaCamera,
+        SchemaScene,
+        SchemaShader
+    },
+    systems::{
+        rendering::canvas,
+        scene::load_scene
+    },
+    wrappers::sdl2::window::QuiPiWindow,
+    FrameState,
+    FrameResponse,
+    Registry,
+    VersionedIndex
 };
 
 pub static WIDTH: u32 = 1600;
@@ -104,7 +120,7 @@ fn scene_schema() -> SchemaScene {
         tag: CTag { tag: "bouncing_shapes".to_string() },
         clr_color: CRGBA { r: 0.0, g: 0.3, b: 0.5, a: 1.0 },
         cameras: vec![camera_schema()],
-        rects: vec![rect_schema()],
+        entities: vec![],
         shaders: vec![shader_schema()]
     }
 }
@@ -129,11 +145,4 @@ fn camera_schema() -> SchemaCamera {
 
 fn shader_schema() -> SchemaShader {
     SchemaShader::default()
-}
-
-fn rect_schema() -> SchemaRect {
-    SchemaRect {
-        instances: vec![],
-        ..SchemaRect::default()
-    }
 }

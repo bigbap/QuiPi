@@ -26,7 +26,7 @@ pub enum ObjectError {
     }
 }
 
-pub fn s_load_obj_file(
+pub fn load_obj_file(
     rel_path: String
 ) -> Result<(Vec<tobj::Model>, Vec<tobj::Material>), ObjectError> {
     let full_path = to_abs_path(&rel_path)?;

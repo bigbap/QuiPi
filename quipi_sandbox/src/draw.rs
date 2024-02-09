@@ -1,6 +1,6 @@
 use quipi::{
     components::CTag, schemas::{
-        camera::DEFAULT_CAMERA_TAG, rect::DEFAULT_RECT_TAG
+        camera::DEFAULT_CAMERA_TAG, entity::DEFAULT_RECT_TAG
     }, systems::rendering::draw::s_draw_by_tag, wrappers::opengl::{
         capabilities::{
             gl_blending_func, gl_enable, GLBlendingFactor, GLCapability

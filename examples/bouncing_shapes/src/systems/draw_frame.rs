@@ -6,7 +6,7 @@ use quipi::{
     systems::rendering::draw::s_draw_by_tag,
     Registry,
     VersionedIndex,
-    schemas::rect::DEFAULT_RECT_TAG,
+    schemas::entity::DEFAULT_RECT_TAG,
 };
 
 pub fn s_draw_frame(

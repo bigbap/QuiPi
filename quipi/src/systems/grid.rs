@@ -4,7 +4,10 @@ use crate::{
     components::{
         CModelMatrix,
         CModelNode,
-        CTransform, CShader, CTag, CName
+        CTransform,
+        CDrawable,
+        CTag,
+        CName
     },
     wrappers::opengl::{
         draw::DrawMode,
@@ -83,12 +86,12 @@ impl Grid {
         let grid = registry.entities.query::<CTag>(CTag { tag: GRID_TAG.to_string() });
 
         for line in grid {
-            if let Some(shader_id) = registry.entities.get::<CShader>(&line) {
+            if let Some(drawable) = registry.entities.get::<CDrawable>(&line) {
                 s_draw_entity(
                     &line,
                     registry,
                     camera,
-                    shader_id,
+                    &drawable.shader,
                     DrawMode::Triangles
                 );
             }
@@ -119,7 +122,7 @@ fn build_axis(
     let entity = registry.entities.create()?;
     registry.entities.add(&entity, CTag { tag: GRID_TAG.to_string() });
     registry.entities.add(&entity, mesh);
-    registry.entities.add(&entity, CShader { shader });
+    registry.entities.add(&entity, CDrawable { shader, texture: None });
     registry.entities.add(&entity, transform);
     registry.entities.add(&entity, model_matrix);
 

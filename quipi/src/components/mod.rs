@@ -23,8 +23,8 @@ pub use resources::*;
 pub use bounding_box::CBoundingBox;
 pub use camera::CCamera;
 pub use children::CChildren;
+pub use drawable::CDrawable;
 pub use drawable::CMesh;
-pub use drawable::CShader;
 pub use identifiers::CName;
 pub use identifiers::CTag;
 pub use lights::CAttenuation;
@@ -39,7 +39,7 @@ pub use matrices::CModelMatrix;
 pub use matrices::CViewMatrix;
 pub use model::CModelNode;
 pub use shapes::CRect;
-pub use shapes::CShape;
+pub use shapes::CCircle;
 pub use speed::CSpeed;
 pub use speed::CVelocity;
 pub use states::CMouseBtnState;
@@ -59,6 +59,7 @@ pub fn register_components(registry: &mut Registry) {
         .register_component::<CCutoff>()
         .register_component::<CDirection>()
         .register_component::<CDistance>()
+        .register_component::<CDrawable>()
         .register_component::<CEulerAngles>()
         .register_component::<CGizmo3D>()
         .register_component::<CMaterial>()
@@ -68,8 +69,7 @@ pub fn register_components(registry: &mut Registry) {
         .register_component::<CMouseBtnState>()
         .register_component::<CName>()
         .register_component::<CRect>()
-        .register_component::<CShader>()
-        .register_component::<CShape>()
+        .register_component::<CCircle>()
         .register_component::<CSpeed>()
         .register_component::<CTag>()
         .register_component::<CTarget>()

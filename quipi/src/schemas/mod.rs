@@ -1,11 +1,11 @@
 pub mod camera;
 pub mod scene;
-pub mod rect;
+pub mod entity;
 pub mod shader;
 
 pub use camera::SchemaCamera;
 pub use scene::SchemaScene;
-pub use rect::SchemaRect;
+pub use entity::SchemaEntity2D;
 pub use shader::SchemaShader;
 
 use std::fmt::Debug;
@@ -13,7 +13,7 @@ use crate::{
     ec_store::EMError, registry::RegistryError, Registry, VersionedIndex
 };
 
-pub trait ISchema {
+pub trait ISchema: Clone {
     fn build(&self, registry: &mut Registry) -> Result<VersionedIndex, SchemaError>;
 }
 

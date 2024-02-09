@@ -1,25 +1,13 @@
 use crate::{
-    VersionedIndex,
     components::{
-        CBoundingBox,
-        CCamera,
-        CMaterial,
-        CModelMatrix,
-        CViewMatrix,
-        CRGBA,
-        CShader,
-        CMesh, CTag
-    },
-    Registry,
-    resources::shader::{
+        CBoundingBox, CCamera, CDrawable, CMaterial, CMesh, CModelMatrix, CTag, CViewMatrix, CRGBA
+    }, resources::shader::{
         RShader,
         UniformVariable
-    },
-    systems::material,
-    wrappers::opengl::{
+    }, systems::material, wrappers::opengl::{
         self,
         draw::*
-    }
+    }, Registry, VersionedIndex
 };
 
 /**
@@ -44,12 +32,12 @@ pub fn s_draw_by_tag(
     let entities = registry.entities.query::<CTag>(CTag { tag: tag.to_string() });
 
     for entity in entities.iter() {
-        if let Some(shader_id) = registry.entities.get::<CShader>(entity) {
+        if let Some(drawable) = registry.entities.get::<CDrawable>(entity) {
             s_draw_entity(
                 entity,
                 registry,
                 camera_id,
-                shader_id,
+                &drawable.shader,
                 mode
             );
         }
@@ -62,10 +50,10 @@ pub fn s_draw_entity(
     entity: &VersionedIndex,
     registry: &Registry,
     camera: &VersionedIndex,
-    shader: &CShader,
+    shader: &VersionedIndex,
     mode: DrawMode
 ) {
-    if let Some(shader) = registry.resources.get::<RShader>(&shader.shader) {
+    if let Some(shader) = registry.resources.get::<RShader>(shader) {
         // TODO: this can be optimized to have textures per tag instead of per entity
         bind_textures(entity, registry, shader);
 

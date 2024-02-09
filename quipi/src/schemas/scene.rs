@@ -12,10 +12,10 @@ use crate::{
 
 use super::{
     SchemaCamera,
-    SchemaRect,
+    SchemaEntity2D,
     SchemaError,
     ISchema,
-    SchemaShader, rect::SchemaRectInstance,
+    SchemaShader,
 };
 
 pub const DEFAULT_SCENE_TAG: &str = "default_scene";
@@ -29,7 +29,7 @@ pub struct SchemaScene {
     pub clr_color: CRGBA,
     pub cameras: Vec<SchemaCamera>,
     pub shaders: Vec<SchemaShader>,
-    pub rects: Vec<SchemaRect>,
+    pub entities: Vec<SchemaEntity2D>,
 }
 
 impl Default for SchemaScene {
@@ -37,7 +37,7 @@ impl Default for SchemaScene {
         let shader = SchemaShader::default();
 
         let mut camera = SchemaCamera::default();
-        let rect_instance = SchemaRectInstance {
+        let rect = SchemaEntity2D {
             transform: CTransform {
                 translate: glm::vec3(
                     camera.params.right / 2.0,
@@ -46,11 +46,7 @@ impl Default for SchemaScene {
                 ),
                 ..CTransform::default()
             },
-            ..SchemaRectInstance::default()
-        };
-        let rect = SchemaRect {
-            instances: vec![rect_instance],
-            ..SchemaRect::default()
+            ..SchemaEntity2D::default()
         };
 
         camera.entities.push(rect.tag.clone());
@@ -60,7 +56,7 @@ impl Default for SchemaScene {
             clr_color: CRGBA { r: 0.3, g: 0.3, b: 0.3, a: 1.0 },
             cameras: vec![camera],
             shaders: vec![shader],
-            rects: vec![rect]
+            entities: vec![rect]
         }
     }
 }
@@ -80,8 +76,8 @@ impl ISchema for SchemaScene {
             shader.build(registry)?;
         }
 
-        // 3. build rects
-        for rect in self.rects.iter() {
+        // 3. build entities
+        for rect in self.entities.iter() {
             rect.build(registry)?;
         }
 

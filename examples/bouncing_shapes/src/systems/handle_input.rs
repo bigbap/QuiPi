@@ -34,7 +34,6 @@ pub fn s_handle_input(
                         spawner.spawn(scene, registry)?;
                     },
                     Some(Keycode::S) => {
-                        println!("saving");
                         save_scene("bouncing_shapes", scene)?;
                     },
                     _ => ()

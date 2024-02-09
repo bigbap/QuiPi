@@ -1,12 +1,19 @@
 use quipi::{
-    VersionedIndex,
-    schemas::{
-        SchemaScene,
-        rect::SchemaRectInstance, IPrefab
+    components::{
+        CBoundingBox,
+        CTransform,
+        CVelocity,
+        CRGBA
     },
-    Registry,
     math::random::Random,
-    utils::now_secs, components::{CRGBA, CTransform, CBoundingBox, CVelocity},
+    schemas::{
+        ISchema,
+        SchemaEntity2D,
+        SchemaScene
+    },
+    utils::now_secs,
+    Registry,
+    VersionedIndex
 };
 
 pub struct RectSpawner {
@@ -27,7 +34,10 @@ impl RectSpawner {
         scene: &mut SchemaScene,
         registry: &mut Registry,
     ) -> Result<Option<VersionedIndex>, Box<dyn std::error::Error>> {
-        let Some(b_box) = registry.entities.get::<CBoundingBox>(&self.camera) else {
+        let (Some(b_box), mut this_schema) = (
+            registry.entities.get::<CBoundingBox>(&self.camera),
+            scene.entities.first().unwrap_or(&SchemaEntity2D::default()).clone()
+         ) else {
             return Ok(None);
         };
 
@@ -38,32 +48,27 @@ impl RectSpawner {
         if self.rand.random() > 0.5 { vel.0 *= -1.0; }
         if self.rand.random() > 0.5 { vel.1 *= -1.0; }
 
-        let velocity = CVelocity { x: vel.0, y: vel.1, z: 0.0 };
-        let color = CRGBA {
+        this_schema.velocity = Some(CVelocity { x: vel.0, y: vel.1, z: 0.0 });
+        this_schema.color = Some(CRGBA {
             r: self.rand.random(),
             g: self.rand.random(),
             b: self.rand.random(),
             a: 0.5
-        };
+        });
 
         let s_factor = self.rand.range(25, 50) as f32 / 100.0;
-        let instance = SchemaRectInstance {
-            transform: CTransform {
-                translate: glm::vec3(
-                    b_box.right / 2.0,
-                    b_box.top / 2.0,
-                    0.0
-                ),
-                scale: Some(glm::vec3(s_factor, s_factor, s_factor)),
-                ..CTransform::default()
-            },
-            color,
-            velocity,
+        this_schema.transform = CTransform {
+            translate: glm::vec3(
+                b_box.right / 2.0,
+                b_box.top / 2.0,
+                0.0
+            ),
+            scale: Some(glm::vec3(s_factor, s_factor, s_factor)),
+            ..CTransform::default()
         };
 
-        let Some(this_schema) = scene.rects.get_mut(0) else { return Ok(None) };
-        let id = this_schema.build_instance(registry, &instance)?;
-        this_schema.instances.push(instance);
+        let id = this_schema.build(registry)?;
+        scene.entities.push(this_schema);
 
         Ok(Some(id))
     }

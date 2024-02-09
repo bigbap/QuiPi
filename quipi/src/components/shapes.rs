@@ -5,20 +5,7 @@ use crate::{
     systems::assets::ObjectConfig
 };
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-pub enum Shape {
-    Rect(CRect),
-    Mesh(String) // path to object file
-}
-
-#[derive(Debug, Component, Serialize, Deserialize, Clone, PartialEq)]
-pub struct CShape(pub Shape);
-
-impl Default for CShape {
-    fn default() -> Self {
-        Self(Shape::Rect(CRect::default()))
-    }
-}
+use super::CRGBA;
 
 #[derive(Debug, Component, Serialize, Deserialize, Clone, PartialEq)]
 pub struct CRect {
@@ -29,19 +16,22 @@ pub struct CRect {
 }
 
 impl CRect {
-    pub fn to_obj_config(&self, color: (f32, f32, f32, f32)) -> ObjectConfig {
+    pub fn to_config(&self, color: Option<CRGBA>) -> ObjectConfig {
         let points: Vec<f32> = vec![
             self.center_x - (self.width / 2.0), self.center_y + (self.height / 2.0), 0.0, // top left
             self.center_x + (self.width / 2.0), self.center_y + (self.height / 2.0), 0.0, // top right
             self.center_x + (self.width / 2.0), self.center_y - (self.height / 2.0), 0.0, // bottom right
             self.center_x - (self.width / 2.0), self.center_y - (self.height / 2.0), 0.0 // bottom left
         ];
-        let colors: Vec<f32> = vec![
-            color.0, color.1, color.2, color.3,
-            color.0, color.1, color.2, color.3,
-            color.0, color.1, color.2, color.3,
-            color.0, color.1, color.2, color.3,
-        ];
+        let colors: Vec<f32> = match color {
+            Some(color) => vec![
+                color.r, color.g, color.b, color.a,
+                color.r, color.g, color.b, color.a,
+                color.r, color.g, color.b, color.a,
+                color.r, color.g, color.b, color.a,
+            ],
+            _ => vec![]
+        };
         let indices = vec![
             0, 1, 2,
             3, 0, 2
@@ -67,3 +57,21 @@ impl Default for CRect {
     }
 }
 
+#[derive(Debug, Component, Serialize, Deserialize, Clone, PartialEq)]
+pub struct CCircle {
+    pub radius: f32,
+    pub center_x: f32,
+    pub center_y: f32,
+    pub theta: f32, // in degrees, must be a factor of 360
+}
+
+impl CCircle {
+    pub fn to_config(&self, _color: Option<CRGBA>) -> ObjectConfig {
+        let _theta = self.theta.clamp(5.0, 90.0);
+
+        // TODO
+        let mut _points = vec![self.center_x, self.center_y, 0.0];
+
+        ObjectConfig::default()
+    }
+}
