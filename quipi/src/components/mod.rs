@@ -47,9 +47,7 @@ pub use color::CRGBA;
 pub use target::CTarget;
 pub use unique_id::CUniqueId;
 
-use crate::Component;
 use crate::Registry;
-use crate::VersionedIndex;
 
 pub fn register_components(registry: &mut Registry) {
     registry.entities
