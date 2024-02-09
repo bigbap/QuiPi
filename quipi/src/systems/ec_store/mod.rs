@@ -16,9 +16,10 @@ pub trait Component {
 macro_rules! get_components {
     ($em:expr, $entity:expr, $($cmp:ty,)+) => {
         (
+            $entity.to_string(),
             $(
-                $em.get::<$cmp>($entity),
-            )+
+                (std::any::type_name::<$cmp>().split("::").last().unwrap(), $em.get::<$cmp>($entity)),
+            )?
         )
     };
 }
