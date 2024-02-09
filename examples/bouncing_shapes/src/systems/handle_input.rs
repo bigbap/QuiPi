@@ -1,7 +1,7 @@
 use quipi::{FrameResponse, Registry};
 use quipi::engine::FrameState;
 use quipi::schemas::SchemaScene;
-use quipi::systems::scene::{save_entities, save_scene};
+use quipi::systems::scene::save_scene;
 use quipi::systems::rendering::canvas;
 use sdl2::event::{
     Event,
@@ -35,8 +35,7 @@ pub fn s_handle_input(
                     },
                     Some(Keycode::S) => {
                         println!("saving");
-                        save_entities("bouncing_shapes", registry)?;
-                        // save_scene("bouncing_shapes", scene)?;
+                        save_scene("bouncing_shapes", scene)?;
                     },
                     _ => ()
                 }
