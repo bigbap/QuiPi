@@ -19,14 +19,13 @@ use crate::{
 *
 * entities must have the following components:
 * - CMesh
-* - CModelMatrix
+* - CDrawable
 *
 * shader must exist and be valid
 */
 pub fn s_draw_by_tag(
     tag: &str,
     registry: &Registry,
-    camera_id: &VersionedIndex,
     mode: DrawMode
 ) -> Result<(), Box<dyn std::error::Error>> {
     let entities = registry.entities.query::<CTag>(CTag { tag: tag.to_string() });
@@ -36,7 +35,7 @@ pub fn s_draw_by_tag(
             s_draw_entity(
                 entity,
                 registry,
-                camera_id,
+                &drawable.camera,
                 &drawable.shader,
                 mode
             );

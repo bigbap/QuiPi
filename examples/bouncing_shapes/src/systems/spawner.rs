@@ -8,8 +8,7 @@ use quipi::{
     math::random::Random,
     schemas::{
         ISchema,
-        SchemaEntity2D,
-        SchemaScene
+        SchemaEntity2D
     },
     utils::now_secs,
     Registry,
@@ -31,12 +30,11 @@ impl RectSpawner {
 
     pub fn spawn(
         &mut self,
-        scene: &mut SchemaScene,
         registry: &mut Registry,
     ) -> Result<Option<VersionedIndex>, Box<dyn std::error::Error>> {
         let (Some(b_box), mut this_schema) = (
             registry.entities.get::<CBoundingBox>(&self.camera),
-            scene.entities.first().unwrap_or(&SchemaEntity2D::default()).clone()
+            SchemaEntity2D::default()
          ) else {
             return Ok(None);
         };
@@ -66,9 +64,13 @@ impl RectSpawner {
             scale: Some(glm::vec3(s_factor, s_factor, s_factor)),
             ..CTransform::default()
         };
+        this_schema.b_box = Some(CBoundingBox {
+            right: 200.0,
+            bottom: 200.0,
+            ..CBoundingBox::default()
+        });
 
         let id = this_schema.build(registry)?;
-        scene.entities.push(this_schema);
 
         Ok(Some(id))
     }

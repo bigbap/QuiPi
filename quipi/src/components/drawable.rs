@@ -14,6 +14,7 @@ use crate::{
 #[derive(Debug, Component, PartialEq)]
 pub struct CDrawable {
     pub shader: VersionedIndex,
+    pub camera: VersionedIndex,
     pub texture: Option<VersionedIndex>,
 }
 
@@ -21,6 +22,7 @@ pub struct CDrawable {
 pub struct CMesh {
     pub mesh: Option<ElementArrayMesh>,
     pub data: ObjectConfig,
+    pub usage: BufferUsage,
 }
 
 impl CMesh {
@@ -41,7 +43,8 @@ impl CMesh {
 
         Ok(Self {
             mesh: Some(mesh),
-            data: config
+            data: config,
+            usage
         })
     }
 }

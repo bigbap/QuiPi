@@ -1,12 +1,6 @@
 use serde::{Serialize, Deserialize};
 
-use crate::{
-    Component,
-    schemas::camera::{
-        CameraParams,
-        CameraKind
-    },
-};
+use crate::Component;
 
 
 #[derive(Debug, Component, Serialize, Deserialize, PartialEq)]
@@ -55,3 +49,37 @@ impl CCamera {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
+pub enum CameraKind {
+    Cam3D,
+    Cam2D
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
+pub struct CameraParams {
+    pub kind: CameraKind,
+    pub fov: f32,
+    pub aspect: f32,
+    pub left: f32,
+    pub right: f32,
+    pub bottom: f32,
+    pub top: f32,
+    pub near: f32,
+    pub far: f32
+}
+
+impl Default for CameraParams {
+    fn default() -> Self {
+        Self {
+            kind: CameraKind::Cam2D,
+            fov: 0.0,
+            aspect: 0.0,
+            left: 0.0,
+            right: 800.0,
+            bottom: 0.0,
+            top: 600.0,
+            near: 0.0,
+            far: 0.2
+        }
+    }
+}

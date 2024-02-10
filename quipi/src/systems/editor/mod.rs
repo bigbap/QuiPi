@@ -3,9 +3,12 @@
 use egui::Vec2;
 
 use crate::{
-    components::CTag,
+    components::{
+        CScene,
+        CTag
+    },
     schemas::{
-        entity::DEFAULT_RECT_TAG,
+        entity2d::DEFAULT_RECT_TAG,
         ISchema,
         SchemaEntity2D
     },
@@ -14,6 +17,8 @@ use crate::{
     Registry,
     VersionedIndex
 };
+
+use super::scene::save_scene_2d;
 
 pub struct SceneEditor {
     gui: GUI,
@@ -55,7 +60,10 @@ impl SceneEditor {
         });
     }
 
-    fn entity_list(&mut self, registry: &mut Registry) {
+    fn entity_list(
+        &mut self,
+        registry: &mut Registry
+    ) {
         let entities = registry.entities.query::<CTag>(CTag { tag: DEFAULT_RECT_TAG.to_string() });
 
         self.gui.add_window("Scene", |ui| {
@@ -71,7 +79,14 @@ impl SceneEditor {
                     }
                 }
                 if ui.button("save scene").clicked() {
-                    println!("saving scene..");
+                    let scenes = registry.entities.query_all::<CScene>();
+                    let Some(scene_id) = scenes.first() else { return };
+
+                    if let Some(scene) = registry.entities.get::<CScene>(scene_id) {
+                        if let Err(e) = save_scene_2d(&scene.name, *scene_id, &registry) {
+                            println!("there was a problem saving scene {}: {:?}", scene.name, e);
+                        }
+                    }
                 }
             });
 

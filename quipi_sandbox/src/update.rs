@@ -4,7 +4,7 @@ use quipi::{
         CTag,
         CTransform
     },
-    schemas::entity::DEFAULT_RECT_TAG,
+    schemas::entity2d::DEFAULT_RECT_TAG,
     Registry
 };
 

@@ -1,8 +1,9 @@
-use quipi::{FrameResponse, Registry};
-use quipi::engine::FrameState;
-use quipi::schemas::SchemaScene;
-use quipi::systems::scene::save_scene;
-use quipi::systems::rendering::canvas;
+use quipi::{
+    FrameResponse,
+    Registry,
+    engine::FrameState,
+    systems::rendering::canvas
+};
 use sdl2::event::{
     Event,
     WindowEvent
@@ -11,11 +12,10 @@ use sdl2::keyboard::Keycode;
 
 use super::spawner::RectSpawner;
 
-pub fn s_handle_input(
+pub fn handle_input(
     frame_state: &mut FrameState,
     registry: &mut Registry,
-    spawner: &mut RectSpawner,
-    scene: &mut SchemaScene
+    spawner: &mut RectSpawner
 ) -> Result<FrameResponse, Box<dyn std::error::Error>> {
     for event in frame_state.events.iter() {
         match event {
@@ -31,10 +31,7 @@ pub fn s_handle_input(
                 if frame_state.editor_mode { continue; }
                 match keycode {
                     Some(Keycode::Space) => {
-                        spawner.spawn(scene, registry)?;
-                    },
-                    Some(Keycode::S) => {
-                        save_scene("bouncing_shapes", scene)?;
+                        spawner.spawn(registry)?;
                     },
                     _ => ()
                 }

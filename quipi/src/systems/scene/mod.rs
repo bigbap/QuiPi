@@ -7,26 +7,32 @@ use std::{
 };
 
 use crate::{
-    schemas::SchemaScene,
-    utils::to_abs_path,
+    schemas::{ISchema, SchemaScene2D},
+    utils::to_abs_path, Registry, VersionedIndex,
 };
 
-pub fn save_scene(
+pub fn save_scene_2d(
     name: &str,
-    scene: &SchemaScene,
+    scene: VersionedIndex,
+    registry: &Registry
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let str = serde_yaml::to_string(&scene)?;
-    let path = to_abs_path(&format!("assets/scenes/{}.yaml", name))?; 
+    if let Some(scene) = SchemaScene2D::from_entity(scene, registry) {
+        let str = serde_yaml::to_string(&scene)?;
+        let path = to_abs_path(&format!("assets/scenes/{}.yaml", name))?; 
 
-    fs::write(path, str)?;
+        fs::write(path, str)?;
+    } else {
+        #[cfg(debug_assertions)]
+        println!("there was a problem saving the scene");
+    }
 
     Ok(())
 }
 
-pub fn load_scene(
+pub fn load_scene_2d(
     name: &str,
-    default: SchemaScene
-) -> Result<SchemaScene, Box<dyn std::error::Error>> {
+    default: SchemaScene2D
+) -> Result<SchemaScene2D, Box<dyn std::error::Error>> {
     let path = to_abs_path(&format!("assets/scenes/{}.yaml", name))?; 
     if let Ok(file) = File::open(path) {
         let reader = BufReader::new(file);

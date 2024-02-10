@@ -1,18 +1,9 @@
 use quipi::{
-    engine::QuiPiApp,
-    Registry,
-    components::CRGBA,
-    systems::{
-        scene::load_scene,
-        rendering::canvas,
-    },
-    wrappers::sdl2::window::QuiPiWindow,
-    FrameState,
-    FrameResponse,
-    schemas::{
-        SchemaScene,
-        ISchema
-    },
+    components::{CScene, CRGBA}, engine::QuiPiApp, schemas::{
+        ISchema, SchemaScene2D
+    }, systems::{
+        rendering::canvas, scene::load_scene_2d
+    }, wrappers::sdl2::window::QuiPiWindow, FrameResponse, FrameState, Registry, VersionedIndex
 };
 
 extern crate quipi;
@@ -28,7 +19,7 @@ pub static HEIGHT: u32 = 900;
 pub type SandboxError = Box<dyn std::error::Error>;
 
 pub struct QuiPiSandbox {
-    scene: Option<SchemaScene>,
+    scene: Option<VersionedIndex>,
 }
 
 impl QuiPiSandbox {
@@ -45,10 +36,13 @@ impl QuiPiApp for QuiPiSandbox {
         registry: &mut Registry,
         window: &QuiPiWindow
     ) -> Result<(), SandboxError> {
-        let mut scene = load_scene("main", SchemaScene::default())?;
-        scene.clr_color = CRGBA { r: 0.2, g: 0.2, b: 0.2, a: 1.0 };
-        scene.build(registry)?;
-        self.scene = Some(scene);
+        let scene_schema = load_scene_2d("main", SchemaScene2D {
+            name: CScene { name: "main".to_string() },
+            clr_color: CRGBA { r: 0.2, g: 0.2, b: 0.2, a: 1.0 },
+            ..Default::default()
+        })?;
+
+        self.scene = Some(scene_schema.build(registry)?);
 
         window.relative_mouse_mode(false);
 
@@ -60,8 +54,14 @@ impl QuiPiApp for QuiPiSandbox {
         registry: &mut Registry,
         frame_state: &mut FrameState
     ) -> Result<FrameResponse, SandboxError> {
-        if let Some(scene) = &self.scene {
-            frame_state.clear_color = scene.clr_color;
+        if self.scene.is_none() {
+            return Err("There is no scene defined".into());
+        };
+        
+        let scene = self.scene.unwrap();
+
+        if let Some(color) = registry.entities.get::<CRGBA>(&scene) {
+            frame_state.clear_color = *color;
         }
 
         update::update_frame(registry);
@@ -69,7 +69,7 @@ impl QuiPiApp for QuiPiSandbox {
         draw::draw_frame(registry)?;
         draw_debug_info(registry, frame_state);
 
-        input::handle_input(frame_state, &self.scene)
+        input::handle_input(frame_state, scene, &registry)
     }
 }
 

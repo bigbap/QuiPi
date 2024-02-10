@@ -34,6 +34,7 @@ pub struct Grid {}
 impl Grid {
     pub fn new(
         registry: &mut Registry,
+        camera: VersionedIndex
     ) -> Result<Self, Box<dyn std::error::Error>>{
         let indices = &[0, 1, 2, 2, 3, 0];
         let vertices = &[
@@ -51,7 +52,7 @@ impl Grid {
                 vertices
             )?;
 
-        let shader = RShader::new(
+        let r_shader = RShader::new(
             &to_abs_path("assets/shaders/grid")?,
             vec![
                 UniformVariable::ProjectionMatrix("projection".to_string()),
@@ -63,13 +64,14 @@ impl Grid {
 
         let id = Uuid::new_v4().to_string();
 
-        let res = registry.resources.create()?;
-        registry.resources.add(&res, CName { name: id });
-        registry.resources.add(&res, shader);
+        let shader = registry.resources.create()?;
+        registry.resources.add(&shader, CName { name: id });
+        registry.resources.add(&shader, r_shader);
 
         build_axis(
             registry,
-            res,
+            shader,
+            camera,
             mesh,
             glm::vec3(0.0, 0.0, 0.0),
             glm::vec3(0.0, 0.0, 0.0)
@@ -104,6 +106,7 @@ impl Grid {
 fn build_axis(
     registry: &mut Registry,
     shader: VersionedIndex,
+    camera: VersionedIndex,
     mesh: ElementArrayMesh,
     translate: glm::Vec3,
     scale: glm::Vec3
@@ -122,7 +125,7 @@ fn build_axis(
     let entity = registry.entities.create()?;
     registry.entities.add(&entity, CTag { tag: GRID_TAG.to_string() });
     registry.entities.add(&entity, mesh);
-    registry.entities.add(&entity, CDrawable { shader, texture: None });
+    registry.entities.add(&entity, CDrawable { shader, camera, texture: None });
     registry.entities.add(&entity, transform);
     registry.entities.add(&entity, model_matrix);
 

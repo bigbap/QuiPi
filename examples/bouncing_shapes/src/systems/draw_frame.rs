@@ -5,13 +5,11 @@ use quipi::{
     },
     systems::rendering::draw::s_draw_by_tag,
     Registry,
-    VersionedIndex,
-    schemas::entity::DEFAULT_RECT_TAG,
+    schemas::entity2d::DEFAULT_RECT_TAG,
 };
 
 pub fn s_draw_frame(
-    registry: &mut Registry,
-    camera: &VersionedIndex
+    registry: &mut Registry
 ) -> Result<(), Box<dyn std::error::Error>> {
     gl_enable(GLCapability::AlphaBlending);
     gl_blending_func(GLBlendingFactor::SrcAlpha, GLBlendingFactor::OneMinusSrcAlpha);
@@ -19,7 +17,6 @@ pub fn s_draw_frame(
     s_draw_by_tag(
         DEFAULT_RECT_TAG,
         registry,
-        camera,
         DrawMode::Triangles
     )?;
 

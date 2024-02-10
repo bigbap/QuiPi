@@ -10,6 +10,7 @@ pub mod lights;
 pub mod material;
 pub mod matrices;
 pub mod model;
+pub mod scene;
 pub mod shapes;
 pub mod speed;
 pub mod states;
@@ -23,6 +24,7 @@ pub use resources::*;
 pub use bounding_box::CBoundingBox;
 pub use camera::CCamera;
 pub use children::CChildren;
+pub use color::CRGBA;
 pub use drawable::CDrawable;
 pub use drawable::CMesh;
 pub use identifiers::CName;
@@ -31,19 +33,19 @@ pub use lights::CAttenuation;
 pub use lights::CCutoff;
 pub use material::CMaterial;
 pub use gizmo::CGizmo3D;
-pub use transform::CDirection;
-pub use transform::CEulerAngles;
-pub use transform::CTransform;
 pub use distance::CDistance;
 pub use matrices::CModelMatrix;
 pub use matrices::CViewMatrix;
 pub use model::CModelNode;
+pub use scene::CScene;
 pub use shapes::CRect;
 pub use shapes::CCircle;
 pub use speed::CSpeed;
 pub use speed::CVelocity;
 pub use states::CMouseBtnState;
-pub use color::CRGBA;
+pub use transform::CDirection;
+pub use transform::CEulerAngles;
+pub use transform::CTransform;
 pub use target::CTarget;
 pub use unique_id::CUniqueId;
 
@@ -70,6 +72,7 @@ pub fn register_components(registry: &mut Registry) {
         .register_component::<CName>()
         .register_component::<CRect>()
         .register_component::<CCircle>()
+        .register_component::<CScene>()
         .register_component::<CSpeed>()
         .register_component::<CTag>()
         .register_component::<CTarget>()

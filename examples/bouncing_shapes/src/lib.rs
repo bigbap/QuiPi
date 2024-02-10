@@ -3,29 +3,21 @@ extern crate nalgebra_glm as glm;
 
 use quipi::{
     components::{
-        CTag,
-        CTransform,
-        CRGBA
-    },
-    schemas::{
-        camera::{
-            CameraKind,
-            CameraParams,
-            DEFAULT_CAMERA_TAG
-        },
-        entity::DEFAULT_RECT_TAG,
+        CName, CScene, CTransform, CRGBA
+    }, schemas::{
+        camera2d::DEFAULT_CAMERA,
         ISchema,
-        SchemaCamera,
-        SchemaScene,
+        SchemaCamera2D,
+        SchemaScene2D,
         SchemaShader
     },
     systems::{
         rendering::canvas,
-        scene::load_scene
+        scene::load_scene_2d
     },
     wrappers::sdl2::window::QuiPiWindow,
-    FrameState,
     FrameResponse,
+    FrameState,
     Registry,
     VersionedIndex
 };
@@ -42,20 +34,15 @@ use systems::{
 
 pub struct MyGame {
     spawner: Option<RectSpawner>,
-    scene: SchemaScene,
+    scene: Option<VersionedIndex>,
     camera: Option<VersionedIndex>
 }
 
 impl MyGame {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let scene = load_scene(
-            "bouncing_shapes",
-            scene_schema()
-        )?;
-
         Ok(MyGame {
             spawner: None,
-            scene,
+            scene: None,
             camera: None
         })
     }
@@ -67,11 +54,18 @@ impl quipi::QuiPiApp for MyGame {
         registry: &mut Registry,
         _winapi: &QuiPiWindow
     ) -> Result<(), Box<dyn std::error::Error>> {
-        self.scene.build(registry)?;
+        let scene = load_scene_2d(
+            "bouncing_shapes",
+            scene_schema()
+        )?;
 
-        self.camera = Some(registry.entities.query::<CTag>(
-            self.scene.cameras.first().unwrap().tag.clone()
-        ).first().unwrap().to_owned());
+        let camera_name = scene.cameras.first().unwrap().name.clone();
+
+        self.scene = Some(scene.build(registry)?);
+        self.camera = Some(registry.entities.query::<CName>(camera_name)
+            .first()
+            .unwrap()
+            .to_owned());
 
         self.spawner = Some(RectSpawner::new(self.camera.unwrap())?);
 
@@ -83,23 +77,28 @@ impl quipi::QuiPiApp for MyGame {
         registry: &mut Registry,
         frame_state: &mut FrameState
     ) -> Result<FrameResponse, Box<dyn std::error::Error>> {
-        frame_state.clear_color = self.scene.clr_color;
+        if self.scene.is_none() {
+            return Err("There is no scene defined".into());
+        };
+        
+        let scene = self.scene.unwrap();
+
+        if let Some(color) = registry.entities.get::<CRGBA>(&scene) {
+            frame_state.clear_color = *color;
+        }
 
         // handle input
-        let frame_response = s_handle_input(
+        let frame_response = handle_input(
             frame_state,
             registry,
-            self.spawner.as_mut().unwrap(),
-            &mut self.scene
+            self.spawner.as_mut().unwrap()
         )?;
 
+        // update
         s_update(registry, frame_state)?;
 
         // render
-        s_draw_frame(
-            registry,
-            &self.camera.unwrap()
-        )?;
+        s_draw_frame(registry)?;
 
         // draw the entity count
         let (_x, _y, width, height) = canvas::get_dimensions();
@@ -115,34 +114,25 @@ impl quipi::QuiPiApp for MyGame {
     }
 }
 
-fn scene_schema() -> SchemaScene {
-    SchemaScene {
-        tag: CTag { tag: "bouncing_shapes".to_string() },
+fn scene_schema() -> SchemaScene2D {
+    SchemaScene2D {
+        name: CScene { name: "bouncing_shapes".to_string() },
         clr_color: CRGBA { r: 0.0, g: 0.3, b: 0.5, a: 1.0 },
         cameras: vec![camera_schema()],
         entities: vec![],
-        shaders: vec![shader_schema()]
+        shaders: vec![SchemaShader::default()]
     }
 }
 
-fn camera_schema() -> SchemaCamera {
-    SchemaCamera {
-        tag: CTag { tag:DEFAULT_CAMERA_TAG.to_string() },
-        params: CameraParams {
-            kind: CameraKind::Cam2D,
-            left: 0.0,
-            right: WIDTH as f32,
-            bottom: 0.0,
-            top: HEIGHT as f32,
-            near: 0.0,
-            far: 0.2,
-            ..CameraParams::default()
-        },
+fn camera_schema() -> SchemaCamera2D {
+    SchemaCamera2D {
+        name: CName { name: DEFAULT_CAMERA.to_string() },
+        left: 0.0,
+        right: WIDTH as f32,
+        bottom: 0.0,
+        top: HEIGHT as f32,
+        near: 0.0,
+        far: 0.2,
         transform: CTransform::default(),
-        entities: vec![CTag { tag: DEFAULT_RECT_TAG.to_string() }]
     }
-}
-
-fn shader_schema() -> SchemaShader {
-    SchemaShader::default()
 }
