@@ -95,6 +95,9 @@ impl SceneEditor {
 
             egui::ScrollArea::vertical().show(ui, |ui| {
                 for entity in entities.iter() {
+                    // let name = registry.entities.get::<CName>(entity).unwrap();
+                    // let name = name.name.clone();
+
                     ui.horizontal(|ui| {
                         ui.set_width(ui.available_width());
                         ui.radio_value(&mut self.active_entity, Some(*entity), entity.to_string());
