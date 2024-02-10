@@ -197,7 +197,7 @@ impl Painter {
             delta.pos,
             self.textures.get_mut(&id)
         ) {
-            println!("got here");
+            println!("GUI painter: got here..");
             
         } else {
             let texture = from_buffer_rgba(

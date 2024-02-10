@@ -1,13 +1,26 @@
 use crate::{
     components::{
-        CBoundingBox, CCamera, CDrawable, CMaterial, CMesh, CModelMatrix, CTag, CViewMatrix, CRGBA
-    }, resources::shader::{
+        CBoundingBox,
+        CCamera,
+        CDrawable,
+        CMaterial,
+        CMesh,
+        CModelMatrix,
+        CTag,
+        CViewMatrix,
+        CRGBA
+    },
+    resources::shader::{
         RShader,
         UniformVariable
-    }, systems::material, wrappers::opengl::{
+    },
+    systems::material,
+    wrappers::opengl::{
         self,
         draw::*
-    }, Registry, VersionedIndex
+    },
+    Registry,
+    VersionedIndex
 };
 
 /**
@@ -25,18 +38,20 @@ use crate::{
 */
 pub fn s_draw_by_tag(
     tag: &str,
-    registry: &Registry,
+    registry: &mut Registry,
     mode: DrawMode
 ) -> Result<(), Box<dyn std::error::Error>> {
     let entities = registry.entities.query::<CTag>(CTag { tag: tag.to_string() });
 
     for entity in entities.iter() {
         if let Some(drawable) = registry.entities.get::<CDrawable>(entity) {
+            let camera = drawable.camera;
+            let shader = drawable.shader;
             s_draw_entity(
                 entity,
                 registry,
-                &drawable.camera,
-                &drawable.shader,
+                &camera,
+                &shader,
                 mode
             );
         }
@@ -47,13 +62,14 @@ pub fn s_draw_by_tag(
 
 pub fn s_draw_entity(
     entity: &VersionedIndex,
-    registry: &Registry,
+    registry: &mut Registry,
     camera: &VersionedIndex,
     shader: &VersionedIndex,
     mode: DrawMode
 ) {
+    CModelMatrix::update_model_matrix(entity, registry);
+
     if let Some(shader) = registry.resources.get::<RShader>(shader) {
-        // TODO: this can be optimized to have textures per tag instead of per entity
         bind_textures(entity, registry, shader);
 
         if let Some(mesh) = registry.entities.get::<CMesh>(entity) {

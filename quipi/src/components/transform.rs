@@ -8,8 +8,8 @@ use crate::systems::ec_store::Component;
 #[derive(Debug, Component, PartialEq, Clone, Copy, Serialize, Deserialize)]
 pub struct CTransform {
     pub translate: glm::Vec3,
-    pub rotate: Option<glm::Vec3>,
-    pub scale: Option<glm::Vec3>,
+    pub rotate: glm::Vec3,
+    pub scale: glm::Vec3,
 
     pub angle: f32,
 }
@@ -18,8 +18,8 @@ impl Default for CTransform {
     fn default() -> Self {
         Self {
             translate: glm::vec3(0.0, 0.0, 0.0),
-            rotate: None,
-            scale: None,
+            rotate: glm::vec3(0.0, 0.0, 0.0),
+            scale: glm::vec3(1.0, 1.0, 1.0),
 
             angle: 0.0
         }
@@ -39,17 +39,8 @@ impl CTransform {
     pub fn to_matrix(&self) -> glm::Mat4 {
         let matrix = glm::Mat4::identity();
         let matrix = glm::translate(&matrix, &self.translate);
-        let matrix = match &self.rotate {
-            None => matrix,
-            Some(rotate) => {
-                // TODO: change this to use quaternions.
-                glm::rotate(&matrix, self.angle, &glm::normalize(rotate))
-            }
-        };
-        match self.scale {
-            Some(scale) => glm::scale(&matrix, &scale),
-            None => matrix
-        }
+        let matrix = glm::rotate(&matrix, self.angle, &glm::normalize(&self.rotate));
+        glm::scale(&matrix, &self.scale)
     }
 }
 

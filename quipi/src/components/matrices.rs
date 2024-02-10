@@ -13,10 +13,15 @@ impl Default for CModelMatrix {
 
 impl CModelMatrix {
     pub fn update_model_matrix(
-        &mut self,
-        matrix: glm::Mat4,
+        entity: &VersionedIndex,
+        registry: &mut Registry
     ) {
-        self.0 = matrix;
+        let Some(transform) = registry.entities.get::<CTransform>(entity) else { return; };
+        let matrix = transform.to_matrix();
+
+        if let Some(model) = registry.entities.get_mut::<CModelMatrix>(entity) {
+            model.0 = matrix;
+        }
     }
 }
 

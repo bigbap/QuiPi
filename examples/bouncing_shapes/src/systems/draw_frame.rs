@@ -8,7 +8,7 @@ use quipi::{
     schemas::entity2d::DEFAULT_RECT_TAG,
 };
 
-pub fn s_draw_frame(
+pub fn draw_frame(
     registry: &mut Registry
 ) -> Result<(), Box<dyn std::error::Error>> {
     gl_enable(GLCapability::AlphaBlending);

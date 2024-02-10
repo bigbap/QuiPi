@@ -1,7 +1,4 @@
-use egui::{
-    RawInput,
-    Ui
-};
+use egui::RawInput;
 use sdl2::event::{
     Event,
     WindowEvent
@@ -20,7 +17,7 @@ mod painter;
 mod input;
 
 pub struct GUI {
-    ctx: egui::Context,
+    pub ctx: egui::Context,
     painter: Painter,
     raw_input: RawInput,
 }
@@ -43,23 +40,7 @@ impl GUI {
     pub fn begin_frame(&mut self) {
         self.ctx.begin_frame(self.raw_input.take());
     }
-    pub fn add_panel_top(
-        &mut self,
-        name: &str,
-        cb: impl FnOnce(&mut Ui)
-    ) {
-        egui::TopBottomPanel::top(name.to_string())
-            .show(&self.ctx, cb);
-    }
-    pub fn add_window(
-        &mut self,
-        name: &str,
-        cb: impl FnOnce(&mut Ui)
-    ) {
-        egui::Window::new(name.to_string())
-            .resizable(true)
-            .show(&self.ctx, cb);
-    }
+
     pub fn end_frame(
         &mut self,
         frame_state: &FrameState

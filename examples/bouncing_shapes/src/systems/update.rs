@@ -1,7 +1,6 @@
 use quipi::{
     components::{
         CBoundingBox,
-        CModelMatrix,
         CTag,
         CTransform,
         CVelocity
@@ -15,7 +14,10 @@ use crate::{
     WIDTH
 };
 
-pub fn s_update(registry: &mut Registry, frame_state: &mut FrameState) -> Result<(), Box<dyn std::error::Error>> {
+pub fn update(
+    registry: &mut Registry,
+    frame_state: &mut FrameState
+) -> Result<(), Box<dyn std::error::Error>> {
     if frame_state.editor_mode {
         return Ok(())
     }
@@ -27,7 +29,7 @@ pub fn s_update(registry: &mut Registry, frame_state: &mut FrameState) -> Result
         let Some(transform) = registry.entities.get::<CTransform>(&quad)   else { continue };
         let Some(b_box)     = registry.entities.get::<CBoundingBox>(&quad) else { continue };
         
-        let scale = transform.scale.unwrap_or(glm::vec3(1.0, 1.0, 1.0));
+        let scale = transform.scale;
 
         let vel = glm::vec3(vel.x, vel.y, 0.0);
         let translate = transform.translate + (vel * frame_state.delta);
@@ -39,14 +41,10 @@ pub fn s_update(registry: &mut Registry, frame_state: &mut FrameState) -> Result
 
         let Some(transform) = registry.entities.get_mut::<CTransform>(&quad) else { continue };
         transform.translate = translate;
-        let matrix = transform.to_matrix();
 
         let Some(vel) = registry.entities.get_mut::<CVelocity>(&quad) else { continue };
         if colided_x { vel.x *= -1.0 }
         if colided_y { vel.y *= -1.0 }
-
-        let Some(model) = registry.entities.get_mut::<CModelMatrix>(&quad) else { continue };
-        model.update_model_matrix(matrix);
     }
 
     Ok(())

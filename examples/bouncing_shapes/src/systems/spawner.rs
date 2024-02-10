@@ -61,7 +61,7 @@ impl RectSpawner {
                 b_box.top / 2.0,
                 0.0
             ),
-            scale: Some(glm::vec3(s_factor, s_factor, s_factor)),
+            scale: glm::vec3(s_factor, s_factor, s_factor),
             ..CTransform::default()
         };
         this_schema.b_box = Some(CBoundingBox {

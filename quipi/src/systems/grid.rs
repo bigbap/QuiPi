@@ -82,18 +82,19 @@ impl Grid {
 
     pub fn draw(
         &self,
-        registry: &Registry,
+        registry: &mut Registry,
         camera: &VersionedIndex
     ) -> Result<(), Box<dyn std::error::Error>> {
         let grid = registry.entities.query::<CTag>(CTag { tag: GRID_TAG.to_string() });
 
         for line in grid {
             if let Some(drawable) = registry.entities.get::<CDrawable>(&line) {
+                let shader = drawable.shader;
                 s_draw_entity(
                     &line,
                     registry,
                     camera,
-                    &drawable.shader,
+                    &shader,
                     DrawMode::Triangles
                 );
             }
@@ -113,7 +114,7 @@ fn build_axis(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let transform = CTransform {
         translate,
-        scale: Some(scale),
+        scale,
         ..CTransform::default()
     };
     let model_matrix = CModelMatrix(transform.to_matrix());
