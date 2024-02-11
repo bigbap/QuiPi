@@ -677,6 +677,7 @@ version = "0.1.0"
 dependencies = [
  "egui",
  "nalgebra-glm",
+ "quipi_2d",
  "quipi_core",
  "serde",
  "serde_yaml",

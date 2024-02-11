@@ -31,6 +31,7 @@ use quipi_core::Registry;
 
 pub fn register_components(registry: &mut Registry) {
     quipi_core::components::register_components(registry);
+    quipi_2d::components::register_components(registry);
 
     registry.entities
         .register_component::<CBoundingBox>()

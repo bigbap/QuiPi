@@ -9,6 +9,7 @@ edition = "2021"
 nalgebra-glm = "*"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"
+quipi_2d = { path = "../quipi_2d" }
 quipi_core = { path = "../quipi_core" }
 egui = "0.26"
 thiserror = "1.0"

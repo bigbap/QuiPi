@@ -1,4 +1,5 @@
 pub extern crate quipi_core;
+pub extern crate quipi_2d;
 pub extern crate nalgebra_glm as glm;
 pub extern crate serde;
 
