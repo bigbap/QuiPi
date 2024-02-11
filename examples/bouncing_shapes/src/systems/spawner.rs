@@ -47,12 +47,12 @@ impl RectSpawner {
         if self.rand.random() > 0.5 { vel.1 *= -1.0; }
 
         this_schema.velocity = Some(CVelocity { x: vel.0, y: vel.1, z: 0.0 });
-        this_schema.color = Some(CRGBA {
-            r: self.rand.random(),
-            g: self.rand.random(),
-            b: self.rand.random(),
-            a: 0.5
-        });
+        this_schema.color = Some(CRGBA { value: [
+            self.rand.random(),
+            self.rand.random(),
+            self.rand.random(),
+            0.5
+        ] });
 
         let s_factor = self.rand.range(25, 50) as f32 / 100.0;
         this_schema.transform = CTransform {

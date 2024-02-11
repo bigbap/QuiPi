@@ -121,7 +121,7 @@ impl Default for SchemaScene2D {
 
         Self {
             name: CScene { name: DEFAULT_SCENE.to_string() },
-            clr_color: CRGBA { r: 0.3, g: 0.3, b: 0.3, a: 1.0 },
+            clr_color: CRGBA { value: [0.3, 0.3, 0.3, 1.0] },
             cameras: vec![camera],
             shaders: vec![shader],
             entities: vec![rect]

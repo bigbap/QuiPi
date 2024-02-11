@@ -8,19 +8,16 @@ use crate::Component;
 */
 #[derive(Debug, Component, Default, Serialize, Deserialize, Clone, Copy, PartialEq)]
 pub struct CRGBA {
-    pub r: f32,
-    pub g: f32,
-    pub b: f32,
-    pub a: f32
+    pub value: [f32; 4]
 }
 
 impl CRGBA {
     pub fn to_tuple(&self) -> (f32, f32, f32, f32) {
         (
-            self.r,
-            self.g,
-            self.b,
-            self.a
+            self.value[0],
+            self.value[1],
+            self.value[2],
+            self.value[3]
         )
     }
 }

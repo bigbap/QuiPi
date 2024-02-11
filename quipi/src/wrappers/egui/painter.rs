@@ -1,5 +1,10 @@
 #![allow(dead_code)]
 
+/*
+* Modeled after equi_sdl2_gl's upload_egui_texture.
+* https://github.com/ArjunNair/egui_sdl2_gl/blob/main/src/painter.rs
+*/
+
 use egui::{
     ahash::AHashMap,
     ClippedPrimitive,
@@ -10,25 +15,15 @@ use egui::{
 };
 
 use crate::{
-    wrappers::opengl::{
-        draw::*,
-        functions::gl_scissor,
-        shader::ShaderProgram,
-        buffer::BufferUsage,
-        capabilities::*,
-        textures::{
-            gl_use_texture_unit,
-            Texture, ParameterName, ParameterValue
-        },
-    },
     systems::rendering::{
-        texture::*,
-        mesh::{
-            ShaderLocation,
-            ElementArrayMesh,
-        },
-        canvas
-    },
+        canvas, mesh::{
+            ElementArrayMesh, ShaderLocation
+        }, texture::*
+    }, wrappers::opengl::{
+        buffer::BufferUsage, capabilities::*, draw::*, functions::gl_scissor, shader::ShaderProgram, textures::{
+            gl_use_texture_unit, Format, ParameterName, ParameterValue, Texture
+        }
+    }
 };
 
 pub struct Painter {
@@ -167,9 +162,6 @@ impl Painter {
         id: egui::TextureId,
         delta: &egui::epaint::ImageDelta
     ) -> Result<(), Box<dyn std::error::Error>> {
-        // Modeled after equi_sdl2_gl's upload_egui_texture.
-        // https://github.com/ArjunNair/egui_sdl2_gl/blob/main/src/painter.rs
-
         let pixels: Vec<u8> = match &delta.image {
             egui::ImageData::Color(image) => {
                 assert_eq!(
@@ -193,11 +185,23 @@ impl Painter {
         let t_width = delta.image.width();
         let t_height = delta.image.height();
 
-        if let (Some(_patch_pos), Some(_texture)) = (
+        if let (Some(patch_pos), Some(texture)) = (
             delta.pos,
             self.textures.get_mut(&id)
         ) {
-            println!("GUI painter: got here..");
+            let patch_x = patch_pos[0];
+            let patch_y = patch_pos[1];
+            let patch_width = t_width;
+            let patch_height = t_height;
+            
+            texture.bind().sub_image_data(
+                patch_x as i32,
+                patch_y as i32,
+                patch_width as i32,
+                patch_height as i32,
+                Format::Rgba,
+                &pixels
+            );
             
         } else {
             let texture = from_buffer_rgba(

@@ -140,7 +140,7 @@ impl Default for SchemaEntity2D {
                 height: 200.0,
             }),
             velocity: None,
-            color: Some(CRGBA { r: 0.1, g: 0.1, b: 0.1, a: 1.0 }),
+            color: Some(CRGBA { value: [0.1, 0.1, 0.1, 1.0] }),
             b_box: None,
             texture: None,
             shader: CName { name: DEFAULT_SHADER.to_string() },

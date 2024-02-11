@@ -117,7 +117,7 @@ impl quipi::QuiPiApp for MyGame {
 fn scene_schema() -> SchemaScene2D {
     SchemaScene2D {
         name: CScene { name: "bouncing_shapes".to_string() },
-        clr_color: CRGBA { r: 0.0, g: 0.3, b: 0.5, a: 1.0 },
+        clr_color: CRGBA { value: [0.0, 0.3, 0.5, 1.0] },
         cameras: vec![camera_schema()],
         entities: vec![],
         shaders: vec![SchemaShader::default()]

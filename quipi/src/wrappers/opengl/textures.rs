@@ -82,7 +82,6 @@ impl Texture {
         let format = format.unwrap();
 
         unsafe {
-            gl::BindTexture(self.target, self.id);
             gl::TexImage2D(
                 self.target,
                 0,
@@ -90,6 +89,37 @@ impl Texture {
                 self.width,
                 self.height,
                 0,
+                format,
+                gl::UNSIGNED_BYTE,
+                buffer.as_ptr() as *const gl::types::GLvoid
+            );
+
+            gl::GenerateMipmap(self.target);
+            gl::BindTexture(self.target, 0);
+        }
+
+        self
+    }
+
+    pub fn sub_image_data(
+        &self,
+        x: i32,
+        y: i32,
+        width: i32,
+        height: i32,
+        format: Format,
+        buffer: &[u8],
+    ) -> &Self {
+        let format = format.unwrap();
+
+        unsafe {
+            gl::TexSubImage2D(
+                self.target,
+                0,
+                x,
+                y,
+                width,
+                height,
                 format,
                 gl::UNSIGNED_BYTE,
                 buffer.as_ptr() as *const gl::types::GLvoid

@@ -25,10 +25,10 @@ impl CRect {
         ];
         let colors: Vec<f32> = match color {
             Some(color) => vec![
-                color.r, color.g, color.b, color.a,
-                color.r, color.g, color.b, color.a,
-                color.r, color.g, color.b, color.a,
-                color.r, color.g, color.b, color.a,
+                color.value[0], color.value[1], color.value[2], color.value[3],
+                color.value[0], color.value[1], color.value[2], color.value[3],
+                color.value[0], color.value[1], color.value[2], color.value[3],
+                color.value[0], color.value[1], color.value[2], color.value[3],
             ],
             _ => vec![]
         };

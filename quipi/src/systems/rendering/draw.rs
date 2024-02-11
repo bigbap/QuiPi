@@ -182,6 +182,6 @@ fn set_color(
     var: &str
 ) {
     if let Some(color) = registry.entities.get::<CRGBA>(entity) {
-        shader.program.set_float_3(var, (color.r, color.g, color.b));
+        shader.program.set_float_3(var, (color.value[0], color.value[1], color.value[2]));
     }
 }

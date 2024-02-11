@@ -5,7 +5,7 @@ use egui::Vec2;
 use crate::{
     components::{
         CScene,
-        CTag, CTransform, CVelocity, CRGBA
+        CTag
     },
     schemas::{
         entity2d::DEFAULT_RECT_TAG,
@@ -19,6 +19,8 @@ use crate::{
 };
 
 use super::scene::save_scene_2d;
+
+mod components;
 
 pub struct SceneEditor {
     gui: GUI,
@@ -41,7 +43,7 @@ impl SceneEditor {
     ) -> Result<(), Box<dyn std::error::Error>> {
         self.gui.begin_frame();
         self.entity_list(registry);
-        self.entity_components(registry);
+        components::entity_components(&self.gui, self.active_entity, registry);
         self.debug(app_state, registry);
         self.gui.end_frame(app_state)
     }
@@ -95,9 +97,6 @@ impl SceneEditor {
 
             egui::ScrollArea::vertical().show(ui, |ui| {
                 for entity in entities.iter() {
-                    // let name = registry.entities.get::<CName>(entity).unwrap();
-                    // let name = name.name.clone();
-
                     ui.horizontal(|ui| {
                         ui.set_width(ui.available_width());
                         ui.radio_value(&mut self.active_entity, Some(*entity), entity.to_string());
@@ -112,60 +111,6 @@ impl SceneEditor {
                 }
             });
         });
-    }
-
-    fn entity_components(&mut self, registry: &mut Registry) {
-        if let Some(entity) = self.active_entity {
-            egui::Window::new("Entity").show(&self.gui.ctx, |ui| {
-                if let Some(transform) = registry.entities.get_mut::<CTransform>(&entity) {
-                    ui.strong("Transforms");
-                    ui.label("translate");
-                    ui.horizontal(|ui| {
-                        ui.label("x");
-                        ui.add(egui::DragValue::new(&mut transform.translate.x).speed(1.0));
-                        ui.label("y");
-                        ui.add(egui::DragValue::new(&mut transform.translate.y).speed(1.0));
-                        ui.label("z");
-                        ui.add(egui::DragValue::new(&mut transform.translate.z).speed(1.0));
-                    });
-                    ui.label("scale");
-                    ui.horizontal(|ui| {
-                        ui.label("x");
-                        ui.add(egui::DragValue::new(&mut transform.scale.x).speed(0.05));
-                        ui.label("y");
-                        ui.add(egui::DragValue::new(&mut transform.scale.y).speed(0.05));
-                        ui.label("z");
-                        ui.add(egui::DragValue::new(&mut transform.scale.z).speed(0.05));
-                    });
-                    ui.label("rotation");
-                    ui.horizontal(|ui| {
-                        ui.label("x");
-                        ui.add(egui::DragValue::new(&mut transform.rotate.x).speed(0.1));
-                        ui.label("y");
-                        ui.add(egui::DragValue::new(&mut transform.rotate.y).speed(0.1));
-                        ui.label("z");
-                        ui.add(egui::DragValue::new(&mut transform.rotate.z).speed(0.1));
-                        ui.label("angle");
-                        ui.add(egui::DragValue::new(&mut transform.angle).speed(0.1));
-                    });
-                }
-                if let Some(velocity) = registry.entities.get_mut::<CVelocity>(&entity) {
-                    ui.strong("Velocity");
-                    ui.horizontal(|ui| {
-                        ui.label("x");
-                        ui.add(egui::DragValue::new(&mut velocity.x).speed(1.0));
-                        ui.label("y");
-                        ui.add(egui::DragValue::new(&mut velocity.y).speed(1.0));
-                        ui.label("z");
-                        ui.add(egui::DragValue::new(&mut velocity.z).speed(1.0));
-                    });
-                }
-                if let Some(color) = registry.entities.get_mut::<CRGBA>(&entity) {
-                    ui.strong("Color");
-                    ui.color_edit_button_rgba_premultiplied(&mut [color.r, color.g, color.b, color.a]);
-                }
-            });
-        }
     }
 
     fn debug(&mut self, app_state: &FrameState, registry: &Registry) {
