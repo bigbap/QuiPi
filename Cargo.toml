@@ -6,4 +6,6 @@ members = [
     "quipi_3d",
     "quipi_sandbox",
     "examples/bouncing_shapes",
+    "examples/isometric",
+    "examples/scene",
 ]

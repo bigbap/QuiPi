@@ -29,40 +29,19 @@ impl CCamera {
     }
 
     pub fn calc_projection_matrix(params: &CameraParams) -> glm::Mat4 {
-        match params.kind {
-            CameraKind::Cam2D => glm::ortho(
-                params.left,
-                params.right,
-                params.bottom,
-                params.top,
-                params.near,
-                params.far
-            ),
-            CameraKind::Cam3D => glm::perspective(
-                params.aspect,
-                params.fov,
-                params.near,
-                params.far
-            )
-        }
+        glm::perspective(
+            params.aspect,
+            params.fov,
+            params.near,
+            params.far
+        )
     }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
-pub enum CameraKind {
-    Cam3D,
-    Cam2D
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
 pub struct CameraParams {
-    pub kind: CameraKind,
     pub fov: f32,
     pub aspect: f32,
-    pub left: f32,
-    pub right: f32,
-    pub bottom: f32,
-    pub top: f32,
     pub near: f32,
     pub far: f32
 }
@@ -70,15 +49,10 @@ pub struct CameraParams {
 impl Default for CameraParams {
     fn default() -> Self {
         Self {
-            kind: CameraKind::Cam2D,
-            fov: 0.0,
-            aspect: 0.0,
-            left: 0.0,
-            right: 800.0,
-            bottom: 0.0,
-            top: 600.0,
-            near: 0.0,
-            far: 0.2
+            fov: 45.0,
+            aspect: 800.0/600.0,
+            near: 0.1,
+            far: 100.0
         }
     }
 }

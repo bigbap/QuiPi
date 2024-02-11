@@ -423,6 +423,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a257582fdcde896fd96463bf2d40eefea0580021c0712a0e2b028b60b47a837a"
 
 [[package]]
+name = "isometric"
+version = "0.1.0"
+dependencies = [
+ "nalgebra-glm",
+ "quipi_3d",
+ "quipi_core",
+ "sdl2",
+ "thiserror",
+ "walkdir",
+]
+
+[[package]]
 name = "itoa"
 version = "1.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -813,6 +825,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "93fc1dc3aaa9bfed95e02e6eadabb4baf7e3078b0bd1b4d7b6b0b68378900502"
 dependencies = [
  "winapi-util",
+]
+
+[[package]]
+name = "scene"
+version = "0.1.0"
+dependencies = [
+ "nalgebra-glm",
+ "quipi_core",
+ "sdl2",
+ "thiserror",
+ "walkdir",
 ]
 
 [[package]]

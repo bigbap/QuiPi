@@ -1,107 +1,100 @@
-pub extern crate quipi;
-pub extern crate nalgebra_glm as glm;
+extern crate quipi_3d as quipi;
+extern crate nalgebra_glm as glm;
 
 mod systems;
 mod ui;
 
+use ui::MyUI;
 use systems::{
     *,
     update_camera::s_update_camera
 };
 
 use quipi::{
+    components::{
+        CEulerAngles,
+        CTransform,
+        CCamera,
+        camera::CameraParams
+    },
+    resources::{
+        shader::UniformVariable,
+        RShader
+    },
+    systems::{
+        grid::Grid,
+        draw::draw_all
+    },
+    FrameState,
+    FrameResponse,
     QuiPiApp,
+    Registry,
+    VersionedIndex
+};
+use quipi_core::{
+    QuiPiWindow,
     wrappers::opengl::{
         capabilities::*,
         buffer::clear_buffers,
         draw::DrawMode,
         shader::ShaderProgram,
-    },
-    Registry,
-    resources::{
-        Shader,
-        register_resources,
-        shader::UniformVariable
-    },
-    components::{
-        register_components,
-        CEulerAngles,
-        CTransform, CBoundingBox,
-    },
-    VersionedIndex,
-    systems::{
-        rendering::{
-            IRenderer,
-            Renderer,
-        },
-        grid::Grid
-    }, FrameState,
+    }
 };
-use ui::MyUI;
 
 pub static WIDTH: u32 = 1600;
 pub static HEIGHT: u32 = 900;
 
 pub struct MyGame {
-    registry: Registry,
     shader: Option<VersionedIndex>,
     grid: Option<Grid>,
     ui: Option<MyUI>,
 
-    renderer3d: Renderer
+    camera: Option<VersionedIndex>
 }
 
 impl MyGame {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let mut registry = Registry::init()?;
-
-        register_components(&mut registry);
-        register_resources(&mut registry);
-
-        let renderer = Renderer::new(
-            &mut registry,
-            45.0, 
-            CBoundingBox {
-                right: WIDTH as f32,
-                top: HEIGHT as f32,
-                near: 0.1,
-                far: 100.0,
-                ..CBoundingBox::default()
-            },
-            CTransform {
-                translate: glm::vec3(5.0, 5.0, 5.0),
-                ..CTransform::default()
-            },
-            CEulerAngles {
-                pitch: 45.0,
-                yaw: -90.0,
-                roll: 35.0
-            }
-        )?;
-
-
         Ok(Self {
-            registry,
             shader: None,
             grid: None,
             ui: None,
-            renderer3d: renderer
+            camera: None
         })
     }
 }
 
 impl QuiPiApp for MyGame {
-    fn init(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let shader = ShaderProgram::new("assets/shaders/simple")?;
-        let shader = self.registry.create_resource(Shader {
-            program: shader,
+    fn init(
+        &mut self,
+        registry: &mut Registry,
+        winapi: &QuiPiWindow
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let shader = registry.resources.create()?;
+        registry.resources.add(&shader, RShader {
+            program: ShaderProgram::new("assets/shaders/simple")?,
             uniforms: vec![
                 UniformVariable::MVPMatrix("mvpMatrix".to_string())
             ]
-        })?;
+        });
 
-        self.grid = Some(Grid::new(&mut self.registry,)?);
+        let camera = registry.entities.create()?;
+        registry.entities.add(&camera, CCamera::new(CameraParams {
+            aspect: WIDTH as f32 / HEIGHT as f32,
+            ..CameraParams::default()
+        })?);
+        registry.entities.add(&camera, CTransform {
+            translate: glm::vec3(5.0, 5.0, 5.0),
+            ..CTransform::default()
+        });
+        registry.entities.add(&camera, CEulerAngles {
+            pitch: 45.0,
+            yaw: -90.0,
+            roll: 35.0
+        });
+
+        self.grid = Some(Grid::new(registry, camera)?);
         self.shader = Some(shader);
+        self.camera = Some(camera);
         
         let mut ui = MyUI::init()?;
         ui.create_quad((0.0, 0.0, 0.0, 0.5))?;
@@ -109,7 +102,7 @@ impl QuiPiApp for MyGame {
         self.ui = Some(ui);
 
         scene::s_load_scene(
-            &mut self.registry
+            registry
         )?;
 
         Ok(())
@@ -117,18 +110,19 @@ impl QuiPiApp for MyGame {
 
     fn handle_frame(
         &mut self,
-        mut frame_state: FrameState
-    ) -> Result<bool, Box<dyn std::error::Error>> {
+        registry: &mut Registry,
+        frame_state: &mut FrameState
+    ) -> Result<FrameResponse, Box<dyn std::error::Error>> {
         handle_input::s_handle_input(
-            &mut frame_state,
-            &mut self.registry,
-            &self.renderer3d.camera(),
+            frame_state,
+            registry,
+            &self.camera.unwrap()
         )?;
 
         // update camera
         s_update_camera(
-            &self.renderer3d.camera(),
-            &mut self.registry,
+            &self.camera.unwrap(),
+            registry,
             frame_state.delta
         )?;
 
@@ -140,10 +134,8 @@ impl QuiPiApp for MyGame {
         gl_blending_func(GLBlendingFactor::SrcAlpha, GLBlendingFactor::OneMinusSrcAlpha);
 
         if let Some(shader) = self.shader {
-            self.renderer3d.draw_by_tag(
-                "cube",
-                &self.registry,
-                &shader,
+            draw_all(
+                registry,
                 DrawMode::Triangles
             )?;
         }
@@ -153,9 +145,9 @@ impl QuiPiApp for MyGame {
         }
 
         if let Some(grid) = &self.grid {
-            grid.draw(&self.registry, &self.renderer3d)?;
+            grid.draw(registry, &self.camera.unwrap())?;
         }
 
-        Ok(frame_state.quit)
+        Ok(FrameResponse::None)
     }
 }
