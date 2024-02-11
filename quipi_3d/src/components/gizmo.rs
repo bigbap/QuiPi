@@ -1,9 +1,8 @@
+use quipi_core::Component;
 use serde::{Serialize, Deserialize};
 
-use crate::Component;
-
 #[derive(Debug, Component, Serialize, Deserialize, PartialEq)]
-pub struct CGizmo3D {
+pub struct CGizmo {
     pub front: glm::Vec3,
     pub up: glm::Vec3,
     pub right: glm::Vec3,
@@ -11,7 +10,7 @@ pub struct CGizmo3D {
     world_up: glm::Vec3
 }
 
-impl Default for CGizmo3D {
+impl Default for CGizmo {
     fn default() -> Self {
         let mut gizmo = Self {
             front: glm::vec3(0.0, 0.0, -1.0),
@@ -26,7 +25,7 @@ impl Default for CGizmo3D {
     }
 }
 
-impl CGizmo3D {
+impl CGizmo {
     pub fn update_vectors(&mut self) {
         self.right = glm::normalize(&glm::cross(&self.front, &self.world_up));
         self.up = glm::normalize(&glm::cross(&self.right, &self.front));

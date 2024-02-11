@@ -3,7 +3,7 @@ use crate::{
     VersionedIndex,
     components::{
         CEulerAngles,
-        CGizmo3D
+        CGizmo
     }
 };
 
@@ -19,7 +19,7 @@ pub fn s_rotate_camera(
         euler_angles.yaw.to_radians().sin() * euler_angles.pitch.to_radians().cos()
     ));
 
-    let Some(gizmo) = registry.entities.get_mut::<CGizmo3D>(camera) else { return };
+    let Some(gizmo) = registry.entities.get_mut::<CGizmo>(camera) else { return };
     gizmo.front = front;
     gizmo.update_vectors();
 }

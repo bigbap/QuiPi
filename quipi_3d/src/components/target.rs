@@ -1,4 +1,4 @@
-use crate::systems::ec_store::Component;
+use quipi_core::Component;
 
 #[derive(Debug, Component, PartialEq, Clone)]
 pub struct CTarget {

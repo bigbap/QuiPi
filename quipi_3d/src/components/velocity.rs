@@ -1,4 +1,4 @@
-use crate::Component;
+use quipi_core::Component;
 use serde::{Serialize, Deserialize};
 
 

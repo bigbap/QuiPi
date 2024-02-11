@@ -11,7 +11,6 @@ pub mod canvas;
 pub mod mesh;
 pub mod texture;
 pub mod text;
-pub mod draw;
 
 pub use text::DEFAULT_FONT;
 pub use text::TextRenderer;

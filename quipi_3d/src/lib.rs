@@ -31,7 +31,7 @@ use components::{
 };
 use systems::{draw::draw_all, editor::AppEditor};
 
-pub struct QuiPi2D<G: QuiPiApp> {
+pub struct QuiPi3D<G: QuiPiApp> {
     app: G,
     registry: Registry,
     winapi: QuiPiWindow,
@@ -40,7 +40,7 @@ pub struct QuiPi2D<G: QuiPiApp> {
     app_editor: AppEditor
 }
 
-impl<G: QuiPiApp> QuiPi2D<G> {
+impl<G: QuiPiApp> QuiPi3D<G> {
     pub fn init(
         mut app: G,
         title: &str,

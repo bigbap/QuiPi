@@ -1,6 +1,6 @@
-use crate::{Component, Registry, VersionedIndex};
+use quipi_core::{Component, Registry, VersionedIndex};
 
-use super::{CTransform, CGizmo3D};
+use super::{CTransform, CGizmo};
 
 #[derive(Debug, Component, PartialEq)]
 pub struct CModelMatrix(pub glm::Mat4);
@@ -41,7 +41,7 @@ impl CViewMatrix {
     ) {
         if let (Some(transform), Some(gizmo)) = (
             registry.entities.get::<CTransform>(camera),
-            registry.entities.get::<CGizmo3D>(camera),
+            registry.entities.get::<CGizmo>(camera),
         ) {
             let position = glm::vec3(
                 transform.translate.x,

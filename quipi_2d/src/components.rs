@@ -17,23 +17,11 @@ pub use sprite::CSprite;
 pub use transform::CTransform2D;
 pub use velocity::CVelocity2D;
 
-pub use quipi_core::components::{
-    CScene,
-    CRGBA,
-    CName,
-    CTag,
-};
+pub use quipi_core::components::*;
 use quipi_core::Registry;
 
 pub fn register_components(registry: &mut Registry) {
-    // TODO: remove all 3d components from core and just call
-    // register_components from core
-    registry.entities
-        .register_component::<CRGBA>()
-        .register_component::<CScene>()
-        .register_component::<CName>()
-        .register_component::<CTag>();
-
+    quipi_core::components::register_components(registry);
 
     registry.entities
         .register_component::<CBoundingBox2D>()

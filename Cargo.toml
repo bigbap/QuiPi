@@ -3,8 +3,7 @@ resolver = "2"
 members = [
     "quipi_core",
     "quipi_2d",
+    "quipi_3d",
     "quipi_sandbox",
-    "examples/scene",
     "examples/bouncing_shapes",
-    "examples/isometric"
 ]

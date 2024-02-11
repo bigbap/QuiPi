@@ -1,10 +1,11 @@
-use crate::{
+use quipi_core::{
+    Component,
     systems::{
         assets::ObjectConfig, rendering::mesh::{
             ElementArrayMesh,
             ShaderLocation
         }
-    }, wrappers::opengl::buffer::BufferUsage, Component, VersionedIndex
+    }, wrappers::opengl::buffer::BufferUsage, VersionedIndex
 };
 
 #[derive(Debug, Component, PartialEq)]
@@ -16,7 +17,7 @@ pub struct CDrawable {
     pub active: bool,
 }
 
-#[derive(Debug, Component, PartialEq)]
+#[derive(Debug, Component, PartialEq, Default)]
 pub struct CMesh {
     pub mesh: Option<ElementArrayMesh>,
     pub data: ObjectConfig,

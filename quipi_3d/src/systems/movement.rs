@@ -2,7 +2,7 @@ use crate::{
     Registry,
     VersionedIndex,
     components::{
-        CGizmo3D,
+        CGizmo,
         CTarget,
         CEulerAngles,
         CDistance,
@@ -17,14 +17,14 @@ use crate::{
 * - CGizmo3D
 * - CPosition
 */
-pub fn s_apply_velocity(
+pub fn apply_velocity(
     registry: &mut Registry,
     entity: &VersionedIndex,
     delta: f32,
     velocity: glm::Vec3
 ) -> Result<(), Box<dyn std::error::Error>> {
     if let (Some(gizmo), Some(_)) = (
-        registry.entities.get::<CGizmo3D>(entity),
+        registry.entities.get::<CGizmo>(entity),
         registry.entities.get::<CTransform>(entity)
     ) {
         let mut change_vec = glm::vec3(0.0, 0.0, 0.0);
@@ -42,7 +42,7 @@ pub fn s_apply_velocity(
     Ok(())
 }
 
-pub fn s_apply_follow_target(
+pub fn apply_follow_target(
     registry: &mut Registry,
     entity: &VersionedIndex
 ) -> Result<(), Box<dyn std::error::Error>> {

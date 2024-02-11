@@ -1,5 +1,5 @@
+use quipi_core::Component;
 use serde::{Serialize, Deserialize};
-use crate::Component;
 
 #[derive(Debug, Component, Default, Clone, Copy, Serialize, Deserialize, PartialEq)]
 pub struct CBoundingBox {

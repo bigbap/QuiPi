@@ -1,6 +1,5 @@
+use quipi_core::Component;
 use serde::{Deserialize, Serialize};
-
-use crate::Component;
 
 /**
 * used to reduce the intensity of light over time

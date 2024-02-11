@@ -1,6 +1,6 @@
 use serde::{Serialize, Deserialize};
 
-use crate::{
+use quipi_core::{
     VersionedIndex,
     Component
 };

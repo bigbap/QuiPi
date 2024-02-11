@@ -1,9 +1,5 @@
 pub mod assets;
-pub mod movement;
-pub mod rotation;
-pub mod material;
-pub mod model;
-pub mod grid;
+// pub mod model;
 pub mod rendering;
 pub mod ec_store;
 pub mod ai;

@@ -13,11 +13,11 @@ use crate::{
         UniformVariable
     },
     systems::material,
-    wrappers::opengl::{
-        self, capabilities::{gl_blending_func, gl_enable, GLBlendingFactor, GLCapability}, draw::*
-    },
     Registry,
     VersionedIndex
+};
+use quipi_core::wrappers::opengl::{
+    self, capabilities::{gl_blending_func, gl_enable, GLBlendingFactor, GLCapability}, draw::*
 };
 
 /**

@@ -1,31 +1,29 @@
-use uuid::Uuid;
-
-use crate::{
+use crate::components::{
+    CDrawable,
+    CTransform,
+    CMesh,
+    CModelMatrix
+};
+use quipi_core::{
     components::{
-        CModelMatrix,
-        CModelNode,
-        CTransform,
-        CDrawable,
-        CTag,
-        CName
-    },
-    wrappers::opengl::{
-        draw::DrawMode,
-        buffer::BufferUsage,
+        CName,
+        CTag
     },
     resources::{
-        RShader,
-        shader::UniformVariable
+        shader::UniformVariable,
+        RShader
     },
-    systems::rendering::*,
+    systems::rendering::mesh::{
+        ElementArrayMesh,
+        ShaderLocation
+    },
     utils::to_abs_path,
-    Registry,
-    VersionedIndex
+    wrappers::opengl::{
+        buffer::BufferUsage, draw::DrawMode
+    }, Registry, VersionedIndex
 };
 
-use self::mesh::{ElementArrayMesh, ShaderLocation};
-
-use super::rendering::draw::draw_entity;
+use super::draw::draw_entity;
 
 const GRID_TAG: &str = "quipi_grid_74872346";
 
@@ -62,10 +60,8 @@ impl Grid {
             ]
         )?;
 
-        let id = Uuid::new_v4().to_string();
-
         let shader = registry.resources.create()?;
-        registry.resources.add(&shader, CName { name: id });
+        registry.resources.add(&shader, CName { name: "grid_3d".to_string() });
         registry.resources.add(&shader, r_shader);
 
         build_axis(
@@ -118,9 +114,9 @@ fn build_axis(
         ..CTransform::default()
     };
     let model_matrix = CModelMatrix(transform.to_matrix());
-    let mesh = CModelNode {
+    let mesh = CMesh {
         mesh: Some(mesh),
-        ..CModelNode::default()
+        ..CMesh::default()
     };
 
     let entity = registry.entities.create()?;

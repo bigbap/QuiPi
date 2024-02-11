@@ -1,6 +1,6 @@
 use serde::{Serialize, Deserialize};
 
-use crate::systems::ec_store::Component;
+use quipi_core::Component;
 
 /**
 * the model portion for a Model View Projection matrix
