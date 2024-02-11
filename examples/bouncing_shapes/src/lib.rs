@@ -97,9 +97,6 @@ impl quipi::QuiPiApp for MyGame {
         // update
         update(registry, frame_state)?;
 
-        // render
-        draw_frame(registry)?;
-
         // draw the entity count
         let (_x, _y, width, height) = canvas::get_dimensions();
         let entity_count = registry.entities.count();

@@ -10,7 +10,6 @@ extern crate quipi;
 extern crate nalgebra_glm as glm;
 
 mod input;
-mod draw;
 mod update;
 
 pub static WIDTH: u32 = 1600;
@@ -66,7 +65,6 @@ impl QuiPiApp for QuiPiSandbox {
 
         update::update_frame(registry);
 
-        draw::draw_frame(registry)?;
         draw_debug_info(registry, frame_state);
 
         input::handle_input(frame_state, scene, &registry)

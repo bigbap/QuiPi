@@ -1,38 +1,27 @@
 #![allow(dead_code)]
 
-use egui::Vec2;
-
 use crate::{
-    components::{
-        CScene,
-        CTag
-    },
-    schemas::{
-        entity2d::DEFAULT_RECT_TAG,
-        ISchema,
-        SchemaEntity2D
-    },
     wrappers::egui::GUI,
     FrameState,
-    Registry,
-    VersionedIndex
+    Registry
 };
 
-use super::scene::save_scene_2d;
+use self::scene::SceneEditor;
 
+mod scene;
 mod components;
+mod debug;
 
-pub struct SceneEditor {
+pub struct AppEditor {
     gui: GUI,
-
-    active_entity: Option<VersionedIndex>,
+    scene: SceneEditor
 }
 
-impl SceneEditor {
+impl AppEditor {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
         Ok(Self {
             gui: GUI::new(1.0)?,
-            active_entity: None,
+            scene: SceneEditor::new()
         })
     }
 
@@ -42,9 +31,10 @@ impl SceneEditor {
         app_state: &mut FrameState
     ) -> Result<(), Box<dyn std::error::Error>> {
         self.gui.begin_frame();
-        self.entity_list(registry);
-        components::entity_components(&self.gui, self.active_entity, registry);
-        self.debug(app_state, registry);
+
+        self.scene.update(&self.gui, registry);
+        debug::debug(&self.gui, app_state, registry);
+
         self.gui.end_frame(app_state)
     }
 
@@ -61,68 +51,6 @@ impl SceneEditor {
                 });
             });
         });
-    }
-
-    fn entity_list(
-        &mut self,
-        registry: &mut Registry
-    ) {
-        let entities = registry.entities.query::<CTag>(CTag { tag: DEFAULT_RECT_TAG.to_string() });
-
-        egui::Window::new("Scene").show(&self.gui.ctx, |ui| {
-            ui.set_width(200.0);
-            ui.separator();
-
-            ui.horizontal(|ui| {
-                if ui.button("create entity").clicked() {
-                    let schema = SchemaEntity2D::default();
-
-                    if let Err(e) = schema.build(registry) {
-                        println!("could not add entity: {}", e);
-                    }
-                }
-                if ui.button("save scene").clicked() {
-                    let scenes = registry.entities.query_all::<CScene>();
-                    let Some(scene_id) = scenes.first() else { return };
-
-                    if let Some(scene) = registry.entities.get::<CScene>(scene_id) {
-                        if let Err(e) = save_scene_2d(&scene.name, *scene_id, &registry) {
-                            println!("there was a problem saving scene {}: {:?}", scene.name, e);
-                        }
-                    }
-                }
-            });
-
-            ui.separator();
-
-            egui::ScrollArea::vertical().show(ui, |ui| {
-                for entity in entities.iter() {
-                    ui.horizontal(|ui| {
-                        ui.set_width(ui.available_width());
-                        ui.radio_value(&mut self.active_entity, Some(*entity), entity.to_string());
-                        if ui.button("del").clicked() {
-                            if self.active_entity == Some(*entity) {
-                                self.active_entity = None;
-                            }
-                            registry.entities.set_to_delete(*entity);
-                        }
-                    });
-                    ui.allocate_space(Vec2::new(0.0, 5.0));
-                }
-            });
-        });
-    }
-
-    fn debug(&mut self, app_state: &FrameState, registry: &Registry) {
-        egui::Window::new("Debug Info")
-            .show(&self.gui.ctx, |ui| {
-                ui.set_width(200.0);
-                ui.label(format!("fps: {}", app_state.debug_info.fps));
-                ui.label(format!("ms: {}", app_state.debug_info.ms));
-                ui.separator();
-                ui.label(format!("entity count: {}", registry.entities.count()));
-                ui.label(format!("allocator size: {}", registry.entities.allocator_size()));
-            });
     }
 }
 

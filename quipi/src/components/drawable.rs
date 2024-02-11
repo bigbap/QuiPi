@@ -1,14 +1,10 @@
 use crate::{
-    Component,
     systems::{
-        rendering::mesh::{
+        assets::ObjectConfig, rendering::mesh::{
             ElementArrayMesh,
             ShaderLocation
-        },
-        assets::ObjectConfig
-    },
-    VersionedIndex,
-    wrappers::opengl::buffer::BufferUsage
+        }
+    }, wrappers::opengl::buffer::BufferUsage, Component, VersionedIndex
 };
 
 #[derive(Debug, Component, PartialEq)]
@@ -16,6 +12,8 @@ pub struct CDrawable {
     pub shader: VersionedIndex,
     pub camera: VersionedIndex,
     pub texture: Option<VersionedIndex>,
+
+    pub active: bool,
 }
 
 #[derive(Debug, Component, PartialEq)]

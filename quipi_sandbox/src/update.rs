@@ -20,5 +20,4 @@ pub fn update_frame(
             model_matrix.0 = model;
         }
     }
-
 }

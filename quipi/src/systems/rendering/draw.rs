@@ -6,7 +6,6 @@ use crate::{
         CMaterial,
         CMesh,
         CModelMatrix,
-        CTag,
         CViewMatrix,
         CRGBA
     },
@@ -16,15 +15,14 @@ use crate::{
     },
     systems::material,
     wrappers::opengl::{
-        self,
-        draw::*
+        self, capabilities::{gl_blending_func, gl_enable, GLBlendingFactor, GLCapability}, draw::*
     },
     Registry,
     VersionedIndex
 };
 
 /**
-* draw entities by tag
+* draw all drawable entities
 *
 * camera must have the following components:
 * - CViewMatrix
@@ -36,18 +34,22 @@ use crate::{
 *
 * shader must exist and be valid
 */
-pub fn s_draw_by_tag(
-    tag: &str,
+pub fn draw_all(
     registry: &mut Registry,
     mode: DrawMode
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let entities = registry.entities.query::<CTag>(CTag { tag: tag.to_string() });
+    gl_enable(GLCapability::AlphaBlending);
+    gl_blending_func(GLBlendingFactor::SrcAlpha, GLBlendingFactor::OneMinusSrcAlpha);
+
+    let entities = registry.entities.query_all::<CDrawable>();
 
     for entity in entities.iter() {
         if let Some(drawable) = registry.entities.get::<CDrawable>(entity) {
+            if !drawable.active { continue; }
+
             let camera = drawable.camera;
             let shader = drawable.shader;
-            s_draw_entity(
+            draw_entity(
                 entity,
                 registry,
                 &camera,
@@ -60,7 +62,7 @@ pub fn s_draw_by_tag(
     Ok(())
 }
 
-pub fn s_draw_entity(
+pub fn draw_entity(
     entity: &VersionedIndex,
     registry: &mut Registry,
     camera: &VersionedIndex,

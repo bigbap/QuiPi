@@ -75,7 +75,8 @@ impl ISchema for SchemaEntity2D {
         registry.entities.add(&entity, CDrawable {
             shader: *shader,
             texture: None, // TODO handle textures,
-            camera: *camera
+            camera: *camera,
+            active: true
         });
         registry.entities.add(&entity, CModelMatrix(self.transform.to_matrix()));
 

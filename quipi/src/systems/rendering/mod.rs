@@ -7,16 +7,11 @@ use crate::{
     VersionedIndex
 };
 
-pub mod renderer;
-pub mod renderer_2d;
 pub mod canvas;
 pub mod mesh;
 pub mod texture;
 pub mod text;
 pub mod draw;
-
-// pub use renderer::Renderer;
-// pub use renderer_2d::Renderer2D;
 
 pub trait IRenderer {
     fn camera(&self) -> VersionedIndex;

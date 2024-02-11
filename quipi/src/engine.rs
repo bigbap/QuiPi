@@ -4,11 +4,11 @@ use sdl2::event::Event;
 
 use crate::{
     components::{register_components, CRGBA}, core::time::Timer, resources::register_resources, systems::{
-        self, editor::SceneEditor, rendering::text::{
+        self, editor::AppEditor, rendering::{self, text::{
             TextRenderer, DEFAULT_FONT
-        }
+        }}
     }, utils::to_abs_path, wrappers::{
-        opengl::buffer::clear_buffers, sdl2::window::QuiPiWindow
+        opengl::{buffer::clear_buffers, draw::DrawMode}, sdl2::window::QuiPiWindow
     }, Registry
 };
 
@@ -59,7 +59,7 @@ pub fn run<G: QuiPiApp>(
     game.init(&mut registry, &winapi)?;
 
     let mut text = TextRenderer::new(DEFAULT_FONT)?;
-    let mut scene_editor = SceneEditor::new()?;
+    let mut scene_editor = AppEditor::new()?;
     let mut timer = Timer::new()?;
 
     let mut app_state = FrameState {
@@ -76,16 +76,19 @@ pub fn run<G: QuiPiApp>(
         registry.resources.flush();
 
         clear_buffers(app_state.clear_color.to_tuple());
-        app_state.events = winapi.get_event_queue()?;
 
+        // 1. draw all drawables
+        rendering::draw::draw_all(&mut registry, DrawMode::Triangles)?;
+
+        // 2. call update systems (any app drawing might happen here. ie rendering text)
         set_debug_info(&mut app_state);
-
+        app_state.events = winapi.get_event_queue()?;
         match game.handle_frame(&mut registry, &mut app_state)? {
             FrameResponse::Quit => break 'running,
             FrameResponse::Restart => { timer.delta(); },
             FrameResponse::None => ()
         }
-        
+
         if app_state.editor_mode && cfg!(debug_assertions) {
             scene_editor.update(&mut registry, &mut app_state)?;
         }

@@ -25,7 +25,7 @@ use crate::{
 
 use self::mesh::{ElementArrayMesh, ShaderLocation};
 
-use super::rendering::draw::s_draw_entity;
+use super::rendering::draw::draw_entity;
 
 const GRID_TAG: &str = "quipi_grid_74872346";
 
@@ -90,7 +90,7 @@ impl Grid {
         for line in grid {
             if let Some(drawable) = registry.entities.get::<CDrawable>(&line) {
                 let shader = drawable.shader;
-                s_draw_entity(
+                draw_entity(
                     &line,
                     registry,
                     camera,
@@ -126,7 +126,7 @@ fn build_axis(
     let entity = registry.entities.create()?;
     registry.entities.add(&entity, CTag { tag: GRID_TAG.to_string() });
     registry.entities.add(&entity, mesh);
-    registry.entities.add(&entity, CDrawable { shader, camera, texture: None });
+    registry.entities.add(&entity, CDrawable { shader, camera, texture: None, active: true });
     registry.entities.add(&entity, transform);
     registry.entities.add(&entity, model_matrix);
 
