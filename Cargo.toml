@@ -1,7 +1,8 @@
 [workspace]
 resolver = "2"
 members = [
-    "quipi",
+    "quipi_core",
+    "quipi_2d",
     "quipi_sandbox",
     "examples/scene",
     "examples/bouncing_shapes",

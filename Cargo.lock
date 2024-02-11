@@ -81,7 +81,8 @@ name = "bouncing_shapes"
 version = "0.1.0"
 dependencies = [
  "nalgebra-glm",
- "quipi",
+ "quipi_2d",
+ "quipi_core",
  "sdl2",
  "thiserror",
  "walkdir",
@@ -426,7 +427,7 @@ name = "isometric"
 version = "0.1.0"
 dependencies = [
  "nalgebra-glm",
- "quipi",
+ "quipi_core",
  "sdl2",
  "thiserror",
  "walkdir",
@@ -669,7 +670,20 @@ dependencies = [
 ]
 
 [[package]]
-name = "quipi"
+name = "quipi_2d"
+version = "0.1.0"
+dependencies = [
+ "egui",
+ "nalgebra-glm",
+ "quipi_core",
+ "serde",
+ "serde_yaml",
+ "thiserror",
+ "walkdir",
+]
+
+[[package]]
+name = "quipi_core"
 version = "0.1.0"
 dependencies = [
  "component-derive",
@@ -695,7 +709,8 @@ name = "quipi_sandbox"
 version = "0.1.0"
 dependencies = [
  "nalgebra-glm",
- "quipi",
+ "quipi_2d",
+ "quipi_core",
  "walkdir",
 ]
 
@@ -802,7 +817,7 @@ name = "scene"
 version = "0.1.0"
 dependencies = [
  "nalgebra-glm",
- "quipi",
+ "quipi_core",
  "sdl2",
  "thiserror",
  "walkdir",

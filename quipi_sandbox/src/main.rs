@@ -5,14 +5,14 @@ use quipi_sandbox::{
 };
 
 fn main() {
-    let mut sandbox = QuiPiSandbox::new().expect("There was a problem initializing QuiPi Sandbox");
-
-    if let Err(e) = quipi::run(
-        &mut sandbox,
+    let mut app = quipi_2d::QuiPi2D::init(
+        QuiPiSandbox::new(),
         "Bouncing Shapes",
         WIDTH,
         HEIGHT,
-    ) {
+    ).expect("There was a problem initializing QuiPi Sandbox");
+
+    if let Err(e) = app.run() {
         eprintln!("QuiPi Sandbox ended unexpectedly: {}", e);
     };
 }

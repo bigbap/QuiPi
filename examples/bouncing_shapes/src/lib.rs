@@ -1,23 +1,24 @@
-extern crate quipi;
+extern crate quipi_2d as quipi;
 extern crate nalgebra_glm as glm;
 
-use quipi::{
+pub use quipi::{
     components::{
-        CName, CScene, CTransform, CRGBA
-    }, schemas::{
-        camera2d::DEFAULT_CAMERA,
+        CScene,
+        CRGBA,
+        CTransform2D
+    },
+    rendering::canvas,
+    schemas::{
         ISchema,
-        SchemaCamera2D,
         SchemaScene2D,
-        SchemaShader
+        SchemaCamera2D,
+        camera2d::DEFAULT_CAMERA
     },
-    systems::{
-        rendering::canvas,
-        scene::load_scene_2d
-    },
-    wrappers::sdl2::window::QuiPiWindow,
+    systems::scene::load_scene_2d,
     FrameResponse,
     FrameState,
+    QuiPiApp,
+    QuiPiWindow,
     Registry,
     VersionedIndex
 };
@@ -27,28 +28,29 @@ pub static HEIGHT: u32 = 900;
 
 mod systems;
 
+use quipi_core::{components::CName, schemas::SchemaShader};
 use systems::{
     *,
     spawner::RectSpawner
 };
 
-pub struct MyGame {
+pub struct BouncingShapes {
     spawner: Option<RectSpawner>,
     scene: Option<VersionedIndex>,
     camera: Option<VersionedIndex>
 }
 
-impl MyGame {
-    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        Ok(MyGame {
+impl BouncingShapes {
+    pub fn new() -> Self {
+        BouncingShapes {
             spawner: None,
             scene: None,
             camera: None
-        })
+        }
     }
 }
 
-impl quipi::QuiPiApp for MyGame {
+impl quipi::QuiPiApp for BouncingShapes {
     fn init(
         &mut self,
         registry: &mut Registry,
@@ -130,6 +132,6 @@ fn camera_schema() -> SchemaCamera2D {
         top: HEIGHT as f32,
         near: 0.0,
         far: 0.2,
-        transform: CTransform::default(),
+        transform: CTransform2D::default(),
     }
 }

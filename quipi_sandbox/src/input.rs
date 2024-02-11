@@ -1,13 +1,14 @@
 use quipi::{
-    sdl2::{
-        event::Event,
-        keyboard::{Keycode, Mod}
-    },
     systems::scene::save_scene_2d,
     FrameResponse,
     FrameState,
     Registry,
     VersionedIndex
+};
+
+use quipi_core::sdl2::{
+    event::Event,
+    keyboard::{Keycode, Mod}
 };
 
 

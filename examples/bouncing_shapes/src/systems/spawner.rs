@@ -1,19 +1,18 @@
 use quipi::{
     components::{
-        CBoundingBox,
-        CTransform,
-        CVelocity,
+        CBoundingBox2D,
+        CTransform2D,
+        CVelocity2D,
         CRGBA
     },
-    math::random::Random,
     schemas::{
         ISchema,
         SchemaEntity2D
     },
-    utils::now_secs,
     Registry,
     VersionedIndex
 };
+use quipi_core::{math::random::Random, utils::now_secs};
 
 pub struct RectSpawner {
     camera: VersionedIndex,
@@ -33,7 +32,7 @@ impl RectSpawner {
         registry: &mut Registry,
     ) -> Result<Option<VersionedIndex>, Box<dyn std::error::Error>> {
         let (Some(b_box), mut this_schema) = (
-            registry.entities.get::<CBoundingBox>(&self.camera),
+            registry.entities.get::<CBoundingBox2D>(&self.camera),
             SchemaEntity2D::default()
          ) else {
             return Ok(None);
@@ -46,7 +45,7 @@ impl RectSpawner {
         if self.rand.random() > 0.5 { vel.0 *= -1.0; }
         if self.rand.random() > 0.5 { vel.1 *= -1.0; }
 
-        this_schema.velocity = Some(CVelocity { x: vel.0, y: vel.1, z: 0.0 });
+        this_schema.velocity = Some(CVelocity2D { x: vel.0, y: vel.1 });
         this_schema.color = Some(CRGBA { value: [
             self.rand.random(),
             self.rand.random(),
@@ -55,19 +54,18 @@ impl RectSpawner {
         ] });
 
         let s_factor = self.rand.range(25, 50) as f32 / 100.0;
-        this_schema.transform = CTransform {
-            translate: glm::vec3(
+        this_schema.transform = CTransform2D {
+            translate: glm::vec2(
                 b_box.right / 2.0,
-                b_box.top / 2.0,
-                0.0
+                b_box.top / 2.0
             ),
-            scale: glm::vec3(s_factor, s_factor, s_factor),
-            ..CTransform::default()
+            scale: glm::vec2(s_factor, s_factor),
+            ..CTransform2D::default()
         };
-        this_schema.b_box = Some(CBoundingBox {
+        this_schema.b_box = Some(CBoundingBox2D {
             right: 200.0,
             bottom: 200.0,
-            ..CBoundingBox::default()
+            ..CBoundingBox2D::default()
         });
 
         let id = this_schema.build(registry)?;

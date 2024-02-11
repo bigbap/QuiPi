@@ -1,9 +1,9 @@
 use quipi::{
     FrameResponse,
     Registry,
-    engine::FrameState,
-    systems::rendering::canvas
 };
+use quipi_core::rendering::canvas;
+use quipi_core::FrameState;
 use sdl2::event::{
     Event,
     WindowEvent

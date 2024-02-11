@@ -1,13 +1,22 @@
-use quipi::{
-    components::{CScene, CRGBA}, engine::QuiPiApp, schemas::{
-        ISchema, SchemaScene2D
-    }, systems::{
-        rendering::canvas, scene::load_scene_2d
-    }, wrappers::sdl2::window::QuiPiWindow, FrameResponse, FrameState, Registry, VersionedIndex
-};
-
-extern crate quipi;
+extern crate quipi_2d as quipi;
 extern crate nalgebra_glm as glm;
+
+pub use quipi::{
+    components::{
+        CScene,
+        CRGBA
+    }, rendering::canvas, schemas::{
+        ISchema,
+        SchemaScene2D
+    },
+    systems::scene::load_scene_2d,
+    FrameResponse,
+    FrameState,
+    QuiPiApp,
+    QuiPiWindow,
+    Registry,
+    VersionedIndex
+};
 
 mod input;
 mod update;
@@ -22,10 +31,10 @@ pub struct QuiPiSandbox {
 }
 
 impl QuiPiSandbox {
-    pub fn new() -> Result<Self, SandboxError> {
-        Ok(Self {
+    pub fn new() -> Self {
+        Self {
             scene: None,
-        })
+        }
     }
 }
 

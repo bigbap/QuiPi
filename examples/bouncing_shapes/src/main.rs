@@ -1,18 +1,18 @@
 use bouncing_shapes::{
-    MyGame,
+    BouncingShapes,
     WIDTH,
     HEIGHT
 };
 
 fn main() {
-    let mut game = MyGame::new().expect("There was a problem initializing the game.");
-
-    if let Err(e) = quipi::run(
-        &mut game,
+    let mut app = quipi_2d::QuiPi2D::init(
+        BouncingShapes::new(),
         "Bouncing Shapes",
         WIDTH,
         HEIGHT,
-    ) {
-        eprintln!("Game ended unexpectedly: {}", e);
+    ).expect("There was a problem initializing Bouncing Shapes");
+
+    if let Err(e) = app.run() {
+        eprintln!("Bouncing Shapes ended unexpectedly: {}", e);
     };
 }

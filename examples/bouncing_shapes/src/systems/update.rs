@@ -1,9 +1,9 @@
 use quipi::{
     components::{
-        CBoundingBox,
+        CBoundingBox2D,
         CTag,
-        CTransform,
-        CVelocity
+        CTransform2D,
+        CVelocity2D
     },
     schemas::entity2d::DEFAULT_RECT_TAG,
     FrameState, Registry
@@ -25,13 +25,13 @@ pub fn update(
     let quads = registry.entities.query::<CTag>(CTag { tag: DEFAULT_RECT_TAG.to_string() });
 
     for quad in quads {
-        let Some(vel)       = registry.entities.get::<CVelocity>(&quad)    else { continue };
-        let Some(transform) = registry.entities.get::<CTransform>(&quad)   else { continue };
-        let Some(b_box)     = registry.entities.get::<CBoundingBox>(&quad) else { continue };
+        let Some(vel)       = registry.entities.get::<CVelocity2D>(&quad)    else { continue };
+        let Some(transform) = registry.entities.get::<CTransform2D>(&quad)   else { continue };
+        let Some(b_box)     = registry.entities.get::<CBoundingBox2D>(&quad) else { continue };
         
         let scale = transform.scale;
 
-        let vel = glm::vec3(vel.x, vel.y, 0.0);
+        let vel = glm::vec2(vel.x, vel.y);
         let translate = transform.translate + (vel * frame_state.delta);
         let (colided_x, colided_y) = check_screen_collision(
             translate,
@@ -39,10 +39,10 @@ pub fn update(
             b_box.bottom * scale.y
         );
 
-        let Some(transform) = registry.entities.get_mut::<CTransform>(&quad) else { continue };
+        let Some(transform) = registry.entities.get_mut::<CTransform2D>(&quad) else { continue };
         transform.translate = translate;
 
-        let Some(vel) = registry.entities.get_mut::<CVelocity>(&quad) else { continue };
+        let Some(vel) = registry.entities.get_mut::<CVelocity2D>(&quad) else { continue };
         if colided_x { vel.x *= -1.0 }
         if colided_y { vel.y *= -1.0 }
     }
@@ -51,7 +51,7 @@ pub fn update(
 }
 
 fn check_screen_collision(
-    pos: glm::Vec3,
+    pos: glm::Vec2,
     w: f32,
     h: f32
 ) -> (bool, bool) {
