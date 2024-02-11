@@ -81,6 +81,19 @@ impl EntityManager {
         }
     }
 
+    pub fn remove<C: Component + std::fmt::Debug + PartialEq + 'static>(
+        &mut self,
+        entity: &VersionedIndex
+    ) {
+        match self.component_maps.get_mut::<EntityMap<C>>() {
+            None => {
+                #[cfg(debug_assertions)]
+                println!("component {:?} has not been registered", std::any::type_name::<C>());
+            },
+            Some(cmp_map) => { cmp_map.unset(&entity); }
+        }
+    }
+
     pub fn get<C: Component + PartialEq + 'static>(
         &self,
         entity: &VersionedIndex

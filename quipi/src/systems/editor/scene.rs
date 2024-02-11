@@ -2,7 +2,7 @@ use egui::Vec2;
 
 use crate::{
     components::{
-        CDrawable, CScene
+        CDrawable, CScene, CTag
     },
     schemas::{
         ISchema, SchemaEntity2D
@@ -30,14 +30,9 @@ impl SceneEditor {
         registry: &mut Registry
     ) {
         self.entity_editor.update(gui, registry);
-
-        // TODO: this is currently hardcoded
         let entities = registry.entities.query_all::<CDrawable>();
     
         egui::Window::new("Scene").show(&gui.ctx, |ui| {
-            ui.set_width(200.0);
-            ui.separator();
-    
             ui.horizontal(|ui| {
                 if ui.button("create entity").clicked() {
                     let schema = SchemaEntity2D::default();
@@ -58,15 +53,20 @@ impl SceneEditor {
                 }
             });
     
-            ui.separator();
+            ui.add_space(10.0);
     
             egui::ScrollArea::vertical().show(ui, |ui| {
+                ui.set_width(200.0);
                 for entity in entities.iter() {
                     ui.horizontal(|ui| {
+                        let default = CTag { tag: entity.to_string() };
+                        let tag = registry.entities.get::<CTag>(entity)
+                            .unwrap_or(&default);
+
                         ui.selectable_value(
                             &mut self.entity_editor.active_entity,
                             Some(*entity),
-                            entity.to_string()
+                            tag.tag.clone()
                         );
                         if ui.button("x").clicked() {
                             if self.entity_editor.active_entity == Some(*entity) {

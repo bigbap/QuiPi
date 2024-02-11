@@ -150,7 +150,7 @@ pub struct IndexedArray<T>(Vec<Option<Entry<T>>>);
 
 impl<T> Default for IndexedArray<T> {
     fn default() -> Self {
-        Self(Vec::<Option<Entry<T>>>::with_capacity(4))
+        Self(Vec::<Option<Entry<T>>>::with_capacity(100))
     }
 }
 
@@ -159,13 +159,23 @@ impl<T> IndexedArray<T> {
         let i = index.index;
 
         if i >= self.0.len() {
-            self.0.resize_with(i + 4, || None);
+            self.0.resize_with(i + 100, || None);
         }
 
         self.0[i] = Some(Entry {
             version: index.version,
             value
         });
+    }
+
+    pub fn unset(&mut self, index: &VersionedIndex) {
+        let i = index.index;
+
+        if i >= self.0.len() {
+            self.0.resize_with(i + 100, || None);
+        }
+
+        self.0[i] = None;
     }
 
     pub fn get(&self, index: &VersionedIndex) -> Option<&T> {

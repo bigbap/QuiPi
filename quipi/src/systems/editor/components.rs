@@ -16,21 +16,28 @@ use crate::{
 
 pub struct EntityEditor {
     pub active_entity: Option<VersionedIndex>,
+
+    to_remove: Vec<Box<dyn FnMut(&mut Registry, VersionedIndex)>>
 }
 
 impl EntityEditor {
     pub fn new() -> Self {
         Self {
-            active_entity: None
+            active_entity: None,
+            to_remove: vec![]
         }
     }
 
     pub fn update(
-        &self,
+        &mut self,
         gui: &GUI,
         registry: &mut Registry
     ) {
         if let Some(entity) = self.active_entity {
+            while !self.to_remove.is_empty() {
+                self.to_remove.pop().unwrap()(registry, entity);
+            }
+
             egui::Window::new("Entity").show(&gui.ctx, |ui| {
                 ui.add_space(10.0);
                 self.add_component(ui, entity, registry);
@@ -76,6 +83,12 @@ impl EntityEditor {
                 }
                 if let Some(velocity) = registry.entities.get_mut::<CVelocity>(&entity) {
                     ui.collapsing("Velocity", |ui| {
+                        if ui.button("del").clicked() {
+                            self.to_remove.push(Box::new(|registry, entity: VersionedIndex| {
+                                registry.entities.remove::<CVelocity>(&entity);
+                            }))
+                        }
+
                         ui.horizontal(|ui| {
                             ui.label("x");
                             ui.add(egui::DragValue::new(&mut velocity.x).speed(1.0));
@@ -88,6 +101,12 @@ impl EntityEditor {
                 }
                 if let Some(rect) = registry.entities.get_mut::<CRect>(&entity) {
                     ui.collapsing("Rect", |ui| {
+                        if ui.button("del").clicked() {
+                            self.to_remove.push(Box::new(|registry, entity: VersionedIndex| {
+                                registry.entities.remove::<CRect>(&entity);
+                            }))
+                        }
+
                         ui.horizontal(|ui| {
                             ui.label("center x");
                             ui.add(egui::DragValue::new(&mut rect.center_x).speed(1.0));
@@ -104,6 +123,11 @@ impl EntityEditor {
                 }
                 if let Some(b_box) = registry.entities.get_mut::<CBoundingBox>(&entity) {
                     ui.collapsing("Bounding Box", |ui| {
+                        if ui.button("del").clicked() {
+                            self.to_remove.push(Box::new(|registry, entity: VersionedIndex| {
+                                registry.entities.remove::<CBoundingBox>(&entity);
+                            }))
+                        }
                         ui.horizontal(|ui| {
                             ui.label("left");
                             ui.add(egui::DragValue::new(&mut b_box.left).speed(1.0));
@@ -126,6 +150,11 @@ impl EntityEditor {
                 }
                 if let Some(color) = registry.entities.get_mut::<CRGBA>(&entity) {
                     ui.collapsing("Color", |ui| {
+                        if ui.button("del").clicked() {
+                            self.to_remove.push(Box::new(|registry, entity: VersionedIndex| {
+                                registry.entities.remove::<CRGBA>(&entity);
+                            }))
+                        }
                         ui.color_edit_button_rgba_premultiplied(&mut color.value);
                     });
                 }
@@ -140,12 +169,6 @@ impl EntityEditor {
         registry: &mut Registry
     ) {
         ui.menu_button("Add component", |ui| {
-            if registry.entities.get::<CTransform>(&entity).is_none() {
-                if ui.button("CTransform").clicked() {
-                    registry.entities.add(&entity, CTransform::default());
-                }
-            } else { ui.label("CVelocity"); }
-
             if registry.entities.get::<CVelocity>(&entity).is_none() {
                 if ui.button("CVelocity").clicked() {
                     registry.entities.add(&entity, CVelocity::default());
