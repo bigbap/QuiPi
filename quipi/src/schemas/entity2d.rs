@@ -71,6 +71,10 @@ impl ISchema for SchemaEntity2D {
         if let Some(color) = self.color {
             registry.entities.add(&entity, color);
         }
+        match &self.shape {
+            Shape2D::Rect(rect) => registry.entities.add(&entity, rect.clone()),
+            Shape2D::Circle(_) => ()
+        }
         registry.entities.add(&entity, self.transform);
         registry.entities.add(&entity, CDrawable {
             shader: *shader,
