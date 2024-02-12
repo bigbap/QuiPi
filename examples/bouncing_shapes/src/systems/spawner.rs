@@ -1,18 +1,14 @@
 use quipi::{
     components::{
-        CBoundingBox2D,
-        CTransform2D,
-        CVelocity2D,
-        CRGBA
+        CBoundingBox2D, CRect, CTransform2D, CVelocity2D, CRGBA
     },
     schemas::{
-        ISchema,
-        SchemaEntity2D
+        entity2d::Shape2D, ISchema, SchemaEntity2D
     },
     Registry,
     VersionedIndex
 };
-use quipi_core::{math::random::Random, utils::now_secs};
+use quipi_core::{components::CName, math::random::Random, utils::now_secs};
 
 pub struct RectSpawner {
     camera: VersionedIndex,
@@ -50,10 +46,10 @@ impl RectSpawner {
             self.rand.random(),
             self.rand.random(),
             self.rand.random(),
-            0.5
+            1.0
         ] });
 
-        let s_factor = self.rand.range(25, 50) as f32 / 100.0;
+        let s_factor = self.rand.range(10, 40) as f32 / 100.0;
         this_schema.transform = CTransform2D {
             translate: glm::vec2(
                 b_box.right / 2.0,
@@ -63,10 +59,17 @@ impl RectSpawner {
             ..CTransform2D::default()
         };
         this_schema.b_box = Some(CBoundingBox2D {
-            right: 200.0,
-            bottom: 200.0,
+            right: 256.0,
+            bottom: 256.0,
             ..CBoundingBox2D::default()
         });
+        this_schema.shape = Shape2D::Rect(CRect {
+            width: 256.0,
+            height: 256.0,
+            ..CRect::default()
+        });
+        this_schema.shader = CName { name: "sprite".into() };
+        this_schema.texture = Some(CName { name: "Sprite-0001.png".into() });
 
         let id = this_schema.build(registry)?;
 

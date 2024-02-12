@@ -18,10 +18,10 @@ pub struct CRect {
 impl CRect {
     pub fn to_config(&self, color: Option<CRGBA>) -> ObjectConfig {
         let points: Vec<f32> = vec![
-            self.center_x - (self.width / 2.0), self.center_y + (self.height / 2.0), 0.0, // top left
             self.center_x + (self.width / 2.0), self.center_y + (self.height / 2.0), 0.0, // top right
             self.center_x + (self.width / 2.0), self.center_y - (self.height / 2.0), 0.0, // bottom right
-            self.center_x - (self.width / 2.0), self.center_y - (self.height / 2.0), 0.0 // bottom left
+            self.center_x - (self.width / 2.0), self.center_y - (self.height / 2.0), 0.0, // bottom left
+            self.center_x - (self.width / 2.0), self.center_y + (self.height / 2.0), 0.0, // top left
         ];
         let colors: Vec<f32> = match color {
             Some(color) => vec![
@@ -32,15 +32,22 @@ impl CRect {
             ],
             _ => vec![]
         };
+        let texture_coords: Vec<f32> = vec![
+            1.0, 1.0,
+            1.0, 0.0,
+            0.0, 0.0,
+            0.0, 1.0
+        ];
         let indices = vec![
-            0, 1, 2,
-            3, 0, 2
+            0, 1, 3,
+            1, 2, 3
         ];
 
         ObjectConfig {
             points,
             indices,
             colors,
+            texture_coords,
             ..ObjectConfig::default()
         }
     }

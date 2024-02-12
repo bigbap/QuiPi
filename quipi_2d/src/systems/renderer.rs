@@ -32,7 +32,7 @@ impl Renderer2D {
 impl IRenderer for Renderer2D {
     fn start(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         if self.rendering == true {
-            return Err("Renderer was not flushed in the last frame".into());
+            return Err("renderer was not flushed in the last frame".into());
         }
 
         gl_enable(GLCapability::AlphaBlending);
@@ -43,43 +43,52 @@ impl IRenderer for Renderer2D {
         Ok(())
     }
 
-    fn batch_render(&mut self, _tag: CTag, _registry: &mut Registry) {
+    fn batch_render(
+        &mut self,
+        _tag: CTag,
+        _registry: &mut Registry
+    ) -> Result<(), Box<dyn std::error::Error>> {
         if !self.rendering {
-            #[cfg(debug_assertions)]
-            println!("rendering hasn't been started for frame");
-
-            return;
+            return Err("rendering hasn't been started for frame".into());
         }
+
+        Ok(())
     }
 
-    fn instance_render(&mut self, _tag: CTag, _registry: &mut Registry) {
+    fn instance_render(
+        &mut self,
+        _tag: CTag,
+        _registry: &mut Registry
+    ) -> Result<(), Box<dyn std::error::Error>> {
         if !self.rendering {
-            #[cfg(debug_assertions)]
-            println!("rendering hasn't been started for frame");
-
-            return;
+            return Err("rendering hasn't been started for frame".into());
         }
+
+        Ok(())
     }
 
-    fn single_render(&mut self, entity: VersionedIndex, registry: &mut Registry) {
+    fn single_render(
+        &mut self,
+        entity: VersionedIndex,
+        registry: &mut Registry
+    ) -> Result<(), Box<dyn std::error::Error>> {
         if !self.rendering {
-            #[cfg(debug_assertions)]
-            println!("rendering hasn't been started for frame");
-
-            return;
+            return Err("rendering hasn't been started for frame".into());
         }
 
         let (Some(sprite), Some(mesh)) = (
             registry.entities.get::<CSprite>(&entity),
             registry.entities.get::<CMesh2D>(&entity),
-        ) else { return };
+        ) else { return Ok(()) };
 
-        if !mesh.should_draw { return }
-        if registry.resources.get::<RShader>(&sprite.shader).is_none() { return };
+        if !mesh.should_draw { return Ok(()) }
+        if registry.resources.get::<RShader>(&sprite.shader).is_none() { return Ok(()) };
 
         CModelMatrix2D::update_model_matrix(&entity, registry);
 
         self.to_draw.push(entity);
+
+        Ok(())
     }
 
     fn flush(&mut self, registry: &Registry) -> RenderInfo {
@@ -184,8 +193,8 @@ fn bind_textures(
     if let Some(sprite) = registry.entities.get::<CSprite>(entity) {
         if let Some(texture_id) = sprite.texture {
             if let Some(texture) = registry.resources.get::<RTexture>(&texture_id) {
-                shader.program.set_int("u_texture", 0);
                 texture.0.use_texture(0);
+                shader.program.set_int("u_texture", 0);
             }
         }
     }

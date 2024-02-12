@@ -40,7 +40,8 @@ pub fn update(
         );
 
         let Some(transform) = registry.entities.get_mut::<CTransform2D>(&quad) else { continue };
-        transform.translate = translate;
+        if !colided_x { transform.translate.x = translate.x; }
+        if !colided_y { transform.translate.y = translate.y; }
 
         let Some(vel) = registry.entities.get_mut::<CVelocity2D>(&quad) else { continue };
         if colided_x { vel.x *= -1.0 }

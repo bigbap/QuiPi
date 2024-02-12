@@ -58,16 +58,26 @@ impl ISchema for SchemaEntity2D {
             return Err(SchemaEntityError::ShaderNotFound.into())
         };
 
-        // 2. get camera by name
+        // 2. get texture by name if any
+        let texture = match &self.texture {
+            Some(name) => registry.resources.query::<CName>(name.clone()),
+            None => vec![]
+        };
+
+        // 3. get camera by name
         let binding = registry.entities.query::<CName>(self.camera.clone());
         let Some(camera) = binding.first() else {
             return Err(SchemaEntityError::CameraNotFound.into())
         };
 
-        // 3. build the entity
+        // 4. build the entity
         let entity = registry.entities.create()?;
         registry.entities.add(&entity, self.tag.clone());
-        registry.entities.add(&entity, CMesh2D::new(self.to_obj_config(), self.draw_mode, self.usage)?);
+        registry.entities.add(&entity, CMesh2D::new(
+            self.to_obj_config(),
+            self.draw_mode,
+            self.usage
+        )?);
         if let Some(b_box) = self.b_box {
             registry.entities.add(&entity, b_box);
         }
@@ -84,7 +94,7 @@ impl ISchema for SchemaEntity2D {
         registry.entities.add(&entity, self.transform);
         registry.entities.add(&entity, CSprite {
             shader: *shader,
-            texture: None, // TODO handle textures,
+            texture: texture.first().cloned(),
             camera: *camera,
         });
         registry.entities.add(&entity, CModelMatrix2D(self.transform.to_matrix()));

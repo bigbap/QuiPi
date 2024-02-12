@@ -40,7 +40,8 @@ impl CMesh2D {
         mesh
             .with_ebo(&config.indices)?
             .with_vbo::<3, f32>(ShaderLocation::Zero, &config.points)?
-            .with_vbo::<4, f32>(ShaderLocation::One, &config.colors)?;
+            .with_vbo::<4, f32>(ShaderLocation::One, &config.colors)?
+            .with_vbo::<2, f32>(ShaderLocation::Two, &config.texture_coords)?;
 
         Ok(Self {
             mesh,

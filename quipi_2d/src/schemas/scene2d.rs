@@ -1,3 +1,4 @@
+use quipi_core::{components::CName, opengl::textures::{ParameterName, ParameterValue}, rendering::texture::from_image, resources::RTexture, utils::to_abs_path};
 use serde::{Serialize, Deserialize};
 
 use crate::{
@@ -31,6 +32,7 @@ pub struct SchemaScene2D {
     pub clr_color:  CRGBA,
     pub cameras:    Vec<SchemaCamera2D>,
     pub shaders:    Vec<SchemaShader>,
+    pub textures:   Vec<String>,
     pub entities:   Vec<SchemaEntity2D>,
 }
 
@@ -47,6 +49,21 @@ impl ISchema for SchemaScene2D {
         // 2. build shaders
         for shader in self.shaders.iter() {
             shader.build(registry)?;
+        }
+
+        // 2. build textures
+        for texture in self.textures.iter() {
+            let path = format!("assets/textures/{}", texture);
+            let entity = registry.resources.create()?;
+
+            let tex = from_image(&to_abs_path(&path)?)?;
+            tex
+                .set_parameter(ParameterName::WrapS, ParameterValue::ClampToEdge)
+                .set_parameter(ParameterName::WrapT, ParameterValue::ClampToEdge)
+                .set_parameter(ParameterName::MinFilter, ParameterValue::LinearMipmapNearest)
+                .set_parameter(ParameterName::MagFilter, ParameterValue::Nearest);
+            registry.resources.add(&entity, RTexture(tex));
+            registry.resources.add(&entity, CName { name: texture.into() });
         }
 
         // 3. build entities
@@ -72,6 +89,7 @@ impl ISchema for SchemaScene2D {
                 clr_color: color.clone(),
                 cameras: vec![],
                 shaders: vec![],
+                textures: vec![],
                 entities: vec![],
             };
 
@@ -87,7 +105,15 @@ impl ISchema for SchemaScene2D {
                 schema.shaders.push(SchemaShader::from_entity(shader, registry)?);
             }
 
-            // 2. parse the entities
+            // 3. parse textures
+            let textures = registry.resources.query_all::<RTexture>();
+            for texture in textures {
+                if let Some(name) = registry.resources.get::<CName>(&texture) {
+                    schema.textures.push(name.name.clone());
+                }
+            }
+
+            // 4. parse the entities
             let entities = registry.entities.query_all::<CSprite>();
             for entity in entities {
                 schema.entities.push(SchemaEntity2D::from_entity(entity, registry)?);
@@ -122,6 +148,7 @@ impl Default for SchemaScene2D {
             clr_color: CRGBA { value: [0.3, 0.3, 0.3, 1.0] },
             cameras: vec![camera],
             shaders: vec![shader],
+            textures: vec![],
             entities: vec![rect]
         }
     }

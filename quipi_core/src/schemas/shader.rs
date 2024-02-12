@@ -16,8 +16,8 @@ pub const DEFAULT_SHADER_UNIFORM: &str = "mvpMatrix";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SchemaShader {
-    name: CName,
-    uniforms: Vec<UniformVariable>
+    pub name: CName,
+    pub uniforms: Vec<UniformVariable>
 }
 
 impl Default for SchemaShader {

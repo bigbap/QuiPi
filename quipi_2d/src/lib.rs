@@ -97,10 +97,10 @@ impl<G: QuiPiApp> QuiPi2D<G> {
             clear_buffers(self.frame_state.clear_color.to_tuple());
     
             // 1. draw all drawables
-            renderer.start()?;
             let entities = self.registry.entities.query_all::<CSprite>();
+            renderer.start()?;
             for entity in entities.iter() {
-                renderer.single_render(*entity, &mut self.registry);
+                renderer.single_render(*entity, &mut self.registry)?;
             }
             self.frame_state.render_info = renderer.flush(&self.registry);
     

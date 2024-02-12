@@ -28,7 +28,7 @@ pub static HEIGHT: u32 = 900;
 
 mod systems;
 
-use quipi_core::{components::CName, schemas::SchemaShader};
+use quipi_core::{components::CName, resources::shader::UniformVariable, schemas::SchemaShader};
 use systems::{
     *,
     spawner::RectSpawner
@@ -102,7 +102,7 @@ impl quipi::QuiPiApp for BouncingShapes {
         // draw the entity count
         let (_x, _y, width, height) = canvas::get_dimensions();
         let entity_count = registry.entities.count();
-        frame_state.text_render.color = glm::vec3(1.0, 1.0, 1.0);
+        frame_state.text_render.color = glm::vec3(0.0, 0.0, 0.0);
         frame_state.text_render.scale = 0.7;
         frame_state.text_render.draw(
             format!("entities: {}", entity_count),
@@ -116,10 +116,16 @@ impl quipi::QuiPiApp for BouncingShapes {
 fn scene_schema() -> SchemaScene2D {
     SchemaScene2D {
         name: CScene { name: "bouncing_shapes".to_string() },
-        clr_color: CRGBA { value: [0.0, 0.3, 0.5, 1.0] },
+        clr_color: CRGBA { value: [1.0, 1.0, 0.8, 1.0] },
         cameras: vec![camera_schema()],
         entities: vec![],
-        shaders: vec![SchemaShader::default()]
+        shaders: vec![SchemaShader {
+            name: CName { name: "sprite".into() },
+            uniforms: vec![
+                UniformVariable::MVPMatrix("mvpMatrix".into())
+            ]
+        }],
+        textures: vec!["Sprite-0001.png".into()]
     }
 }
 

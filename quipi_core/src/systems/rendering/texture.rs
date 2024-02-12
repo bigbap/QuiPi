@@ -8,8 +8,6 @@ use crate::{
         Texture,
         Format,
         Target,
-        ParameterName,
-        ParameterValue
     },
 };
 
@@ -90,11 +88,8 @@ pub fn from_image(
 
     texture
         .bind()
-        .add_image_data(Format::Rgba, format, &img.flipv())
-        .set_parameter(ParameterName::WrapS, ParameterValue::ClampToEdge)
-        .set_parameter(ParameterName::WrapT, ParameterValue::ClampToEdge)
-        .set_parameter(ParameterName::MinFilter, ParameterValue::LinearMipmapLinear)
-        .set_parameter(ParameterName::MagFilter, ParameterValue::Linear);
+        .add_image_data(Format::Rgba, format, &img.flipv());
+        
 
     Ok(texture)
 }
