@@ -5,6 +5,7 @@ pub extern crate serde;
 pub mod components;
 pub mod schemas;
 pub mod systems;
+use quipi_core::rendering::{IRenderer, RenderInfo};
 pub use quipi_core::{
     resources,
     DebugInfo,
@@ -27,9 +28,10 @@ pub use quipi_core::{
 use components::{
     register_components,
     register_resources,
-    CRGBA
+    CRGBA,
+    CSprite
 };
-use systems::{draw::draw_all, editor::AppEditor};
+use systems::{editor::AppEditor, renderer::Renderer2D};
 
 pub struct QuiPi2D<G: QuiPiApp> {
     app: G,
@@ -65,12 +67,13 @@ impl<G: QuiPiApp> QuiPi2D<G> {
         
         app.init(&mut registry, &winapi)?;
 
-        let mut timer = Timer::new()?;
+        let mut timer = Timer::new();
         let frame_state = FrameState {
             clear_color: CRGBA::default(),
             editor_mode: false,
             events: vec![],
             text_render: rendering::TextRenderer::new(rendering::DEFAULT_FONT)?,
+            render_info: RenderInfo::default(),
             debug_info: DebugInfo::default(),
             delta: timer.delta(),
         };
@@ -86,6 +89,7 @@ impl<G: QuiPiApp> QuiPi2D<G> {
     }
 
     pub fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let mut renderer = Renderer2D::new();
         'running: loop {
             self.registry.entities.flush();
             self.registry.resources.flush();
@@ -93,7 +97,12 @@ impl<G: QuiPiApp> QuiPi2D<G> {
             clear_buffers(self.frame_state.clear_color.to_tuple());
     
             // 1. draw all drawables
-            draw_all(&mut self.registry, DrawMode::Triangles)?;
+            renderer.start()?;
+            let entities = self.registry.entities.query_all::<CSprite>();
+            for entity in entities.iter() {
+                renderer.single_render(*entity, &mut self.registry);
+            }
+            self.frame_state.render_info = renderer.flush(&self.registry);
     
             // 2. call update systems (any app drawing might happen here. ie rendering text)
             set_debug_info(&mut self.frame_state);

@@ -1,5 +1,5 @@
 use quipi_core::{
-    opengl::buffer::BufferUsage,
+    opengl::{buffer::BufferUsage, draw::DrawMode},
     schemas::shader::DEFAULT_SHADER,
     systems::assets::ObjectConfig
 };
@@ -43,6 +43,7 @@ pub struct SchemaEntity2D {
     
     pub shader:     CName,
     pub camera:     CName,
+    pub draw_mode:  DrawMode,
     pub usage:      BufferUsage
 }
 
@@ -66,7 +67,7 @@ impl ISchema for SchemaEntity2D {
         // 3. build the entity
         let entity = registry.entities.create()?;
         registry.entities.add(&entity, self.tag.clone());
-        registry.entities.add(&entity, CMesh2D::new(self.to_obj_config(), self.usage)?);
+        registry.entities.add(&entity, CMesh2D::new(self.to_obj_config(), self.draw_mode, self.usage)?);
         if let Some(b_box) = self.b_box {
             registry.entities.add(&entity, b_box);
         }
@@ -85,7 +86,6 @@ impl ISchema for SchemaEntity2D {
             shader: *shader,
             texture: None, // TODO handle textures,
             camera: *camera,
-            active: true
         });
         registry.entities.add(&entity, CModelMatrix2D(self.transform.to_matrix()));
 
@@ -155,6 +155,7 @@ impl Default for SchemaEntity2D {
             texture: None,
             shader: CName { name: DEFAULT_SHADER.to_string() },
             camera: CName { name: DEFAULT_CAMERA.to_string() },
+            draw_mode: DrawMode::Triangles,
             usage: BufferUsage::StaticDraw
         }
     }

@@ -1,10 +1,12 @@
+use serde::{Deserialize, Serialize};
+
 #[derive(Debug, Clone, Copy)]
 pub enum DrawBuffer {
     Elements,
     Arrays
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum DrawMode {
     Triangles,
     Lines,

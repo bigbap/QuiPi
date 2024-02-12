@@ -1,5 +1,5 @@
 use crate::{
-    wrappers::{
+    components::CTag, wrappers::{
         opengl::MyOpenGL,
         sdl2::window::QuiPiWindow
     },
@@ -15,9 +15,19 @@ pub mod text;
 pub use text::DEFAULT_FONT;
 pub use text::TextRenderer;
 
+#[derive(Debug, Default)]
+pub struct RenderInfo {
+    pub num_draw_calls: u32,
+    pub total_ms: f32
+}
+
 pub trait IRenderer {
-    fn camera(&self) -> VersionedIndex;
-    fn update_view_matrix(&self, registry: &mut Registry);
+    fn batch_render(&mut self, tag: CTag, registry: &mut Registry);
+    fn instance_render(&mut self, tag: CTag, registry: &mut Registry);
+    fn single_render(&mut self, entity: VersionedIndex, registry: &mut Registry);
+
+    fn start(&mut self) -> Result<(), Box<dyn std::error::Error>>;
+    fn flush(&mut self, registry: &Registry) -> RenderInfo;
 }
 
 pub fn init(

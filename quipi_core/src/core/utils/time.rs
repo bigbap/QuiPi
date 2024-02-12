@@ -11,13 +11,13 @@ pub struct Timer {
 }
 
 impl Timer {
-    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new() -> Self {
         let timer = Instant::now();
 
-        Ok(Self {
+        Self {
             timer,
             last_tick: timer.elapsed().as_millis()
-        })
+        }
     }
 
     pub fn ticks(&self) -> u128 {

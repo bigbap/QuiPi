@@ -19,7 +19,7 @@ use crate::{
 
 mod characters;
 
-pub static DEFAULT_FONT: &str = "assets/fonts/FiraSansRegular.ttf";
+pub static DEFAULT_FONT: &str = "assets/fonts/Poppins-Regular.ttf";
 
 #[derive(Debug)]
 pub struct TextRenderer {

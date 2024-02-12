@@ -1,5 +1,5 @@
 use quipi_core::{
-    opengl::buffer::BufferUsage,
+    opengl::{buffer::BufferUsage, draw::DrawMode},
     rendering::mesh::{
         ElementArrayMesh,
         ShaderLocation
@@ -9,27 +9,26 @@ use quipi_core::{
     VersionedIndex
 };
 
-
-
 #[derive(Debug, Component, PartialEq)]
 pub struct CSprite {
     pub shader: VersionedIndex,
     pub camera: VersionedIndex,
     pub texture: Option<VersionedIndex>,
-
-    pub active: bool,
 }
 
 #[derive(Debug, Component, PartialEq)]
 pub struct CMesh2D {
-    pub mesh: Option<ElementArrayMesh>,
+    pub mesh: ElementArrayMesh,
     pub data: ObjectConfig,
+    pub draw_mode: DrawMode,
     pub usage: BufferUsage,
+    pub should_draw: bool
 }
 
 impl CMesh2D {
     pub fn new(
         config: ObjectConfig,
+        draw_mode: DrawMode,
         usage: BufferUsage
     ) -> Result<Self, Box<dyn std::error::Error>> {
         let mut mesh = ElementArrayMesh::new(
@@ -44,9 +43,11 @@ impl CMesh2D {
             .with_vbo::<4, f32>(ShaderLocation::One, &config.colors)?;
 
         Ok(Self {
-            mesh: Some(mesh),
+            mesh,
             data: config,
-            usage
+            draw_mode,
+            usage,
+            should_draw: true
         })
     }
 }

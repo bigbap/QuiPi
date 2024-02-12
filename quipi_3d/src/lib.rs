@@ -66,7 +66,7 @@ impl<G: QuiPiApp> QuiPi3D<G> {
         
         app.init(&mut registry, &winapi)?;
 
-        let mut timer = Timer::new()?;
+        let mut timer = Timer::new();
         let frame_state = FrameState {
             clear_color: CRGBA::default(),
             editor_mode: false,

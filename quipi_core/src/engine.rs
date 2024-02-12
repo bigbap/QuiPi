@@ -6,12 +6,7 @@ use crate::{
     components::{
         register_components,
         CRGBA
-    },
-    resources::register_resources,
-    systems::rendering::text::TextRenderer,
-    utils::to_abs_path,
-    QuiPiWindow,
-    Registry
+    }, rendering::RenderInfo, resources::register_resources, systems::rendering::text::TextRenderer, utils::to_abs_path, QuiPiWindow, Registry
 };
 
 pub trait QuiPiApp {
@@ -42,6 +37,7 @@ pub struct FrameState {
     pub events: Vec<Event>,
     pub text_render: TextRenderer,
     pub debug_info: DebugInfo,
+    pub render_info: RenderInfo,
     pub delta: f32,
 }
 
