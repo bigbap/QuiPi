@@ -7,3 +7,4 @@ pub mod audio;
 pub mod input;
 pub mod events;
 pub mod physics;
+pub mod text;

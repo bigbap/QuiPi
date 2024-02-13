@@ -2,6 +2,7 @@ pub mod children;
 pub mod color;
 pub mod distance;
 pub mod identifiers;
+pub mod mesh;
 // pub mod model;
 pub mod scene;
 pub mod states;
@@ -15,6 +16,7 @@ pub use color::CRGBA;
 pub use identifiers::CName;
 pub use identifiers::CTag;
 pub use distance::CDistance;
+pub use mesh::CMesh;
 // pub use model::CModelNode;
 pub use scene::CScene;
 pub use states::CMouseBtnState;
@@ -28,6 +30,7 @@ pub fn register_components(registry: &mut Registry) {
         .register_component::<CChildren>()
         .register_component::<CDistance>()
         // .register_component::<CModelNode>()
+        .register_component::<CMesh>()
         .register_component::<CMouseBtnState>()
         .register_component::<CName>()
         .register_component::<CScene>()

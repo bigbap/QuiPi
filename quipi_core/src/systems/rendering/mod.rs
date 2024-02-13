@@ -10,10 +10,6 @@ use crate::{
 pub mod canvas;
 pub mod mesh;
 pub mod texture;
-pub mod text;
-
-pub use text::DEFAULT_FONT;
-pub use text::TextRenderer;
 
 #[derive(Debug, Default)]
 pub struct RenderInfo {

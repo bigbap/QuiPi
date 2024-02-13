@@ -6,7 +6,13 @@ use crate::{
     components::{
         register_components,
         CRGBA
-    }, rendering::RenderInfo, resources::register_resources, systems::rendering::text::TextRenderer, utils::to_abs_path, QuiPiWindow, Registry
+    },
+    rendering::RenderInfo,
+    resources::register_resources,
+    systems::text::TextRenderer,
+    utils::to_abs_path,
+    QuiPiWindow,
+    Registry
 };
 
 pub trait QuiPiApp {

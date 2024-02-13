@@ -19,6 +19,7 @@ pub use quipi_core::{
         buffer::clear_buffers,
         draw::DrawMode
     },
+    systems::text,
     VersionedIndex,
     wrappers::egui::GUI,
     QuiPiApp,
@@ -72,7 +73,7 @@ impl<G: QuiPiApp> QuiPi2D<G> {
             clear_color: CRGBA::default(),
             editor_mode: false,
             events: vec![],
-            text_render: rendering::TextRenderer::new(rendering::DEFAULT_FONT)?,
+            text_render: text::TextRenderer::new(text::DEFAULT_FONT)?,
             render_info: RenderInfo::default(),
             debug_info: DebugInfo::default(),
             delta: timer.delta(),
