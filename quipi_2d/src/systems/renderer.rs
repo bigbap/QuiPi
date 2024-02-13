@@ -1,17 +1,14 @@
 use quipi_core::{
-    components::{CElementArray, CTag, CTexture, CRGBA},
-    opengl::{
+    components::{CElementArray, CTag, CTexture, CRGBA}, ec_store::EMQuery, opengl::{
         self, capabilities::{gl_blending_func, gl_enable, GLBlendingFactor, GLCapability}, draw::{DrawBuffer, DrawMode}
-    },
-    rendering::{IRenderer, RenderInfo},
-    resources::{
+    }, rendering::{IRenderer, RenderInfo}, resources::{
         shader::UniformVariable,
         RShader,
         RTexture
     }, utils::Timer, Registry, VersionedIndex
 };
 
-use crate::components::{CCamera2D, CModelMatrix2D, CDrawable, CViewMatrix2D};
+use crate::components::{CCamera2D, CDrawable, CModelMatrix2D, CRect, CViewMatrix2D};
 
 pub struct Renderer2D {
     timer: Timer,
@@ -48,10 +45,25 @@ impl IRenderer for Renderer2D {
     fn batch_render(
         &mut self,
         _tag: CTag,
-        _registry: &mut Registry
+        registry: &mut Registry
     ) -> Result<(), Box<dyn std::error::Error>> {
         if !self.rendering {
             return Err("rendering hasn't been started for frame".into());
+        }
+
+        let mut indices = Vec::<u32>::new();
+        let entities = EMQuery::<CTag, CRect>::query_all(&registry);
+        for entity in entities.iter() {
+            let rect = registry.entities.get::<CRect>(entity).unwrap();
+            let color = registry.entities.get::<CRGBA>(entity);
+            let mesh_data = rect.to_mesh(color.cloned());
+
+            let offset = indices.len() as u32;
+            for index in mesh_data.indices {
+                indices.push(index + offset);
+            }
+
+            // self.single_render(*entity, registry)?;
         }
 
         Ok(())

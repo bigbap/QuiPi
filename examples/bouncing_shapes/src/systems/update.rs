@@ -5,7 +5,6 @@ use quipi::{
         CTransform2D,
         CVelocity2D
     },
-    schemas::entity2d::DEFAULT_RECT_TAG,
     FrameState, Registry
 };
 
@@ -22,7 +21,7 @@ pub fn update(
         return Ok(())
     }
 
-    let quads = registry.entities.query::<CTag>(CTag { tag: DEFAULT_RECT_TAG.to_string() });
+    let quads = registry.entities.query::<CTag>(CTag { tag: "bubble".into() });
 
     for quad in quads {
         let Some(vel)       = registry.entities.get::<CVelocity2D>(&quad)    else { continue };

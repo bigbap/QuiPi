@@ -13,14 +13,9 @@ pub fn component_derive_macro(item: TokenStream) -> TokenStream {
 fn impl_component_trait(ast: DeriveInput) -> TokenStream {
     // get the struct identifier
     let ident = ast.ident;
-    let ident_str = ident.to_string();
 
     // generate impl
     (quote::quote! {
-        impl Component for #ident {
-            fn my_type(&self) -> String {
-                #ident_str.to_string()
-            }
-        }
+        impl Component for #ident {}
     }).into()
 }

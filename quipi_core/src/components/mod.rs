@@ -40,5 +40,6 @@ pub fn register_components(registry: &mut Registry) {
         .register_component::<CScene>()
         .register_component::<CTag>()
         .register_component::<CTexture>()
-        .register_component::<CUniqueId>();
+        .register_component::<CUniqueId>()
+        .register_component::<()>(); // empty component
 }
