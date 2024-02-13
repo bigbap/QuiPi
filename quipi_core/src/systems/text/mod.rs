@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use crate::{
-    systems::rendering::{
+    core::rendering::{
         mesh::{
-            ElementArrayMesh,
+            ElementArray,
             ShaderLocation
         },
         canvas
@@ -24,7 +24,7 @@ pub static DEFAULT_FONT: &str = "assets/fonts/Poppins-Regular.ttf";
 #[derive(Debug)]
 pub struct TextRenderer {
     shader: ShaderProgram,
-    mesh: ElementArrayMesh,
+    mesh: ElementArray<>,
     char_map: HashMap<char, characters::Character>,
 
     pub color: glm::Vec4,
@@ -41,7 +41,7 @@ impl TextRenderer {
             FRAG_SHADER,
         )?;
         
-        let mut mesh = ElementArrayMesh::new(6, BufferUsage::DynamicDraw)?;
+        let mut mesh = ElementArray::new(6, BufferUsage::DynamicDraw)?;
         mesh.with_empty_vbo::<4, f32>(
             ShaderLocation::Zero,
             6 * 4

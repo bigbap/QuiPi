@@ -19,7 +19,7 @@ pub use drawable::CDrawable;
 pub use identifiers::CName;
 pub use identifiers::CTag;
 pub use distance::CDistance;
-pub use mesh::CMesh;
+pub use mesh::CMeshData;
 // pub use model::CModelNode;
 pub use scene::CScene;
 pub use states::CMouseBtnState;
@@ -35,7 +35,7 @@ pub fn register_components(registry: &mut Registry) {
         .register_component::<CDistance>()
         .register_component::<CDrawable>()
         // .register_component::<CModelNode>()
-        .register_component::<CMesh>()
+        .register_component::<CMeshData>()
         .register_component::<CMouseBtnState>()
         .register_component::<CName>()
         .register_component::<CScene>()

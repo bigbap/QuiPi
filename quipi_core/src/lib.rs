@@ -19,7 +19,7 @@ pub use systems::ec_store;
 pub use systems::ec_store::Component;
 pub use systems::ec_store::EntityManager;
 pub use systems::ec_store::VersionedIndex;
-pub use systems::rendering;
+pub use core::rendering;
 pub use core::math;
 pub use core::utils;
 pub use engine::QuiPiApp;

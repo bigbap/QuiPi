@@ -1,5 +1,5 @@
 use quipi_core::{
-    components::{CTag, CTexture, CRGBA},
+    components::{CMeshData, CTag, CTexture, CRGBA},
     opengl::{
         self, capabilities::{gl_blending_func, gl_enable, GLBlendingFactor, GLCapability}, draw::DrawBuffer
     },
@@ -11,7 +11,7 @@ use quipi_core::{
     }, utils::Timer, Registry, VersionedIndex
 };
 
-use crate::components::{CCamera2D, CMesh, CModelMatrix2D, CDrawable, CViewMatrix2D};
+use crate::components::{CCamera2D, CMeshStatic, CModelMatrix2D, CDrawable, CViewMatrix2D};
 
 pub struct Renderer2D {
     timer: Timer,
@@ -78,7 +78,7 @@ impl IRenderer for Renderer2D {
 
         let (Some(drawable), Some(mesh)) = (
             registry.entities.get::<CDrawable>(&entity),
-            registry.entities.get::<CMesh>(&entity),
+            registry.entities.get::<CMeshData>(&entity),
         ) else { return Ok(()) };
 
         if !mesh.should_draw { return Ok(()) }

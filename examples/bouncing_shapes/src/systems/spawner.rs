@@ -34,12 +34,10 @@ impl RectSpawner {
             return Ok(None);
         };
 
-        let mut vel = (
-            self.rand.range(0, 200) as f32,
-            self.rand.range(0, 200) as f32,
+        let vel = (
+            self.rand.range(-200, 200) as f32,
+            self.rand.range(-200, 200) as f32,
         );
-        if self.rand.random() > 0.5 { vel.0 *= -1.0; }
-        if self.rand.random() > 0.5 { vel.1 *= -1.0; }
 
         this_schema.velocity = Some(CVelocity2D { x: vel.0, y: vel.1 });
         this_schema.color = Some(CRGBA { value: [
@@ -49,7 +47,7 @@ impl RectSpawner {
             1.0
         ] });
 
-        let s_factor = self.rand.range(10, 40) as f32 / 100.0;
+        let s_factor = self.rand.range(10, 50) as f32 / 100.0;
         this_schema.transform = CTransform2D {
             translate: glm::vec2(
                 b_box.right / 2.0,

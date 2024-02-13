@@ -20,7 +20,7 @@ impl Random {
         self.rng.gen::<f32>()
     }
 
-    pub fn range(&mut self, start: u32, end: u32) -> u32 {
+    pub fn range(&mut self, start: i32, end: i32) -> i32 {
         self.rng.gen_range(start..end)
     }
 }

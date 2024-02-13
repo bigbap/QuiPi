@@ -6,6 +6,7 @@ pub extern crate serde;
 pub mod components;
 pub mod schemas;
 pub mod systems;
+use quipi_core::rendering::RenderInfo;
 pub use quipi_core::{
     resources,
     DebugInfo,
@@ -15,6 +16,7 @@ pub use quipi_core::{
     Registry,
     utils::Timer,
     rendering,
+    systems::text,
     opengl::{
         buffer::clear_buffers,
         draw::DrawMode
@@ -71,8 +73,9 @@ impl<G: QuiPiApp> QuiPi3D<G> {
             clear_color: CRGBA::default(),
             editor_mode: false,
             events: vec![],
-            text_render: rendering::TextRenderer::new(rendering::DEFAULT_FONT)?,
+            text_render: text::TextRenderer::new(text::DEFAULT_FONT)?,
             debug_info: DebugInfo::default(),
+            render_info: RenderInfo::default(),
             delta: timer.delta(),
         };
 

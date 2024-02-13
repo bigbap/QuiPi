@@ -1,3 +1,7 @@
+pub mod canvas;
+pub mod mesh;
+pub mod texture;
+
 use crate::{
     components::CTag, wrappers::{
         opengl::MyOpenGL,
@@ -6,10 +10,6 @@ use crate::{
     Registry,
     VersionedIndex
 };
-
-pub mod canvas;
-pub mod mesh;
-pub mod texture;
 
 #[derive(Debug, Default)]
 pub struct RenderInfo {

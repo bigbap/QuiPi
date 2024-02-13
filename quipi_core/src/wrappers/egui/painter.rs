@@ -15,9 +15,9 @@ use egui::{
 };
 
 use crate::{
-    systems::rendering::{
+    core::rendering::{
         canvas, mesh::{
-            ElementArrayMesh, ShaderLocation
+            ElementArray, ShaderLocation
         }, texture::*
     }, wrappers::opengl::{
         buffer::BufferUsage, capabilities::*, draw::*, functions::gl_scissor, shader::ShaderProgram, textures::{
@@ -136,7 +136,7 @@ impl Painter {
         mesh: &Mesh,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let (points, colors, uv_coords) = parse_vertices(mesh);
-        let mut m_mesh = ElementArrayMesh::new(
+        let mut m_mesh = ElementArray::new(
             mesh.indices.len(),
             BufferUsage::StreamDraw
         )?;

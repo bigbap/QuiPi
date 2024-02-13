@@ -16,8 +16,8 @@ pub struct CRect {
 }
 
 impl CRect {
-    pub fn to_config(&self, color: Option<CRGBA>) -> ObjectConfig {
-        let points: Vec<f32> = vec![
+    pub fn to_mesh(&self, color: Option<CRGBA>) -> ObjectConfig {
+        let vertices: Vec<f32> = vec![
             self.center_x + (self.width / 2.0), self.center_y + (self.height / 2.0), 0.0, // top right
             self.center_x + (self.width / 2.0), self.center_y - (self.height / 2.0), 0.0, // bottom right
             self.center_x - (self.width / 2.0), self.center_y - (self.height / 2.0), 0.0, // bottom left
@@ -32,7 +32,7 @@ impl CRect {
             ],
             _ => vec![]
         };
-        let texture_coords: Vec<f32> = vec![
+        let tex_coords: Vec<f32> = vec![
             1.0, 1.0,
             1.0, 0.0,
             0.0, 0.0,

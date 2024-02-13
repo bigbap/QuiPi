@@ -9,7 +9,7 @@ use crate::wrappers::opengl::{
     pixel_store,
     textures::Texture
 };
-use crate::systems::rendering::texture;
+use crate::core::rendering::texture;
 
 #[derive(Debug)]
 pub struct Character {

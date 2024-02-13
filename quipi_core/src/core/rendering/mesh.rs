@@ -19,7 +19,7 @@ pub enum ShaderLocation {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct ElementArrayMesh {
+pub struct ElementArray {
     pub vao: VertexArray,
     pub ebo: Option<Buffer<EBO>>,
     pub vbo_list: Vec<Buffer<VBO>>,
@@ -27,7 +27,7 @@ pub struct ElementArrayMesh {
     pub usage: BufferUsage,
 }
 
-impl ElementArrayMesh {
+impl ElementArray {
     pub fn new(
         length: usize,
         usage: BufferUsage

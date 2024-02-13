@@ -5,7 +5,7 @@ use sdl2::event::{
 };
 
 use crate::{
-    systems::rendering::canvas::set_dimensions,
+    core::rendering::canvas::set_dimensions,
     wrappers::egui::{
         input::parse_event,
         painter::Painter
