@@ -44,13 +44,19 @@ pub struct FrameState {
     pub text_render: TextRenderer,
     pub debug_info: DebugInfo,
     pub render_info: RenderInfo,
+    pub editor_info: EditorInfo,
     pub delta: f32,
 }
 
 #[derive(Debug, Default)]
 pub struct DebugInfo {
-    pub fps: f32,
-    pub ms: f32
+    pub fps: u32,
+    pub ms: u32
+}
+
+#[derive(Debug, Default)]
+pub struct EditorInfo {
+    pub ms: u32
 }
 
 #[derive(Debug, Default)]
@@ -73,8 +79,8 @@ pub enum AppMode {
 }
 
 pub fn set_debug_info(app_state: &mut FrameState) {
-    app_state.debug_info.fps = 1.0 / app_state.delta;
-    app_state.debug_info.ms = app_state.delta * 1000.0;
+    app_state.debug_info.fps = (1.0 / app_state.delta) as u32;
+    app_state.debug_info.ms = (app_state.delta * 1000.0) as u32;
 }
 
 pub fn create_asset_dirs() -> Result<(), Box<dyn std::error::Error>> {

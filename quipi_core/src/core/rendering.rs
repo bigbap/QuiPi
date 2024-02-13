@@ -3,10 +3,7 @@ pub mod mesh;
 pub mod texture;
 
 use crate::{
-    components::CTag, wrappers::{
-        opengl::MyOpenGL,
-        sdl2::window::QuiPiWindow
-    },
+    components::CTag,
     Registry,
     VersionedIndex
 };
@@ -24,16 +21,4 @@ pub trait IRenderer {
 
     fn start(&mut self) -> Result<(), Box<dyn std::error::Error>>;
     fn flush(&mut self, registry: &Registry) -> RenderInfo;
-}
-
-pub fn init(
-    window_api: &QuiPiWindow,
-    width: i32,
-    height: i32,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let _opengl = MyOpenGL::init(window_api)?;
-
-    canvas::set_dimensions(0, 0, width, height);
-
-    Ok(())
 }

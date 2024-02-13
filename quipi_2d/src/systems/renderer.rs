@@ -1,7 +1,7 @@
 use quipi_core::{
-    components::{CMeshData, CTag, CTexture, CRGBA},
+    components::{CElementArray, CTag, CTexture, CRGBA},
     opengl::{
-        self, capabilities::{gl_blending_func, gl_enable, GLBlendingFactor, GLCapability}, draw::DrawBuffer
+        self, capabilities::{gl_blending_func, gl_enable, GLBlendingFactor, GLCapability}, draw::{DrawBuffer, DrawMode}
     },
     rendering::{IRenderer, RenderInfo},
     resources::{
@@ -11,7 +11,7 @@ use quipi_core::{
     }, utils::Timer, Registry, VersionedIndex
 };
 
-use crate::components::{CCamera2D, CMeshStatic, CModelMatrix2D, CDrawable, CViewMatrix2D};
+use crate::components::{CCamera2D, CModelMatrix2D, CDrawable, CViewMatrix2D};
 
 pub struct Renderer2D {
     timer: Timer,
@@ -34,6 +34,8 @@ impl IRenderer for Renderer2D {
         if self.rendering == true {
             return Err("renderer was not flushed in the last frame".into());
         }
+
+        self.timer.delta();
 
         gl_enable(GLCapability::AlphaBlending);
         gl_blending_func(GLBlendingFactor::SrcAlpha, GLBlendingFactor::OneMinusSrcAlpha);
@@ -76,12 +78,11 @@ impl IRenderer for Renderer2D {
             return Err("rendering hasn't been started for frame".into());
         }
 
-        let (Some(drawable), Some(mesh)) = (
+        let (Some(drawable), Some(_)) = (
             registry.entities.get::<CDrawable>(&entity),
-            registry.entities.get::<CMeshData>(&entity),
+            registry.entities.get::<CElementArray>(&entity),
         ) else { return Ok(()) };
 
-        if !mesh.should_draw { return Ok(()) }
         if registry.resources.get::<RShader>(&drawable.shader).is_none() { return Ok(()) };
 
         CModelMatrix2D::update_model_matrix(&entity, registry);
@@ -92,16 +93,13 @@ impl IRenderer for Renderer2D {
     }
 
     fn flush(&mut self, registry: &Registry) -> RenderInfo {
-        self.timer.delta();
-
         let mut draw_calls = 0;
         while let Some(entity) = self.to_draw.pop() {
-            // it's safe to unwrap here because the check is already preformed
-            let drawable = registry.entities.get::<CDrawable>(&entity).unwrap();
-            let mesh = registry.entities.get::<CMesh>(&entity).unwrap();
-            let shader = registry.resources.get::<RShader>(&drawable.shader).unwrap();
+            let Some(drawable) = registry.entities.get::<CDrawable>(&entity) else { continue; };
+            let Some(buffer_obj) = registry.entities.get::<CElementArray>(&entity) else { continue; };
+            let Some(shader) = registry.resources.get::<RShader>(&drawable.shader) else { continue; };
 
-            let mode = mesh.draw_mode;
+            let buffer_obj = &buffer_obj.0;
 
             shader.program.use_program();
 
@@ -113,16 +111,16 @@ impl IRenderer for Renderer2D {
                 &drawable.camera
             );
 
-            mesh.mesh.vao.bind();
+            buffer_obj.vao.bind();
             opengl::draw::gl_draw(
-                match mesh.mesh.ebo {
+                match buffer_obj.ebo {
                     Some(_) => DrawBuffer::Elements,
                     _ => DrawBuffer::Arrays
                 },
-                mode,
-                mesh.mesh.vao.count()
+                DrawMode::Triangles, // TODO: this is hardcoded
+                buffer_obj.vao.count()
             );
-            mesh.mesh.vao.unbind();
+            buffer_obj.vao.unbind();
 
             draw_calls += 1;
         }

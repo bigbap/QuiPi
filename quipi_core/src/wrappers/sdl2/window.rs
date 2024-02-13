@@ -54,6 +54,12 @@ impl QuiPiWindow {
 
         self.window = Some(window);
 
+        crate::opengl::init(
+            self,
+            width as i32,
+            height as i32,
+        )?;
+
         Ok(())
     }
 

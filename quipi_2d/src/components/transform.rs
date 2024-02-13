@@ -1,6 +1,8 @@
 use quipi_core::Component;
 use serde::{Deserialize, Serialize};
 
+use super::CModelMatrix2D;
+
 /**
 * the model portion for a Model View Projection matrix
 */
@@ -31,7 +33,7 @@ impl CTransform2D {
     * 2. rotate
     * 3. scale
     */
-    pub fn to_matrix(&self) -> glm::Mat4 {
+    pub fn to_matrix(&self) -> CModelMatrix2D {
         let translate = glm::vec3(self.translate.x, self.translate.y, 0.0);
         let rotate = glm::vec3(0.0, 0.0, 1.0);
         let scale = glm::vec3(self.scale.x, self.scale.y, 0.0);
@@ -39,6 +41,8 @@ impl CTransform2D {
         let matrix = glm::Mat4::identity();
         let matrix = glm::translate(&matrix, &translate);
         let matrix = glm::rotate(&matrix, self.rotate, &rotate);
-        glm::scale(&matrix, &scale)
+        let matrix = glm::scale(&matrix, &scale);
+
+        CModelMatrix2D(matrix)
     }
 }

@@ -1,11 +1,10 @@
 use serde::{Serialize, Deserialize};
 
 use quipi_core::{
-    Component,
-    systems::assets::ObjectConfig
+    components::CMeshData, systems::assets::ObjectConfig, Component
 };
 
-use super::CRGBA;
+use super::{CBoundingBox2D, CRGBA};
 
 #[derive(Debug, Component, Serialize, Deserialize, Clone, PartialEq)]
 pub struct CRect {
@@ -16,7 +15,7 @@ pub struct CRect {
 }
 
 impl CRect {
-    pub fn to_mesh(&self, color: Option<CRGBA>) -> ObjectConfig {
+    pub fn to_mesh(&self, color: Option<CRGBA>) -> CMeshData {
         let vertices: Vec<f32> = vec![
             self.center_x + (self.width / 2.0), self.center_y + (self.height / 2.0), 0.0, // top right
             self.center_x + (self.width / 2.0), self.center_y - (self.height / 2.0), 0.0, // bottom right
@@ -43,12 +42,20 @@ impl CRect {
             1, 2, 3
         ];
 
-        ObjectConfig {
-            points,
+        CMeshData {
             indices,
+            vertices,
             colors,
-            texture_coords,
-            ..ObjectConfig::default()
+            tex_coords,
+            normals: vec![]
+        }
+    }
+
+    pub fn to_b_box(&self) -> CBoundingBox2D {
+        CBoundingBox2D {
+            right: self.width,
+            bottom: self.height,
+            ..CBoundingBox2D::default()
         }
     }
 }

@@ -8,6 +8,23 @@ pub mod pixel_store;
 pub mod textures;
 pub mod shader;
 
+pub fn init(
+    window_api: &QuiPiWindow,
+    width: i32,
+    height: i32,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let _opengl = MyOpenGL::init(window_api)?;
+
+    functions::gl_set_viewport_dimensions(
+        0,
+        0,
+        width,
+        height
+    );
+
+    Ok(())
+}
+
 pub struct MyOpenGL {}
 
 impl MyOpenGL {

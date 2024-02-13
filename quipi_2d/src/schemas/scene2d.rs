@@ -44,6 +44,7 @@ pub struct SchemaScene2D {
     pub cameras:    Vec<SchemaCamera2D>,
     pub shaders:    Vec<SchemaShader>,
     pub textures:   Vec<String>,
+
     pub entities:   Vec<SchemaEntity2D>,
 }
 

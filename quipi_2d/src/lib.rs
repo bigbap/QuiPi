@@ -5,7 +5,7 @@ pub extern crate serde;
 pub mod components;
 pub mod schemas;
 pub mod systems;
-use quipi_core::rendering::{IRenderer, RenderInfo};
+use quipi_core::{engine::EditorInfo, rendering::{IRenderer, RenderInfo}};
 pub use quipi_core::{
     resources,
     DebugInfo,
@@ -59,12 +59,6 @@ impl<G: QuiPiApp> QuiPi2D<G> {
             height,
             (4, 5)
         )?;
-
-        rendering::init(
-            &winapi,
-            width as i32,
-            height as i32,
-        )?;
         
         app.init(&mut registry, &winapi)?;
 
@@ -75,6 +69,7 @@ impl<G: QuiPiApp> QuiPi2D<G> {
             events: vec![],
             text_render: text::TextRenderer::new(text::DEFAULT_FONT)?,
             render_info: RenderInfo::default(),
+            editor_info: EditorInfo::default(),
             debug_info: DebugInfo::default(),
             delta: timer.delta(),
         };
@@ -113,9 +108,13 @@ impl<G: QuiPiApp> QuiPi2D<G> {
                 FrameResponse::Restart => { self.timer.delta(); },
                 FrameResponse::None => ()
             }
-    
+            
+            // draw the editor
             if self.frame_state.editor_mode && cfg!(debug_assertions) {
-                self.app_editor.update(&mut self.registry, &mut self.frame_state)?;
+                self.frame_state.editor_info = self.app_editor.update(
+                    &mut self.registry,
+                    &mut self.frame_state
+                )?;
             }
             
             if let Some(window) = &self.winapi.window {
