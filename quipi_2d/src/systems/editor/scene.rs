@@ -2,7 +2,7 @@ use egui::Vec2;
 
 use crate::{
     components::{
-        CSprite,
+        CDrawable,
         CScene,
         CTag
     },
@@ -33,7 +33,7 @@ impl SceneEditor {
         registry: &mut Registry
     ) {
         self.entity_editor.update(gui, registry);
-        let entities = registry.entities.query_all::<CSprite>();
+        let entities = registry.entities.query_all::<CDrawable>();
     
         egui::Window::new("Scene").show(&gui.ctx, |ui| {
             ui.horizontal(|ui| {

@@ -1,7 +1,12 @@
 use quipi_core::{
     opengl::{buffer::BufferUsage, draw::DrawMode},
     schemas::shader::DEFAULT_SHADER,
-    systems::assets::ObjectConfig
+    systems::assets::ObjectConfig,
+    components::{
+        CMesh,
+        CDrawable,
+        CTexture
+    }
 };
 use serde::{Serialize, Deserialize};
 
@@ -9,8 +14,6 @@ use crate::{
     components::{
         CBoundingBox2D,
         CCircle,
-        CSprite,
-        CMesh2D,
         CModelMatrix2D,
         CName,
         CRect,
@@ -59,7 +62,7 @@ impl ISchema for SchemaEntity2D {
         };
 
         // 2. get texture by name if any
-        let texture = match &self.texture {
+        let textures = match &self.texture {
             Some(name) => registry.resources.query::<CName>(name.clone()),
             None => vec![]
         };
@@ -73,7 +76,7 @@ impl ISchema for SchemaEntity2D {
         // 4. build the entity
         let entity = registry.entities.create()?;
         registry.entities.add(&entity, self.tag.clone());
-        registry.entities.add(&entity, CMesh2D::new(
+        registry.entities.add(&entity, CMesh::new(
             self.to_obj_config(),
             self.draw_mode,
             self.usage
@@ -87,14 +90,16 @@ impl ISchema for SchemaEntity2D {
         if let Some(color) = self.color {
             registry.entities.add(&entity, color);
         }
+        if let Some(texture) = textures.first() {
+            registry.entities.add(&entity, CTexture(*texture))
+        }
         match &self.shape {
             Shape2D::Rect(rect) => registry.entities.add(&entity, rect.clone()),
             Shape2D::Circle(_) => ()
         }
         registry.entities.add(&entity, self.transform);
-        registry.entities.add(&entity, CSprite {
+        registry.entities.add(&entity, CDrawable {
             shader: *shader,
-            texture: texture.first().cloned(),
             camera: *camera,
         });
         registry.entities.add(&entity, CModelMatrix2D(self.transform.to_matrix()));
@@ -103,13 +108,13 @@ impl ISchema for SchemaEntity2D {
     }
 
     fn from_entity(entity: VersionedIndex, registry: &Registry) -> Option<Self> {
-        let Some(sprite) = registry.entities.get::<CSprite>(&entity) else { return None; };
+        let Some(drawable) = registry.entities.get::<CDrawable>(&entity) else { return None; };
 
         if let (Some(tag), Some(transform), Some(mesh), Some(shader)) = (
             registry.entities.get::<CTag>(&entity),
             registry.entities.get::<CTransform2D>(&entity),
-            registry.entities.get::<CMesh2D>(&entity),
-            registry.resources.get::<CName>(&sprite.shader),
+            registry.entities.get::<CMesh>(&entity),
+            registry.resources.get::<CName>(&drawable.shader),
         ) {
             let mut schema = Self {
                 tag: tag.clone(),
@@ -119,8 +124,8 @@ impl ISchema for SchemaEntity2D {
                 velocity: registry.entities.get::<CVelocity2D>(&entity).cloned(),
                 color: registry.entities.get::<CRGBA>(&entity).cloned(),
                 b_box: registry.entities.get::<CBoundingBox2D>(&entity).cloned(),
-                texture: match sprite.texture {
-                    Some(tex) => registry.resources.get::<CName>(&tex).cloned(),
+                texture: match registry.entities.get::<CTexture>(&entity) {
+                    Some(tex) => registry.resources.get::<CName>(&tex.0).cloned(),
                     None => None
                 },
                 ..Self::default()

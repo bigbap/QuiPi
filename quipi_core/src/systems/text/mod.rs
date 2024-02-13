@@ -27,7 +27,7 @@ pub struct TextRenderer {
     mesh: ElementArrayMesh,
     char_map: HashMap<char, characters::Character>,
 
-    pub color: glm::Vec3,
+    pub color: glm::Vec4,
     pub scale: f32,
 }
 
@@ -52,7 +52,7 @@ impl TextRenderer {
             mesh,
             char_map,
 
-            color: glm::vec3(0.0, 0.0, 0.0),
+            color: glm::vec4(0.0, 0.0, 0.0, 1.0),
             scale: 1.0
         })
     }
@@ -67,7 +67,7 @@ impl TextRenderer {
 
         let (_x, _y, width, height) = canvas::get_dimensions();
         self.shader.use_program();
-        self.shader.set_float_3("textColor", (self.color.x, self.color.y, self.color.z));
+        self.shader.set_float_4("textColor", (self.color.x, self.color.y, self.color.z, self.color.w));
         self.shader.set_mat4("projection", &glm::ortho(
             0.0,
             width as f32,
@@ -147,11 +147,11 @@ in vec2 TexCoords;
 out vec4 color;
 
 uniform sampler2D text;
-uniform vec3 textColor;
+uniform vec4 textColor;
 
 void main()
 {    
     vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r);
-    color = vec4(textColor, 1.0) * sampled;
+    color = textColor * sampled;
 }  
 "#;

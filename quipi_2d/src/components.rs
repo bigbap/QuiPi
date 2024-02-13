@@ -2,7 +2,6 @@ pub mod bounding_box;
 pub mod camera;
 pub mod matrices;
 pub mod shapes;
-pub mod sprite;
 pub mod transform;
 pub mod velocity;
 
@@ -12,8 +11,6 @@ pub use matrices::CModelMatrix2D;
 pub use matrices::CViewMatrix2D;
 pub use shapes::CRect;
 pub use shapes::CCircle;
-pub use sprite::CMesh2D;
-pub use sprite::CSprite;
 pub use transform::CTransform2D;
 pub use velocity::CVelocity2D;
 
@@ -29,9 +26,7 @@ pub fn register_components(registry: &mut Registry) {
         .register_component::<CCircle>()
         .register_component::<CModelMatrix2D>()
         .register_component::<CTransform2D>()
-        .register_component::<CMesh2D>()
         .register_component::<CRect>()
-        .register_component::<CSprite>()
         .register_component::<CVelocity2D>()
         .register_component::<CViewMatrix2D>();
 }

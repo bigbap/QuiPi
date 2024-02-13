@@ -1,11 +1,10 @@
-use quipi_core::{
+use crate::{
     Component,
     VersionedIndex
 };
 
 #[derive(Debug, Component, PartialEq)]
-pub struct CSprite {
+pub struct CDrawable {
     pub shader: VersionedIndex,
     pub camera: VersionedIndex,
-    pub texture: VersionedIndex,
 }

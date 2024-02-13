@@ -102,7 +102,7 @@ impl quipi::QuiPiApp for BouncingShapes {
         // draw the entity count
         let (_x, _y, width, height) = canvas::get_dimensions();
         let entity_count = registry.entities.count();
-        frame_state.text_render.color = glm::vec3(0.0, 0.0, 0.0);
+        frame_state.text_render.color = glm::vec4(0.9, 0.0, 0.3, 0.8);
         frame_state.text_render.scale = 0.7;
         frame_state.text_render.draw(
             format!("entities: {}", entity_count),

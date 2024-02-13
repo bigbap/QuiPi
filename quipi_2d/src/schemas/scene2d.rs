@@ -1,10 +1,21 @@
-use quipi_core::{components::CName, opengl::textures::{ParameterName, ParameterValue}, rendering::texture::from_image, resources::RTexture, utils::to_abs_path};
+use quipi_core::{
+    components::{
+        CDrawable,
+        CName
+    },
+    opengl::textures::{
+        ParameterName,
+        ParameterValue
+    },
+    rendering::texture::from_image,
+    resources::RTexture,
+    utils::to_abs_path
+};
 use serde::{Serialize, Deserialize};
 
 use crate::{
     components::{
         CCamera2D,
-        CSprite,
         CScene,
         CTransform2D,
         CRGBA
@@ -114,7 +125,7 @@ impl ISchema for SchemaScene2D {
             }
 
             // 4. parse the entities
-            let entities = registry.entities.query_all::<CSprite>();
+            let entities = registry.entities.query_all::<CDrawable>();
             for entity in entities {
                 schema.entities.push(SchemaEntity2D::from_entity(entity, registry)?);
             }

@@ -31,7 +31,7 @@ impl CMesh {
             usage
         )?;
 
-        // TODO:
+        // TODO: this is currently hardcoded
         mesh
             .with_ebo(&config.indices)?
             .with_vbo::<3, f32>(ShaderLocation::Zero, &config.points)?

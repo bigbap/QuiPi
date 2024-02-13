@@ -30,7 +30,7 @@ use components::{
     register_components,
     register_resources,
     CRGBA,
-    CSprite
+    CDrawable
 };
 use systems::{editor::AppEditor, renderer::Renderer2D};
 
@@ -98,7 +98,7 @@ impl<G: QuiPiApp> QuiPi2D<G> {
             clear_buffers(self.frame_state.clear_color.to_tuple());
     
             // 1. draw all drawables
-            let entities = self.registry.entities.query_all::<CSprite>();
+            let entities = self.registry.entities.query_all::<CDrawable>();
             renderer.start()?;
             for entity in entities.iter() {
                 renderer.single_render(*entity, &mut self.registry)?;

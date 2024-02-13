@@ -1,5 +1,5 @@
 use quipi_core::{
-    components::{CTag, CRGBA},
+    components::{CTag, CTexture, CRGBA},
     opengl::{
         self, capabilities::{gl_blending_func, gl_enable, GLBlendingFactor, GLCapability}, draw::DrawBuffer
     },
@@ -11,7 +11,7 @@ use quipi_core::{
     }, utils::Timer, Registry, VersionedIndex
 };
 
-use crate::components::{CCamera2D, CMesh2D, CModelMatrix2D, CSprite, CViewMatrix2D};
+use crate::components::{CCamera2D, CMesh, CModelMatrix2D, CDrawable, CViewMatrix2D};
 
 pub struct Renderer2D {
     timer: Timer,
@@ -76,13 +76,13 @@ impl IRenderer for Renderer2D {
             return Err("rendering hasn't been started for frame".into());
         }
 
-        let (Some(sprite), Some(mesh)) = (
-            registry.entities.get::<CSprite>(&entity),
-            registry.entities.get::<CMesh2D>(&entity),
+        let (Some(drawable), Some(mesh)) = (
+            registry.entities.get::<CDrawable>(&entity),
+            registry.entities.get::<CMesh>(&entity),
         ) else { return Ok(()) };
 
         if !mesh.should_draw { return Ok(()) }
-        if registry.resources.get::<RShader>(&sprite.shader).is_none() { return Ok(()) };
+        if registry.resources.get::<RShader>(&drawable.shader).is_none() { return Ok(()) };
 
         CModelMatrix2D::update_model_matrix(&entity, registry);
 
@@ -97,9 +97,9 @@ impl IRenderer for Renderer2D {
         let mut draw_calls = 0;
         while let Some(entity) = self.to_draw.pop() {
             // it's safe to unwrap here because the check is already preformed
-            let sprite = registry.entities.get::<CSprite>(&entity).unwrap();
-            let mesh = registry.entities.get::<CMesh2D>(&entity).unwrap();
-            let shader = registry.resources.get::<RShader>(&sprite.shader).unwrap();
+            let drawable = registry.entities.get::<CDrawable>(&entity).unwrap();
+            let mesh = registry.entities.get::<CMesh>(&entity).unwrap();
+            let shader = registry.resources.get::<RShader>(&drawable.shader).unwrap();
 
             let mode = mesh.draw_mode;
 
@@ -110,7 +110,7 @@ impl IRenderer for Renderer2D {
                 &entity,
                 registry,
                 shader,
-                &sprite.camera
+                &drawable.camera
             );
 
             mesh.mesh.vao.bind();
@@ -190,12 +190,10 @@ fn bind_textures(
     registry: &Registry,
     shader: &RShader
 ) {
-    if let Some(sprite) = registry.entities.get::<CSprite>(entity) {
-        if let Some(texture_id) = sprite.texture {
-            if let Some(texture) = registry.resources.get::<RTexture>(&texture_id) {
-                texture.0.use_texture(0);
-                shader.program.set_int("u_texture", 0);
-            }
+    if let Some(texture_id) = registry.entities.get::<CTexture>(entity) {
+        if let Some(texture) = registry.resources.get::<RTexture>(&texture_id.0) {
+            texture.0.use_texture(0);
+            shader.program.set_int("u_texture", 0);
         }
     }
 }
