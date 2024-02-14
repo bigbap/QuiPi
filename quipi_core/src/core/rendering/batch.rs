@@ -2,16 +2,22 @@ use std::marker::PhantomData;
 
 use field_offset::offset_of;
 
-use crate::{
-    opengl::buffer::{
-        create_ebo, vertex_attribute_pointer, Buffer, BufferUsage, VertexArray, EBO, VBO
-    }, VersionedIndex
+use crate::opengl::buffer::{
+    create_ebo,
+    vertex_attribute_pointer,
+    Buffer,
+    BufferUsage,
+    VertexArray,
+    EBO,
+    VBO
 };
 
 use super::vertex::Vertex;
 
 pub struct BatchDynamic<M: IMesh> {
     pub capacity: usize,
+    pub mesh_capacity: usize,
+
     pub vao: VertexArray,
     pub ebo: Buffer<EBO>,
     pub vbo: Buffer<VBO>,
@@ -24,18 +30,18 @@ impl<M: IMesh> BatchDynamic<M> {
         let stride = std::mem::size_of::<Vertex>();
 
         let base_indices = M::indices();
-        let len = base_indices.len();
-        let tot_meshes = capacity / M::vertex_count();
-        let mut indices = Vec::<u32>::with_capacity(len * tot_meshes);
-        for i in 0..tot_meshes {
-            let offset = i * len;
-            for index in base_indices {
-                indices.push(index as u32 + offset as u32);
+        let mesh_capacity = capacity / M::vertex_count();
+        let mut indices = Vec::<u32>::with_capacity(base_indices.len() * mesh_capacity);
+        let offset_delta = M::vertex_count();
+        for i in 0..mesh_capacity {
+            let offset = i * offset_delta;
+            for index in &base_indices {
+                indices.push(*index as u32 + offset as u32);
             }
         }
 
         let vao = VertexArray::new();
-        let ebo = create_ebo(&indices, &BufferUsage::StaticDraw)?;
+        let ebo = create_ebo(&indices, &BufferUsage::StaticDraw);
 
         vao.bind();
         ebo.bind();
@@ -52,6 +58,7 @@ impl<M: IMesh> BatchDynamic<M> {
 
         Ok(Self {
             capacity,
+            mesh_capacity,
             vao,
             ebo,
             vbo,
@@ -59,11 +66,26 @@ impl<M: IMesh> BatchDynamic<M> {
         })
     }
 
-    pub fn draw(
+    pub fn update(
         &mut self,
         meshes: Vec<M>
     ) {
+        if meshes.len() > self.mesh_capacity {
+            println!("trying to batch too many meshes");
+            return;
+        }
 
+        let mut vertices = Vec::<Vertex>::with_capacity(self.capacity);
+
+        for i in 0..self.mesh_capacity {
+            if let Some(mesh) = meshes.get(i) {
+                vertices.append(&mut mesh.vertices());
+            } else {
+                break;
+            }
+        }
+
+        self.vbo.buffer_sub_data::<Vertex>(0, vertices.len(), Some(&vertices));
     }
 }
 

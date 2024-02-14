@@ -1,8 +1,12 @@
-use nalgebra_glm::Mat4;
 use quipi_core::{
-    components::{CElementArray, CName, CTag, CTexture, CRGBA}, ec_store::EMQuery, opengl::{
+    components::{CName, CTag, CTexture, CRGBA}, ec_store::EMQuery, opengl::{
         self, buffer::BufferUsage, capabilities::{gl_blending_func, gl_enable, GLBlendingFactor, GLCapability}, draw::{DrawBuffer, DrawMode}
-    }, rendering::{mesh::{ElementArray, ShaderLocation}, IRenderer, RenderInfo}, resources::{
+    },
+    rendering::{
+        IRenderer,
+        RenderInfo
+    },
+    resources::{
         shader::UniformVariable,
         RShader,
         RTexture

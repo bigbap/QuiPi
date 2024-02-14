@@ -1,19 +1,19 @@
 use std::collections::HashMap;
 use crate::{
-    core::rendering::{
-        mesh::{
-            ElementArray,
-            ShaderLocation
-        },
-        canvas
+    core::rendering::canvas,
+    opengl::buffer::{
+        vertex_attribute_pointer,
+        Buffer,
+        VertexArray,
+        VBO
     },
     utils::to_abs_path,
     wrappers::opengl::{
-        textures::gl_use_texture_unit,
+        buffer::BufferUsage,
         capabilities::*,
         draw::*,
-        buffer::BufferUsage,
         shader::ShaderProgram,
+        textures::gl_use_texture_unit
     }
 };
 
@@ -24,11 +24,13 @@ pub static DEFAULT_FONT: &str = "assets/fonts/Poppins-Regular.ttf";
 #[derive(Debug)]
 pub struct TextRenderer {
     shader: ShaderProgram,
-    mesh: ElementArray<>,
     char_map: HashMap<char, characters::Character>,
 
     pub color: glm::Vec4,
     pub scale: f32,
+
+    vao: VertexArray,
+    vbo: Buffer<VBO>
 }
 
 impl TextRenderer {
@@ -41,19 +43,23 @@ impl TextRenderer {
             FRAG_SHADER,
         )?;
         
-        let mut mesh = ElementArray::new(6, BufferUsage::DynamicDraw)?;
-        mesh.with_empty_vbo::<4, f32>(
-            ShaderLocation::Zero,
-            6 * 4
-        )?;
+        let vao = VertexArray::new();
+        vao.bind();
+
+        let vbo = Buffer::<VBO>::new();
+        vbo.bind();
+        vbo.buffer_data::<f32>(6 * 4, None, &BufferUsage::DynamicDraw);
+        vertex_attribute_pointer(0, 4, std::mem::size_of::<f32>() * 4, 0);
 
         Ok(Self {
             shader,
-            mesh,
             char_map,
 
             color: glm::vec4(0.0, 0.0, 0.0, 1.0),
-            scale: 1.0
+            scale: 1.0,
+
+            vao,
+            vbo
         })
     }
 
@@ -79,7 +85,7 @@ impl TextRenderer {
         
         gl_use_texture_unit(0);
 
-        self.mesh.vao.bind();
+        self.vao.bind();
 
         for c in text.chars() {
             let Some(ch) = self.char_map.get(&c) else { continue; };
@@ -100,26 +106,24 @@ impl TextRenderer {
             ];
 
             ch.texture.use_texture(0);
-            if let Some(mesh) = self.mesh.vbo_list.get(0) {
-                mesh.bind();
-                mesh.buffer_sub_data(
-                    0,
-                    vertices.len(),
-                    Some(&vertices)
-                );
-                mesh.unbind();
+            self.vbo.bind();
+            self.vbo.buffer_sub_data(
+                0,
+                vertices.len(),
+                Some(&vertices)
+            );
+            self.vbo.unbind();
 
-                gl_draw(
-                    DrawBuffer::Arrays,
-                    DrawMode::Triangles,
-                    6
-                );
-            }
+            gl_draw(
+                DrawBuffer::Arrays,
+                DrawMode::Triangles,
+                6
+            );
 
             pos.x += (ch.advance >> 6) as f32 * self.scale;
         }
 
-        self.mesh.vao.unbind();
+        self.vao.unbind();
 
         gl_disable(GLCapability::AlphaBlending);
     }

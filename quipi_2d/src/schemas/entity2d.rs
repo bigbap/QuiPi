@@ -74,7 +74,6 @@ impl ISchema for SchemaEntity2D {
         if let Some(texture) = textures.first() {
             registry.entities.add(&entity, CTexture(*texture))
         }
-        registry.entities.add(&entity, self.rect.to_mesh(self.color));
         registry.entities.add(&entity, self.rect.to_b_box());
         registry.entities.add(&entity, self.rect.clone());
         registry.entities.add(&entity, self.transform.to_matrix());

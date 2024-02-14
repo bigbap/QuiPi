@@ -16,10 +16,9 @@ use egui::{
 
 use crate::{
     core::rendering::{
-        canvas, mesh::{
-            ElementArray, ShaderLocation
-        }, texture::*
-    }, wrappers::opengl::{
+        canvas,
+        texture::*
+    }, opengl::buffer::{create_ebo, vertex_attribute_pointer, Buffer, VertexArray, VBO}, wrappers::opengl::{
         buffer::BufferUsage, capabilities::*, draw::*, functions::gl_scissor, shader::ShaderProgram, textures::{
             gl_use_texture_unit, Format, ParameterName, ParameterValue, Texture
         }
@@ -136,23 +135,36 @@ impl Painter {
         mesh: &Mesh,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let (points, colors, uv_coords) = parse_vertices(mesh);
-        let mut m_mesh = ElementArray::new(
-            mesh.indices.len(),
-            BufferUsage::StreamDraw
-        )?;
-        m_mesh
-            .with_ebo(&mesh.indices)?
-            .with_vbo::<2, f32>(ShaderLocation::Zero, &points)?
-            .with_vbo::<4, f32>(ShaderLocation::One, &colors)?
-            .with_vbo::<2, f32>(ShaderLocation::Two, &uv_coords)?;
+
+        let vao = VertexArray::new();
+        let ebo = create_ebo(&mesh.indices, &BufferUsage::StaticDraw);
+
+        vao.bind();
+        ebo.bind();
+
+        let vbo_points = Buffer::<VBO>::new();
+        let vbo_colors = Buffer::<VBO>::new();
+        let vbo_uv_coords = Buffer::<VBO>::new();
+
+        vbo_points.bind();
+        vbo_points.buffer_data::<f32>(mesh.indices.len() * 2, Some(&points), &BufferUsage::StreamDraw);
+        vertex_attribute_pointer(0, 2, std::mem::size_of::<f32>() * 2, 0);
+
+        vbo_colors.bind();
+        vbo_colors.buffer_data::<f32>(mesh.indices.len() * 4, Some(&colors), &BufferUsage::StreamDraw);
+        vertex_attribute_pointer(1, 4, std::mem::size_of::<f32>() * 4, 0);
+
+        vbo_uv_coords.bind();
+        vbo_uv_coords.buffer_data::<f32>(mesh.indices.len() * 2, Some(&uv_coords), &BufferUsage::StreamDraw);
+        vertex_attribute_pointer(2, 2, std::mem::size_of::<f32>() * 2, 0);
 
         self.shader.use_program();
         self.shader.set_float_2("u_screenSize", (self.screen_rect.width(), self.screen_rect.height()));
 
-        m_mesh.vao.bind();
+        vao.bind();
         gl_use_texture_unit(0);
-        gl_draw(DrawBuffer::Elements, DrawMode::Triangles, m_mesh.vao.count());
-        m_mesh.vao.unbind();
+        gl_draw(DrawBuffer::Elements, DrawMode::Triangles, mesh.indices.len() as i32);
+        vao.unbind();
 
         Ok(())
     }

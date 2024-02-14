@@ -174,13 +174,13 @@ pub fn vertex_attribute_pointer(
 pub fn create_ebo(
     indices: &[u32],
     usage: &BufferUsage
-) -> Result<Buffer<EBO>, Box<dyn std::error::Error>> {
+) -> Buffer<EBO> {
     let index_buffer = Buffer::<EBO>::new();
     index_buffer.bind();
     index_buffer.buffer_data(indices.len(), Some(indices), usage);
     index_buffer.unbind();
 
-    Ok(index_buffer)
+    index_buffer
 }
 
 pub fn clear_buffers(clr: (f32, f32, f32, f32)) {

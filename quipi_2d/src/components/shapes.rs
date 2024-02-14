@@ -1,7 +1,12 @@
 use serde::{Serialize, Deserialize};
 
 use quipi_core::{
-    components::CMeshData, systems::assets::ObjectConfig, Component
+    rendering::{
+        batch::IMesh,
+        vertex::Vertex
+    },
+    systems::assets::ObjectConfig,
+    Component
 };
 
 use super::{CBoundingBox2D, CRGBA};
@@ -15,48 +20,46 @@ pub struct CRect {
 }
 
 impl CRect {
-    pub fn to_mesh(&self, color: Option<CRGBA>) -> CMeshData {
-        let vertices: Vec<f32> = vec![
-            self.center_x + (self.width / 2.0), self.center_y + (self.height / 2.0), 0.0, // top right
-            self.center_x + (self.width / 2.0), self.center_y - (self.height / 2.0), 0.0, // bottom right
-            self.center_x - (self.width / 2.0), self.center_y - (self.height / 2.0), 0.0, // bottom left
-            self.center_x - (self.width / 2.0), self.center_y + (self.height / 2.0), 0.0, // top left
-        ];
-        let colors: Vec<f32> = match color {
-            Some(color) => vec![
-                color.value[0], color.value[1], color.value[2], color.value[3],
-                color.value[0], color.value[1], color.value[2], color.value[3],
-                color.value[0], color.value[1], color.value[2], color.value[3],
-                color.value[0], color.value[1], color.value[2], color.value[3],
-            ],
-            _ => vec![]
-        };
-        let tex_coords: Vec<f32> = vec![
-            1.0, 1.0,
-            1.0, 0.0,
-            0.0, 0.0,
-            0.0, 1.0
-        ];
-        let indices = vec![
-            0, 1, 3,
-            1, 2, 3
-        ];
-
-        CMeshData {
-            indices,
-            vertices,
-            colors,
-            tex_coords,
-            normals: vec![]
-        }
-    }
-
     pub fn to_b_box(&self) -> CBoundingBox2D {
         CBoundingBox2D {
             right: self.width,
             bottom: self.height,
             ..CBoundingBox2D::default()
         }
+    }
+}
+
+impl IMesh for CRect {
+    fn indices() -> Vec<i32> { vec![0, 1, 3, 1, 2, 3]}
+    fn vertex_count() -> usize { 4 }
+
+    fn vertices(&self) -> Vec<Vertex> {
+        vec![
+            Vertex { // top right
+                position: [self.center_x + (self.width / 2.0), self.center_y + (self.height / 2.0), 0.0],
+                color: [0.0, 0.0, 0.0, 0.0],
+                tex_coords: [1.0, 1.0],
+                tex_index: 0.0
+            },
+            Vertex { // bottom right
+                position: [self.center_x + (self.width / 2.0), self.center_y - (self.height / 2.0), 0.0],
+                color: [0.0, 0.0, 0.0, 0.0],
+                tex_coords: [1.0, 0.0],
+                tex_index: 0.0
+            },
+            Vertex { // bottom left
+                position: [self.center_x - (self.width / 2.0), self.center_y - (self.height / 2.0), 0.0],
+                color: [0.0, 0.0, 0.0, 0.0],
+                tex_coords: [0.0, 0.0],
+                tex_index: 0.0
+            },
+            Vertex { // top left
+                position: [self.center_x - (self.width / 2.0), self.center_y + (self.height / 2.0), 0.0],
+                color: [0.0, 0.0, 0.0, 0.0],
+                tex_coords: [0.0, 1.0],
+                tex_index: 0.0
+            }
+        ]
     }
 }
 

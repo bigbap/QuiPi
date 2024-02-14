@@ -15,7 +15,6 @@ pub use resources::*;
 pub use children::CChildren;
 pub use color::CRGBA;
 pub use drawable::CDrawable;
-pub use drawable::CElementArray;
 pub use identifiers::CName;
 pub use identifiers::CTag;
 pub use distance::CDistance;
@@ -33,7 +32,6 @@ pub fn register_components(registry: &mut Registry) {
         .register_component::<CChildren>()
         .register_component::<CDistance>()
         .register_component::<CDrawable>()
-        .register_component::<CElementArray>()
         .register_component::<CMeshData>()
         .register_component::<CMouseBtnState>()
         .register_component::<CName>()

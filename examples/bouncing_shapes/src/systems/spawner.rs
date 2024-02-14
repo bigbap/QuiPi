@@ -8,7 +8,7 @@ use quipi::{
     Registry,
     VersionedIndex
 };
-use quipi_core::{components::{CElementArray, CName, CTag}, core::rendering::mesh::{ElementArray, ShaderLocation}, math::random::Random, opengl::buffer::BufferUsage, utils::now_secs};
+use quipi_core::{components::{CName, CTag}, math::random::Random, opengl::buffer::BufferUsage, utils::now_secs};
 
 pub struct RectSpawner {
     camera: VersionedIndex,
@@ -67,7 +67,7 @@ impl RectSpawner {
         this_schema.transform = transform;
         this_schema.rect = rect;
         this_schema.tag = CTag { tag: "bubble".into() };
-        this_schema.shader = CName { name: "sprite".into() };
+        this_schema.shader = CName { name: "default".into() };
         this_schema.camera = c_name.clone();
         this_schema.texture = Some(CName { name: "Sprite-0001.png".into() });
         this_schema.is_static = false;

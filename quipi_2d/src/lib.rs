@@ -5,7 +5,7 @@ pub extern crate serde;
 pub mod components;
 pub mod schemas;
 pub mod systems;
-use quipi_core::{components::CTag, engine::EditorInfo, rendering::{IRenderer, RenderInfo}};
+use quipi_core::{engine::EditorInfo, rendering::RenderInfo};
 pub use quipi_core::{
     resources,
     DebugInfo,
@@ -31,7 +31,7 @@ use components::{
     register_resources,
     CRGBA,
 };
-use systems::{editor::AppEditor, renderer::Renderer2D};
+use systems::editor::AppEditor;
 
 pub struct QuiPi2D<G: QuiPiApp> {
     app: G,
@@ -84,17 +84,17 @@ impl<G: QuiPiApp> QuiPi2D<G> {
     }
 
     pub fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let mut renderer = Renderer2D::new(&mut self.registry);
+        // let mut renderer = Renderer2D::new(&mut self.registry);
         'running: loop {
             self.registry.entities.flush();
             self.registry.resources.flush();
     
             clear_buffers(self.frame_state.clear_color.to_tuple());
     
-            // 1. draw all drawables
-            renderer.start()?;
-            renderer.batch_render(CTag { tag: "bubble".into() }, &mut self.registry)?;
-            self.frame_state.render_info = renderer.flush(&self.registry);
+            // // 1. draw all drawables
+            // renderer.start()?;
+            // renderer.batch_render(CTag { tag: "bubble".into() }, &mut self.registry)?;
+            // self.frame_state.render_info = renderer.flush(&self.registry);
     
             // 2. call update systems (any app drawing might happen here. ie rendering text)
             set_debug_info(&mut self.frame_state);
