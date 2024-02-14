@@ -66,7 +66,7 @@ impl ISchema for SchemaEntity2D {
         };
 
         // 4. build the entity
-        let entity = registry.entities.create()?;
+        let entity = registry.entities.create();
         registry.entities.add(&entity, self.tag.clone());
         if let Some(velocity) = self.velocity {
             registry.entities.add(&entity, velocity);

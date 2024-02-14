@@ -53,14 +53,16 @@ impl RectSpawner {
         let s_factor = self.rand.range(10, 50) as f32 / 100.0;
         let transform = CTransform2D {
             translate: glm::vec2(
-                b_box.right / 2.0,
-                b_box.top / 2.0
+                self.rand.range(0, b_box.right as i32) as f32,
+                self.rand.range(0, b_box.top as i32) as f32,
+                // b_box.right / 2.0,
+                // b_box.top / 2.0
             ),
             scale: glm::vec2(s_factor, s_factor),
             ..CTransform2D::default()
         };
 
-        this_schema.velocity = Some(CVelocity2D { x: vel.0, y: vel.1 });
+        // this_schema.velocity = Some(CVelocity2D { x: vel.0, y: vel.1 });
         this_schema.color = Some(CRGBA { value: color });
         this_schema.transform = transform;
         this_schema.rect = rect;

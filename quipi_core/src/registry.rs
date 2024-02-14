@@ -65,7 +65,7 @@ mod tests {
     fn registry_create_entities() {
         let mut registry = create_registry();
 
-        let player = registry.entities.create().unwrap();
+        let player = registry.entities.create();
         registry.entities.add(&player, DrawComponent { shader_id: Some(1234) });
         registry.entities.add(&player, TransformComponent {
             translate: glm::vec3(1.0, 1.0, 1.0),

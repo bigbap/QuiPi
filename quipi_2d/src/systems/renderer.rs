@@ -1,7 +1,7 @@
 use quipi_core::{
-    components::{CElementArray, CTag, CTexture, CRGBA}, ec_store::EMQuery, opengl::{
-        self, capabilities::{gl_blending_func, gl_enable, GLBlendingFactor, GLCapability}, draw::{DrawBuffer, DrawMode}
-    }, rendering::{IRenderer, RenderInfo}, resources::{
+    components::{CElementArray, CName, CTag, CTexture, CRGBA}, ec_store::EMQuery, opengl::{
+        self, buffer::BufferUsage, capabilities::{gl_blending_func, gl_enable, GLBlendingFactor, GLCapability}, draw::{DrawBuffer, DrawMode}
+    }, rendering::{mesh::{ElementArray, ShaderLocation}, IRenderer, RenderInfo}, resources::{
         shader::UniformVariable,
         RShader,
         RTexture
@@ -13,15 +13,31 @@ use crate::components::{CCamera2D, CDrawable, CModelMatrix2D, CRect, CViewMatrix
 pub struct Renderer2D {
     timer: Timer,
     rendering: bool,
-    to_draw: Vec<VersionedIndex>
+    to_draw: Vec<VersionedIndex>,
+
+    batch: VersionedIndex
 }
 
 impl Renderer2D {
-    pub fn new() -> Self {
+    pub fn new(registry: &mut Registry) -> Self {
+        let batch = registry.entities.create();
+        // 1. get shader by name
+        let binding = registry.resources.query::<CName>(CName { name: "sprite".into() });
+        let shader = binding.first().unwrap();
+
+        // 3. get camera by name
+        let binding = registry.entities.query::<CName>(CName { name: "default_camera".into() });
+        let camera = binding.first().unwrap();
+        registry.entities.add(&batch, CDrawable {
+            shader: *shader,
+            camera: *camera
+        });
+
         Self {
             timer: Timer::new(),
             rendering: false,
-            to_draw: vec![]
+            to_draw: vec![],
+            batch
         }
     }
 }
@@ -52,19 +68,45 @@ impl IRenderer for Renderer2D {
         }
 
         let mut indices = Vec::<u32>::new();
+        let mut vertices = Vec::<f32>::new();
+        let mut colors = Vec::<f32>::new();
+        let mut tex_coords = Vec::<f32>::new();
+        
         let entities = EMQuery::<CTag, CRect>::query_all(&registry);
         for entity in entities.iter() {
             let rect = registry.entities.get::<CRect>(entity).unwrap();
             let color = registry.entities.get::<CRGBA>(entity);
             let mesh_data = rect.to_mesh(color.cloned());
 
-            let offset = indices.len() as u32;
+            for vertex in mesh_data.vertices {
+                vertices.push(vertex);
+            }
+            for color in mesh_data.colors {
+                colors.push(color);
+            }
+            for coord in mesh_data.tex_coords {
+                tex_coords.push(coord);
+            }
+
+            let offset = vertices.len() as u32;
             for index in mesh_data.indices {
                 indices.push(index + offset);
             }
 
             // self.single_render(*entity, registry)?;
         }
+
+        let mut element_arr = ElementArray::new(indices.len(), BufferUsage::StaticDraw)?;
+        element_arr
+            .with_ebo(&indices)?
+            .with_vbo::<3, f32>(ShaderLocation::Zero, &vertices)?
+            .with_vbo::<4, f32>(ShaderLocation::One, &colors)?
+            .with_vbo::<2, f32>(ShaderLocation::Two, &tex_coords)?;
+
+        registry.entities.remove::<CElementArray>(&self.batch);
+        registry.entities.add(&self.batch, CElementArray(element_arr));
+
+        self.to_draw.push(self.batch.clone());
 
         Ok(())
     }

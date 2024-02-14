@@ -72,7 +72,7 @@ impl quipi::QuiPiApp for BouncingShapes {
         // self.spawner = Some(RectSpawner::new(self.camera.unwrap())?);
 
         let mut spawner = RectSpawner::new(self.camera.unwrap())?;
-        for _ in 0..10000 {
+        for _ in 0..2 {
             spawner.spawn(registry)?;
         }
 

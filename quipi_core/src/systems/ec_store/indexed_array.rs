@@ -159,7 +159,7 @@ impl<T> IndexedArray<T> {
         let i = index.index;
 
         if i >= self.0.len() {
-            self.0.resize_with(i + 100, || None);
+            self.0.resize_with(self.0.capacity() * 2, || None);
         }
 
         self.0[i] = Some(Entry {
@@ -172,7 +172,7 @@ impl<T> IndexedArray<T> {
         let i = index.index;
 
         if i >= self.0.len() {
-            self.0.resize_with(i + 100, || None);
+            return;
         }
 
         self.0[i] = None;

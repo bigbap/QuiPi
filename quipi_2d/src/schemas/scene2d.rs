@@ -66,7 +66,7 @@ impl ISchema for SchemaScene2D {
         // 2. build textures
         for texture in self.textures.iter() {
             let path = format!("assets/textures/{}", texture);
-            let entity = registry.resources.create()?;
+            let entity = registry.resources.create();
 
             let tex = from_image(&to_abs_path(&path)?)?;
             tex
@@ -83,7 +83,7 @@ impl ISchema for SchemaScene2D {
             rect.build(registry)?;
         }
 
-        let entity = registry.entities.create()?;
+        let entity = registry.entities.create();
         registry.entities.add(&entity, self.name.clone());
         registry.entities.add(&entity, self.clr_color);
 

@@ -84,7 +84,7 @@ impl<G: QuiPiApp> QuiPi2D<G> {
     }
 
     pub fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let mut renderer = Renderer2D::new();
+        let mut renderer = Renderer2D::new(&mut self.registry);
         'running: loop {
             self.registry.entities.flush();
             self.registry.resources.flush();

@@ -36,7 +36,7 @@ impl ISchema for SchemaShader {
         &self,
         registry: &mut crate::Registry
     ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
-        let res = registry.resources.create()?;
+        let res = registry.resources.create();
         registry.resources.add(&res, self.name.clone());
         registry.resources.add(&res, RShader::new(&self.name.name, self.uniforms.to_vec())?);
 

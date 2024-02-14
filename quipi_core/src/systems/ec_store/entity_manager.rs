@@ -47,12 +47,12 @@ impl EntityManager {
         self
     }
 
-    pub fn create(&mut self) -> Result<VersionedIndex, EMError> {
+    pub fn create(&mut self) -> VersionedIndex {
         let entity = self.entity_allocator.allocate();
 
         self.entities.push(entity);
 
-        Ok(entity)
+        entity
     }
 
     pub fn set_to_delete(&mut self, entity: VersionedIndex) {

@@ -58,7 +58,7 @@ impl ISchema for SchemaCamera2D {
             ..CBoundingBox2D::default()
         };
 
-        let camera = registry.entities.create()?;
+        let camera = registry.entities.create();
         registry.entities.add(&camera, self.name.clone());
         registry.entities.add(&camera, CCamera2D::new(self.params())?);
         registry.entities.add(&camera, b_box);
