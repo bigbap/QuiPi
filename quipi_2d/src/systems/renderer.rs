@@ -1,3 +1,4 @@
+use nalgebra_glm::Mat4;
 use quipi_core::{
     components::{CElementArray, CName, CTag, CTexture, CRGBA}, ec_store::EMQuery, opengl::{
         self, buffer::BufferUsage, capabilities::{gl_blending_func, gl_enable, GLBlendingFactor, GLCapability}, draw::{DrawBuffer, DrawMode}
@@ -8,7 +9,7 @@ use quipi_core::{
     }, utils::Timer, Registry, VersionedIndex
 };
 
-use crate::components::{CCamera2D, CDrawable, CModelMatrix2D, CRect, CViewMatrix2D};
+use crate::components::{transform::{self, CTransform2D}, CCamera2D, CDrawable, CModelMatrix2D, CRect, CViewMatrix2D};
 
 pub struct Renderer2D {
     timer: Timer,
@@ -68,6 +69,7 @@ impl IRenderer for Renderer2D {
         }
 
         let mut indices = Vec::<u32>::new();
+        let mut transforms = Vec::<f32>::new();
         let mut vertices = Vec::<f32>::new();
         let mut colors = Vec::<f32>::new();
         let mut tex_coords = Vec::<f32>::new();
@@ -75,6 +77,7 @@ impl IRenderer for Renderer2D {
         let entities = EMQuery::<CTag, CRect>::query_all(&registry);
         for entity in entities.iter() {
             let rect = registry.entities.get::<CRect>(entity).unwrap();
+            let transform = registry.entities.get::<CTransform2D>(entity).unwrap();
             let color = registry.entities.get::<CRGBA>(entity);
             let mesh_data = rect.to_mesh(color.cloned());
 
@@ -86,6 +89,20 @@ impl IRenderer for Renderer2D {
             }
             for coord in mesh_data.tex_coords {
                 tex_coords.push(coord);
+            }
+            
+            let matrix = transform.to_matrix();
+            for i in matrix.0.iter() {
+                transforms.push(*i);
+            }
+            for i in matrix.0.iter() {
+                transforms.push(*i);
+            }
+            for i in matrix.0.iter() {
+                transforms.push(*i);
+            }
+            for i in matrix.0.iter() {
+                transforms.push(*i);
             }
 
             let offset = vertices.len() as u32;
@@ -101,12 +118,13 @@ impl IRenderer for Renderer2D {
             .with_ebo(&indices)?
             .with_vbo::<3, f32>(ShaderLocation::Zero, &vertices)?
             .with_vbo::<4, f32>(ShaderLocation::One, &colors)?
-            .with_vbo::<2, f32>(ShaderLocation::Two, &tex_coords)?;
+            .with_vbo::<2, f32>(ShaderLocation::Two, &tex_coords)?
+            .with_vbo::<16, f32>(ShaderLocation::Three, &transforms)?;
 
-        registry.entities.remove::<CElementArray>(&self.batch);
-        registry.entities.add(&self.batch, CElementArray(element_arr));
+        // registry.entities.remove::<CElementArray>(&self.batch);
+        // registry.entities.add(&self.batch, CElementArray(element_arr));
 
-        self.to_draw.push(self.batch.clone());
+        // self.to_draw.push(self.batch.clone());
 
         Ok(())
     }
@@ -152,6 +170,8 @@ impl IRenderer for Renderer2D {
             let Some(drawable) = registry.entities.get::<CDrawable>(&entity) else { continue; };
             let Some(buffer_obj) = registry.entities.get::<CElementArray>(&entity) else { continue; };
             let Some(shader) = registry.resources.get::<RShader>(&drawable.shader) else { continue; };
+
+            println!("drawing");
 
             let buffer_obj = &buffer_obj.0;
 

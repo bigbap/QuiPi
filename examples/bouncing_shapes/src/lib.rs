@@ -132,7 +132,9 @@ fn scene_schema() -> SchemaScene2D {
         shaders: vec![SchemaShader {
             name: CName { name: "sprite".into() },
             uniforms: vec![
-                UniformVariable::MVPMatrix("mvpMatrix".into())
+                // UniformVariable::ModelMatrix("model".into()),
+                UniformVariable::ViewMatrix("view".into()),
+                UniformVariable::ProjectionMatrix("projection".into())
             ]
         }],
         textures: vec!["Sprite-0001.png".into()]

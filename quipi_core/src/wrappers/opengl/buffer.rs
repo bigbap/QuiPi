@@ -148,6 +148,7 @@ pub fn create_vbo<T>(
     buffer.bind();
     buffer.buffer_data::<T>(buffer_length, data, usage);
 
+    println!("wrap 1");
     unsafe {
         gl::VertexAttribPointer(
             location as gl::types::GLuint,
@@ -159,6 +160,7 @@ pub fn create_vbo<T>(
         );
         gl::EnableVertexAttribArray(location as gl::types::GLuint);
     }
+    println!("wrap 2");
 
     buffer.unbind();
 
