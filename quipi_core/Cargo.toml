@@ -21,6 +21,7 @@ freetype-rs = "0.35.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"
 uuid = { version = "1.7", features = ["v4", "fast-rng"] }
+field-offset = "0.3.6"
 
 [build-dependencies]
 walkdir = "2.4"

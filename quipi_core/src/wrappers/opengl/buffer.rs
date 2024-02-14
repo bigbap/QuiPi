@@ -107,7 +107,6 @@ impl BufferType for EBO {
 #[derive(Debug, PartialEq)]
 pub struct VertexArray {
     id: gl::types::GLuint,
-    count: i32
 }
 
 impl Drop for VertexArray {
@@ -117,12 +116,12 @@ impl Drop for VertexArray {
 }
 
 impl VertexArray {
-    pub fn new(count: i32) -> Self {
+    pub fn new() -> Self {
         let mut id: gl::types::GLuint = 0;
 
         unsafe { gl::GenVertexArrays(1, &mut id) }
 
-        Self { id, count }
+        Self { id }
     }
 
     pub fn bind(&self) {
@@ -132,8 +131,6 @@ impl VertexArray {
     pub fn unbind(&self) {
         unsafe { gl::BindVertexArray(0) }
     }
-
-    pub fn count(&self) -> i32 { self.count }
 }
 
 pub fn create_vbo<T>(
@@ -148,23 +145,30 @@ pub fn create_vbo<T>(
     buffer.bind();
     buffer.buffer_data::<T>(buffer_length, data, usage);
 
-    println!("wrap 1");
+    vertex_attribute_pointer(location, size, stride, 0);
+
+    buffer.unbind();
+
+    Ok(buffer)
+}
+
+pub fn vertex_attribute_pointer(
+    location: usize,
+    size: usize, // this is the size of the vertex attribute (i.e. vec3 will be 3)
+    stride: usize,
+    offset: usize
+) {
     unsafe {
+        gl::EnableVertexAttribArray(location as gl::types::GLuint);
         gl::VertexAttribPointer(
             location as gl::types::GLuint,
             size as gl::types::GLint,
             gl::FLOAT,
             gl::FALSE,
             stride as gl::types::GLint,
-            std::ptr::null()
-        );
-        gl::EnableVertexAttribArray(location as gl::types::GLuint);
+            offset as *const gl::types::GLvoid
+        )
     }
-    println!("wrap 2");
-
-    buffer.unbind();
-
-    Ok(buffer)
 }
 
 pub fn create_ebo(
