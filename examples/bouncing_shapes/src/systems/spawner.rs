@@ -8,7 +8,7 @@ use quipi::{
     Registry,
     VersionedIndex
 };
-use quipi_core::{components::{CName, CTag}, math::random::Random, opengl::buffer::BufferUsage, utils::now_secs};
+use quipi_core::{components::{CName, CTag}, math::random::Random, utils::now_secs};
 
 pub struct RectSpawner {
     camera: VersionedIndex,
@@ -53,8 +53,8 @@ impl RectSpawner {
         let s_factor = self.rand.range(10, 50) as f32 / 100.0;
         let transform = CTransform2D {
             translate: glm::vec2(
-                self.rand.range(0, b_box.right as i32) as f32,
-                self.rand.range(0, b_box.top as i32) as f32,
+                self.rand.range(0 + 128, b_box.right as i32 - 128) as f32,
+                self.rand.range(0 + 128, b_box.top as i32 - 128) as f32,
                 // b_box.right / 2.0,
                 // b_box.top / 2.0
             ),
@@ -62,7 +62,7 @@ impl RectSpawner {
             ..CTransform2D::default()
         };
 
-        // this_schema.velocity = Some(CVelocity2D { x: vel.0, y: vel.1 });
+        this_schema.velocity = Some(CVelocity2D { x: vel.0, y: vel.1 });
         this_schema.color = Some(CRGBA { value: color });
         this_schema.transform = transform;
         this_schema.rect = rect;
@@ -73,16 +73,6 @@ impl RectSpawner {
         this_schema.is_static = false;
 
         let id = this_schema.build(registry)?;
-
-        let mesh_data = this_schema.rect.to_mesh(this_schema.color);
-        let mut element_arr = ElementArray::new(mesh_data.indices.len(), BufferUsage::StaticDraw)?;
-        element_arr
-            .with_ebo(&mesh_data.indices)?
-            .with_vbo::<3, f32>(ShaderLocation::Zero, &mesh_data.vertices)?
-            .with_vbo::<4, f32>(ShaderLocation::One, &mesh_data.colors)?
-            .with_vbo::<2, f32>(ShaderLocation::Two, &mesh_data.tex_coords)?;
-
-        registry.entities.add(&id, CElementArray(element_arr));
 
         Ok(Some(id))
     }

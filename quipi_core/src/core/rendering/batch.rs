@@ -16,7 +16,7 @@ use super::vertex::Vertex;
 
 pub struct BatchDynamic<M: IMesh> {
     pub capacity: usize,
-    pub mesh_capacity: usize,
+    pub vertex_capacity: usize,
 
     pub vao: VertexArray,
     pub ebo: Buffer<EBO>,
@@ -26,14 +26,14 @@ pub struct BatchDynamic<M: IMesh> {
 }
 
 impl<M: IMesh> BatchDynamic<M> {
-    pub fn new(capacity: usize) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(capacity: usize) -> Self {
         let stride = std::mem::size_of::<Vertex>();
 
         let base_indices = M::indices();
-        let mesh_capacity = capacity / M::vertex_count();
-        let mut indices = Vec::<u32>::with_capacity(base_indices.len() * mesh_capacity);
+        let vertex_capacity = capacity * M::vertex_count();
+        let mut indices = Vec::<u32>::with_capacity(base_indices.len() * capacity);
         let offset_delta = M::vertex_count();
-        for i in 0..mesh_capacity {
+        for i in 0..capacity {
             let offset = i * offset_delta;
             for index in &base_indices {
                 indices.push(*index as u32 + offset as u32);
@@ -49,43 +49,94 @@ impl<M: IMesh> BatchDynamic<M> {
         let vbo = Buffer::<VBO>::new();
 
         vbo.bind();
-        vbo.buffer_data::<Vertex>(capacity, None, &BufferUsage::DynamicDraw);
+        vbo.buffer_data::<Vertex>(vertex_capacity, None, &BufferUsage::DynamicDraw);
 
         vertex_attribute_pointer(0, 3, stride, offset_of!(Vertex => position).get_byte_offset());
         vertex_attribute_pointer(1, 4, stride, offset_of!(Vertex => color).get_byte_offset());
         vertex_attribute_pointer(2, 2, stride, offset_of!(Vertex => tex_coords).get_byte_offset());
         vertex_attribute_pointer(3, 1, stride, offset_of!(Vertex => tex_index).get_byte_offset());
 
-        Ok(Self {
+        Self {
             capacity,
-            mesh_capacity,
+            vertex_capacity,
             vao,
             ebo,
             vbo,
             _marker: PhantomData
-        })
+        }
     }
 
     pub fn update(
         &mut self,
-        meshes: Vec<M>
+        vertices: Vec<Vertex>
     ) {
-        if meshes.len() > self.mesh_capacity {
+        if vertices.len() > self.vertex_capacity {
             println!("trying to batch too many meshes");
             return;
         }
 
-        let mut vertices = Vec::<Vertex>::with_capacity(self.capacity);
+        self.vbo.bind();
+        self.vbo.buffer_sub_data::<Vertex>(0, vertices.len(), Some(&vertices));
+        self.vbo.unbind();
+    }
+}
 
-        for i in 0..self.mesh_capacity {
-            if let Some(mesh) = meshes.get(i) {
-                vertices.append(&mut mesh.vertices());
-            } else {
-                break;
+pub struct BatchStatic<M: IMesh> {
+    pub capacity: usize,
+    pub vertex_capacity: usize,
+
+    pub vao: VertexArray,
+    pub ebo: Buffer<EBO>,
+    pub vbo: Buffer<VBO>,
+
+    _marker: PhantomData<M>
+}
+
+impl<M: IMesh> BatchStatic<M> {
+    pub fn new(capacity: usize, vertices: Vec<Vertex>) -> Self {
+        let stride = std::mem::size_of::<Vertex>();
+
+        let base_indices = M::indices();
+        let vertex_capacity = capacity * M::vertex_count();
+
+        if vertices.len() > vertex_capacity {
+            println!("trying to batch too many meshes");
+            panic!("tried to load a static batch with too many vertices");
+        }
+
+        let mut indices = Vec::<u32>::with_capacity(base_indices.len() * capacity);
+        let offset_delta = M::vertex_count();
+        for i in 0..capacity {
+            let offset = i * offset_delta;
+            for index in &base_indices {
+                indices.push(*index as u32 + offset as u32);
             }
         }
 
-        self.vbo.buffer_sub_data::<Vertex>(0, vertices.len(), Some(&vertices));
+        let vao = VertexArray::new();
+        let ebo = create_ebo(&indices, &BufferUsage::StaticDraw);
+
+        vao.bind();
+        ebo.bind();
+
+        let vbo = Buffer::<VBO>::new();
+
+        vbo.bind();
+        vbo.buffer_data::<Vertex>(vertices.len(), Some(&vertices), &BufferUsage::StaticDraw);
+
+        vertex_attribute_pointer(0, 3, stride, offset_of!(Vertex => position).get_byte_offset());
+        vertex_attribute_pointer(1, 4, stride, offset_of!(Vertex => color).get_byte_offset());
+        vertex_attribute_pointer(2, 2, stride, offset_of!(Vertex => tex_coords).get_byte_offset());
+        vertex_attribute_pointer(3, 1, stride, offset_of!(Vertex => tex_index).get_byte_offset());
+
+        Self {
+            capacity,
+            vertex_capacity,
+            vao,
+            ebo,
+            vbo,
+            _marker: PhantomData
+        }
     }
 }
 

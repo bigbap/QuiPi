@@ -1,7 +1,8 @@
+#[derive(Debug)]
 pub struct Vertex {
-    pub position: [f32; 3],
-    pub color: [f32; 4],
-    pub tex_coords: [f32; 2],
+    pub position: glm::Vec3,
+    pub color: glm::Vec4,
+    pub tex_coords: glm::Vec2,
     pub tex_index: f32
 }
 

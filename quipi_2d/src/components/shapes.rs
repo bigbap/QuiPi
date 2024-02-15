@@ -16,7 +16,7 @@ pub struct CRect {
     pub width: f32,
     pub height: f32,
     pub center_x: f32,
-    pub center_y: f32
+    pub center_y: f32,
 }
 
 impl CRect {
@@ -36,28 +36,28 @@ impl IMesh for CRect {
     fn vertices(&self) -> Vec<Vertex> {
         vec![
             Vertex { // top right
-                position: [self.center_x + (self.width / 2.0), self.center_y + (self.height / 2.0), 0.0],
-                color: [0.0, 0.0, 0.0, 0.0],
-                tex_coords: [1.0, 1.0],
-                tex_index: 0.0
+                position: glm::vec3(self.center_x + (self.width / 2.0), self.center_y + (self.height / 2.0), 0.0),
+                color: glm::vec4(0.2, 0.6, 0.8, 0.8), // TODO: hardcoded
+                tex_coords: glm::vec2(1.0, 1.0),
+                tex_index: 1.0 // TODO: hardcoded
             },
             Vertex { // bottom right
-                position: [self.center_x + (self.width / 2.0), self.center_y - (self.height / 2.0), 0.0],
-                color: [0.0, 0.0, 0.0, 0.0],
-                tex_coords: [1.0, 0.0],
-                tex_index: 0.0
+                position: glm::vec3(self.center_x + (self.width / 2.0), self.center_y - (self.height / 2.0), 0.0),
+                color: glm::vec4(0.2, 0.6, 0.8, 0.8), // TODO: hardcoded
+                tex_coords: glm::vec2(1.0, 0.0),
+                tex_index: 1.0 // TODO: hardcoded
             },
             Vertex { // bottom left
-                position: [self.center_x - (self.width / 2.0), self.center_y - (self.height / 2.0), 0.0],
-                color: [0.0, 0.0, 0.0, 0.0],
-                tex_coords: [0.0, 0.0],
-                tex_index: 0.0
+                position: glm::vec3(self.center_x - (self.width / 2.0), self.center_y - (self.height / 2.0), 0.0),
+                color: glm::vec4(0.2, 0.6, 0.8, 0.8), // TODO: hardcoded
+                tex_coords: glm::vec2(0.0, 0.0),
+                tex_index: 1.0 // TODO: hardcoded
             },
             Vertex { // top left
-                position: [self.center_x - (self.width / 2.0), self.center_y + (self.height / 2.0), 0.0],
-                color: [0.0, 0.0, 0.0, 0.0],
-                tex_coords: [0.0, 1.0],
-                tex_index: 0.0
+                position: glm::vec3(self.center_x - (self.width / 2.0), self.center_y + (self.height / 2.0), 0.0),
+                color: glm::vec4(0.2, 0.6, 0.8, 0.8), // TODO: hardcoded
+                tex_coords: glm::vec2(0.0, 1.0),
+                tex_index: 1.0 // TODO: hardcoded
             }
         ]
     }
@@ -69,7 +69,7 @@ impl Default for CRect {
             center_x: 0.0,
             center_y: 0.0,
             width: 200.0,
-            height: 200.0
+            height: 200.0,
         }
     }
 }
