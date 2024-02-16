@@ -56,6 +56,9 @@ impl<M: IMesh> BatchDynamic<M> {
         vertex_attribute_pointer(2, 2, stride, offset_of!(Vertex => tex_coords).get_byte_offset());
         vertex_attribute_pointer(3, 1, stride, offset_of!(Vertex => tex_index).get_byte_offset());
 
+        vao.unbind();
+        ebo.unbind();
+
         Self {
             capacity,
             vertex_capacity,
@@ -128,6 +131,9 @@ impl<M: IMesh> BatchStatic<M> {
         vertex_attribute_pointer(1, 4, stride, offset_of!(Vertex => color).get_byte_offset());
         vertex_attribute_pointer(2, 2, stride, offset_of!(Vertex => tex_coords).get_byte_offset());
         vertex_attribute_pointer(3, 1, stride, offset_of!(Vertex => tex_index).get_byte_offset());
+
+        vao.unbind();
+        ebo.unbind();
 
         Self {
             capacity,

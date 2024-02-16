@@ -113,12 +113,13 @@ impl quipi::QuiPiApp for BouncingShapes {
             }
         }
 
-        self.batch_static = Some(BatchStatic::<CRect>::new(10000, vertices));
+        self.batch_static = Some(BatchStatic::<CRect>::new(1000, vertices));
 
         //////////////////////////////////////////////////////
+        
+        self.batch_dynamic = Some(BatchDynamic::<CRect>::new(200));
 
         self.spawner = Some(spawner);
-        self.batch_dynamic = Some(BatchDynamic::<CRect>::new(10000));
 
         Ok(())
     }
@@ -206,33 +207,33 @@ impl quipi::QuiPiApp for BouncingShapes {
             batch.vao.unbind();
         }
 
-        // if let Some(batch) = &self.batch_static {
-        //     shader.program.use_program();
+        if let Some(batch) = &self.batch_static {
+            shader.program.use_program();
 
-        //     texture.unwrap().0.use_texture(0);
-        //     shader.program.set_int("u_texture", 0);
+            texture.unwrap().0.use_texture(0);
+            shader.program.set_int("u_texture", 0);
 
-        //     batch.vao.bind();
-        //     opengl::draw::gl_draw(
-        //         DrawBuffer::Elements,
-        //         DrawMode::Triangles, // TODO: this is hardcoded
-        //         batch.vertex_capacity as i32
-        //     );
-        //     batch.vao.unbind();
-        // }
+            batch.vao.bind();
+            opengl::draw::gl_draw(
+                DrawBuffer::Elements,
+                DrawMode::Triangles, // TODO: this is hardcoded
+                batch.vertex_capacity as i32
+            );
+            batch.vao.unbind();
+        }
 
-        // // draw the entity count
-        // let entity_count = registry.entities.count();
-        // frame_state.text_render.color = glm::vec4(0.9, 0.0, 0.3, 0.8);
-        // frame_state.text_render.scale = 0.7;
-        // frame_state.text_render.draw(
-        //     format!("entities: {}", entity_count),
-        //     glm::vec2(20.0, 30.0)
-        // );
-        // frame_state.text_render.draw(
-        //     format!("fps: {}", frame_state.debug_info.fps as u32),
-        //     glm::vec2(20.0, 60.0)
-        // );
+        // draw the entity count
+        let entity_count = registry.entities.count();
+        frame_state.text_render.color = glm::vec4(0.9, 0.0, 0.3, 0.8);
+        frame_state.text_render.scale = 0.7;
+        frame_state.text_render.draw(
+            format!("entities: {}", entity_count),
+            glm::vec2(20.0, 30.0)
+        );
+        frame_state.text_render.draw(
+            format!("fps: {}", frame_state.debug_info.fps as u32),
+            glm::vec2(20.0, 60.0)
+        );
 
         Ok(frame_response)
     }
