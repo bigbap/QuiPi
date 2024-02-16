@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use crate::{
-    core::rendering::canvas,
+    core::canvas,
     opengl::buffer::{
         vertex_attribute_pointer,
         Buffer,

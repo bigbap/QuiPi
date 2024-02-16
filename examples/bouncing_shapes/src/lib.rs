@@ -8,7 +8,7 @@ pub use quipi::{
         CRGBA,
         CTransform2D
     },
-    rendering::canvas,
+    core::canvas,
     schemas::{
         ISchema,
         SchemaScene2D,

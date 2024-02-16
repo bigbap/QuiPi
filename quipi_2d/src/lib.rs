@@ -14,6 +14,7 @@ pub use quipi_core::{
     QuiPiWindow,
     Registry,
     utils::Timer,
+    core,
     rendering,
     opengl::{
         buffer::clear_buffers,

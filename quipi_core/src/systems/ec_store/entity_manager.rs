@@ -1,4 +1,3 @@
-use std::any::TypeId;
 use crate::{
     core::collections::AnyMap,
     Component,
@@ -24,7 +23,6 @@ pub struct EntityManager {
 
     entities: Vec<VersionedIndex>,
     to_delete: Vec<VersionedIndex>,
-    component_types: Vec<TypeId>
 }
 
 impl EntityManager {
@@ -34,7 +32,6 @@ impl EntityManager {
             component_maps: AnyMap::new(),
             entities: Vec::<VersionedIndex>::new(),
             to_delete: Vec::<VersionedIndex>::new(),
-            component_types: Vec::<TypeId>::new()
         };
 
         Ok(entity_manager)
@@ -42,7 +39,6 @@ impl EntityManager {
 
     pub fn register_component<C: Component + PartialEq + 'static>(&mut self) -> &mut Self {
         self.component_maps.insert::<EntityMap<C>>(EntityMap::<C>::default());
-        self.component_types.push(std::any::TypeId::of::<C>());
 
         self
     }

@@ -1,6 +1,4 @@
 pub mod batch;
-pub mod canvas;
-// pub mod mesh;
 pub mod texture;
 pub mod vertex;
 

@@ -15,10 +15,18 @@ use egui::{
 };
 
 use crate::{
-    core::rendering::{
-        canvas,
-        texture::*
-    }, opengl::buffer::{create_ebo, vertex_attribute_pointer, Buffer, VertexArray, VBO}, wrappers::opengl::{
+    core::{
+        rendering::texture::*,
+        canvas
+    },
+    opengl::buffer::{
+        create_ebo,
+        vertex_attribute_pointer,
+        Buffer,
+        VertexArray,
+        VBO
+    },
+    wrappers::opengl::{
         buffer::BufferUsage, capabilities::*, draw::*, functions::gl_scissor, shader::ShaderProgram, textures::{
             gl_use_texture_unit, Format, ParameterName, ParameterValue, Texture
         }

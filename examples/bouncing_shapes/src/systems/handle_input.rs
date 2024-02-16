@@ -2,7 +2,7 @@ use quipi::{
     FrameResponse,
     Registry,
 };
-use quipi_core::rendering::canvas;
+use quipi_core::core::canvas;
 use quipi_core::FrameState;
 use sdl2::event::{
     Event,
