@@ -9,7 +9,7 @@ pub use bounding_box::CBoundingBox2D;
 pub use camera::CCamera2D;
 pub use matrices::CModelMatrix2D;
 pub use matrices::CViewMatrix2D;
-pub use shapes::CRect;
+pub use shapes::CQuad;
 pub use shapes::CCircle;
 pub use transform::CTransform2D;
 pub use velocity::CVelocity2D;
@@ -26,7 +26,7 @@ pub fn register_components(registry: &mut Registry) {
         .register_component::<CCircle>()
         .register_component::<CModelMatrix2D>()
         .register_component::<CTransform2D>()
-        .register_component::<CRect>()
+        .register_component::<CQuad>()
         .register_component::<CVelocity2D>()
         .register_component::<CViewMatrix2D>();
 }

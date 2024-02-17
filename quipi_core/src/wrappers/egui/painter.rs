@@ -228,7 +228,7 @@ impl Painter {
                 t_width as i32,
                 t_height as i32,
                 &pixels
-            )?;
+            );
 
             texture.bind()
                 .set_parameter(ParameterName::WrapS, ParameterValue::ClampToEdge)

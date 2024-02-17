@@ -8,7 +8,6 @@ pub mod scene;
 pub mod states;
 pub mod resources;
 pub mod texture;
-pub mod unique_id;
 
 pub use resources::*;
 
@@ -22,7 +21,6 @@ pub use mesh::CMeshData;
 pub use scene::CScene;
 pub use states::CMouseBtnState;
 pub use texture::CTexture;
-pub use unique_id::CUniqueId;
 
 use crate::Registry;
 
@@ -38,6 +36,5 @@ pub fn register_components(registry: &mut Registry) {
         .register_component::<CScene>()
         .register_component::<CTag>()
         .register_component::<CTexture>()
-        .register_component::<CUniqueId>()
         .register_component::<()>(); // empty component
 }

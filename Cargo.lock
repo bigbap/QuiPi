@@ -283,9 +283,9 @@ dependencies = [
 
 [[package]]
 name = "freetype-rs"
-version = "0.35.0"
+version = "0.36.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1fad2be0bf06af23adddcf6cd143c94ff0ba3b329691f92d1a38dae5c5aeebf"
+checksum = "5442dee36ca09604133580dc0553780e867936bb3cbef3275859e889026d2b17"
 dependencies = [
  "bitflags 2.4.2",
  "freetype-sys",

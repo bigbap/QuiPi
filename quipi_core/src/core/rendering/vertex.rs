@@ -1,4 +1,5 @@
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
+#[repr(packed)]
 pub struct Vertex {
     pub position: glm::Vec3,
     pub color: glm::Vec4,

@@ -48,7 +48,7 @@ pub enum ParameterValue {
 
 #[derive(Debug, PartialEq)]
 pub struct Texture {
-    id: u32,
+    pub id: u32,
     target: gl::types::GLenum,
 
     pub width: i32,
@@ -182,6 +182,13 @@ impl Drop for Texture {
 pub fn gl_use_texture_unit(unit: i32) {
     unsafe {
         gl::ActiveTexture(gl::TEXTURE0 + unit as gl::types::GLuint);
+    }
+}
+
+pub fn use_texture(texture_id: u32, unit: i32) {
+    unsafe {
+        gl::ActiveTexture(gl::TEXTURE0 + unit as gl::types::GLuint);
+        gl::BindTexture(gl::TEXTURE_2D, texture_id);
     }
 }
 

@@ -48,7 +48,7 @@ pub fn from_buffer_rgba(
     width: i32,
     height: i32,
     buffer: &[u8]
-) -> Result<Texture, TextureError> {
+) -> Texture {
     let texture = Texture::new(
         width,
         height,
@@ -59,7 +59,7 @@ pub fn from_buffer_rgba(
         .bind()
         .add_image_data(Format::Rgba, Format::Rgba, buffer);
 
-    Ok(texture)
+    texture
 }
 
 pub fn from_wavefront_material(

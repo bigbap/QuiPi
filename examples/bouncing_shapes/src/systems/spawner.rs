@@ -1,6 +1,6 @@
 use quipi::{
     components::{
-        CBoundingBox2D, CRect, CTransform2D, CVelocity2D, CRGBA
+        CBoundingBox2D, CQuad, CTransform2D, CVelocity2D
     },
     schemas::{
         ISchema, SchemaEntity2D
@@ -39,22 +39,23 @@ impl RectSpawner {
             self.rand.range(-200, 200) as f32,
             self.rand.range(-200, 200) as f32,
         );
-        let color = [
+        let color = glm::vec4(
             self.rand.random(),
             self.rand.random(),
             self.rand.random(),
             1.0
-        ];
-        let rect = CRect {
-            width: 256.0,
-            height: 256.0,
-            ..CRect::default()
+        );
+        let quad = CQuad {
+            width: 200.0,
+            height: 200.0,
+            color,
+            ..CQuad::default()
         };
-        let s_factor = self.rand.range(10, 50) as f32 / 100.0;
+        let s_factor = self.rand.range(5, 25) as f32 / 100.0;
         let transform = CTransform2D {
             translate: glm::vec2(
-                self.rand.range(0 + 128, b_box.right as i32 - 128) as f32,
-                self.rand.range(0 + 128, b_box.top as i32 - 128) as f32,
+                self.rand.range(0 + 100, b_box.right as i32 - 100) as f32,
+                self.rand.range(0 + 100, b_box.top as i32 - 100) as f32,
                 // b_box.right / 2.0,
                 // b_box.top / 2.0
             ),
@@ -63,9 +64,8 @@ impl RectSpawner {
         };
 
         this_schema.velocity = Some(CVelocity2D { x: vel.0, y: vel.1 });
-        this_schema.color = Some(CRGBA { value: color });
         this_schema.transform = transform;
-        this_schema.rect = rect;
+        this_schema.quad = quad;
         this_schema.tag = CTag { tag: "bubble".into() };
         this_schema.shader = CName { name: "default".into() };
         this_schema.camera = c_name.clone();

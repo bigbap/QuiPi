@@ -10,11 +10,10 @@ use serde::{Serialize, Deserialize};
 use crate::{
     components::{
         CName,
-        CRect,
+        CQuad,
         CTag,
         CTransform2D,
-        CVelocity2D,
-        CRGBA
+        CVelocity2D
     },
     Registry,
     VersionedIndex
@@ -31,10 +30,9 @@ pub const DEFAULT_RECT_TAG: &str = "default_rect";
 pub struct SchemaEntity2D {
     pub tag:        CTag,
     pub transform:  CTransform2D,
-    pub rect:       CRect,
+    pub quad:       CQuad,
 
     pub velocity:   Option<CVelocity2D>,
-    pub color:      Option<CRGBA>,
     pub texture:    Option<CName>,
     
     pub shader:     CName,
@@ -74,8 +72,8 @@ impl ISchema for SchemaEntity2D {
         if let Some(texture) = textures.first() {
             registry.entities.add(&entity, CTexture(*texture))
         }
-        registry.entities.add(&entity, self.rect.to_b_box());
-        registry.entities.add(&entity, self.rect.clone());
+        registry.entities.add(&entity, self.quad.to_b_box());
+        registry.entities.add(&entity, self.quad.clone());
         registry.entities.add(&entity, self.transform.to_matrix());
         registry.entities.add(&entity, self.transform);
         registry.entities.add(&entity, CDrawable {
@@ -89,21 +87,20 @@ impl ISchema for SchemaEntity2D {
     fn from_entity(entity: VersionedIndex, registry: &Registry) -> Option<Self> {
         let Some(drawable) = registry.entities.get::<CDrawable>(&entity) else { return None; };
 
-        if let (Some(tag), Some(transform), Some(shader), Some(camera), Some(rect)) = (
+        if let (Some(tag), Some(transform), Some(shader), Some(camera), Some(quad)) = (
             registry.entities.get::<CTag>(&entity),
             registry.entities.get::<CTransform2D>(&entity),
             registry.resources.get::<CName>(&drawable.shader),
             registry.entities.get::<CName>(&drawable.camera),
-            registry.entities.get::<CRect>(&entity),
+            registry.entities.get::<CQuad>(&entity),
         ) {
             let schema = Self {
                 tag: tag.clone(),
                 transform: transform.clone(),
-                rect: rect.clone(),
+                quad: quad.clone(),
                 shader: shader.clone(),
                 camera: camera.clone(),
                 velocity: registry.entities.get::<CVelocity2D>(&entity).cloned(),
-                color: registry.entities.get::<CRGBA>(&entity).cloned(),
                 texture: match registry.entities.get::<CTexture>(&entity) {
                     Some(tex) => registry.resources.get::<CName>(&tex.0).cloned(),
                     None => None
@@ -123,14 +120,13 @@ impl Default for SchemaEntity2D {
         Self {
             tag: CTag { tag: DEFAULT_RECT_TAG.to_string() },
             transform: CTransform2D::default(),
-            rect: CRect {
-                center_x: 0.0,
-                center_y: 0.0,
+            quad: CQuad {
                 width: 200.0,
                 height: 200.0,
+                color: glm::vec4(0.1, 0.1, 0.1, 1.0),
+                ..CQuad::default()
             },
             velocity: None,
-            color: Some(CRGBA { value: [0.1, 0.1, 0.1, 1.0] }),
             texture: None,
             shader: CName { name: DEFAULT_SHADER.to_string() },
             camera: CName { name: DEFAULT_CAMERA.to_string() },

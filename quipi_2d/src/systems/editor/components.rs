@@ -3,7 +3,7 @@ use egui::Ui;
 use crate::{
     components::{
         CBoundingBox2D,
-        CRect,
+        CQuad,
         CTag,
         CTransform2D,
         CVelocity2D,
@@ -87,11 +87,11 @@ impl EntityEditor {
                         });
                     });
                 }
-                if let Some(rect) = registry.entities.get_mut::<CRect>(&entity) {
+                if let Some(rect) = registry.entities.get_mut::<CQuad>(&entity) {
                     ui.collapsing("Rect", |ui| {
                         if ui.button("del").clicked() {
                             self.to_remove.push(Box::new(|registry, entity: VersionedIndex| {
-                                registry.entities.remove::<CRect>(&entity);
+                                registry.entities.remove::<CQuad>(&entity);
                             }))
                         }
 
@@ -157,14 +157,14 @@ impl EntityEditor {
                 }
             } else { ui.label("CVelocity"); }
 
-            if registry.entities.get::<CRect>(&entity).is_none() {
+            if registry.entities.get::<CQuad>(&entity).is_none() {
                 if ui.button("CRect").clicked() {
-                    registry.entities.add(&entity, CRect::default());
+                    registry.entities.add(&entity, CQuad::default());
                 }
             } else { ui.label("CRect"); }
             
             if registry.entities.get::<CBoundingBox2D>(&entity).is_none() {
-                if let Some(rect) = registry.entities.get::<CRect>(&entity) {
+                if let Some(rect) = registry.entities.get::<CQuad>(&entity) {
                     if ui.button("CBoundingBox").clicked() {
                         registry.entities.add(&entity, CBoundingBox2D {
                             right: rect.width,

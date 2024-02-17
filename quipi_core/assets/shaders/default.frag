@@ -4,16 +4,12 @@ in vec4 color;
 in vec2 texCoords;
 in float texIndex;
 
-uniform sampler2D[8] u_textures;
+uniform sampler2D u_textures[16];
 
 out vec4 fragColor;
 
 void main() {
     int texId = int(texIndex);
 
-    if (texId == 0) {
-        fragColor = color;
-    } else {
-        fragColor = texture(u_textures[texId - 1], texCoords);
-    }
+    fragColor = color * texture(u_textures[texId], texCoords);
 }
