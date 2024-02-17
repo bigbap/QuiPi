@@ -34,10 +34,19 @@ use quipi_core::{
         CName,
         CTexture
     },
+    core::canvas::get_dimensions,
     ec_store::EMQuery,
-    opengl::capabilities::{gl_blending_func, gl_enable, GLBlendingFactor, GLCapability},
+    opengl::capabilities::{
+        gl_blending_func,
+        gl_enable,
+        GLBlendingFactor,
+        GLCapability
+    },
     rendering::batch::BatchRenderer,
-    resources::{shader::UniformVariable, RShader, RTexture},
+    resources::{
+        shader::UniformVariable,
+        RShader, RTexture
+    },
     schemas::SchemaShader
 };
 use systems::{
@@ -50,7 +59,7 @@ pub struct BouncingShapes {
     scene: Option<VersionedIndex>,
     camera: Option<VersionedIndex>,
 
-    batch_renderer: Option<BatchRenderer<2000, CQuad>>
+    batch_renderer: Option<BatchRenderer<500, CQuad>>
 }
 
 impl BouncingShapes {
@@ -121,7 +130,7 @@ impl quipi::QuiPiApp for BouncingShapes {
         update(registry, frame_state)?;
 
         // draw batch
-        let shader_id = registry.resources.query(CName { name: "default".into() });
+        let shader_id = registry.resources.query(CName { name: "sprite".into() });
         let shader_id = shader_id.first().unwrap();
         let shader = registry.resources.get::<RShader>(shader_id).unwrap();
 
@@ -138,36 +147,49 @@ impl quipi::QuiPiApp for BouncingShapes {
                 &(glm::vec3(0.0, 0.0, 0.0) + glm::vec3(0.0, 0.0, -1.0)),
                 &glm::vec3(0.0, 1.0, 0.0)
             );
-            let projection = glm::ortho(0.0, WIDTH as f32, 0.0, HEIGHT as f32, 0.0, 0.2);
 
+            let (_x, _y, width, height) = get_dimensions();
+            let projection = glm::ortho(0.0, width as f32, 0.0, height as f32, 0.0, 0.2);
+
+            batch_renderer.reset_info();
             batch_renderer.begin_batch();
             for entity in entities {
                 let Some(transform) = registry.entities.get::<CTransform2D>(&entity) else { continue; };
-                let model = transform.to_matrix().0;
+                let model = transform.to_matrix();
                 let mvp = projection * view * model;
 
-                let Some(rect) = registry.entities.get_mut::<CQuad>(&entity) else { continue; };
+                let Some(quad) = registry.entities.get_mut::<CQuad>(&entity) else { continue; };
 
-                rect.mvp = mvp;
+                quad.mvp = mvp;
 
-                batch_renderer.draw_mesh(rect, shader, texture);
+                batch_renderer.draw_mesh(quad, shader, texture);
             }
+            batch_renderer.end_batch();
             batch_renderer.flush_batch(shader);
-            frame_state.render_info = batch_renderer.reset_info();
+
+            frame_state.render_info = batch_renderer.render_info.clone();
         }
 
-        // // draw the entity count
-        // let entity_count = registry.entities.count();
-        // frame_state.text_render.color = glm::vec4(0.9, 0.0, 0.3, 0.8);
-        // frame_state.text_render.scale = 0.7;
-        // frame_state.text_render.draw(
-        //     format!("entities: {}", entity_count),
-        //     glm::vec2(20.0, 30.0)
-        // );
-        // frame_state.text_render.draw(
-        //     format!("fps: {}", frame_state.debug_info.fps as u32),
-        //     glm::vec2(20.0, 60.0)
-        // );
+        // draw the entity count
+        let entity_count = registry.entities.count();
+        frame_state.text_render.color = glm::vec4(0.0, 0.0, 0.0, 1.0);
+        frame_state.text_render.scale = 0.6;
+        frame_state.text_render.draw(
+            format!("entities: {}", entity_count),
+            glm::vec2(20.0, 20.0)
+        );
+        frame_state.text_render.draw(
+            format!("draw calls: {}", frame_state.render_info.num_draw_calls),
+            glm::vec2(20.0, 40.0)
+        );
+        frame_state.text_render.draw(
+            format!("fps: {}", frame_state.debug_info.fps as u32),
+            glm::vec2(20.0, 60.0)
+        );
+        frame_state.text_render.draw(
+            format!("ms: {}", frame_state.debug_info.ms as u32),
+            glm::vec2(20.0, 80.0)
+        );
 
         Ok(frame_response)
     }
@@ -180,7 +202,7 @@ fn scene_schema() -> SchemaScene2D {
         cameras: vec![camera_schema()],
         entities: vec![],
         shaders: vec![SchemaShader {
-            name: CName { name: "default".into() },
+            name: CName { name: "sprite".into() },
             uniforms: vec![
                 // UniformVariable::ModelMatrix("model".into()),
                 UniformVariable::ViewMatrix("view".into()),

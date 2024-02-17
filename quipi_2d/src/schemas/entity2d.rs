@@ -9,11 +9,7 @@ use serde::{Serialize, Deserialize};
 
 use crate::{
     components::{
-        CName,
-        CQuad,
-        CTag,
-        CTransform2D,
-        CVelocity2D
+        CModelMatrix2D, CName, CQuad, CTag, CTransform2D, CVelocity2D
     },
     Registry,
     VersionedIndex
@@ -74,7 +70,7 @@ impl ISchema for SchemaEntity2D {
         }
         registry.entities.add(&entity, self.quad.to_b_box());
         registry.entities.add(&entity, self.quad.clone());
-        registry.entities.add(&entity, self.transform.to_matrix());
+        registry.entities.add(&entity, CModelMatrix2D(self.transform.to_matrix()));
         registry.entities.add(&entity, self.transform);
         registry.entities.add(&entity, CDrawable {
             shader: *shader,

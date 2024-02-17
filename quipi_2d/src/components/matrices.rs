@@ -20,7 +20,7 @@ impl CModelMatrix2D {
         let matrix = transform.to_matrix();
 
         if let Some(model) = registry.entities.get_mut::<CModelMatrix2D>(entity) {
-            model.0 = matrix.0;
+            model.0 = matrix;
         }
     }
 }
