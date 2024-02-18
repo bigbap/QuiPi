@@ -18,10 +18,7 @@ use crate::{
             DrawBuffer,
             DrawMode
         },
-        textures::{
-            use_texture,
-            Texture
-        }
+        textures::use_texture
     },
     resources::{
         RShader,
@@ -30,8 +27,8 @@ use crate::{
 };
 
 use super::{
-    texture::from_buffer_rgba,
-    vertex::Vertex, RenderInfo
+    vertex::Vertex,
+    RenderInfo
 };
 
 pub struct BatchRenderer<const C: usize, M: IMesh> {
@@ -40,7 +37,6 @@ pub struct BatchRenderer<const C: usize, M: IMesh> {
     vbo: Buffer<VBO>,
 
     indices_count: usize,
-    white_texture: Texture,
     max_textures: u32,
     textures: Vec<u32>,
     mesh_count: usize,
@@ -85,18 +81,14 @@ impl<const C: usize, M: IMesh> BatchRenderer<C, M> {
         vao.unbind();
         ebo.unbind();
 
-        let white_texture = from_buffer_rgba(1, 1, &[1, 1, 1, 1]);
-        let textures = vec![white_texture.id];
-
         Self {
             vao,
             _ebo: ebo,
             vbo,
 
             indices_count: M::indices().len(),
-            white_texture,
             max_textures: 16, // TODO: this is hardcoded
-            textures,
+            textures: vec![],
             mesh_count: 0,
             vertices: Vec::<Vertex>::with_capacity(vertex_capacity),
             render_info: RenderInfo::default(),
@@ -107,7 +99,7 @@ impl<const C: usize, M: IMesh> BatchRenderer<C, M> {
 
     pub fn begin_batch(&mut self) {
         self.mesh_count = 0;
-        self.textures = vec![self.white_texture.id];
+        self.textures.clear();
         self.vertices.clear();
     }
 
@@ -148,7 +140,7 @@ impl<const C: usize, M: IMesh> BatchRenderer<C, M> {
         shader: &RShader,
         texture: Option<&RTexture>
     ) {
-        let mut texture_slot = 0;
+        let mut texture_slot = self.max_textures as usize;
         if let Some(texture) = texture {
             let id = texture.texture.id;
 

@@ -1,10 +1,7 @@
 use serde::{Serialize, Deserialize};
 
 use crate::{
-    components::{
-        CTransform2D,
-        CVelocity2D,
-    },
+    components::CTransform2D,
     resources::{
         RCamera2D,
         camera::CameraParams
@@ -53,8 +50,7 @@ impl ISchema for SchemaCamera2D {
             self.name.clone(),
             RCamera2D::new(
                 self.params(),
-                self.transform,
-                CVelocity2D::default()
+                self.transform
             )?
         )?)
     }

@@ -1,11 +1,13 @@
 use quipi_2d::{resources::RCamera2D, schemas::SchemaCamera2D};
 use quipi_core::{core::canvas::{get_dimensions, set_dimensions}, FrameResponse, FrameState, IController, Registry};
-use sdl2::event::{Event, WindowEvent};
+use sdl2::{event::{Event, WindowEvent}, keyboard::Keycode};
 
 pub const MAIN_CAMERA: &str = "main_camera";
 
 pub struct CameraController {
-    camera: u64
+    camera: u64,
+    velocity: glm::Vec2,
+    speed: f32
 }
 
 impl CameraController {
@@ -16,7 +18,9 @@ impl CameraController {
         };
 
         Ok(Self {
-            camera
+            camera,
+            velocity: glm::vec2(0.0, 0.0),
+            speed: 3.0
         })
     }
 }
@@ -36,8 +40,31 @@ impl IController for CameraController {
                         camera.params.top = *h as f32;
                     }
                 },
+                Event::KeyDown { keycode, repeat: false, .. } => {
+                    match keycode {
+                        Some(Keycode::W) => self.velocity.y += self.speed, // move up
+                        Some(Keycode::S) => self.velocity.y -= self.speed, // move down
+                        Some(Keycode::A) => self.velocity.x -= self.speed, // move left
+                        Some(Keycode::D) => self.velocity.x += self.speed, // move right,
+                        _ => ()
+                    }
+                },
+                Event::KeyUp { keycode, repeat: false, .. } => {
+                    match keycode {
+                        Some(Keycode::W) => self.velocity.y -= self.speed, // move up
+                        Some(Keycode::S) => self.velocity.y += self.speed, // move down
+                        Some(Keycode::A) => self.velocity.x += self.speed, // move left
+                        Some(Keycode::D) => self.velocity.x -= self.speed, // move right,
+                        _ => ()
+                    }
+                },
                 _ => ()
             };
+        }
+
+        if let Some(camera) = registry.get_resource_mut::<RCamera2D>(self.camera) {
+            camera.transform.translate.x += self.velocity.x;
+            camera.transform.translate.y += self.velocity.y;
         }
     
         FrameResponse::None

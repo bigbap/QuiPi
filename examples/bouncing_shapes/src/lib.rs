@@ -41,4 +41,5 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     app.register_controller(scene);
     app.run((1.0, 1.0, 0.8, 1.0))
+    // app.run((0.3, 0.3, 0.3, 1.0))
 }

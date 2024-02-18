@@ -2,7 +2,7 @@ use serde::{Serialize, Deserialize};
 
 use quipi_core::Component;
 
-use crate::components::{CTransform2D, CVelocity2D};
+use crate::components::CTransform2D;
 
 #[derive(Debug, Component, Serialize, Deserialize, PartialEq)]
 pub struct RCamera2D {
@@ -11,7 +11,6 @@ pub struct RCamera2D {
 
     pub params: CameraParams,
     pub transform: CTransform2D,
-    pub velocity: CVelocity2D,
 }
 
 impl Default for RCamera2D {
@@ -22,8 +21,7 @@ impl Default for RCamera2D {
             projection: RCamera2D::calc_projection_matrix(&params),
             view: RCamera2D::calc_view_matrix(&transform),
             params,
-            transform,
-            velocity: CVelocity2D::default()
+            transform
         }
     }
 }
@@ -32,14 +30,12 @@ impl RCamera2D {
     pub fn new(
         params: CameraParams,
         transform: CTransform2D,
-        velocity: CVelocity2D
     ) -> Result<Self, Box<dyn std::error::Error>> {
         let camera = Self {
             projection: RCamera2D::calc_projection_matrix(&params),
             view: RCamera2D::calc_view_matrix(&transform),
             params,
             transform,
-            velocity
         };
 
         Ok(camera)

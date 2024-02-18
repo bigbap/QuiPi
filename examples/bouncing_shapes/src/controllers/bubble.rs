@@ -139,17 +139,17 @@ impl IController for BubbleController {
             let Some(quad) = registry.entities.get_mut::<CQuad>(&bubble) else { continue; };
             quad.mvp = mvp;
 
-            let quad = registry.entities.get::<CQuad>(&bubble).unwrap();
-            let drawable = registry.entities.get::<CDrawable>(&bubble).unwrap();
+            let quad = registry.entities.get::<CQuad>(&bubble)?;
+            let drawable = registry.entities.get::<CDrawable>(&bubble)?;
             let texture = match drawable.texture {
                 Some(id) => registry.get_resource(id),
                 _ => None
             };
 
-            self.renderer.draw_mesh(quad, registry.get_resource(self.shader).unwrap(), texture);
+            self.renderer.draw_mesh(quad, registry.get_resource(self.shader)?, texture);
         }
         self.renderer.end_batch();
-        self.renderer.flush_batch(registry.get_resource(self.shader).unwrap());
+        self.renderer.flush_batch(registry.get_resource(self.shader)?);
 
         Some(self.renderer.render_info.clone())
     }

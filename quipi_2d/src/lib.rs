@@ -93,6 +93,7 @@ impl QuiPi2D {
             // call controller update and draw
             set_debug_info(&mut self.frame_state);
             self.frame_state.events = self.winapi.get_event_queue()?;
+            self.frame_state.render_info = RenderInfo::default();
 
             for controller in self.controllers.iter_mut() {
                 match controller.update(&mut self.frame_state, &mut self.registry) {
@@ -105,7 +106,8 @@ impl QuiPi2D {
                     &mut self.frame_state,
                     &mut self.registry
                 ) {
-                    self.frame_state.render_info = render_info;
+                    self.frame_state.render_info.total_ms += render_info.total_ms;
+                    self.frame_state.render_info.num_draw_calls += render_info.num_draw_calls;
                 }
             }
             
