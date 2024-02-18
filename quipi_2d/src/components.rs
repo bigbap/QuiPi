@@ -27,7 +27,3 @@ pub fn register_components(registry: &mut Registry) {
         .register_component::<CVelocity2D>()
         .register_component::<CViewMatrix2D>();
 }
-
-pub fn register_resources(registry: &mut Registry) {
-    quipi_core::resources::register_resources(registry);
-}

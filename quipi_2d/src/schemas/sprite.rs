@@ -39,15 +39,15 @@ impl ISchema for SchemaSprite {
         registry: &mut Registry,
     ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
         let Some(shader) = registry.get_resource_id(&self.shader) else {
-            return Err("[entity2d schema] shader doesn't exist".into())
+            return Err("[sprite schema] shader doesn't exist".into())
         };
         let Some(camera) = registry.get_resource_id(&self.camera) else {
-            return Err("[entity2d schema] camera doesn't exist".into())
+            return Err("[sprite schema] camera doesn't exist".into())
         };
         let texture = match &self.texture {
             Some(id_as_str) => {
                 let Some(tex) = registry.get_resource_id(&id_as_str) else {
-                    return Err("[entity2d schema] texture doesn't exist".into())
+                    return Err("[sprite schema] texture doesn't exist".into())
                 };
 
                 Some(tex)
@@ -126,10 +126,10 @@ impl Default for SchemaSprite {
 #[derive(Debug, thiserror::Error)]
 pub enum SchemaEntityError {
     // SchemaRect errors
-    #[error("[SchemaRect] shader not found")]
+    #[error("[sprite schema] shader not found")]
     ShaderNotFound,
 
-    #[error("[SchemaRect] camera not found")]
+    #[error("[sprite schema] camera not found")]
     CameraNotFound,
 
     #[error("Other error")]

@@ -34,7 +34,6 @@ pub const DEFAULT_SCENE: &str = "default_scene";
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SchemaScene2D {
     pub name:       String,
-    pub clr_color:  glm::Vec4,
     pub cameras:    Vec<SchemaCamera2D>,
     pub shaders:    Vec<SchemaShader>,
     pub textures:   Vec<String>,
@@ -84,7 +83,6 @@ impl ISchema for SchemaScene2D {
         let entity = registry.entities.create();
         registry.entities.add(&entity, CScene {
             id: registry.string_interner.intern(self.name.clone()),
-            color: self.clr_color,
             cameras,
             shaders,
             textures
@@ -98,7 +96,6 @@ impl ISchema for SchemaScene2D {
             // 1. new default scene schema
             let mut schema = Self {
                 name: registry.string_interner.get_string(scene.id)?,
-                clr_color: scene.color,
                 cameras: vec![],
                 shaders: vec![],
                 textures: vec![],
@@ -154,7 +151,6 @@ impl Default for SchemaScene2D {
 
         Self {
             name: DEFAULT_SCENE.to_string(),
-            clr_color: glm::vec4(0.3, 0.3, 0.3, 1.0),
             cameras: vec![camera],
             shaders: vec![shader],
             textures: vec![],

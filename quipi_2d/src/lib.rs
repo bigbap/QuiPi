@@ -8,6 +8,7 @@ pub mod schemas;
 pub mod systems;
 use quipi_core::{EditorInfo, rendering::RenderInfo};
 pub use quipi_core::{
+    IController,
     DebugInfo,
     FrameResponse,
     FrameState,
@@ -23,33 +24,29 @@ pub use quipi_core::{
     core::text,
     VersionedIndex,
     platform::egui::GUI,
-    QuiPiApp,
     set_debug_info
 };
 
-use components::{
-    register_components,
-    register_resources,
-};
+use components::register_components;
+use resources::register_resources;
 use systems::editor::AppEditor;
 
-pub struct QuiPi2D<G: QuiPiApp> {
-    app: G,
-    registry: Registry,
+pub struct QuiPi2D {
+    pub registry: Registry,
     winapi: QuiPiWindow,
     timer: Timer,
     frame_state: FrameState,
-    app_editor: AppEditor
+    app_editor: AppEditor,
+    controllers: Vec<Box<dyn IController>>
 }
 
-impl<G: QuiPiApp> QuiPi2D<G> {
+impl QuiPi2D {
     pub fn init(
-        mut app: G,
         title: &str,
         width: u32,
         height: u32,
     ) -> Result<Self, Box<dyn std::error::Error>> {
-        let mut registry = setup()?;
+        let registry = setup()?;
 
         let mut winapi = QuiPiWindow::init()?;
         let _window = winapi.opengl_window(
@@ -58,8 +55,6 @@ impl<G: QuiPiApp> QuiPi2D<G> {
             height,
             (4, 5)
         )?;
-        
-        app.init(&mut registry, &winapi)?;
 
         let mut timer = Timer::new();
         let frame_state = FrameState {
@@ -74,40 +69,44 @@ impl<G: QuiPiApp> QuiPi2D<G> {
         };
 
         Ok(Self {
-            app,
             registry,
             winapi,
             timer,
             frame_state,
-            app_editor: AppEditor::new()?
+            app_editor: AppEditor::new()?,
+            controllers: vec![]
         })
     }
 
-    pub fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn register_controller(&mut self, controller: impl IController + 'static) {
+        self.controllers.push(Box::new(controller));
+    }
+
+    pub fn run(&mut self, clear_color: (f32, f32, f32, f32)) -> Result<(), Box<dyn std::error::Error>> {
         // let mut renderer = Renderer2D::new(&mut self.registry);
         'running: loop {
             self.registry.entities.flush();
             self.registry.flush_resources();
     
-            clear_buffers((
-                self.frame_state.clear_color.x,
-                self.frame_state.clear_color.y,
-                self.frame_state.clear_color.z,
-                self.frame_state.clear_color.w,
-            ));
+            clear_buffers(clear_color);
     
-            // // 1. draw all drawables
-            // renderer.start()?;
-            // renderer.batch_render(CTag { tag: "bubble".into() }, &mut self.registry)?;
-            // self.frame_state.render_info = renderer.flush(&self.registry);
-    
-            // 2. call update systems (any app drawing might happen here. ie rendering text)
+            // call controller update and draw
             set_debug_info(&mut self.frame_state);
             self.frame_state.events = self.winapi.get_event_queue()?;
-            match self.app.handle_frame(&mut self.registry, &mut self.frame_state)? {
-                FrameResponse::Quit => break 'running,
-                FrameResponse::Restart => { self.timer.delta(); },
-                FrameResponse::None => ()
+
+            for controller in self.controllers.iter_mut() {
+                match controller.update(&mut self.frame_state, &mut self.registry) {
+                    FrameResponse::Quit => break 'running,
+                    FrameResponse::Restart => { self.timer.delta(); },
+                    FrameResponse::None => ()
+                }
+
+                if let Some(render_info) = controller.draw(
+                    &mut self.frame_state,
+                    &mut self.registry
+                ) {
+                    self.frame_state.render_info = render_info;
+                }
             }
             
             // draw the editor

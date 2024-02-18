@@ -20,6 +20,7 @@ pub use core::ecs::EntityManager;
 pub use core::ecs::VersionedIndex;
 pub use core::rendering;
 pub use core::math;
+use core::rendering::RenderInfo;
 pub use core::utils;
 pub use registry::Registry;
 pub use platform::sdl2::window::QuiPiWindow;
@@ -27,26 +28,9 @@ pub use platform::opengl;
 
 use sdl2::event::Event;
 
-pub trait QuiPiApp {
-    /// game.init() is called by the engine, after all the Sdl and
-    /// openGl setup is done.
-    /// 
-    /// Use this method to set up your game. If you do anything
-    /// that uses the 'gl::' crate before this method gets called
-    /// by the engine, you will get a 'function not loaded error'
-    fn init(
-        &mut self,
-        registry: &mut Registry,
-        winapi: &QuiPiWindow
-    ) -> Result<(), Box<dyn std::error::Error>>;
-    
-    /// This method is called by the engine every frame.
-    /// This is where you will do all your game specific logic.
-    fn handle_frame(
-        &mut self,
-        registry: &mut Registry,
-        frame_state: &mut FrameState
-    ) -> Result<FrameResponse, Box<dyn std::error::Error>>;
+pub trait IController {
+    fn update(&mut self, _frame_state: &mut FrameState, _registry: &mut Registry) -> FrameResponse { FrameResponse::None }
+    fn draw(&mut self, _frame_state: &mut FrameState,  _registry: &mut Registry) -> Option<RenderInfo> { None }
 }
 
 pub struct FrameState {

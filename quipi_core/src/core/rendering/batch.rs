@@ -152,19 +152,20 @@ impl<const C: usize, M: IMesh> BatchRenderer<C, M> {
         if let Some(texture) = texture {
             let id = texture.texture.id;
 
-            if let Some(texture) = self.textures
+            if let Some((i, _)) = self.textures
                 .iter()
-                .find(|i| **i == id)
+                .enumerate()
+                .find(|(_, tex)| **tex == id)
             {
-                texture_slot = *texture;
+                texture_slot = i;
             } else {
-                if self.max_textures == self.textures.len() as u32 {
+                if self.textures.len() as u32 >= self.max_textures {
                     self.batch_reset(shader);
                 }
 
                 self.textures.push(id);
 
-                texture_slot = self.textures.len() as u32 - 1;
+                texture_slot = self.textures.len() - 1;
             }
         }
 

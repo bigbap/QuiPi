@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Debug};
 
 use crate::{
     core::strings::StringInterner, ecs::ECSError, Component, EntityManager, VersionedIndex
@@ -19,13 +19,11 @@ pub enum RegistryError {
     DuplicateResource
 }
 
-#[derive(Debug)]
 pub struct Registry {
     pub entities: EntityManager,
     resources: EntityManager,
 
     pub string_interner: StringInterner,
-    
     index_map: HashMap<u64, VersionedIndex>
 }
 
@@ -75,6 +73,17 @@ impl Registry {
     ) -> Option<&C> {
         if let Some(index) = self.index_map.get(&id) {
             return self.resources.get::<C>(index)
+        }
+
+        None
+    }
+
+    pub fn get_resource_mut<C: Component + std::fmt::Debug + PartialEq + 'static>(
+        &mut self,
+        id: u64
+    ) -> Option<&mut C> {
+        if let Some(index) = self.index_map.get(&id) {
+            return self.resources.get_mut::<C>(index)
         }
 
         None
