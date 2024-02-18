@@ -2,7 +2,7 @@ use crate::{
     core::collections::AnyMap,
     Component,
     VersionedIndex,
-    ec_store::{
+    ecs::{
         IndexedArray,
         VersionedIndexAllocator
     }
@@ -11,7 +11,7 @@ use crate::{
 type EntityMap<C> = IndexedArray<C>;
 
 #[derive(Debug, thiserror::Error)]
-pub enum EMError {
+pub enum ECSError {
     #[error("there was a problem creating a new component registry")]
     ProblemCreatingNewComponentRegistry
 }
@@ -26,7 +26,7 @@ pub struct EntityManager {
 }
 
 impl EntityManager {
-    pub fn new() -> Result<Self, EMError> {
+    pub fn new() -> Result<Self, ECSError> {
         let entity_manager = Self {
             entity_allocator: VersionedIndexAllocator::default(),
             component_maps: AnyMap::new(),

@@ -3,11 +3,11 @@ pub extern crate nalgebra_glm as glm;
 pub extern crate serde;
 
 pub mod components;
+pub mod resources;
 pub mod schemas;
 pub mod systems;
-use quipi_core::{engine::EditorInfo, rendering::RenderInfo};
+use quipi_core::{EditorInfo, rendering::RenderInfo};
 pub use quipi_core::{
-    resources,
     DebugInfo,
     FrameResponse,
     FrameState,
@@ -20,17 +20,16 @@ pub use quipi_core::{
         buffer::clear_buffers,
         draw::DrawMode
     },
-    systems::text,
+    core::text,
     VersionedIndex,
-    wrappers::egui::GUI,
+    platform::egui::GUI,
     QuiPiApp,
-    engine::set_debug_info
+    set_debug_info
 };
 
 use components::{
     register_components,
     register_resources,
-    CRGBA,
 };
 use systems::editor::AppEditor;
 
@@ -64,7 +63,7 @@ impl<G: QuiPiApp> QuiPi2D<G> {
 
         let mut timer = Timer::new();
         let frame_state = FrameState {
-            clear_color: CRGBA::default(),
+            clear_color: glm::vec4(0.3, 0.5, 0.1, 1.0),
             editor_mode: false,
             events: vec![],
             text_render: text::TextRenderer::new(text::DEFAULT_FONT)?,
@@ -88,9 +87,14 @@ impl<G: QuiPiApp> QuiPi2D<G> {
         // let mut renderer = Renderer2D::new(&mut self.registry);
         'running: loop {
             self.registry.entities.flush();
-            self.registry.resources.flush();
+            self.registry.flush_resources();
     
-            clear_buffers(self.frame_state.clear_color.to_tuple());
+            clear_buffers((
+                self.frame_state.clear_color.x,
+                self.frame_state.clear_color.y,
+                self.frame_state.clear_color.z,
+                self.frame_state.clear_color.w,
+            ));
     
             // // 1. draw all drawables
             // renderer.start()?;
@@ -128,8 +132,6 @@ impl<G: QuiPiApp> QuiPi2D<G> {
 }
 
 fn setup() -> Result<Registry, Box<dyn std::error::Error>> {
-    quipi_core::engine::create_asset_dirs()?;
-
     let mut registry = Registry::init()?;
 
     register_components(&mut registry);

@@ -26,7 +26,7 @@ use crate::{
         VertexArray,
         VBO
     },
-    wrappers::opengl::{
+    platform::opengl::{
         buffer::BufferUsage, capabilities::*, draw::*, functions::gl_scissor, shader::ShaderProgram, textures::{
             gl_use_texture_unit, Format, ParameterName, ParameterValue, Texture
         }

@@ -1,6 +1,7 @@
+use std::collections::HashMap;
+
 use crate::{
-    EntityManager,
-    ec_store::EMError
+    core::strings::StringInterner, ecs::ECSError, Component, EntityManager, VersionedIndex
 };
 
 #[derive(Debug, thiserror::Error)]
@@ -8,17 +9,24 @@ pub enum RegistryError {
     #[error("there was a problem initializing the registry")]
     ProblemInitialisingRegistry(
         #[from]
-        EMError
+        ECSError
     ),
 
     #[error("there was a problem creating a new entity")]
-    ProblemCreatingEntity
+    ProblemCreatingEntity,
+
+    #[error("trying to load existing resource")]
+    DuplicateResource
 }
 
 #[derive(Debug)]
 pub struct Registry {
     pub entities: EntityManager,
-    pub resources: EntityManager,
+    resources: EntityManager,
+
+    pub string_interner: StringInterner,
+    
+    index_map: HashMap<u64, VersionedIndex>
 }
 
 impl Registry {
@@ -29,7 +37,82 @@ impl Registry {
         Ok(Self {
             entities,
             resources,
+            string_interner: StringInterner::new(),
+            index_map: HashMap::new()
         })
+    }
+
+    pub fn register_resource<C: Component + std::fmt::Debug + PartialEq + 'static>(
+        &mut self
+    ) -> &mut Self {
+        self.resources.register_component::<C>();
+
+        self
+    }
+
+    pub fn load_resourse<C: Component + std::fmt::Debug + PartialEq + 'static>(
+        &mut self,
+        unique_name: String,
+        resource: C
+    ) -> Result<u64, RegistryError> {
+        let id = self.string_interner.intern(unique_name);
+
+        if self.index_map.get(&id).is_some() {
+            return Err(RegistryError::DuplicateResource)
+        }
+
+        let index = self.resources.create();
+        self.resources.add(&index, resource);
+
+        self.index_map.insert(id, index);
+
+        Ok(id)
+    }
+
+    pub fn get_resource<C: Component + std::fmt::Debug + PartialEq + 'static>(
+        &self,
+        id: u64
+    ) -> Option<&C> {
+        if let Some(index) = self.index_map.get(&id) {
+            return self.resources.get::<C>(index)
+        }
+
+        None
+    }
+
+    pub fn get_resource_id(
+        &mut self,
+        id_as_str: &str
+    ) -> Option<u64> {
+        let id = self.string_interner.intern(id_as_str.to_string());
+
+        match self.index_map.contains_key(&id) {
+            true => Some(id),
+            _ => None
+        }
+    }
+
+    pub fn unload_resource<C: Component + std::fmt::Debug + PartialEq + 'static>(
+        &mut self,
+        id: u64
+    ) {
+        if let Some(index) = self.index_map.get(&id) {
+            self.resources.remove::<C>(index);
+
+            self.index_map.remove(&id);
+        }
+    }
+
+    pub fn store_index(&mut self, id: u64, index: VersionedIndex) {
+        self.index_map.insert(id, index);
+    }
+
+    pub fn lookup_index(&self, id: u64) -> Option<VersionedIndex> {
+        self.index_map.get(&id).cloned()
+    }
+
+    pub fn flush_resources(&mut self) {
+        self.resources.flush();
     }
 }
 

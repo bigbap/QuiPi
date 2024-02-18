@@ -8,7 +8,7 @@ use crate::{
         VBO
     },
     utils::to_abs_path,
-    wrappers::opengl::{
+    platform::opengl::{
         buffer::BufferUsage,
         capabilities::*,
         draw::*,

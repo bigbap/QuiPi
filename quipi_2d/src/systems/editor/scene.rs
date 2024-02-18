@@ -7,7 +7,7 @@ use crate::{
         CTag
     },
     schemas::{
-        ISchema, SchemaEntity2D
+        ISchema, SchemaSprite
     },
     systems::scene::save_scene_2d,
     GUI,
@@ -38,9 +38,9 @@ impl SceneEditor {
         egui::Window::new("Scene").show(&gui.ctx, |ui| {
             ui.horizontal(|ui| {
                 if ui.button("create entity").clicked() {
-                    let schema = SchemaEntity2D::default();
+                    let schema = SchemaSprite::default();
     
-                    if let Err(e) = schema.build(registry) {
+                    if let Err(e) = schema.build_entity(registry) {
                         println!("could not add entity: {}", e);
                     }
                 }
@@ -49,8 +49,9 @@ impl SceneEditor {
                     let Some(scene_id) = scenes.first() else { return };
     
                     if let Some(scene) = registry.entities.get::<CScene>(scene_id) {
-                        if let Err(e) = save_scene_2d(&scene.name, *scene_id, &registry) {
-                            println!("there was a problem saving scene {}: {:?}", scene.name, e);
+                        let scene_name = registry.string_interner.get_string(scene.id).unwrap();
+                        if let Err(e) = save_scene_2d(&scene_name, *scene_id, &registry) {
+                            println!("there was a problem saving scene {}: {:?}", scene_name, e);
                         }
                     }
                 }

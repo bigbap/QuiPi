@@ -4,5 +4,9 @@ use crate::Component;
 
 #[derive(Debug, Component, Serialize, Deserialize, PartialEq, Clone)]
 pub struct CScene {
-    pub name: String
+    pub id: u64,
+    pub color: glm::Vec4,
+    pub cameras: Vec<u64>,
+    pub shaders: Vec<u64>,
+    pub textures: Vec<u64>
 }

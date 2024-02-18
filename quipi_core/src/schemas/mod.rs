@@ -7,6 +7,9 @@ use crate::{
 };
 
 pub trait ISchema: Clone {
-    fn build(&self, registry: &mut Registry) -> Result<VersionedIndex, Box<dyn std::error::Error>>;
-    fn from_entity(entity: VersionedIndex, registry: &Registry) -> Option<Self>;
+    fn build_entity(&self, _registry: &mut Registry) -> Result<VersionedIndex, Box<dyn std::error::Error>> { unimplemented!() }
+    fn from_entity(_entity: VersionedIndex, _registry: &Registry) -> Option<Self> { unimplemented!() }
+
+    fn load_resource(&self, _registry: &mut Registry) -> Result<u64, Box<dyn std::error::Error>> { unimplemented!() }
+    fn from_resource(_id: u64, _registry: &Registry) -> Option<Self> { unimplemented!() }
 }

@@ -4,7 +4,7 @@ use ft::Face;
 use crate::{
     systems::assets::image::Image,
     utils::to_abs_path,
-    wrappers::opengl::textures::{
+    platform::opengl::textures::{
         Texture,
         Format,
         Target,

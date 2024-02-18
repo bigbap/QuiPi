@@ -150,7 +150,7 @@ impl<const C: usize, M: IMesh> BatchRenderer<C, M> {
     ) {
         let mut texture_slot = 0;
         if let Some(texture) = texture {
-            let id = texture.0.id;
+            let id = texture.texture.id;
 
             if let Some(texture) = self.textures
                 .iter()

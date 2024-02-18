@@ -5,7 +5,7 @@ use ft::{
     FtResult
 };
 
-use crate::wrappers::opengl::{
+use crate::platform::opengl::{
     pixel_store,
     textures::Texture
 };

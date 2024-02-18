@@ -1,15 +1,12 @@
 use quipi_core::{
-    schemas::shader::DEFAULT_SHADER,
-    components::{
-        CDrawable,
-        CTexture
-    }
+    components::CDrawable,
+    schemas::shader::DEFAULT_SHADER
 };
 use serde::{Serialize, Deserialize};
 
 use crate::{
     components::{
-        CModelMatrix2D, CName, CQuad, CTag, CTransform2D, CVelocity2D
+        CModelMatrix2D, CQuad, CTag, CTransform2D, CVelocity2D
     },
     Registry,
     VersionedIndex
@@ -23,58 +20,55 @@ use super::{
 pub const DEFAULT_RECT_TAG: &str = "default_rect";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct SchemaEntity2D {
-    pub tag:        CTag,
+pub struct SchemaSprite {
+    pub tag:        String,
     pub transform:  CTransform2D,
     pub quad:       CQuad,
 
     pub velocity:   Option<CVelocity2D>,
-    pub texture:    Option<CName>,
+    pub color:      Option<glm::Vec4>,
+    pub texture:    Option<String>,
     
-    pub shader:     CName,
-    pub camera:     CName,
-    pub is_static:  bool,
+    pub shader:     String,
+    pub camera:     String,
 }
 
-impl ISchema for SchemaEntity2D {
-    fn build(
+impl ISchema for SchemaSprite {
+    fn build_entity(
         &self,
         registry: &mut Registry,
     ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
-        // 1. get shader by name
-        let binding = registry.resources.query::<CName>(self.shader.clone());
-        let Some(shader) = binding.first() else {
-            return Err(SchemaEntityError::ShaderNotFound.into())
+        let Some(shader) = registry.get_resource_id(&self.shader) else {
+            return Err("[entity2d schema] shader doesn't exist".into())
+        };
+        let Some(camera) = registry.get_resource_id(&self.camera) else {
+            return Err("[entity2d schema] camera doesn't exist".into())
+        };
+        let texture = match &self.texture {
+            Some(id_as_str) => {
+                let Some(tex) = registry.get_resource_id(&id_as_str) else {
+                    return Err("[entity2d schema] texture doesn't exist".into())
+                };
+
+                Some(tex)
+            },
+            None => None
         };
 
-        // 2. get texture by name if any
-        let textures = match &self.texture {
-            Some(name) => registry.resources.query::<CName>(name.clone()),
-            None => vec![]
-        };
-
-        // 3. get camera by name
-        let binding = registry.entities.query::<CName>(self.camera.clone());
-        let Some(camera) = binding.first() else {
-            return Err(SchemaEntityError::CameraNotFound.into())
-        };
-
-        // 4. build the entity
         let entity = registry.entities.create();
-        registry.entities.add(&entity, self.tag.clone());
+        registry.entities.add(&entity, CTag { tag: self.tag.clone() });
         if let Some(velocity) = self.velocity {
             registry.entities.add(&entity, velocity);
-        }
-        if let Some(texture) = textures.first() {
-            registry.entities.add(&entity, CTexture(*texture))
         }
         registry.entities.add(&entity, self.quad.to_b_box());
         registry.entities.add(&entity, self.quad.clone());
         registry.entities.add(&entity, CModelMatrix2D(self.transform.to_matrix()));
         registry.entities.add(&entity, self.transform);
         registry.entities.add(&entity, CDrawable {
-            shader: *shader,
-            camera: *camera,
+            shader,
+            camera,
+            color: self.color,
+            texture
         });
 
         Ok(entity)
@@ -83,25 +77,23 @@ impl ISchema for SchemaEntity2D {
     fn from_entity(entity: VersionedIndex, registry: &Registry) -> Option<Self> {
         let Some(drawable) = registry.entities.get::<CDrawable>(&entity) else { return None; };
 
-        if let (Some(tag), Some(transform), Some(shader), Some(camera), Some(quad)) = (
+        if let (Some(tag), Some(transform), Some(quad)) = (
             registry.entities.get::<CTag>(&entity),
             registry.entities.get::<CTransform2D>(&entity),
-            registry.resources.get::<CName>(&drawable.shader),
-            registry.entities.get::<CName>(&drawable.camera),
             registry.entities.get::<CQuad>(&entity),
         ) {
             let schema = Self {
-                tag: tag.clone(),
+                tag: tag.tag.clone(),
                 transform: transform.clone(),
                 quad: quad.clone(),
-                shader: shader.clone(),
-                camera: camera.clone(),
-                velocity: registry.entities.get::<CVelocity2D>(&entity).cloned(),
-                texture: match registry.entities.get::<CTexture>(&entity) {
-                    Some(tex) => registry.resources.get::<CName>(&tex.0).cloned(),
+                shader: registry.string_interner.get_string(drawable.shader)?,
+                camera: registry.string_interner.get_string(drawable.camera)?,
+                texture: match drawable.texture {
+                    Some(id) => registry.string_interner.get_string(id),
                     None => None
                 },
-                is_static: true, // TODO: this is currently hardcoded
+                color: drawable.color,
+                velocity: registry.entities.get::<CVelocity2D>(&entity).cloned(),
             };
 
             return Some(schema)
@@ -111,10 +103,10 @@ impl ISchema for SchemaEntity2D {
     }
 }
 
-impl Default for SchemaEntity2D {
+impl Default for SchemaSprite {
     fn default() -> Self {
         Self {
-            tag: CTag { tag: DEFAULT_RECT_TAG.to_string() },
+            tag: DEFAULT_RECT_TAG.to_string(),
             transform: CTransform2D::default(),
             quad: CQuad {
                 width: 200.0,
@@ -123,10 +115,10 @@ impl Default for SchemaEntity2D {
                 ..CQuad::default()
             },
             velocity: None,
+            shader: DEFAULT_SHADER.to_string(),
+            camera: DEFAULT_CAMERA.to_string(),
             texture: None,
-            shader: CName { name: DEFAULT_SHADER.to_string() },
-            camera: CName { name: DEFAULT_CAMERA.to_string() },
-            is_static: true
+            color: Some(glm::vec4(0.3, 0.3, 0.3, 1.0))
         }
     }
 }

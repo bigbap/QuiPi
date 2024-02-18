@@ -1,8 +1,5 @@
 use quipi_core::{
-    components::{
-        CDrawable,
-        CName
-    },
+    components::CDrawable,
     opengl::textures::{
         ParameterName,
         ParameterValue
@@ -15,19 +12,16 @@ use serde::{Serialize, Deserialize};
 
 use crate::{
     components::{
-        CCamera2D,
         CScene,
-        CTransform2D,
-        CRGBA
+        CTransform2D
     },
-    resources::RShader,
     Registry,
     VersionedIndex
 };
 
 use super::{
     SchemaCamera2D,
-    SchemaEntity2D,
+    SchemaSprite,
     ISchema,
     SchemaShader,
 };
@@ -39,66 +33,72 @@ pub const DEFAULT_SCENE: &str = "default_scene";
 */
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SchemaScene2D {
-    pub name:       CScene,
-    pub clr_color:  CRGBA,
+    pub name:       String,
+    pub clr_color:  glm::Vec4,
     pub cameras:    Vec<SchemaCamera2D>,
     pub shaders:    Vec<SchemaShader>,
     pub textures:   Vec<String>,
 
-    pub entities:   Vec<SchemaEntity2D>,
+    pub entities:   Vec<SchemaSprite>,
 }
 
 impl ISchema for SchemaScene2D {
-    fn build(
+    fn build_entity(
         &self,
         registry: &mut Registry
     ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
         // 1. build cameras
+        let mut cameras = vec![];
         for camera in self.cameras.iter() {
-            camera.build(registry)?;
+            cameras.push(camera.load_resource(registry)?);
         }
 
         // 2. build shaders
+        let mut shaders = vec![];
         for shader in self.shaders.iter() {
-            shader.build(registry)?;
+            shaders.push(shader.load_resource(registry)?);
         }
 
         // 2. build textures
-        for texture in self.textures.iter() {
-            let path = format!("assets/textures/{}", texture);
-            let entity = registry.resources.create();
+        let mut textures = vec![];
+        for texture_name in self.textures.iter() {
+            let path = format!("assets/textures/{}", texture_name);
 
-            let tex = from_image(&to_abs_path(&path)?)?;
-            tex
+            let texture = from_image(&to_abs_path(&path)?)?;
+            texture
                 .set_parameter(ParameterName::WrapS, ParameterValue::ClampToEdge)
                 .set_parameter(ParameterName::WrapT, ParameterValue::ClampToEdge)
                 .set_parameter(ParameterName::MinFilter, ParameterValue::LinearMipmapNearest)
                 .set_parameter(ParameterName::MagFilter, ParameterValue::Nearest);
-            registry.resources.add(&entity, RTexture(tex));
-            registry.resources.add(&entity, CName { name: texture.into() });
+
+            textures.push(registry.load_resourse(texture_name.to_string(), RTexture {
+                texture
+            })?);
         }
 
         // 3. build entities
         for rect in self.entities.iter() {
-            rect.build(registry)?;
+            rect.build_entity(registry)?;
         }
 
         let entity = registry.entities.create();
-        registry.entities.add(&entity, self.name.clone());
-        registry.entities.add(&entity, self.clr_color);
+        registry.entities.add(&entity, CScene {
+            id: registry.string_interner.intern(self.name.clone()),
+            color: self.clr_color,
+            cameras,
+            shaders,
+            textures
+        });
 
         Ok(entity)
     }
 
     fn from_entity(entity: VersionedIndex, registry: &Registry) -> Option<Self> {
-        if let (Some(name), Some(color)) = (
-            registry.entities.get::<CScene>(&entity),
-            registry.entities.get::<CRGBA>(&entity)
-        ) {
+        if let Some(scene) = registry.entities.get::<CScene>(&entity) {
             // 1. new default scene schema
             let mut schema = Self {
-                name: name.clone(),
-                clr_color: color.clone(),
+                name: registry.string_interner.get_string(scene.id)?,
+                clr_color: scene.color,
                 cameras: vec![],
                 shaders: vec![],
                 textures: vec![],
@@ -106,29 +106,26 @@ impl ISchema for SchemaScene2D {
             };
 
             // 2. parse the cameras
-            let cameras = registry.entities.query_all::<CCamera2D>();
-            for camera in cameras {
-                schema.cameras.push(SchemaCamera2D::from_entity(camera, registry)?);
+            for id in scene.cameras.iter() {
+                schema.cameras.push(SchemaCamera2D::from_resource(*id, registry)?);
             }
 
             // 2. parse the shaders
-            let shaders = registry.resources.query_all::<RShader>();
-            for shader in shaders {
-                schema.shaders.push(SchemaShader::from_entity(shader, registry)?);
+            for id in scene.shaders.iter() {
+                schema.shaders.push(SchemaShader::from_resource(*id, registry)?);
             }
 
             // 3. parse textures
-            let textures = registry.resources.query_all::<RTexture>();
-            for texture in textures {
-                if let Some(name) = registry.resources.get::<CName>(&texture) {
-                    schema.textures.push(name.name.clone());
+            for id in scene.textures.iter() {
+                if registry.get_resource::<RTexture>(*id).is_some() {
+                    schema.textures.push(registry.string_interner.get_string(*id)?);
                 }
             }
 
             // 4. parse the entities
             let entities = registry.entities.query_all::<CDrawable>();
             for entity in entities {
-                schema.entities.push(SchemaEntity2D::from_entity(entity, registry)?);
+                schema.entities.push(SchemaSprite::from_entity(entity, registry)?);
             }
 
             return Some(schema)
@@ -143,7 +140,7 @@ impl Default for SchemaScene2D {
         let shader = SchemaShader::default();
 
         let camera = SchemaCamera2D::default();
-        let rect = SchemaEntity2D {
+        let rect = SchemaSprite {
             camera: camera.name.clone(),
             transform: CTransform2D {
                 translate: glm::vec2(
@@ -152,12 +149,12 @@ impl Default for SchemaScene2D {
                 ),
                 ..CTransform2D::default()
             },
-            ..SchemaEntity2D::default()
+            ..SchemaSprite::default()
         };
 
         Self {
-            name: CScene { name: DEFAULT_SCENE.to_string() },
-            clr_color: CRGBA { value: [0.3, 0.3, 0.3, 1.0] },
+            name: DEFAULT_SCENE.to_string(),
+            clr_color: glm::vec4(0.3, 0.3, 0.3, 1.0),
             cameras: vec![camera],
             shaders: vec![shader],
             textures: vec![],

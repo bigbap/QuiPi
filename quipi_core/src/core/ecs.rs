@@ -7,11 +7,10 @@ pub use indexed_array::VersionedIndexAllocator;
 pub use indexed_array::IndexedArray;
 pub use component_derive::Component;
 pub use entity_manager::EntityManager;
-pub use entity_manager::EMError;
+pub use entity_manager::ECSError;
 pub use query::EMQuery;
 
 pub trait Component {}
 impl Component for () {}
-
 
 mod tests;

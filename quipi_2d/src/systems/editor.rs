@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use quipi_core::{engine::EditorInfo, utils::Timer, wrappers::egui::GUI};
+use quipi_core::{EditorInfo, utils::Timer, platform::egui::GUI};
 
 use crate::{
     FrameState,

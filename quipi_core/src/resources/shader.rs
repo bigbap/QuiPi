@@ -1,7 +1,7 @@
 use serde::{Serialize, Deserialize};
 
 use crate::Component;
-use crate::wrappers::opengl::shader::ShaderProgram;
+use crate::platform::opengl::shader::ShaderProgram;
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub enum UniformVariable {
