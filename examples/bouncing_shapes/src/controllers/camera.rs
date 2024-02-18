@@ -1,17 +1,17 @@
-use quipi_2d::{resources::RCamera2D, schemas::SchemaCamera2D};
-use quipi_core::{core::canvas::{get_dimensions, set_dimensions}, FrameResponse, FrameState, IController, Registry};
-use sdl2::{event::{Event, WindowEvent}, keyboard::Keycode};
+use quipi_2d::{components::CTransform2D, resources::RCamera2D, schemas::SchemaCamera2D};
+use quipi_core::{core::canvas::{get_dimensions, set_dimensions}, FrameResponse, FrameState, IController, Registry, VersionedIndex};
+use sdl2::event::{Event, WindowEvent};
 
 pub const MAIN_CAMERA: &str = "main_camera";
 
 pub struct CameraController {
     camera: u64,
-    velocity: glm::Vec2,
-    speed: f32
+
+    player: VersionedIndex // camera will follow player
 }
 
 impl CameraController {
-    pub fn new(registry: &mut Registry) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(player: VersionedIndex, registry: &mut Registry) -> Result<Self, Box<dyn std::error::Error>> {
 
         let Some(camera) = registry.get_resource_id(MAIN_CAMERA) else {
             return Err("[camera controller] camera resource has not been loaded".into());
@@ -19,8 +19,7 @@ impl CameraController {
 
         Ok(Self {
             camera,
-            velocity: glm::vec2(0.0, 0.0),
-            speed: 3.0
+            player
         })
     }
 }
@@ -40,31 +39,20 @@ impl IController for CameraController {
                         camera.params.top = *h as f32;
                     }
                 },
-                Event::KeyDown { keycode, repeat: false, .. } => {
-                    match keycode {
-                        Some(Keycode::W) => self.velocity.y += self.speed, // move up
-                        Some(Keycode::S) => self.velocity.y -= self.speed, // move down
-                        Some(Keycode::A) => self.velocity.x -= self.speed, // move left
-                        Some(Keycode::D) => self.velocity.x += self.speed, // move right,
-                        _ => ()
-                    }
-                },
-                Event::KeyUp { keycode, repeat: false, .. } => {
-                    match keycode {
-                        Some(Keycode::W) => self.velocity.y -= self.speed, // move up
-                        Some(Keycode::S) => self.velocity.y += self.speed, // move down
-                        Some(Keycode::A) => self.velocity.x += self.speed, // move left
-                        Some(Keycode::D) => self.velocity.x -= self.speed, // move right,
-                        _ => ()
-                    }
-                },
                 _ => ()
             };
         }
 
+        let mut x = 0.0;
+        let mut y = 0.0;
+        if let Some(player) = registry.entities.get::<CTransform2D>(&self.player) {
+            x = player.translate.x;
+            y = player.translate.y;
+        }
+
         if let Some(camera) = registry.get_resource_mut::<RCamera2D>(self.camera) {
-            camera.transform.translate.x += self.velocity.x;
-            camera.transform.translate.y += self.velocity.y;
+            camera.transform.translate.x = x - (camera.params.right / 2.0);
+            camera.transform.translate.y = y - (camera.params.top / 2.0);
         }
     
         FrameResponse::None

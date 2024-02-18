@@ -52,8 +52,8 @@ impl BubbleController {
 
         let rand = Random::from_seed(now_secs()?);
 
-        // for stress testing
-        // for _ in 0..30000 {
+        // // for stress testing
+        // for _ in 0..3000 {
         //     bubbles.push(spawn(&mut rand, registry)?);
         // }
 
@@ -196,7 +196,12 @@ fn spawn(
     this_schema.quad = quad;
     this_schema.tag = TAG.into();
     this_schema.shader = SHADER.into();
-    this_schema.texture = Some("Sprite-0001.png".into());
+    this_schema.texture = Some(
+        match rand.random() > 0.5 {
+            true => "Bubble.png".into(),
+            false => "Bubble.png".into()
+        }
+    );
     this_schema.camera = CAMERA.to_string();
 
     let id = this_schema.build_entity(registry)?;

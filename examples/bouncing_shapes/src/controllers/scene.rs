@@ -2,7 +2,7 @@ use quipi_2d::{schemas::{ISchema, SchemaScene2D}, systems::scene::load_scene_2d,
 use quipi_core::{rendering::RenderInfo, resources::shader::UniformVariable, schemas::SchemaShader, FrameResponse, FrameState, IController, Registry};
 use sdl2::{event::Event, keyboard::Keycode};
 
-use super::{bubble::BubbleController, camera::{camera_schema, CameraController}, tiles::TileControler};
+use super::{bubble::BubbleController, camera::{camera_schema, CameraController}, player::PlayerController, tiles::TileControler};
 
 pub struct SceneController {}
 
@@ -15,13 +15,18 @@ impl SceneController {
 
         scene.build_entity(&mut engine.registry)?;
 
+        let player_controller = PlayerController::new(&mut engine.registry)?;
         let bubble_controller = BubbleController::new(&mut engine.registry)?;
         let tile_controller = TileControler::new(&mut engine.registry)?;
-        let camera_controller = CameraController::new(&mut engine.registry)?;
+        let camera_controller = CameraController::new(
+            player_controller.player,
+            &mut engine.registry
+        )?;
 
-        engine.register_controller(camera_controller);
         engine.register_controller(tile_controller);
         engine.register_controller(bubble_controller);
+        engine.register_controller(player_controller);
+        engine.register_controller(camera_controller);
 
         Ok(Self {})
     }
@@ -84,6 +89,9 @@ fn scene_schema() -> SchemaScene2D {
                 UniformVariable::ProjectionMatrix("projection".into())
             ]
         }],
-        textures: vec!["Sprite-0001.png".into()]
+        textures: vec![
+            "Bubble.png".into(),
+            "Player.png".into()
+        ]
     }
 }

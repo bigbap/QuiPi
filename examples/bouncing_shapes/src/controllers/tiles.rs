@@ -1,6 +1,6 @@
 use quipi_2d::{components::{CModelMatrix2D, CQuad, CTransform2D}, resources::RCamera2D};
 use quipi_core::{
-    core::canvas::get_dimensions, opengl::capabilities::{
+    core::canvas::get_dimensions, math::random::Random, opengl::capabilities::{
         gl_blending_func,
         gl_enable,
         GLBlendingFactor,
@@ -8,12 +8,7 @@ use quipi_core::{
     }, rendering::{
         batch::BatchRenderer,
         RenderInfo
-    },
-    resources::RShader,
-    FrameState,
-    IController,
-    Registry,
-    VersionedIndex
+    }, resources::RShader, utils::now_secs, FrameState, IController, Registry, VersionedIndex
 };
 
 const CAMERA: &str = "main_camera";
@@ -39,11 +34,11 @@ impl TileControler {
         };
 
         let (_x, _y, width, height) = get_dimensions();
-
+        let mut rand = Random::from_seed(now_secs()?);
         let mut tiles = vec![];
-        for x in 0..(width / 40) {
-            for y in 0..(height / 40) {
-                tiles.push(tile(x as u32, y as u32, registry));
+        for x in 0..(width / 10) {
+            for y in 0..(height / 10) {
+                tiles.push(tile(x as u32, y as u32, &mut rand, registry));
             }
         }
 
@@ -108,12 +103,12 @@ impl IController for TileControler {
     }
 }
 
-fn tile(x: u32, y: u32, registry: &mut Registry) -> VersionedIndex {
+fn tile(x: u32, y: u32, rand: &mut Random, registry: &mut Registry) -> VersionedIndex {
     let x_offset = (x + 1) as f32 * 1.0;
     let y_offset = (y + 1) as f32 * 1.0;
-    let color = match (y + x) % 2 {
-        0 => glm::vec4(0.4, 0.4, 0.1, 1.0),
-        _ => glm::vec4(0.1, 0.4, 0.4, 1.0),
+    let color = match rand.random() > 0.9 {
+        true => glm::vec4(0.3, 0.3, 0.3, 1.0),
+        false => glm::vec4(0.6, 0.8, 0.0, 1.0),
     };
 
     let transform = CTransform2D {
