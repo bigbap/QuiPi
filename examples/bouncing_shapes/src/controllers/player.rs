@@ -61,19 +61,19 @@ impl IController for PlayerController {
             match event {
                 Event::KeyDown { keycode, repeat: false, .. } => {
                     match keycode {
-                        Some(Keycode::W) => self.velocity.y += SPEED,
-                        Some(Keycode::S) => self.velocity.y -= SPEED,
-                        Some(Keycode::A) => self.velocity.x -= SPEED,
-                        Some(Keycode::D) => self.velocity.x += SPEED,
+                        Some(Keycode::W) => self.velocity.y += 1.0,
+                        Some(Keycode::S) => self.velocity.y -= 1.0,
+                        Some(Keycode::A) => self.velocity.x -= 1.0,
+                        Some(Keycode::D) => self.velocity.x += 1.0,
                         _ => ()
                     }
                 },
                 Event::KeyUp { keycode, repeat: false, .. } => {
                     match keycode {
-                        Some(Keycode::W) => self.velocity.y -= SPEED,
-                        Some(Keycode::S) => self.velocity.y += SPEED,
-                        Some(Keycode::A) => self.velocity.x += SPEED,
-                        Some(Keycode::D) => self.velocity.x -= SPEED,
+                        Some(Keycode::W) => self.velocity.y -= 1.0,
+                        Some(Keycode::S) => self.velocity.y += 1.0,
+                        Some(Keycode::A) => self.velocity.x += 1.0,
+                        Some(Keycode::D) => self.velocity.x -= 1.0,
                         _ => ()
                     }
                 },
@@ -82,8 +82,13 @@ impl IController for PlayerController {
         }
 
         if let Some(transform) = registry.entities.get_mut::<CTransform2D>(&self.player) {
-            transform.translate.x += self.velocity.x;
-            transform.translate.y += self.velocity.y;
+            let mut velocity = glm::vec2(self.velocity.x, self.velocity.y);
+            if velocity.x != 0.0 && self.velocity.y != 0.0 {
+                velocity = glm::normalize(&velocity);
+            }
+            
+            transform.translate.x += velocity.x * SPEED;
+            transform.translate.y += velocity.y * SPEED;
         }
 
         FrameResponse::None

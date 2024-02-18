@@ -1,6 +1,7 @@
 pub extern crate quipi_core;
 pub extern crate nalgebra_glm as glm;
 pub extern crate serde;
+pub extern crate profiling;
 
 pub mod components;
 pub mod resources;
@@ -48,6 +49,9 @@ impl QuiPi2D {
     ) -> Result<Self, Box<dyn std::error::Error>> {
         let registry = setup()?;
 
+        #[cfg(feature = "profile-with-tracy")]
+        println!("tracy");
+
         let mut winapi = QuiPiWindow::init()?;
         let _window = winapi.opengl_window(
             title,
@@ -83,7 +87,6 @@ impl QuiPi2D {
     }
 
     pub fn run(&mut self, clear_color: (f32, f32, f32, f32)) -> Result<(), Box<dyn std::error::Error>> {
-        // let mut renderer = Renderer2D::new(&mut self.registry);
         'running: loop {
             self.registry.entities.flush();
             self.registry.flush_resources();

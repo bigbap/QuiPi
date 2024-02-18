@@ -12,6 +12,15 @@ serde_yaml = "0.9"
 quipi_core = { path = "../quipi_core" }
 egui = "0.26"
 thiserror = "1.0"
+profiling = "1.0"
 
 [build-dependencies]
 walkdir = "2.4"
+
+[features]
+default = ["profile-with-tracy"]
+profile-with-puffin = ["profiling/profile-with-puffin"]
+profile-with-optick = ["profiling/profile-with-optick"]
+profile-with-superluminal = ["profiling/profile-with-superluminal"]
+profile-with-tracing = ["profiling/profile-with-tracing"]
+profile-with-tracy = ["profiling/profile-with-tracy"]
