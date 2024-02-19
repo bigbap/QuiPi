@@ -124,6 +124,10 @@ fn scene_schema() -> SchemaScene2D {
             SchemaTexture {
                 name: "Player.png".into(),
                 texture_dims: glm::vec2(1.0, 1.0)
+            },
+            SchemaTexture {
+                name: "tiles.png".into(),
+                texture_dims: glm::vec2(1.0, 2.0)
             }
         ]
     }

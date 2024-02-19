@@ -14,7 +14,7 @@ use super::CQuad;
 pub struct TextureAtlas {
     pub texture: u64,
     pub texture_dims: glm::Vec2,
-    pub active_texture: u32, // 0 indexed
+    pub active_texture: glm::Vec2
 }
 
 #[derive(Debug, Component, Serialize, Deserialize, Clone, PartialEq, Default)]
@@ -63,29 +63,40 @@ impl IMesh for CSprite {
         let pos3 = self.mvp * self.positions[2];
         let pos4 = self.mvp * self.positions[3];
 
+        let mut x_dim = 1.0;
+        let mut y_dim = 1.0;
+        let mut x_offset = 0.0;
+        let mut y_offset = 0.0;
+        if let Some(atlas) = &self.texture_atlas {
+            x_dim = atlas.texture_dims.x;
+            y_dim = atlas.texture_dims.y;
+            x_offset = atlas.active_texture.x / x_dim;
+            y_offset = atlas.active_texture.y / y_dim;
+        }
+
         vec![
             Vertex {
                 position: pos1.xyz(),
                 color: self.color,
-                tex_coords: glm::vec2(1.0, 1.0), // TODO: calculate from atlas
+                tex_coords: glm::vec2((1.0 / x_dim) + x_offset, (1.0 / y_dim) + y_offset),
                 tex_index: 0.0
             },
             Vertex {
                 position: pos2.xyz(),
                 color: self.color,
-                tex_coords: glm::vec2(1.0, 0.0), // TODO: calculate from atlas
+                tex_coords: glm::vec2((1.0 / x_dim) + x_offset, (0.0 / y_dim) + y_offset),
                 tex_index: 0.0
             },
             Vertex {
                 position: pos3.xyz(),
                 color: self.color,
-                tex_coords: glm::vec2(0.0, 0.0), // TODO: calculate from atlas
+                tex_coords: glm::vec2((0.0 / x_dim) + x_offset, (0.0 / y_dim) + y_offset),
                 tex_index: 0.0
             },
             Vertex {
                 position: pos4.xyz(),
                 color: self.color,
-                tex_coords: glm::vec2(0.0, 1.0), // TODO: calculate from atlas
+                tex_coords: glm::vec2((0.0 / x_dim) + x_offset, (1.0 / y_dim) + y_offset),
                 tex_index: 0.0
             }
         ]

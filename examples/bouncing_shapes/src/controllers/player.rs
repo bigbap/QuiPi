@@ -7,7 +7,6 @@ use quipi_2d::{
     }
 };
 use quipi_core::{
-    core::canvas::get_dimensions,
     FrameResponse,
     FrameState,
     IController,
@@ -27,19 +26,17 @@ impl PlayerController {
     pub fn new(registry: &mut Registry) -> Result<Self, Box<dyn std::error::Error>> {
         let mut this_schema = SchemaSprite::default();
 
-        let (_x, _y, width, height) = get_dimensions();
-
         let transform = CTransform2D {
             translate: glm::vec2(
-                width as f32 / 2.0,
-                height as f32 / 2.0
+                0.0,
+                0.0
             ),
             scale: glm::vec2(1.0, 1.0),
             ..CTransform2D::default()
         };
         let quad = CQuad {
-            width: 64.0,
-            height: 64.0,
+            width: 32.0,
+            height: 32.0,
             ..CQuad::default()
         };
 

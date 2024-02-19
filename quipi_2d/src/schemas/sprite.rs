@@ -40,7 +40,7 @@ impl ISchema for SchemaSprite {
                 Some(TextureAtlas {
                     texture: id,
                     texture_dims: texture.texture_dims,
-                    active_texture: 0
+                    active_texture: glm::vec2(0.0, 0.0)
                 })
             },
             None => None
