@@ -11,7 +11,7 @@ pub mod components;
 pub mod resources;
 pub mod systems;
 pub mod platform;
-pub mod schemas;
+pub mod schema;
 
 // pub use engine::run;
 pub use core::ecs;

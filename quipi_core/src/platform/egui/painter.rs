@@ -45,7 +45,7 @@ impl Painter {
     pub fn new(
         scale: f32
     ) -> Result<Self, Box<dyn std::error::Error>> {
-        let shader = ShaderProgram::new("egui")?;
+        let shader = ShaderProgram::from_str(VERT_SHADER, FRAG_SHADER)?;
 
         let pixels_per_point = scale;
         let (_x, _y, width, height) = canvas::get_dimensions();
@@ -264,3 +264,81 @@ fn parse_vertices(mesh: &Mesh) -> (Vec<f32>, Vec<f32>, Vec<f32>) {
 
     (pos, color, uv_coords)
 }
+
+// copied from https://github.com/ArjunNair/egui_sdl2_gl/tree/main
+const VERT_SHADER: &str = r#"
+#version 450 core
+
+layout (location = 0) in vec2 aPos;
+layout (location = 1) in vec4 aColor;
+layout (location = 2) in vec2 aUVCoords; 
+
+uniform vec2 u_screenSize;
+
+out vec4 color;
+out vec2 uvCoords;
+
+// 0-1 linear  from  0-255 sRGB
+vec3 linearFromSrgb(vec3 srgb) {
+    bvec3 cutoff = lessThan(srgb, vec3(10.31475));
+    vec3 lower = srgb / vec3(3294.6);
+    vec3 higher = pow((srgb + vec3(14.025)) / vec3(269.025), vec3(2.4));
+    return mix(higher, lower, cutoff);
+}
+
+vec4 linearFromSrgba(vec4 srgba) {
+    return vec4(linearFromSrgb(srgba.rgb), srgba.a / 255.0);
+}
+
+void main(){
+    gl_Position = vec4(
+        2.0 * aPos.x / u_screenSize.x - 1.0,
+        1.0 - 2.0 * aPos.y / u_screenSize.y,
+        0.0,
+        1.0
+    );
+
+    color = linearFromSrgba(aColor);
+    uvCoords = aUVCoords;
+}
+"#;
+
+// copied from https://github.com/ArjunNair/egui_sdl2_gl/tree/main
+const FRAG_SHADER: &str = r#"
+#version 450 core
+
+in vec4 color;
+in vec2 uvCoords;
+
+uniform sampler2D u_sampler;
+
+out vec4 fragColor;
+
+// 0-255 sRGB  from  0-1 linear
+vec3 srgbFromLinear(vec3 rgb) {
+    bvec3 cutoff = lessThan(rgb, vec3(0.0031308));
+    vec3 lower = rgb * vec3(3294.6);
+    vec3 higher = vec3(269.025) * pow(rgb, vec3(1.0 / 2.4)) - vec3(14.025);
+    return mix(higher, lower, vec3(cutoff));
+}
+
+vec4 srgbaFromLinear(vec4 rgba) {
+    return vec4(srgbFromLinear(rgba.rgb), 255.0 * rgba.a);
+}
+
+vec3 linearFromSrgb(vec3 srgb) {
+    bvec3 cutoff = lessThan(srgb, vec3(10.31475));
+    vec3 lower = srgb / vec3(3294.6);
+    vec3 higher = pow((srgb + vec3(14.025)) / vec3(269.025), vec3(2.4));
+    return mix(higher, lower, vec3(cutoff));
+}
+
+vec4 linearFromSrgba(vec4 srgba) {
+    return vec4(linearFromSrgb(srgba.rgb), srgba.a / 255.0);
+}
+
+void main() {
+    vec4 textureRgba = linearFromSrgba(texture(u_sampler, uvCoords) * 255.0);
+    fragColor = color * textureRgba;
+}  
+"#;

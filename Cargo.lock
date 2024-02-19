@@ -862,16 +862,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "quipi_sandbox"
-version = "0.1.0"
-dependencies = [
- "nalgebra-glm",
- "quipi_2d",
- "quipi_core",
- "walkdir",
-]
-
-[[package]]
 name = "quote"
 version = "1.0.35"
 source = "registry+https://github.com/rust-lang/crates.io-index"

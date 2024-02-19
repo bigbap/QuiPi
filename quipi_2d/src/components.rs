@@ -1,14 +1,10 @@
-pub mod bounding_box;
-pub mod matrices;
-pub mod shapes;
+pub mod circle;
+pub mod quad;
 pub mod transform;
 pub mod velocity;
 
-pub use bounding_box::CBoundingBox2D;
-pub use matrices::CModelMatrix2D;
-pub use matrices::CViewMatrix2D;
-pub use shapes::CQuad;
-pub use shapes::CCircle;
+pub use quad::CQuad;
+pub use circle::CCircle;
 pub use transform::CTransform2D;
 pub use velocity::CVelocity2D;
 
@@ -19,11 +15,8 @@ pub fn register_components(registry: &mut Registry) {
     quipi_core::components::register_components(registry);
 
     registry.entities
-        .register_component::<CBoundingBox2D>()
         .register_component::<CCircle>()
-        .register_component::<CModelMatrix2D>()
         .register_component::<CTransform2D>()
         .register_component::<CQuad>()
-        .register_component::<CVelocity2D>()
-        .register_component::<CViewMatrix2D>();
+        .register_component::<CVelocity2D>();
 }

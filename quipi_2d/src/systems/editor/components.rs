@@ -2,12 +2,10 @@ use egui::Ui;
 
 use crate::{
     components::{
-        CBoundingBox2D,
         CQuad,
         CTag,
         CTransform2D,
         CVelocity2D,
-        CRGBA
     },
     Registry,
     VersionedIndex,
@@ -88,7 +86,7 @@ impl EntityEditor {
                     });
                 }
                 if let Some(rect) = registry.entities.get_mut::<CQuad>(&entity) {
-                    ui.collapsing("Rect", |ui| {
+                    ui.collapsing("Quad", |ui| {
                         if ui.button("del").clicked() {
                             self.to_remove.push(Box::new(|registry, entity: VersionedIndex| {
                                 registry.entities.remove::<CQuad>(&entity);
@@ -109,37 +107,6 @@ impl EntityEditor {
                         });
                     });
                 }
-                if let Some(b_box) = registry.entities.get_mut::<CBoundingBox2D>(&entity) {
-                    ui.collapsing("Bounding Box", |ui| {
-                        if ui.button("del").clicked() {
-                            self.to_remove.push(Box::new(|registry, entity: VersionedIndex| {
-                                registry.entities.remove::<CBoundingBox2D>(&entity);
-                            }))
-                        }
-                        ui.horizontal(|ui| {
-                            ui.label("left");
-                            ui.add(egui::DragValue::new(&mut b_box.left).speed(1.0));
-                            ui.label("right");
-                            ui.add(egui::DragValue::new(&mut b_box.right).speed(1.0));
-                        });
-                        ui.horizontal(|ui| {
-                            ui.label("bottom");
-                            ui.add(egui::DragValue::new(&mut b_box.bottom).speed(1.0));
-                            ui.label("top");
-                            ui.add(egui::DragValue::new(&mut b_box.top).speed(1.0));
-                        });
-                    });
-                }
-                if let Some(color) = registry.entities.get_mut::<CRGBA>(&entity) {
-                    ui.collapsing("Color", |ui| {
-                        if ui.button("del").clicked() {
-                            self.to_remove.push(Box::new(|registry, entity: VersionedIndex| {
-                                registry.entities.remove::<CRGBA>(&entity);
-                            }))
-                        }
-                        ui.color_edit_button_rgba_premultiplied(&mut color.value);
-                    });
-                }
             });
         }
     }
@@ -158,28 +125,10 @@ impl EntityEditor {
             } else { ui.label("CVelocity"); }
 
             if registry.entities.get::<CQuad>(&entity).is_none() {
-                if ui.button("CRect").clicked() {
+                if ui.button("CQuad").clicked() {
                     registry.entities.add(&entity, CQuad::default());
                 }
-            } else { ui.label("CRect"); }
-            
-            if registry.entities.get::<CBoundingBox2D>(&entity).is_none() {
-                if let Some(rect) = registry.entities.get::<CQuad>(&entity) {
-                    if ui.button("CBoundingBox").clicked() {
-                        registry.entities.add(&entity, CBoundingBox2D {
-                            right: rect.width,
-                            bottom: rect.height,
-                            ..CBoundingBox2D::default()
-                        });
-                    }
-                }
-            } else { ui.label("CBoundingBox"); }
-
-            if registry.entities.get::<CRGBA>(&entity).is_none() {
-                if ui.button("CRGBA").clicked() {
-                    registry.entities.add(&entity, CRGBA::default());
-                }
-            } else { ui.label("CRGBA"); }
+            } else { ui.label("CQuad"); }
         });
     }
 }

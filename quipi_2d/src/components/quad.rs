@@ -5,11 +5,10 @@ use quipi_core::{
         batch::IMesh,
         vertex::Vertex
     },
-    systems::assets::ObjectConfig,
     Component
 };
 
-use super::{CBoundingBox2D, CRGBA};
+// use super::CBoundingBox2D;
 
 #[derive(Debug, Component, Serialize, Deserialize, Clone, PartialEq)]
 pub struct CQuad {
@@ -20,16 +19,6 @@ pub struct CQuad {
 
     pub mvp: glm::Mat4,
     pub color: glm::Vec4
-}
-
-impl CQuad {
-    pub fn to_b_box(&self) -> CBoundingBox2D {
-        CBoundingBox2D {
-            right: self.width,
-            bottom: self.height,
-            ..CBoundingBox2D::default()
-        }
-    }
 }
 
 impl IMesh for CQuad {
@@ -81,24 +70,5 @@ impl Default for CQuad {
             mvp: glm::Mat4::identity(),
             color: glm::vec4(1.0, 1.0, 1.0, 1.0)
         }
-    }
-}
-
-#[derive(Debug, Component, Serialize, Deserialize, Clone, PartialEq)]
-pub struct CCircle {
-    pub radius: f32,
-    pub center_x: f32,
-    pub center_y: f32,
-    pub theta: f32, // in degrees, must be a factor of 360
-}
-
-impl CCircle {
-    pub fn to_config(&self, _color: Option<CRGBA>) -> ObjectConfig {
-        let _theta = self.theta.clamp(5.0, 90.0);
-
-        // TODO
-        let mut _points = vec![self.center_x, self.center_y, 0.0];
-
-        ObjectConfig::default()
     }
 }

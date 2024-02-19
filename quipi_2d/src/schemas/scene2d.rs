@@ -20,7 +20,7 @@ use crate::{
 };
 
 use super::{
-    ISchema, SchemaCamera2D, SchemaSprite, SchemaSpriteShader
+    ISchema, SchemaCamera2D, SchemaSprite, SchemaShader
 };
 
 pub const DEFAULT_SCENE: &str = "default_scene";
@@ -32,7 +32,7 @@ pub const DEFAULT_SCENE: &str = "default_scene";
 pub struct SchemaScene2D {
     pub name:       String,
     pub cameras:    Vec<SchemaCamera2D>,
-    pub shaders:    Vec<SchemaSpriteShader>,
+    pub shaders:    Vec<SchemaShader>,
     pub textures:   Vec<String>,
 
     pub entities:   Vec<SchemaSprite>,
@@ -106,7 +106,7 @@ impl ISchema for SchemaScene2D {
 
             // 2. parse the shaders
             for id in scene.shaders.iter() {
-                schema.shaders.push(SchemaSpriteShader::from_resource(*id, registry)?);
+                schema.shaders.push(SchemaShader::from_resource(*id, registry)?);
             }
 
             // 3. parse textures
@@ -131,11 +131,10 @@ impl ISchema for SchemaScene2D {
 
 impl Default for SchemaScene2D {
     fn default() -> Self {
-        let shader = SchemaSpriteShader::default();
+        let shader = SchemaShader::default();
 
         let camera = SchemaCamera2D::default();
         let rect = SchemaSprite {
-            camera: camera.name.clone(),
             transform: CTransform2D {
                 translate: glm::vec2(
                     camera.right / 2.0,

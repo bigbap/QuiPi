@@ -1,6 +1,6 @@
-use quipi_2d::{components::{CModelMatrix2D, CQuad, CTransform2D}, resources::RCamera2D};
+use quipi_2d::{components::{CQuad, CTransform2D}, resources::RCamera2D};
 use quipi_core::{
-    core::canvas::get_dimensions, math::random::Random, opengl::capabilities::{
+    components::CModelMatrix, core::canvas::get_dimensions, math::random::Random, opengl::capabilities::{
         gl_blending_func,
         gl_enable,
         GLBlendingFactor,
@@ -36,8 +36,8 @@ impl TileControler {
         let (_x, _y, width, height) = get_dimensions();
         let mut rand = Random::from_seed(now_secs()?);
         let mut tiles = vec![];
-        for x in 0..(width / 10) {
-            for y in 0..(height / 10) {
+        for x in 0..(width / 100) {
+            for y in 0..(height / 100) {
                 tiles.push(tile(x as u32, y as u32, &mut rand, registry));
             }
         }
@@ -80,7 +80,7 @@ impl IController for TileControler {
         self.renderer.reset_info();
         self.renderer.begin_batch();
         for tile in self.tiles.iter() {
-            let Some(model) = registry.entities.get::<CModelMatrix2D>(&tile) else {
+            let Some(model) = registry.entities.get::<CModelMatrix>(&tile) else {
                 #[cfg(debug_assertions)]
                 println!("[tile controller] tried to render a tile without a model matrix");
 
@@ -126,7 +126,7 @@ fn tile(x: u32, y: u32, rand: &mut Random, registry: &mut Registry) -> Versioned
         color,
         ..CQuad::default()
     });
-    registry.entities.add(&entity, CModelMatrix2D(transform.to_matrix()));
+    registry.entities.add(&entity, CModelMatrix(transform.to_matrix()));
 
     entity
 }

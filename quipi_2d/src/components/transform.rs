@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 pub struct CTransform2D {
     pub translate: glm::Vec2,
     pub rotate: f32, // rotation on happens on z-axis
-    pub scale: glm::Vec2,
+    pub scale: glm::Vec2
 }
 
 impl Default for CTransform2D {
@@ -16,7 +16,7 @@ impl Default for CTransform2D {
         Self {
             translate: glm::vec2(0.0, 0.0,),
             rotate: 0.0,
-            scale: glm::vec2(1.0, 1.0),
+            scale: glm::vec2(1.0, 1.0)
         }
     }
 }

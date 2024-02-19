@@ -1,21 +1,15 @@
-use quipi_core::{
-    components::CDrawable,
-    schemas::shader::DEFAULT_SHADER
-};
+use quipi_core::components::CDrawable;
 use serde::{Serialize, Deserialize};
 
 use crate::{
     components::{
-        CModelMatrix2D, CQuad, CTag, CTransform2D, CVelocity2D
+        CQuad, CTag, CTransform2D, CVelocity2D
     },
     Registry,
     VersionedIndex
 };
 
-use super::{
-    camera2d::DEFAULT_CAMERA,
-    ISchema
-};
+use super::ISchema;
 
 pub const DEFAULT_RECT_TAG: &str = "default_rect";
 
@@ -28,9 +22,6 @@ pub struct SchemaSprite {
     pub velocity:   Option<CVelocity2D>,
     pub color:      Option<glm::Vec4>,
     pub texture:    Option<String>,
-    
-    pub shader:     String,
-    pub camera:     String,
 }
 
 impl ISchema for SchemaSprite {
@@ -38,12 +29,6 @@ impl ISchema for SchemaSprite {
         &self,
         registry: &mut Registry,
     ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
-        let Some(shader) = registry.get_resource_id(&self.shader) else {
-            return Err("[sprite schema] shader doesn't exist".into())
-        };
-        let Some(camera) = registry.get_resource_id(&self.camera) else {
-            return Err("[sprite schema] camera doesn't exist".into())
-        };
         let texture = match &self.texture {
             Some(id_as_str) => {
                 let Some(tex) = registry.get_resource_id(&id_as_str) else {
@@ -60,13 +45,10 @@ impl ISchema for SchemaSprite {
         if let Some(velocity) = self.velocity {
             registry.entities.add(&entity, velocity);
         }
-        registry.entities.add(&entity, self.quad.to_b_box());
+        // registry.entities.add(&entity, self.quad.to_b_box());
         registry.entities.add(&entity, self.quad.clone());
-        registry.entities.add(&entity, CModelMatrix2D(self.transform.to_matrix()));
         registry.entities.add(&entity, self.transform);
         registry.entities.add(&entity, CDrawable {
-            shader,
-            camera,
             color: self.color,
             texture
         });
@@ -86,8 +68,6 @@ impl ISchema for SchemaSprite {
                 tag: tag.tag.clone(),
                 transform: transform.clone(),
                 quad: quad.clone(),
-                shader: registry.string_interner.get_string(drawable.shader)?,
-                camera: registry.string_interner.get_string(drawable.camera)?,
                 texture: match drawable.texture {
                     Some(id) => registry.string_interner.get_string(id),
                     None => None
@@ -115,8 +95,6 @@ impl Default for SchemaSprite {
                 ..CQuad::default()
             },
             velocity: None,
-            shader: DEFAULT_SHADER.to_string(),
-            camera: DEFAULT_CAMERA.to_string(),
             texture: None,
             color: Some(glm::vec4(0.3, 0.3, 0.3, 1.0))
         }

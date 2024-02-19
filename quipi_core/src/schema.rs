@@ -1,7 +1,3 @@
-pub mod shader;
-
-pub use shader::SchemaShader;
-
 use crate::{
     Registry, VersionedIndex
 };

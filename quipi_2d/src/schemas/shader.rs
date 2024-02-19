@@ -1,14 +1,15 @@
 use serde::{Serialize, Deserialize};
 
-use crate::resources::{
-    RShader,
-    shader::UniformVariable
+use crate::{
+    resources::{
+        shader::UniformVariable, RShader
+    },
+    shaders::get_shader
 };
 
 use super::ISchema;
 
-
-pub const DEFAULT_SHADER: &str = "default";
+pub const DEFAULT_SHADER: &str = "sprite";
 pub const DEFAULT_SHADER_UNIFORM: &str = "mvpMatrix";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -20,7 +21,7 @@ pub struct SchemaShader {
 impl Default for SchemaShader {
     fn default() -> Self {
         Self {
-            name:  DEFAULT_SHADER.to_string(),
+            name: DEFAULT_SHADER.to_string(),
             uniforms: vec![
                 UniformVariable::MVPMatrix(DEFAULT_SHADER_UNIFORM.to_string())
             ],
@@ -33,9 +34,10 @@ impl ISchema for SchemaShader {
         &self,
         registry: &mut crate::Registry
     ) -> Result<u64, Box<dyn std::error::Error>> {
+        let shader = get_shader(&self.name);
         let id = registry.load_resourse(
-            self.name.clone(),
-            RShader::new(&self.name, self.uniforms.to_vec())?
+            self.name.to_string(),
+            RShader::from_str(shader.vert, shader.frag, self.uniforms.to_vec())?
         )?;
 
         Ok(id)

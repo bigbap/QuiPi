@@ -1,6 +1,6 @@
 use quipi_2d::{
     components::{
-        CBoundingBox2D, CQuad, CTransform2D, CVelocity2D
+        CQuad, CTransform2D, CVelocity2D
     },
     resources::RCamera2D, schemas::{
         ISchema,
@@ -176,8 +176,6 @@ fn spawn(
     let s_factor = rand.range(5, 25) as f32 / 100.0;
     let transform = CTransform2D {
         translate: glm::vec2(
-            // self.rand.range(0 + 100, b_box.right as i32 - 100) as f32,
-            // self.rand.range(0 + 100, b_box.top as i32 - 100) as f32,
             width as f32 / 2.0,
             height as f32 / 2.0
         ),
@@ -195,14 +193,12 @@ fn spawn(
     this_schema.transform = transform;
     this_schema.quad = quad;
     this_schema.tag = TAG.into();
-    this_schema.shader = SHADER.into();
     this_schema.texture = Some(
         match rand.random() > 0.5 {
             true => "Bubble.png".into(),
             false => "Bubble.png".into()
         }
     );
-    this_schema.camera = CAMERA.to_string();
 
     let id = this_schema.build_entity(registry)?;
 
@@ -217,14 +213,14 @@ pub fn update(
     for bubble in bubbles {
         let Some(vel)       = registry.entities.get::<CVelocity2D>(&bubble)    else { continue };
         let Some(transform) = registry.entities.get::<CTransform2D>(&bubble)   else { continue };
-        let Some(b_box)     = registry.entities.get::<CBoundingBox2D>(&bubble) else { continue };
+        let Some(quad)      = registry.entities.get::<CQuad>(&bubble)           else { continue };
         
         let scale = transform.scale;
 
         let vel = glm::vec2(vel.x, vel.y);
         let translate = transform.translate + (vel * frame_state.delta);
-        let w = b_box.right * scale.x;
-        let h = b_box.bottom * scale.y;
+        let w = quad.width * scale.x;
+        let h = quad.height * scale.y;
         let (colided_x, colided_y) = check_screen_collision(
             translate,
             w,
