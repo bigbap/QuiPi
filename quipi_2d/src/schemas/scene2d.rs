@@ -1,26 +1,15 @@
-use quipi_core::{
-    components::CDrawable,
-    opengl::textures::{
-        ParameterName,
-        ParameterValue
-    },
-    rendering::texture::from_image,
-    resources::RTexture,
-    utils::to_abs_path
-};
 use serde::{Serialize, Deserialize};
 
 use crate::{
     components::{
-        CScene,
-        CTransform2D
+        CScene, CSprite, CTransform2D
     },
     Registry,
     VersionedIndex
 };
 
 use super::{
-    ISchema, SchemaCamera2D, SchemaSprite, SchemaShader
+    ISchema, SchemaCamera2D, SchemaShader, SchemaSprite, SchemaTexture
 };
 
 pub const DEFAULT_SCENE: &str = "default_scene";
@@ -33,9 +22,9 @@ pub struct SchemaScene2D {
     pub name:       String,
     pub cameras:    Vec<SchemaCamera2D>,
     pub shaders:    Vec<SchemaShader>,
-    pub textures:   Vec<String>,
+    pub textures:   Vec<SchemaTexture>,
 
-    pub entities:   Vec<SchemaSprite>,
+    pub sprites:   Vec<SchemaSprite>,
 }
 
 impl ISchema for SchemaScene2D {
@@ -57,23 +46,12 @@ impl ISchema for SchemaScene2D {
 
         // 2. build textures
         let mut textures = vec![];
-        for texture_name in self.textures.iter() {
-            let path = format!("assets/textures/{}", texture_name);
-
-            let texture = from_image(&to_abs_path(&path)?)?;
-            texture
-                .set_parameter(ParameterName::WrapS, ParameterValue::ClampToEdge)
-                .set_parameter(ParameterName::WrapT, ParameterValue::ClampToEdge)
-                .set_parameter(ParameterName::MinFilter, ParameterValue::LinearMipmapNearest)
-                .set_parameter(ParameterName::MagFilter, ParameterValue::Nearest);
-
-            textures.push(registry.load_resourse(texture_name.to_string(), RTexture {
-                texture
-            })?);
+        for texture in self.textures.iter() {
+            textures.push(texture.load_resource(registry)?);
         }
 
         // 3. build entities
-        for rect in self.entities.iter() {
+        for rect in self.sprites.iter() {
             rect.build_entity(registry)?;
         }
 
@@ -96,7 +74,7 @@ impl ISchema for SchemaScene2D {
                 cameras: vec![],
                 shaders: vec![],
                 textures: vec![],
-                entities: vec![],
+                sprites: vec![],
             };
 
             // 2. parse the cameras
@@ -111,15 +89,13 @@ impl ISchema for SchemaScene2D {
 
             // 3. parse textures
             for id in scene.textures.iter() {
-                if registry.get_resource::<RTexture>(*id).is_some() {
-                    schema.textures.push(registry.string_interner.get_string(*id)?);
-                }
+                schema.textures.push(SchemaTexture::from_resource(*id, registry)?);
             }
 
             // 4. parse the entities
-            let entities = registry.entities.query_all::<CDrawable>();
+            let entities = registry.entities.query_all::<CSprite>();
             for entity in entities {
-                schema.entities.push(SchemaSprite::from_entity(entity, registry)?);
+                schema.sprites.push(SchemaSprite::from_entity(entity, registry)?);
             }
 
             return Some(schema)
@@ -134,7 +110,7 @@ impl Default for SchemaScene2D {
         let shader = SchemaShader::default();
 
         let camera = SchemaCamera2D::default();
-        let rect = SchemaSprite {
+        let sprite = SchemaSprite {
             transform: CTransform2D {
                 translate: glm::vec2(
                     camera.right / 2.0,
@@ -150,7 +126,7 @@ impl Default for SchemaScene2D {
             cameras: vec![camera],
             shaders: vec![shader],
             textures: vec![],
-            entities: vec![rect]
+            sprites: vec![sprite]
         }
     }
 }

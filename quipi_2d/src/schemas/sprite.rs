@@ -1,9 +1,9 @@
-use quipi_core::components::CDrawable;
+use quipi_core::resources::RTexture;
 use serde::{Serialize, Deserialize};
 
 use crate::{
     components::{
-        CQuad, CTag, CTransform2D, CVelocity2D
+        sprite::TextureAtlas, CQuad, CSprite, CTag, CTransform2D, CVelocity2D
     },
     Registry,
     VersionedIndex
@@ -15,13 +15,13 @@ pub const DEFAULT_RECT_TAG: &str = "default_rect";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SchemaSprite {
-    pub tag:        String,
-    pub transform:  CTransform2D,
-    pub quad:       CQuad,
+    pub tag:                String,
+    pub transform:          CTransform2D,
+    pub quad:               CQuad,
 
-    pub velocity:   Option<CVelocity2D>,
-    pub color:      Option<glm::Vec4>,
-    pub texture:    Option<String>,
+    pub velocity:           Option<CVelocity2D>,
+    pub color:              glm::Vec4,
+    pub texture:            Option<String>,
 }
 
 impl ISchema for SchemaSprite {
@@ -29,13 +29,19 @@ impl ISchema for SchemaSprite {
         &self,
         registry: &mut Registry,
     ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
-        let texture = match &self.texture {
+        let texture_atlas = match &self.texture {
             Some(id_as_str) => {
-                let Some(tex) = registry.get_resource_id(&id_as_str) else {
+                let Some(id) = registry.get_resource_id(&id_as_str) else {
                     return Err("[sprite schema] texture doesn't exist".into())
                 };
 
-                Some(tex)
+                let texture = registry.get_resource::<RTexture>(id).unwrap();
+
+                Some(TextureAtlas {
+                    texture: id,
+                    texture_dims: texture.texture_dims,
+                    active_texture: 0
+                })
             },
             None => None
         };
@@ -45,19 +51,19 @@ impl ISchema for SchemaSprite {
         if let Some(velocity) = self.velocity {
             registry.entities.add(&entity, velocity);
         }
-        // registry.entities.add(&entity, self.quad.to_b_box());
         registry.entities.add(&entity, self.quad.clone());
         registry.entities.add(&entity, self.transform);
-        registry.entities.add(&entity, CDrawable {
-            color: self.color,
-            texture
-        });
+        registry.entities.add(&entity, CSprite::new(
+            &self.quad,
+            Some(self.color),
+            texture_atlas
+        ));
 
         Ok(entity)
     }
 
     fn from_entity(entity: VersionedIndex, registry: &Registry) -> Option<Self> {
-        let Some(drawable) = registry.entities.get::<CDrawable>(&entity) else { return None; };
+        let Some(sprite) = registry.entities.get::<CSprite>(&entity) else { return None; };
 
         if let (Some(tag), Some(transform), Some(quad)) = (
             registry.entities.get::<CTag>(&entity),
@@ -68,11 +74,11 @@ impl ISchema for SchemaSprite {
                 tag: tag.tag.clone(),
                 transform: transform.clone(),
                 quad: quad.clone(),
-                texture: match drawable.texture {
-                    Some(id) => registry.string_interner.get_string(id),
+                texture: match &sprite.texture_atlas {
+                    Some(atlas) => registry.string_interner.get_string(atlas.texture),
                     None => None
                 },
-                color: drawable.color,
+                color: sprite.color,
                 velocity: registry.entities.get::<CVelocity2D>(&entity).cloned(),
             };
 
@@ -91,12 +97,11 @@ impl Default for SchemaSprite {
             quad: CQuad {
                 width: 200.0,
                 height: 200.0,
-                color: glm::vec4(0.1, 0.1, 0.1, 1.0),
                 ..CQuad::default()
             },
             velocity: None,
             texture: None,
-            color: Some(glm::vec4(0.3, 0.3, 0.3, 1.0))
+            color: glm::vec4(1.0, 1.0, 1.0, 1.0)
         }
     }
 }

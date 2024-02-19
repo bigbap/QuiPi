@@ -6,10 +6,16 @@ use quipi_2d::{
         ISchema, SchemaSprite
     }
 };
-use quipi_core::{core::canvas::get_dimensions, FrameResponse, FrameState, IController, Registry, VersionedIndex};
+use quipi_core::{
+    core::canvas::get_dimensions,
+    FrameResponse,
+    FrameState,
+    IController,
+    Registry,
+    VersionedIndex
+};
 use sdl2::{event::Event, keyboard::Keycode};
 
-const TAG: &str = "bubble"; // trick the bubble controller to render us
 const SPEED: f32 = 3.0;
 
 pub struct PlayerController {
@@ -39,7 +45,7 @@ impl PlayerController {
 
         this_schema.transform = transform;
         this_schema.quad = quad;
-        this_schema.tag = TAG.into();
+        this_schema.tag = "sprite".into();
         this_schema.texture = Some("Player.png".into());
 
         let id = this_schema.build_entity(registry)?;

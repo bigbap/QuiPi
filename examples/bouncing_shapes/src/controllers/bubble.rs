@@ -2,54 +2,32 @@ use quipi_2d::{
     components::{
         CQuad, CTransform2D, CVelocity2D
     },
-    resources::RCamera2D, schemas::{
+    schemas::{
         ISchema,
         SchemaSprite
     },
     IController
 };
 use quipi_core::{
-    components::{
-        CDrawable,
-        CTag
-    }, core::canvas::get_dimensions, math::random::Random, opengl::capabilities::{
-        gl_blending_func,
-        gl_enable,
-        GLBlendingFactor,
-        GLCapability
-    }, rendering::{
-        batch::BatchRenderer,
-        RenderInfo
-    }, resources::RShader, utils::now_secs, FrameResponse, FrameState, Registry, VersionedIndex
+    components::CTag,
+    core::canvas::get_dimensions,
+    math::random::Random,
+    utils::now_secs,
+    FrameResponse,
+    FrameState,
+    Registry,
+    VersionedIndex
 };
 use sdl2::{event::Event, keyboard::Keycode};
 
-const TAG: &str = "bubble";
-const CAMERA: &str = "main_camera";
-const SHADER: &str = "sprite";
-
 pub struct BubbleController {
     bubbles: Vec<VersionedIndex>,
-
-    camera: u64,
-    shader: u64,
-
-    renderer: BatchRenderer<1000, CQuad>,
     rand: Random
 }
 
 impl BubbleController {
     pub fn new(registry: &mut Registry) -> Result<Self, Box<dyn std::error::Error>> {
-        let bubbles = registry.entities.query(CTag { tag: TAG.to_string() });
-
-        let Some(camera) = registry.get_resource_id(CAMERA) else {
-            return Err("[bubble controller] camera is not loaded".into());
-        };
-
-        let Some(shader) = registry.get_resource_id(SHADER) else {
-            return Err("[bubble controller] shader is not loaded".into());
-        };
-
+        let bubbles = registry.entities.query(CTag { tag: "sprite".to_string() });
         let rand = Random::from_seed(now_secs()?);
 
         // // for stress testing
@@ -59,9 +37,6 @@ impl BubbleController {
 
         Ok(Self {
             bubbles,
-            camera,
-            shader,
-            renderer: BatchRenderer::new(),
             rand
         })
     }
@@ -97,62 +72,6 @@ impl IController for BubbleController {
 
         FrameResponse::None
     }
-
-    fn draw(
-        &mut self,
-        _frame_state: &mut FrameState,
-        registry: &mut Registry
-    ) -> Option<RenderInfo> {
-        gl_enable(GLCapability::AlphaBlending);
-        gl_blending_func(GLBlendingFactor::SrcAlpha, GLBlendingFactor::OneMinusSrcAlpha);
-
-        if registry.get_resource::<RShader>(self.shader).is_none() {
-            #[cfg(debug_assertions)]
-            println!("[bubble controller] tried to use a shader that is not loaded");
-
-            return None;
-        };
-
-        let Some(camera) = registry.get_resource::<RCamera2D>(self.camera) else {
-            #[cfg(debug_assertions)]
-            println!("[bubble controller] tried to use a camera that is not loaded");
-
-            return None;
-        };
-
-        let view = RCamera2D::calc_view_matrix(&camera.transform);
-        let projection = RCamera2D::calc_projection_matrix(&camera.params);
-
-        self.renderer.reset_info();
-        self.renderer.begin_batch();
-        for bubble in self.bubbles.iter() {
-            let Some(transform) = registry.entities.get::<CTransform2D>(&bubble) else {
-                #[cfg(debug_assertions)]
-                println!("[bubble controller] tried to render a bubble without a transform");
-
-                continue;
-            };
-
-            let model = transform.to_matrix();
-            let mvp = projection * view * model;
-
-            let Some(quad) = registry.entities.get_mut::<CQuad>(&bubble) else { continue; };
-            quad.mvp = mvp;
-
-            let quad = registry.entities.get::<CQuad>(&bubble)?;
-            let drawable = registry.entities.get::<CDrawable>(&bubble)?;
-            let texture = match drawable.texture {
-                Some(id) => registry.get_resource(id),
-                _ => None
-            };
-
-            self.renderer.draw_mesh(quad, registry.get_resource(self.shader)?, texture);
-        }
-        self.renderer.end_batch();
-        self.renderer.flush_batch(registry.get_resource(self.shader)?);
-
-        Some(self.renderer.render_info.clone())
-    }
 }
 
 fn spawn(
@@ -185,14 +104,14 @@ fn spawn(
     let quad = CQuad {
         width: 200.0,
         height: 200.0,
-        color,
         ..CQuad::default()
     };
 
     this_schema.velocity = Some(CVelocity2D { x: vel.0, y: vel.1 });
     this_schema.transform = transform;
     this_schema.quad = quad;
-    this_schema.tag = TAG.into();
+    this_schema.color = color;
+    this_schema.tag = "sprite".into();
     this_schema.texture = Some(
         match rand.random() > 0.5 {
             true => "Bubble.png".into(),

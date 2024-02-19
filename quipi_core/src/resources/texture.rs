@@ -5,5 +5,6 @@ use crate::{
 
 #[derive(Component, Debug, PartialEq)]
 pub struct RTexture {
-    pub texture: Texture
+    pub texture: Texture,
+    pub texture_dims: glm::Vec2
 }

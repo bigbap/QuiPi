@@ -1,5 +1,4 @@
 pub mod children;
-pub mod drawable;
 pub mod identifiers;
 pub mod mesh;
 pub mod mvp;
@@ -7,7 +6,6 @@ pub mod scene;
 pub mod states;
 
 pub use children::CChildren;
-pub use drawable::CDrawable;
 pub use identifiers::CTag;
 pub use mvp::CModelMatrix;
 pub use mvp::CProjectionMatrix;
@@ -22,7 +20,6 @@ use crate::Registry;
 pub fn register_components(registry: &mut Registry) {
     registry.entities
         .register_component::<CChildren>()
-        .register_component::<CDrawable>()
         .register_component::<CMeshData>()
         .register_component::<CModelMatrix>()
         .register_component::<CProjectionMatrix>()

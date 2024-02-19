@@ -1,5 +1,19 @@
-use quipi_2d::{components::CTransform2D, resources::RCamera2D, schemas::SchemaCamera2D};
-use quipi_core::{core::canvas::{get_dimensions, set_dimensions}, FrameResponse, FrameState, IController, Registry, VersionedIndex};
+use quipi_2d::{
+    components::CTransform2D,
+    resources::RCamera2D,
+    schemas::SchemaCamera2D
+};
+use quipi_core::{
+    core::canvas::{
+        get_dimensions,
+        set_dimensions
+    },
+    FrameResponse,
+    FrameState,
+    IController,
+    Registry,
+    VersionedIndex
+};
 use sdl2::event::{Event, WindowEvent};
 
 pub const MAIN_CAMERA: &str = "main_camera";

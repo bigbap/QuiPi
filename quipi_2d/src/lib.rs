@@ -4,6 +4,7 @@ pub extern crate serde;
 pub extern crate profiling;
 
 pub mod components;
+pub mod controllers;
 pub mod resources;
 pub mod schemas;
 pub mod systems;

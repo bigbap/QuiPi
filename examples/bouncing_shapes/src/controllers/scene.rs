@@ -1,6 +1,25 @@
-use quipi_2d::{schemas::{ISchema, SchemaScene2D, SchemaShader}, systems::scene::load_scene_2d, QuiPi2D};
-use quipi_core::{rendering::RenderInfo, resources::shader::UniformVariable, FrameResponse, FrameState, IController, Registry};
-use sdl2::{event::Event, keyboard::Keycode};
+use quipi_2d::{
+    controllers::SpriteController,
+    schemas::{
+        ISchema,
+        SchemaScene2D,
+        SchemaShader, SchemaTexture
+    },
+    systems::scene::load_scene_2d,
+    QuiPi2D
+};
+use quipi_core::{
+    rendering::RenderInfo,
+    resources::shader::UniformVariable,
+    FrameResponse,
+    FrameState,
+    IController,
+    Registry
+};
+use sdl2::{
+    event::Event,
+    keyboard::Keycode
+};
 
 use super::{bubble::BubbleController, camera::{camera_schema, CameraController}, player::PlayerController, tiles::TileControler};
 
@@ -15,17 +34,25 @@ impl SceneController {
 
         scene.build_entity(&mut engine.registry)?;
 
+        TileControler::new(&mut engine.registry)?;
+
         let player_controller = PlayerController::new(&mut engine.registry)?;
         let bubble_controller = BubbleController::new(&mut engine.registry)?;
-        let tile_controller = TileControler::new(&mut engine.registry)?;
         let camera_controller = CameraController::new(
             player_controller.player,
             &mut engine.registry
         )?;
 
-        engine.register_controller(tile_controller);
-        engine.register_controller(bubble_controller);
+        let sprite_controller = SpriteController::new(
+            &mut engine.registry,
+            "main_camera",
+            "sprite"
+        )?;
+
         engine.register_controller(player_controller);
+        engine.register_controller(bubble_controller);
+        
+        engine.register_controller(sprite_controller);
         engine.register_controller(camera_controller);
 
         Ok(Self {})
@@ -81,7 +108,7 @@ fn scene_schema() -> SchemaScene2D {
     SchemaScene2D {
         name: "bouncing_shapes".to_string(),
         cameras: vec![camera_schema()],
-        entities: vec![],
+        sprites: vec![],
         shaders: vec![SchemaShader {
             name: "sprite".to_string(),
             uniforms: vec![
@@ -90,8 +117,14 @@ fn scene_schema() -> SchemaScene2D {
             ]
         }],
         textures: vec![
-            "Bubble.png".into(),
-            "Player.png".into()
+            SchemaTexture {
+                name: "Bubble.png".into(),
+                texture_dims: glm::vec2(1.0, 1.0)
+            },
+            SchemaTexture {
+                name: "Player.png".into(),
+                texture_dims: glm::vec2(1.0, 1.0)
+            }
         ]
     }
 }
