@@ -31,6 +31,17 @@ impl RShader {
         })
     }
 
+    pub fn from_str(
+        vert: &str,
+        frag: &str,
+        uniforms: Vec<UniformVariable>
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        Ok(Self {
+            program: ShaderProgram::from_str(vert, frag)?,
+            uniforms
+        })
+    }
+
     pub fn program(&self) -> &ShaderProgram {
         &self.program
     }

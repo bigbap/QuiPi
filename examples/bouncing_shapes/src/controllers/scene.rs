@@ -1,4 +1,4 @@
-use quipi_2d::{schemas::{ISchema, SchemaScene2D}, systems::scene::load_scene_2d, QuiPi2D};
+use quipi_2d::{schemas::{ISchema, SchemaScene2D, SchemaSpriteShader}, systems::scene::load_scene_2d, QuiPi2D};
 use quipi_core::{rendering::RenderInfo, resources::shader::UniformVariable, schemas::SchemaShader, FrameResponse, FrameState, IController, Registry};
 use sdl2::{event::Event, keyboard::Keycode};
 
@@ -82,7 +82,7 @@ fn scene_schema() -> SchemaScene2D {
         name: "bouncing_shapes".to_string(),
         cameras: vec![camera_schema()],
         entities: vec![],
-        shaders: vec![SchemaShader {
+        shaders: vec![SchemaSpriteShader {
             name: "sprite".to_string(),
             uniforms: vec![
                 UniformVariable::ViewMatrix("view".into()),

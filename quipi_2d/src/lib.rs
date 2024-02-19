@@ -7,6 +7,8 @@ pub mod components;
 pub mod resources;
 pub mod schemas;
 pub mod systems;
+pub mod shaders;
+
 use quipi_core::{EditorInfo, rendering::RenderInfo};
 pub use quipi_core::{
     IController,

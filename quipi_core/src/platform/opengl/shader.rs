@@ -266,4 +266,3 @@ fn shader_to_cstring(shader_path: &str) -> Result<ffi::CString, ShaderError> {
 
     Ok(unsafe { ffi::CString::from_vec_unchecked(buffer) })
 }
-
