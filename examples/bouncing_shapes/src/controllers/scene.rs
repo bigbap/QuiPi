@@ -52,9 +52,9 @@ impl SceneController {
         engine.register_controller(tile_controller);
         engine.register_controller(player_controller);
         engine.register_controller(bubble_controller);
-        
-        engine.register_controller(sprite_controller);
         engine.register_controller(camera_controller);
+
+        engine.register_controller(sprite_controller);
 
         Ok(Self {})
     }

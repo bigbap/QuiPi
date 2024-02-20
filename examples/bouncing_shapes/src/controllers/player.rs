@@ -1,7 +1,9 @@
 use quipi_2d::{
     components::{
         CQuad, CTransform2D
-    }, resources::RTileMap, schemas::{
+    },
+    resources::{tilemap::ValidTile, RTileMap},
+    schemas::{
         ISchema, SchemaSprite
     }
 };
@@ -14,11 +16,10 @@ use quipi_core::{
 };
 use sdl2::{event::Event, keyboard::Keycode};
 
-// const SPEED: f32 = 0.5;
+const PLAYER_SIZE: f32 = 54.0;
 
 pub struct PlayerController {
     pub player: VersionedIndex,
-    // velocity: glm::Vec2,
     tile_map: u64,
     tile: glm::Vec2
 }
@@ -30,19 +31,19 @@ impl PlayerController {
     ) -> Result<Self, Box<dyn std::error::Error>> {
         let r_tile_map = registry.get_resource::<RTileMap>(tile_map).unwrap();
         let mut this_schema = SchemaSprite::default();
-        let start_tile = glm::vec2(10.0, 10.0);
+        let start_tile = glm::vec2(1.0, 7.0);
 
+        let ValidTile::Valid(tile_pos) = r_tile_map.get_tile_pos(start_tile) else {
+            return Err("[player controller] invalid start tile".into())
+        };
         let transform = CTransform2D {
-            translate: r_tile_map.get_tile_pos((
-                start_tile.x as usize,
-                start_tile.y as usize
-            )).xy(),
+            translate: tile_pos.xy(),
             scale: glm::vec2(1.0, 1.0),
             ..CTransform2D::default()
         };
         let quad = CQuad {
-            width: 32.0,
-            height: 32.0,
+            width: PLAYER_SIZE,
+            height: PLAYER_SIZE,
             ..CQuad::default()
         };
 
@@ -55,7 +56,6 @@ impl PlayerController {
 
         Ok(Self {
             player: id,
-            // velocity: glm::vec2(0.0, 0.0),
             tile: start_tile,
             tile_map
         })
@@ -64,52 +64,40 @@ impl PlayerController {
 
 impl IController for PlayerController {
     fn update(&mut self, frame_state: &mut FrameState, registry: &mut Registry) -> FrameResponse {
+        let mut new_tile = self.tile;
         for event in frame_state.events.iter() {
             match event {
                 Event::KeyDown { keycode, repeat: false, .. } => {
-                    // match keycode {
-                    //     Some(Keycode::W) => self.velocity.y += 1.0,
-                    //     Some(Keycode::S) => self.velocity.y -= 1.0,
-                    //     Some(Keycode::A) => self.velocity.x -= 1.0,
-                    //     Some(Keycode::D) => self.velocity.x += 1.0,
-                    //     _ => ()
-                    // }
-
                     match keycode {
-                        Some(Keycode::W) => self.tile.x += 1.0,
-                        Some(Keycode::S) => self.tile.x -= 1.0,
-                        Some(Keycode::A) => self.tile.y -= 1.0,
-                        Some(Keycode::D) => self.tile.y += 1.0,
+                        Some(Keycode::W) => new_tile.y += 1.0,
+                        Some(Keycode::S) => new_tile.y -= 1.0,
+                        Some(Keycode::A) => new_tile.x -= 1.0,
+                        Some(Keycode::D) => new_tile.x += 1.0,
                         _ => ()
                     }
                 },
-                // Event::KeyUp { keycode, repeat: false, .. } => {
-                //     match keycode {
-                //         Some(Keycode::W) => self.velocity.y -= 1.0,
-                //         Some(Keycode::S) => self.velocity.y += 1.0,
-                //         Some(Keycode::A) => self.velocity.x += 1.0,
-                //         Some(Keycode::D) => self.velocity.x -= 1.0,
-                //         _ => ()
-                //     }
-                // },
                 _ => ()
             };
         }
 
-        let tile_map = registry.get_resource::<RTileMap>(self.tile_map).unwrap();
-        let new_translate = tile_map.get_tile_pos((
-            self.tile.x as usize,
-            self.tile.y as usize
-        )).xy();
+        let Some(tile_map) = registry.get_resource::<RTileMap>(self.tile_map) else {
+            return FrameResponse::None
+        };
+        let ValidTile::Valid(tile_val) = tile_map.get_tile_value(new_tile) else {
+            return FrameResponse::None
+        };
+        if tile_val == 3 || tile_val == 1 {
+            return FrameResponse::None
+        }
+
+        let ValidTile::Valid(tile_pos) = tile_map.get_tile_pos(new_tile) else {
+            return FrameResponse::None
+        };
+
+        let new_translate = tile_pos.xy();
         if let Some(transform) = registry.entities.get_mut::<CTransform2D>(&self.player) {
+            self.tile = new_tile;
             transform.translate = new_translate;
-            // let mut velocity = glm::vec2(self.velocity.x, self.velocity.y);
-            // if velocity.x != 0.0 && self.velocity.y != 0.0 {
-            //     velocity = glm::normalize(&velocity);
-            // }
-            
-            // transform.translate.x += velocity.x * SPEED;
-            // transform.translate.y += velocity.y * SPEED;
         }
 
         FrameResponse::None
