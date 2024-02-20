@@ -34,9 +34,9 @@ impl SceneController {
 
         scene.build_entity(&mut engine.registry)?;
 
-        TileControler::new(&mut engine.registry)?;
+        let tile_controller = TileControler::new(&mut engine.registry)?;
 
-        let player_controller = PlayerController::new(&mut engine.registry)?;
+        let player_controller = PlayerController::new(&mut engine.registry, tile_controller.tile_map)?;
         let bubble_controller = BubbleController::new(&mut engine.registry)?;
         let camera_controller = CameraController::new(
             player_controller.player,
@@ -49,6 +49,7 @@ impl SceneController {
             "sprite"
         )?;
 
+        engine.register_controller(tile_controller);
         engine.register_controller(player_controller);
         engine.register_controller(bubble_controller);
         
