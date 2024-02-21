@@ -56,6 +56,20 @@ use scene::*;
 pub static WIDTH: u32 = 1600;
 pub static HEIGHT: u32 = 900;
 
+fn main() {
+    let mut my_game = MyGame::new().expect("there was a problem initializing the game");
+
+    if let Err(e) = quipi::run(
+        &mut my_game,
+        "Game Engine - Scene Example",
+        WIDTH,
+        HEIGHT,
+        vec![Flags::HideMouse, Flags::RelativeMouseMode],
+    ) {
+        eprintln!("{e}")
+    }
+}
+
 type Light = VersionedIndex;
 
 const CAMERA_SPEED: f32 = 5.0;
