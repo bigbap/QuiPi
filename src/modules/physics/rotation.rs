@@ -1,7 +1,7 @@
 use crate::{
     Registry,
     VersionedIndex,
-    components::{
+    ecs::components::{
         CEulerAngles,
         CGizmo
     }
