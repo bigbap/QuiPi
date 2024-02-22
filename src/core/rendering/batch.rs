@@ -26,10 +26,7 @@ use crate::{
     }
 };
 
-use super::{
-    vertex::Vertex,
-    RenderInfo
-};
+use super::vertex::Vertex;
 
 pub struct BatchRenderer<const C: usize, M: IMesh> {
     vao: VertexArray,
@@ -42,7 +39,7 @@ pub struct BatchRenderer<const C: usize, M: IMesh> {
     mesh_count: usize,
     vertices: Vec<Vertex>,
     
-    pub render_info: RenderInfo,
+    pub draw_calls: u32,
 
     _marker: PhantomData<M>
 }
@@ -91,7 +88,7 @@ impl<const C: usize, M: IMesh> BatchRenderer<C, M> {
             textures: vec![],
             mesh_count: 0,
             vertices: Vec::<Vertex>::with_capacity(vertex_capacity),
-            render_info: RenderInfo::default(),
+            draw_calls: 0,
 
             _marker: PhantomData
         }
@@ -121,7 +118,7 @@ impl<const C: usize, M: IMesh> BatchRenderer<C, M> {
         );
         self.vao.unbind();
 
-        self.render_info.num_draw_calls += 1;
+        self.draw_calls += 1;
     }
 
     pub fn end_batch(&self) {
@@ -131,7 +128,7 @@ impl<const C: usize, M: IMesh> BatchRenderer<C, M> {
     }
 
     pub fn reset_info(&mut self) {
-        self.render_info = RenderInfo::default();
+        self.draw_calls = 0;
     }
 
     pub fn draw_mesh(

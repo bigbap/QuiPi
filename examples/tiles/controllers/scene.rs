@@ -1,32 +1,27 @@
 use quipi::{
-    controllers::SpriteController,
-    schemas::{
+    ecs::resources::shader::UniformVariable, renderers, scene::load_scene_2d, schemas::{
         ISchema,
         SchemaScene2D,
         SchemaShader, SchemaTexture
-    },
-    scene::load_scene_2d,
-    QuiPi,
-    rendering::RenderInfo,
-    ecs::resources::shader::UniformVariable,
-    FrameResponse,
-    FrameState,
-    IController,
-    Registry
+    }, time::Timer, FrameResponse, FrameState, IController, IRenderer, QuiPi, Registry
 };
 use sdl2::{
     event::Event,
     keyboard::Keycode
 };
 
-use super::{bubble::BubbleController, camera::{camera_schema, CameraController}, player::PlayerController, tiles::TileControler};
+use super::{
+    camera::{camera_schema, CameraController},
+    player::PlayerController,
+    tiles::TileControler
+};
 
 pub struct SceneController {}
 
 impl SceneController {
     pub fn load(engine: &mut QuiPi) -> Result<Self, Box<dyn std::error::Error>> {
         let scene = load_scene_2d(
-            "bouncing_shapes",
+            "tile_map",
             scene_schema()
         )?;
 
@@ -35,24 +30,23 @@ impl SceneController {
         let tile_controller = TileControler::new(&mut engine.registry)?;
 
         let player_controller = PlayerController::new(&mut engine.registry, tile_controller.tile_map)?;
-        let bubble_controller = BubbleController::new(&mut engine.registry)?;
         let camera_controller = CameraController::new(
             player_controller.player,
             &mut engine.registry
         )?;
 
-        let sprite_controller = SpriteController::new(
+        engine.register_controller(tile_controller);
+        engine.register_controller(player_controller);
+        engine.register_controller(camera_controller);
+
+        let renderer = renderers::Renderer2D::new(
             &mut engine.registry,
             "main_camera",
             "sprite"
         )?;
 
-        engine.register_controller(tile_controller);
-        engine.register_controller(player_controller);
-        engine.register_controller(bubble_controller);
-        engine.register_controller(camera_controller);
-
-        engine.register_controller(sprite_controller);
+        engine.register_renderer(renderer);
+        engine.register_renderer(DebugInfoText::new());
 
         Ok(Self {})
     }
@@ -67,7 +61,7 @@ impl IController for SceneController {
                 },
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
                     if cfg!(debug_assertions) {
-                        frame_state.editor_mode = !frame_state.editor_mode;
+                        frame_state.debug_mode = !frame_state.debug_mode;
                     }
                 },
                 _ => ()
@@ -75,31 +69,6 @@ impl IController for SceneController {
         }
     
         FrameResponse::None
-    }
-
-    fn draw(&mut self, frame_state: &mut FrameState, registry: &mut Registry) -> Option<RenderInfo> {
-        // draw the entity count
-        let entity_count = registry.entities.count();
-        frame_state.text_render.color = glm::vec4(1.0, 1.0, 1.0, 1.0);
-        frame_state.text_render.scale = 0.6;
-        frame_state.text_render.draw(
-            format!("entities: {}", entity_count),
-            glm::vec2(20.0, 20.0)
-        );
-        frame_state.text_render.draw(
-            format!("draw calls: {}", frame_state.render_info.num_draw_calls),
-            glm::vec2(20.0, 40.0)
-        );
-        frame_state.text_render.draw(
-            format!("fps: {}", frame_state.debug_info.fps as u32),
-            glm::vec2(20.0, 60.0)
-        );
-        frame_state.text_render.draw(
-            format!("ms: {}", frame_state.debug_info.ms as u32),
-            glm::vec2(20.0, 80.0)
-        );
-
-        None
     }
 }
 
@@ -129,5 +98,58 @@ fn scene_schema() -> SchemaScene2D {
                 texture_dims: glm::vec2(1.0, 2.0)
             }
         ]
+    }
+}
+
+struct DebugInfoText {
+    timer: Timer
+}
+
+impl DebugInfoText {
+    pub fn new() -> Self {
+        Self {
+            timer: Timer::new()
+        }
+    }
+}
+
+impl IRenderer for DebugInfoText {
+    fn draw(
+        &mut self,
+        frame_state: &mut FrameState,
+        registry: &mut Registry
+    ) -> Option<u32> {
+        self.timer.delta();
+
+        // draw the entity count
+        let entity_count = registry.entities.count();
+        frame_state.text_render.color = glm::vec4(0.9, 0.9, 0.9, 1.0);
+        frame_state.text_render.scale = 0.6;
+        frame_state.text_render.draw(
+            format!("entities: {}", entity_count),
+            glm::vec2(20.0, 20.0)
+        );
+        frame_state.text_render.draw(
+            format!("draw calls: {}", frame_state.debug_info.draw_calls),
+            glm::vec2(20.0, 40.0)
+        );
+        frame_state.text_render.draw(
+            format!("render ms: {}", frame_state.debug_info.render_ms),
+            glm::vec2(20.0, 60.0)
+        );
+        frame_state.text_render.draw(
+            format!("controller ms: {}", frame_state.debug_info.controller_ms),
+            glm::vec2(20.0, 80.0)
+        );
+        frame_state.text_render.draw(
+            format!("fps: {}", frame_state.debug_info.fps as u32),
+            glm::vec2(20.0, 100.0)
+        );
+        frame_state.text_render.draw(
+            format!("ms: {}", frame_state.debug_info.frame_ms as u32),
+            glm::vec2(20.0, 120.0)
+        );
+
+        Some(6)
     }
 }

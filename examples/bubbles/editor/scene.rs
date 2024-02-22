@@ -1,23 +1,18 @@
 use egui::Vec2;
 
-use crate::{
-    components::{
-        CSprite,
-        CScene,
-        CTag
-    },
-    schemas::{
+use quipi::{
+    debug_ui::GUI, ecs::components::{
+        CScene, CSprite, CTag
+    }, scene::save_scene_2d, schemas::{
         ISchema, SchemaSprite
     },
-    systems::scene::save_scene_2d,
-    GUI,
     Registry
 };
 
 use super::components::EntityEditor;
 
 pub struct SceneEditor {
-    entity_editor: EntityEditor,
+    entity_editor: EntityEditor
 }
 
 impl SceneEditor {

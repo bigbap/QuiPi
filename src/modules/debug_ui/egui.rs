@@ -6,15 +6,14 @@ use sdl2::event::{
 
 use crate::{
     core::canvas::set_dimensions,
-    platform::egui::{
-        input::parse_event,
-        painter::Painter
-    },
     FrameState
 };
 
 mod painter;
 mod input;
+
+use painter::Painter;
+use input::parse_event;
 
 pub struct GUI {
     pub ctx: egui::Context,

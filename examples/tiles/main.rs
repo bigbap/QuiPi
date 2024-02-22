@@ -27,23 +27,26 @@ pub static WIDTH: u32 = 1600;
 pub static HEIGHT: u32 = 900;
 
 mod controllers;
+mod editor;
 
 pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let mut app = QuiPi::init(
-        "Bouncing Shapes",
+        "Tiles",
         WIDTH,
         HEIGHT,
     )?;
 
     let scene = SceneController::load(&mut app)?;
+    let editor = editor::AppEditor::new()?;
 
     app.register_controller(scene);
+    app.register_controller(editor);
     app.run((0.3, 0.3, 0.3, 1.0))
 }
 
 
 fn main() {
     if let Err(e) = run() {
-        eprintln!("Bouncing Shapes ended unexpectedly: {}", e);
+        eprintln!("Tiles ended unexpectedly: {}", e);
     };
 }

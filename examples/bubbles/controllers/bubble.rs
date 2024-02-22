@@ -27,13 +27,13 @@ pub struct BubbleController {
 
 impl BubbleController {
     pub fn new(registry: &mut Registry) -> Result<Self, Box<dyn std::error::Error>> {
-        let bubbles = registry.entities.query(CTag { tag: "sprite".to_string() });
-        let rand = Random::from_seed(now_secs()?);
+        let mut bubbles = registry.entities.query(CTag { tag: "sprite".to_string() });
+        let mut rand = Random::from_seed(now_secs()?);
 
-        // // for stress testing
-        // for _ in 0..3000 {
-        //     bubbles.push(spawn(&mut rand, registry)?);
-        // }
+        // for stress testing
+        for _ in 0..1000 {
+            bubbles.push(spawn(&mut rand, registry)?);
+        }
 
         Ok(Self {
             bubbles,
@@ -48,7 +48,7 @@ impl IController for BubbleController {
         frame_state: &mut FrameState,
         registry: &mut Registry
     ) -> FrameResponse {
-        if frame_state.editor_mode { return FrameResponse::None; }
+        if frame_state.debug_mode { return FrameResponse::None; }
 
         // handle input
         for event in frame_state.events.iter() {
@@ -97,6 +97,8 @@ fn spawn(
         translate: glm::vec2(
             width as f32 / 2.0,
             height as f32 / 2.0
+            // rand.range(25, width) as f32,
+            // rand.range(25, height) as f32,
         ),
         scale: glm::vec2(s_factor, s_factor),
         ..CTransform2D::default()
@@ -112,12 +114,7 @@ fn spawn(
     this_schema.quad = quad;
     this_schema.color = color;
     this_schema.tag = "sprite".into();
-    this_schema.texture = Some(
-        match rand.random() > 0.5 {
-            true => "Bubble.png".into(),
-            false => "Bubble.png".into()
-        }
-    );
+    this_schema.texture = Some("Bubble.png".into());
 
     let id = this_schema.build_entity(registry)?;
 

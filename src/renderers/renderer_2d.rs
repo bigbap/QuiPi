@@ -1,46 +1,37 @@
 use crate::{
-    modules::ecs::{
+    core::rendering::batch::BatchRenderer, modules::ecs::{
         components::{
-            CTransform2D, CSprite
+            CSprite, CTransform2D
         },
-        resources::RCamera2D,
-        resources::RShader,
-    },
-    IController,
-    opengl::capabilities::{
+        resources::{RCamera2D, RShader},
+    }, opengl::capabilities::{
         gl_blending_func,
         gl_enable,
         GLBlendingFactor,
         GLCapability
     },
-    core::rendering::{
-        batch::BatchRenderer,
-        RenderInfo
-    },
-    
-    FrameState,
-    Registry
+    FrameState, IRenderer, Registry
 };
 
-pub struct SpriteController {
+pub struct Renderer2D {
     camera: u64,
     shader: u64,
 
-    renderer: BatchRenderer<1000, CSprite>
+    renderer: BatchRenderer<10000, CSprite>
 }
 
-impl SpriteController {
+impl Renderer2D {
     pub fn new(
         registry: &mut Registry,
         camera: &str,
         shader: &str
     ) -> Result<Self, Box<dyn std::error::Error>> {
         let Some(camera) = registry.get_resource_id(camera) else {
-            return Err("[sprite controller] camera is not loaded".into());
+            return Err("[2d renderer] camera is not loaded".into());
         };
 
         let Some(shader) = registry.get_resource_id(shader) else {
-            return Err("[sprite controller] shader is not loaded".into());
+            return Err("[2d renderer] shader is not loaded".into());
         };
 
         Ok(Self {
@@ -51,12 +42,12 @@ impl SpriteController {
     }
 }
 
-impl IController for SpriteController {
+impl IRenderer for Renderer2D {
     fn draw(
         &mut self,
         _frame_state: &mut FrameState,
         registry: &mut Registry
-    ) -> Option<RenderInfo> {
+    ) -> Option<u32> {
         let entities = registry.entities.query_all::<CSprite>();
 
         gl_enable(GLCapability::AlphaBlending);
@@ -109,6 +100,6 @@ impl IController for SpriteController {
         self.renderer.end_batch();
         self.renderer.flush_batch(registry.get_resource(self.shader)?);
 
-        Some(self.renderer.render_info.clone())
+        Some(self.renderer.draw_calls)
     }
 }

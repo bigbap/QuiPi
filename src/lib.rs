@@ -10,6 +10,7 @@ pub mod schemas;
 pub mod shaders;
 pub mod game_state;
 pub mod controllers;
+pub mod renderers;
 
 mod core;
 mod platform;
@@ -24,24 +25,25 @@ pub use core::canvas;
 pub use core::math;
 pub use core::time;
 pub use core::rendering;
+pub use controllers::IController;
+pub use renderers::IRenderer;
 
-use core::rendering::RenderInfo;
+
 use platform::sdl2::window::QuiPiWindow;
 use platform::opengl;
 
-
-
-pub trait IController {
-    fn update(&mut self, _frame_state: &mut FrameState, _registry: &mut Registry) -> FrameResponse { FrameResponse::None }
-    fn draw(&mut self, _frame_state: &mut FrameState,  _registry: &mut Registry) -> Option<RenderInfo> { None }
-}
+use crate::profiling::Profiler;
 
 pub struct QuiPi {
     pub registry: Registry,
     winapi: QuiPiWindow,
-    timer: time::Timer,
+    profiler: profiling::Profiler,
+
+    frame_timer: time::Timer,
     frame_state: FrameState,
-    controllers: Vec<Box<dyn IController>>
+
+    controllers: Vec<Box<dyn IController>>,
+    renderers: Vec<Box<dyn IRenderer>>
 }
 
 impl QuiPi {
@@ -63,29 +65,32 @@ impl QuiPi {
             (4, 5)
         )?;
 
-        let mut timer = time::Timer::new();
+        let mut frame_timer = time::Timer::new();
         let frame_state = FrameState {
-            clear_color: glm::vec4(0.3, 0.5, 0.1, 1.0),
-            editor_mode: false,
+            delta: frame_timer.delta(),
             events: vec![],
             text_render: text::TextRenderer::new(text::DEFAULT_FONT)?,
-            render_info: RenderInfo::default(),
-            editor_info: EditorInfo::default(),
+            debug_mode: false,
             debug_info: DebugInfo::default(),
-            delta: timer.delta(),
         };
 
         Ok(Self {
             registry,
             winapi,
-            timer,
+            profiler: Profiler::new(),
+            frame_timer,
             frame_state,
-            controllers: vec![]
+            controllers: vec![],
+            renderers: vec![]
         })
     }
 
     pub fn register_controller(&mut self, controller: impl IController + 'static) {
         self.controllers.push(Box::new(controller));
+    }
+
+    pub fn register_renderer(&mut self, renderer: impl IRenderer + 'static) {
+        self.renderers.push(Box::new(renderer));
     }
 
     pub fn run(&mut self, clear_color: (f32, f32, f32, f32)) -> Result<(), Box<dyn std::error::Error>> {
@@ -95,42 +100,44 @@ impl QuiPi {
     
             opengl::buffer::clear_buffers(clear_color);
     
-            // call controller update and draw
-            set_debug_info(&mut self.frame_state);
+            set_frame_debug_info(&mut self.frame_state);
             self.frame_state.events = self.winapi.get_event_queue()?;
-            self.frame_state.render_info = RenderInfo::default();
 
+            // update controllers
+            self.profiler.begin();
             for controller in self.controllers.iter_mut() {
                 match controller.update(&mut self.frame_state, &mut self.registry) {
                     FrameResponse::Quit => break 'running,
-                    FrameResponse::Restart => { self.timer.delta(); },
+                    FrameResponse::Restart => { self.frame_timer.delta(); },
                     FrameResponse::None => ()
                 }
+            }
+            let controller_ms = self.profiler.end();
 
-                if let Some(render_info) = controller.draw(
+            // call renderers
+            let mut draw_calls = 0;
+
+            self.profiler.begin();
+            for renderer in self.renderers.iter_mut() {
+                if let Some(m_draw_calls) = renderer.draw(
                     &mut self.frame_state,
                     &mut self.registry
                 ) {
-                    self.frame_state.render_info.total_ms += render_info.total_ms;
-                    self.frame_state.render_info.num_draw_calls += render_info.num_draw_calls;
+                    draw_calls += m_draw_calls;
                 }
             }
-            
-            // // draw the editor
-            // if self.frame_state.editor_mode && cfg!(debug_assertions) {
-            //     self.frame_state.editor_info = self.app_editor.update(
-            //         &mut self.registry,
-            //         &mut self.frame_state
-            //     )?;
-            // }
-            
+
             if let Some(window) = &self.winapi.window {
                 window.gl_swap_window();
             } else {
                 return Err("There was a problem drawing the frame".into())
             }
+            let render_ms = self.profiler.end();
     
-            self.frame_state.delta = self.timer.delta();
+            self.frame_state.debug_info.controller_ms = controller_ms as u32;
+            self.frame_state.debug_info.render_ms = render_ms as u32;
+            self.frame_state.debug_info.draw_calls = draw_calls;
+            self.frame_state.delta = self.frame_timer.delta();
         }
     
         Ok(())

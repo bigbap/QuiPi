@@ -1,7 +1,7 @@
 use egui::Ui;
 
-use crate::{
-    components::{
+use quipi::{
+    ecs::components::{
         CQuad,
         CTag,
         CTransform2D,
@@ -9,7 +9,7 @@ use crate::{
     },
     Registry,
     VersionedIndex,
-    GUI
+    debug_ui::GUI
 };
 
 pub struct EntityEditor {
