@@ -1,16 +1,18 @@
-use quipi::{
+use crate::{
     ecs::{
         components::CTransform2D,
         resources::RCamera2D,
     },
     schemas::SchemaCamera2D,
-    canvas::{
+    gfx::viewport::{
         get_dimensions,
         set_dimensions
     },
-    FrameResponse,
-    FrameState,
-    IController,
+    data::{
+        FrameResponse,
+        FrameState,
+        IController,
+    },
     Registry,
     VersionedIndex
 };

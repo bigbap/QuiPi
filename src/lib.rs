@@ -1,154 +1,38 @@
-pub extern crate sdl2;
-pub extern crate gl;
-pub extern crate nalgebra_glm as glm;
-pub extern crate freetype as ft;
-pub extern crate serde;
-// pub extern crate gltf;
-
-pub mod registry;
-pub mod schemas;
-pub mod shaders;
-pub mod game_state;
-pub mod controllers;
-pub mod renderers;
+extern crate sdl2;
+extern crate gl;
+extern crate nalgebra_glm as glm;
+extern crate freetype as ft;
+extern crate serde;
+// extern crate gltf;
 
 mod core;
+mod data;
+mod ecs;
+mod egui;
+mod gfx;
+mod physics;
 mod platform;
-mod modules;
+mod profiling;
+mod quipi;
+mod registry;
+mod schemas;
 
-pub use modules::ecs::Component;
-pub use modules::ecs::VersionedIndex;
-pub use modules::*;
-pub use registry::Registry;
-pub use game_state::*;
-pub use core::canvas;
-pub use core::math;
-pub use core::time;
-pub use core::rendering;
-pub use controllers::IController;
-pub use renderers::IRenderer;
+pub mod prelude {
+    use super::*;
 
+    pub use self::core::api as core;
+    pub use self::data::api as data;
+    pub use self::ecs::api as ecs;
+    pub use self::gfx::api as gfx;
+    pub use self::physics::api as physics;
+    pub use self::profiling::api as profiling;
+    pub use self::schemas::api as schemas;
 
-use platform::sdl2::window::QuiPiWindow;
-use platform::opengl;
+    pub use quipi::QuiPi;
+    pub use self::egui::GUI;
+    pub use self::registry::Registry;
+    pub use self::ecs::VersionedIndex;
 
-use crate::profiling::Profiler;
-
-pub struct QuiPi {
-    pub registry: Registry,
-    winapi: QuiPiWindow,
-    profiler: profiling::Profiler,
-
-    frame_timer: time::Timer,
-    frame_state: FrameState,
-
-    controllers: Vec<Box<dyn IController>>,
-    renderers: Vec<Box<dyn IRenderer>>
-}
-
-impl QuiPi {
-    pub fn init(
-        title: &str,
-        width: u32,
-        height: u32,
-    ) -> Result<Self, Box<dyn std::error::Error>> {
-        let registry = setup()?;
-
-        #[cfg(feature = "profile-with-tracy")]
-        println!("tracy");
-
-        let mut winapi = QuiPiWindow::init()?;
-        let _window = winapi.opengl_window(
-            title,
-            width,
-            height,
-            (4, 5)
-        )?;
-
-        let mut frame_timer = time::Timer::new();
-        let frame_state = FrameState {
-            delta: frame_timer.delta(),
-            events: vec![],
-            text_render: text::TextRenderer::new(text::DEFAULT_FONT)?,
-            debug_mode: false,
-            debug_info: DebugInfo::default(),
-        };
-
-        Ok(Self {
-            registry,
-            winapi,
-            profiler: Profiler::new(),
-            frame_timer,
-            frame_state,
-            controllers: vec![],
-            renderers: vec![]
-        })
-    }
-
-    pub fn register_controller(&mut self, controller: impl IController + 'static) {
-        self.controllers.push(Box::new(controller));
-    }
-
-    pub fn register_renderer(&mut self, renderer: impl IRenderer + 'static) {
-        self.renderers.push(Box::new(renderer));
-    }
-
-    pub fn run(&mut self, clear_color: (f32, f32, f32, f32)) -> Result<(), Box<dyn std::error::Error>> {
-        'running: loop {
-            self.registry.entities.flush();
-            self.registry.flush_resources();
-    
-            opengl::buffer::clear_buffers(clear_color);
-    
-            set_frame_debug_info(&mut self.frame_state);
-            self.frame_state.events = self.winapi.get_event_queue()?;
-
-            // update controllers
-            self.profiler.begin();
-            for controller in self.controllers.iter_mut() {
-                match controller.update(&mut self.frame_state, &mut self.registry) {
-                    FrameResponse::Quit => break 'running,
-                    FrameResponse::Restart => { self.frame_timer.delta(); },
-                    FrameResponse::None => ()
-                }
-            }
-            let controller_ms = self.profiler.end();
-
-            // call renderers
-            let mut draw_calls = 0;
-
-            self.profiler.begin();
-            for renderer in self.renderers.iter_mut() {
-                if let Some(m_draw_calls) = renderer.draw(
-                    &mut self.frame_state,
-                    &mut self.registry
-                ) {
-                    draw_calls += m_draw_calls;
-                }
-            }
-
-            if let Some(window) = &self.winapi.window {
-                window.gl_swap_window();
-            } else {
-                return Err("There was a problem drawing the frame".into())
-            }
-            let render_ms = self.profiler.end();
-    
-            self.frame_state.debug_info.controller_ms = controller_ms as u32;
-            self.frame_state.debug_info.render_ms = render_ms as u32;
-            self.frame_state.debug_info.draw_calls = draw_calls;
-            self.frame_state.delta = self.frame_timer.delta();
-        }
-    
-        Ok(())
-    }
-}
-
-fn setup() -> Result<Registry, Box<dyn std::error::Error>> {
-    let mut registry = Registry::init()?;
-
-    ecs::components::register_components(&mut registry);
-    ecs::resources::register_resources(&mut registry);
-
-    Ok(registry)
+    // 3rd party - TODO: abstract this
+    pub use sdl2::event::Event;
 }

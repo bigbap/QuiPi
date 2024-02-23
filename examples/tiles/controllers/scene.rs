@@ -1,9 +1,22 @@
-use quipi::{
-    ecs::resources::shader::UniformVariable, renderers, scene::load_scene_2d, schemas::{
-        ISchema,
+use crate::{
+    gfx::Renderer2D,
+    schemas::{
         SchemaScene2D,
-        SchemaShader, SchemaTexture
-    }, time::Timer, FrameResponse, FrameState, IController, IRenderer, QuiPi, Registry
+        SchemaShader,
+        SchemaTexture,
+        load_scene_2d
+    },
+    core::Timer,
+    data::{
+        FrameResponse,
+        FrameState,
+        IController,
+        IRenderer,
+        ISchema,
+        ShaderUniforms
+    },
+    QuiPi,
+    Registry
 };
 use sdl2::{
     event::Event,
@@ -39,7 +52,7 @@ impl SceneController {
         engine.register_controller(player_controller);
         engine.register_controller(camera_controller);
 
-        let renderer = renderers::Renderer2D::new(
+        let renderer = Renderer2D::new(
             &mut engine.registry,
             "main_camera",
             "sprite"
@@ -80,8 +93,8 @@ fn scene_schema() -> SchemaScene2D {
         shaders: vec![SchemaShader {
             name: "sprite".to_string(),
             uniforms: vec![
-                UniformVariable::ViewMatrix("view".into()),
-                UniformVariable::ProjectionMatrix("projection".into())
+                ShaderUniforms::ViewMatrix("view".into()),
+                ShaderUniforms::ProjectionMatrix("projection".into())
             ]
         }],
         textures: vec![

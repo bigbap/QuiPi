@@ -1,5 +1,3 @@
-use super::sdl2::window::QuiPiWindow;
-
 pub mod buffer;
 pub mod capabilities;
 pub mod draw;
@@ -7,6 +5,10 @@ pub mod functions;
 pub mod pixel_store;
 pub mod textures;
 pub mod shader;
+
+mod c_str;
+
+use super::sdl2::QuiPiWindow;
 
 pub fn init(
     window_api: &QuiPiWindow,

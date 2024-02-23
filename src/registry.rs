@@ -1,13 +1,13 @@
 use std::{collections::HashMap, fmt::Debug};
 
-use crate::{
-    core::strings::StringInterner,
+use crate::prelude::{
+    core::StringInterner,
     ecs::{
         ECSError,
-        EntityManager
-    },
-    Component,
-    VersionedIndex
+        EntityManager,
+        Component,
+        VersionedIndex
+    }
 };
 
 #[derive(Debug, thiserror::Error)]
@@ -133,7 +133,7 @@ impl Registry {
 
 #[cfg(test)]
 mod tests {
-    use crate::Component;
+    use crate::prelude::ecs::Component;
 
     use super::*;
 

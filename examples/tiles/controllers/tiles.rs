@@ -1,18 +1,22 @@
-use quipi::{
+use crate::{
     ecs::{
         components::{
-            sprite::TextureAtlas,
             CQuad,
             CSprite,
             CTransform2D
         },
         resources::RTileMap,
     },
-    math::random::Random,
-    time::now_secs,
-    FrameResponse,
-    FrameState,
-    IController,
+    core::{
+        random::Random,
+        now_secs
+    },
+    data::{
+        FrameResponse,
+        FrameState,
+        IController,
+        TextureAtlas
+    },
     Registry,
     VersionedIndex
 };

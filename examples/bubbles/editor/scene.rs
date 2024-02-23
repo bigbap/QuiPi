@@ -1,11 +1,17 @@
 use egui::Vec2;
 
-use quipi::{
-    debug_ui::GUI, ecs::components::{
-        CScene, CSprite, CTag
-    }, scene::save_scene_2d, schemas::{
-        ISchema, SchemaSprite
+use crate::{
+    GUI,
+    ecs::components::{
+        CScene,
+        CSprite,
+        CTag,
     },
+    schemas::{
+        SchemaSprite,
+        save_scene_2d
+    },
+    data::ISchema,
     Registry
 };
 

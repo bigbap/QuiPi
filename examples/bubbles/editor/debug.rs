@@ -1,7 +1,7 @@
-use quipi::{
-    FrameState,
+use crate::{
+    data::FrameState,
     Registry,
-    debug_ui::GUI
+    GUI
 };
 
 pub fn debug(

@@ -1,11 +1,13 @@
 mod debug;
 
-use quipi::{
-    debug_ui::GUI,
-    time::Timer,
-    FrameResponse,
-    FrameState,
-    IController,
+use crate::{
+    GUI,
+    core::Timer,
+    data::{
+        FrameResponse,
+        FrameState,
+        IController,
+    },
     Registry
 };
 

@@ -1,20 +1,23 @@
 use serde::{Serialize, Deserialize};
 
-use crate::modules::ecs::{
-    components::{
-        sprite::TextureAtlas,
-        CQuad,
-        CSprite,
-        CTag,
-        CTransform2D,
-        CVelocity2D
+use crate::prelude::{
+    ecs::{
+        components::{
+            CQuad,
+            CSprite,
+            CTag,
+            CTransform2D,
+            CVelocity2D
+        },
+        resources::RTexture,
+        VersionedIndex
     },
-    resources::RTexture,
-    VersionedIndex
+    data::{
+        TextureAtlas,
+        ISchema
+    },
+    Registry
 };
-use crate::Registry;
-
-use super::ISchema;
 
 pub const DEFAULT_RECT_TAG: &str = "default_rect";
 

@@ -4,11 +4,8 @@ use std::{
     ffi
 };
 
-use crate::core::utils::{
-    macros,
-    strings,
-    to_abs_path
-};
+use super::c_str::*;
+use crate::prelude::core::to_abs_path;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ShaderError {
@@ -140,7 +137,7 @@ impl ShaderProgram {
         unsafe {
             gl::GetUniformLocation(
                 self.id,
-                macros::c_str!(key).as_ptr()
+                c_str!(key).as_ptr()
             )
         }
     }
@@ -169,7 +166,7 @@ fn link_program(
             let mut len: gl::types::GLint = 0;
             gl::GetProgramiv(id, gl::INFO_LOG_LENGTH, &mut len);
 
-            let error = strings::create_empty_cstring_with_len(len as usize);
+            let error = create_empty_cstring_with_len(len as usize);
             gl::GetProgramInfoLog(
                 id,
                 len,
@@ -218,7 +215,7 @@ fn compile_shader(
             let mut len: gl::types::GLint = 0;
             gl::GetShaderiv(id, gl::INFO_LOG_LENGTH, &mut len);
 
-            let error = strings::create_empty_cstring_with_len(len as usize);
+            let error = create_empty_cstring_with_len(len as usize);
             gl::GetShaderInfoLog(
                 id,
                 len,

@@ -1,11 +1,14 @@
 use serde::{Serialize, Deserialize};
 
-use crate::modules::ecs::resources::{
-    shader::UniformVariable, RShader
+use crate::prelude::{
+    ecs::resources::RShader,
+    data::{
+        ShaderUniforms,
+        ISchema
+    },
+    gfx::get_shader,
+    Registry
 };
-use crate::shaders::get_shader;
-
-use super::ISchema;
 
 pub const DEFAULT_SHADER: &str = "sprite";
 pub const DEFAULT_SHADER_UNIFORM: &str = "mvpMatrix";
@@ -13,7 +16,7 @@ pub const DEFAULT_SHADER_UNIFORM: &str = "mvpMatrix";
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SchemaShader {
     pub name: String,
-    pub uniforms: Vec<UniformVariable>
+    pub uniforms: Vec<ShaderUniforms>
 }
 
 impl Default for SchemaShader {
@@ -21,7 +24,7 @@ impl Default for SchemaShader {
         Self {
             name: DEFAULT_SHADER.to_string(),
             uniforms: vec![
-                UniformVariable::MVPMatrix(DEFAULT_SHADER_UNIFORM.to_string())
+                ShaderUniforms::MVPMatrix(DEFAULT_SHADER_UNIFORM.to_string())
             ],
         }
     }
@@ -30,7 +33,7 @@ impl Default for SchemaShader {
 impl ISchema for SchemaShader {
     fn load_resource(
         &self,
-        registry: &mut crate::Registry
+        registry: &mut Registry
     ) -> Result<u64, Box<dyn std::error::Error>> {
         let shader = get_shader(&self.name);
         let id = registry.load_resourse(
@@ -41,7 +44,7 @@ impl ISchema for SchemaShader {
         Ok(id)
     }
 
-    fn from_resource(id: u64, registry: &crate::Registry) -> Option<Self> {
+    fn from_resource(id: u64, registry: &Registry) -> Option<Self> {
         if let (Some(shader), Some(name)) = (
             registry.get_resource::<RShader>(id),
             registry.string_interner.get_string(id)

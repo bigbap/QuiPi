@@ -8,6 +8,8 @@ use sdl2::{
     event::Event
 };
 
+use super::super::opengl;
+
 pub struct QuiPiWindow {
     pub ctx: Sdl,
     pub video_subsystem: VideoSubsystem,
@@ -54,7 +56,7 @@ impl QuiPiWindow {
 
         self.window = Some(window);
 
-        crate::opengl::init(
+        opengl::init(
             self,
             width as i32,
             height as i32,

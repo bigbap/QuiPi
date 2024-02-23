@@ -1,13 +1,15 @@
-use quipi::{
+use crate::{
     ecs::resources::RCamera2D,
     schemas::SchemaCamera2D,
-    canvas::{
+    gfx::viewport::{
         get_dimensions,
         set_dimensions
     },
-    FrameResponse,
-    FrameState,
-    IController,
+    data::{
+        FrameResponse,
+        FrameState,
+        IController,
+    },
     Registry
 };
 use sdl2::event::{Event, WindowEvent};

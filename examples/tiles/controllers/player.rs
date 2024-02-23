@@ -1,20 +1,19 @@
-use quipi::{
+use crate::{
     ecs::{
         components::{
             CQuad,
             CTransform2D
         },
-        resources::{
-            tilemap::ValidTile,
-            RTileMap
-        },
+        resources::RTileMap,
     },
-    schemas::{
-        ISchema, SchemaSprite
+    data::{
+        ISchema,
+        ValidTile,
+        FrameResponse,
+        FrameState,
+        IController,
     },
-    FrameResponse,
-    FrameState,
-    IController,
+    schemas::SchemaSprite,
     Registry,
     VersionedIndex
 };

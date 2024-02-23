@@ -1,15 +1,14 @@
 use serde::{Serialize, Deserialize};
 
-use crate::modules::ecs::{
-    components::CTransform2D,
-    resources::{
-        RCamera2D,
-        camera::CameraParams
-    },
+use crate::prelude::{
+    ecs::components::CTransform2D,
+    ecs::resources::RCamera2D,
+    Registry,
+    data::{
+        ISchema,
+        OrthographicCameraParams
+    }
 };
-use crate::Registry;
-
-use super::ISchema;
 
 pub const DEFAULT_CAMERA: &str = "default_camera";
 
@@ -76,8 +75,8 @@ impl ISchema for SchemaCamera2D {
 }
 
 impl SchemaCamera2D {
-    fn params(&self) -> CameraParams {
-        CameraParams {
+    fn params(&self) -> OrthographicCameraParams {
+        OrthographicCameraParams {
             left: self.left,
             right: self.right,
             bottom: self.bottom,

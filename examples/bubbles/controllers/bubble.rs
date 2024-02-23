@@ -1,20 +1,22 @@
-use quipi::{
+use crate::{
     ecs::components::{
         CQuad,
         CTransform2D,
          CVelocity2D,
          CTag
     },
-    schemas::{
+    schemas::SchemaSprite,
+    data::{
         ISchema,
-        SchemaSprite
+        IController,
+        FrameResponse,
+        FrameState,
     },
-    IController,
-    canvas::get_dimensions,
-    math::random::Random,
-    time::now_secs,
-    FrameResponse,
-    FrameState,
+    gfx::viewport::get_dimensions,
+    core::{
+        random::Random,
+        now_secs
+    },
     Registry,
     VersionedIndex
 };

@@ -1,15 +1,21 @@
 use serde::{Serialize, Deserialize};
 
-use crate::modules::ecs::{
-    components::{
-        CScene, CSprite, CTransform2D
+use crate::prelude::{
+    ecs::components::{
+        CScene,
+        CSprite,
+        CTransform2D
     },
-    VersionedIndex
+    ecs::VersionedIndex,
+    Registry,
+    data::ISchema
 };
-use crate::Registry;
 
-use super::{
-    ISchema, SchemaCamera2D, SchemaShader, SchemaSprite, SchemaTexture
+use super::api::{
+    SchemaCamera2D,
+    SchemaShader,
+    SchemaSprite,
+    SchemaTexture
 };
 
 pub const DEFAULT_SCENE: &str = "default_scene";
