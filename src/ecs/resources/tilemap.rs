@@ -1,6 +1,6 @@
-use super::super::api::Component;
+use super::super::prelude::Component;
 use serde::{Deserialize, Serialize};
-use crate::prelude::data::ValidTile;
+use crate::prelude::qp_data::ValidTile;
 
 #[derive(Debug, Component, PartialEq, Clone, Serialize, Deserialize)]
 pub struct RTileMap {

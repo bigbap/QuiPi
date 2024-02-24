@@ -5,27 +5,33 @@ mod debug;
 use scene::SceneEditor;
 
 use crate::{
-    GUI,
-    core::Timer,
-    data::{
+    qp_editor::GuiManager,
+    qp_core::Timer,
+    qp_data::{
         FrameResponse,
         FrameState,
         IController,
     },
     Registry
 };
+use crate::editor::debug::DebugUi;
 
 pub struct AppEditor {
-    gui: GUI,
-    scene: SceneEditor,
+    gui: GuiManager,
     timer: Timer
 }
 
 impl AppEditor {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
+        let mut gui = GuiManager::new(1.0)?;
+        let scene = SceneEditor::new();
+        let debug_ui = DebugUi {};
+
+        gui.register_controller(scene);
+        gui.register_controller(debug_ui);
+
         Ok(Self {
-            gui: GUI::new(1.0)?,
-            scene: SceneEditor::new(),
+            gui,
             timer: Timer::new()
         })
     }
@@ -43,12 +49,7 @@ impl IController for AppEditor {
 
         self.timer.delta();
 
-        self.gui.begin_frame();
-
-        self.scene.update(&self.gui, registry);
-        debug::debug(&self.gui, frame_state, registry);
-
-        self.gui.end_frame(frame_state).unwrap();
+        self.gui.update(frame_state, registry);
 
         frame_state.debug_info.editor_ms = (self.timer.delta() * 1000.0) as u32;
 

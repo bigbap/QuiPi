@@ -6,7 +6,7 @@ mod text;
 mod texture;
 mod viewport;
 
-pub mod api {
+pub mod prelude {
     use super::*;
 
     // pub use grid::*;

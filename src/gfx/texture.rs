@@ -2,8 +2,8 @@ use std::io;
 use ft::Face;
 
 use crate::{
-    prelude::core::{
-        image::Image,
+    prelude::qp_core::{
+        QPImage,
         to_abs_path,
     },
     platform::opengl::textures::{
@@ -82,7 +82,7 @@ pub mod texture {
     ) -> Result<Texture, TextureError> {
         let file_path = &to_abs_path(file_path)?;
         let format = get_format(file_path);
-        let img = Image::from_file(file_path)?;
+        let img = QPImage::from_file(file_path)?;
 
         let texture = Texture::new(
             img.width as i32,

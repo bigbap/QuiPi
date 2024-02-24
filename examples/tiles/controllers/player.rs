@@ -1,19 +1,19 @@
 use crate::{
-    ecs::{
+    qp_ecs::{
         components::{
             CQuad,
             CTransform2D
         },
         resources::RTileMap,
     },
-    data::{
+    qp_data::{
         ISchema,
         ValidTile,
         FrameResponse,
         FrameState,
         IController,
     },
-    schemas::SchemaSprite,
+    qp_schemas::SchemaSprite,
     Registry,
     VersionedIndex
 };

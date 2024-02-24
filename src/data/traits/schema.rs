@@ -1,5 +1,5 @@
 use crate::prelude::{
-    ecs::VersionedIndex,
+    qp_ecs::VersionedIndex,
     Registry
 };
 

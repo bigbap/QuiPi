@@ -4,10 +4,10 @@ use crate::{
         ParameterValue
     },
     prelude::{
-        gfx::texture::from_image,
-        core::to_abs_path,
-        ecs::resources::RTexture,
-        data::ISchema,
+        qp_gfx::texture::from_image,
+        qp_core::to_abs_path,
+        qp_ecs::resources::RTexture,
+        qp_data::ISchema,
         Registry
     },
 };

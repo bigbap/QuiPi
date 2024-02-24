@@ -1,6 +1,6 @@
 mod profiler;
 
-pub mod api {
+pub mod prelude {
     use super::*;
 
     pub use profiler::*;

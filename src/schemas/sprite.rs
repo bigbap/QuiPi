@@ -1,7 +1,7 @@
 use serde::{Serialize, Deserialize};
 
 use crate::prelude::{
-    ecs::{
+    qp_ecs::{
         components::{
             CQuad,
             CSprite,
@@ -12,7 +12,7 @@ use crate::prelude::{
         resources::RTexture,
         VersionedIndex
     },
-    data::{
+    qp_data::{
         TextureAtlas,
         ISchema
     },

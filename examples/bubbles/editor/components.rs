@@ -1,15 +1,16 @@
-use egui::Ui;
+use egui::{Context, Ui};
+use quipi::prelude::qp_data::FrameState;
 
 use crate::{
-    ecs::components::{
+    qp_ecs::components::{
         CQuad,
         CTag,
         CTransform2D,
         CVelocity2D,
     },
+    qp_editor::IGuiController,
     Registry,
-    VersionedIndex,
-    GUI
+    VersionedIndex
 };
 
 pub struct EntityEditor {
@@ -26,9 +27,33 @@ impl EntityEditor {
         }
     }
 
-    pub fn update(
+    fn add_component(
+        &self,
+        ui: &mut Ui,
+        entity: VersionedIndex,
+        registry: &mut Registry
+    ) {
+        ui.menu_button("Add component", |ui| {
+            if registry.entities.get::<CVelocity2D>(&entity).is_none() {
+                if ui.button("CVelocity").clicked() {
+                    registry.entities.add(&entity, CVelocity2D::default());
+                }
+            } else { ui.label("CVelocity"); }
+
+            if registry.entities.get::<CQuad>(&entity).is_none() {
+                if ui.button("CQuad").clicked() {
+                    registry.entities.add(&entity, CQuad::default());
+                }
+            } else { ui.label("CQuad"); }
+        });
+    }
+}
+
+impl IGuiController for EntityEditor {
+    fn update(
         &mut self,
-        gui: &GUI,
+        ctx: &Context,
+        _frame_state: &mut FrameState,
         registry: &mut Registry
     ) {
         if let Some(entity) = self.active_entity {
@@ -36,7 +61,7 @@ impl EntityEditor {
                 self.to_remove.pop().unwrap()(registry, entity);
             }
 
-            egui::Window::new("Entity").show(&gui.ctx, |ui| {
+            egui::Window::new("Entity").show(ctx, |ui| {
                 ui.add_space(10.0);
                 self.add_component(ui, entity, registry);
                 ui.add_space(10.0);
@@ -109,26 +134,5 @@ impl EntityEditor {
                 }
             });
         }
-    }
-
-    fn add_component(
-        &self,
-        ui: &mut Ui,
-        entity: VersionedIndex,
-        registry: &mut Registry
-    ) {
-        ui.menu_button("Add component", |ui| {
-            if registry.entities.get::<CVelocity2D>(&entity).is_none() {
-                if ui.button("CVelocity").clicked() {
-                    registry.entities.add(&entity, CVelocity2D::default());
-                }
-            } else { ui.label("CVelocity"); }
-
-            if registry.entities.get::<CQuad>(&entity).is_none() {
-                if ui.button("CQuad").clicked() {
-                    registry.entities.add(&entity, CQuad::default());
-                }
-            } else { ui.label("CQuad"); }
-        });
     }
 }

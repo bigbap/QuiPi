@@ -1,7 +1,7 @@
 use serde::{Serialize, Deserialize};
-use super::super::api::Component;
+use super::super::prelude::Component;
 
-use crate::prelude::data::{
+use crate::prelude::qp_data::{
     IMesh,
     Vertex,
     TextureAtlas

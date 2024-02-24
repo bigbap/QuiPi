@@ -1,4 +1,4 @@
-use super::super::api::Component;
+use super::super::prelude::Component;
 
 #[derive(Debug, Component, Default, PartialEq)]
 pub struct CMouseBtnState {

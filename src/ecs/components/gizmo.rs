@@ -1,4 +1,4 @@
-use super::super::api::Component;
+use super::super::prelude::Component;
 use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Component, Serialize, Deserialize, PartialEq)]

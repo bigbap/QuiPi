@@ -1,6 +1,6 @@
 use serde::{Serialize, Deserialize};
 
-use super::super::api::Component;
+use super::super::prelude::Component;
 
 #[derive(Debug, Component, Serialize, Deserialize, Clone, PartialEq)]
 pub struct CQuad {

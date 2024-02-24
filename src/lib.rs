@@ -8,30 +8,34 @@ extern crate serde;
 mod core;
 mod data;
 mod ecs;
-mod egui;
+mod editor;
 mod gfx;
 mod physics;
 mod platform;
 mod profiling;
 mod quipi;
 mod registry;
+mod resource_manager;
 mod schemas;
 
 pub mod prelude {
     use super::*;
 
-    pub use self::core::api as core;
-    pub use self::data::api as data;
-    pub use self::ecs::api as ecs;
-    pub use self::gfx::api as gfx;
-    pub use self::physics::api as physics;
-    pub use self::profiling::api as profiling;
-    pub use self::schemas::api as schemas;
+    pub use self::core::prelude as qp_core;
+    pub use self::data::prelude as qp_data;
+    pub use self::ecs::prelude as qp_ecs;
+
+    #[cfg(feature = "qp_editor")]
+    pub use self::editor::prelude as qp_editor;
+
+    pub use self::gfx::prelude as qp_gfx;
+    pub use self::physics::prelude as qp_physics;
+    pub use self::profiling::prelude as qp_profiling;
+    pub use self::schemas::prelude as qp_schemas;
 
     pub use quipi::QuiPi;
-    pub use self::egui::GUI;
     pub use self::registry::Registry;
-    pub use self::ecs::VersionedIndex;
+    pub use self::qp_ecs::VersionedIndex;
 
     // 3rd party - TODO: abstract this
     pub use sdl2::event::Event;

@@ -1,6 +1,6 @@
 use crate::prelude::{
-    ecs::components::CSprite,
-    data::{
+    qp_ecs::components::CSprite,
+    qp_data::{
         IRenderer,
         FrameState
     },

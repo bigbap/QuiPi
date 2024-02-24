@@ -1,17 +1,18 @@
-use egui::Vec2;
+use egui::{Context, Vec2};
+use quipi::prelude::qp_data::FrameState;
+use quipi::prelude::qp_editor::IGuiController;
 
 use crate::{
-    GUI,
-    ecs::components::{
+    qp_ecs::components::{
         CScene,
         CSprite,
         CTag,
     },
-    schemas::{
+    qp_schemas::{
         SchemaSprite,
         save_scene_2d
     },
-    data::ISchema,
+    qp_data::ISchema,
     Registry
 };
 
@@ -27,16 +28,19 @@ impl SceneEditor {
             entity_editor: EntityEditor::new()
         }
     }
+}
 
-    pub fn update(
+impl IGuiController for SceneEditor {
+    fn update(
         &mut self,
-        gui: &GUI,
+        ctx: &Context,
+        frame_state: &mut FrameState,
         registry: &mut Registry
     ) {
-        self.entity_editor.update(gui, registry);
+        self.entity_editor.update(ctx, frame_state, registry);
         let entities = registry.entities.query_all::<CSprite>();
     
-        egui::Window::new("Scene").show(&gui.ctx, |ui| {
+        egui::Window::new("Scene").show(ctx, |ui| {
             ui.horizontal(|ui| {
                 if ui.button("create entity").clicked() {
                     let schema = SchemaSprite::default();

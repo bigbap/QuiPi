@@ -5,7 +5,7 @@ use std::{
 };
 
 use super::c_str::*;
-use crate::prelude::core::to_abs_path;
+use crate::prelude::qp_core::to_abs_path;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ShaderError {

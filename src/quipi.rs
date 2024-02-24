@@ -2,21 +2,21 @@ use crate::platform::sdl2;
 use crate::platform::opengl;
 
 use crate::prelude::{
-    core::Timer,
+    qp_core::Timer,
     Registry,
-    data::{
+    qp_data::{
         FrameState,
         FrameResponse,
         IController,
         IRenderer,
         DebugInfo
     },
-    profiling::Profiler,
-    gfx::{
+    qp_profiling::Profiler,
+    qp_gfx::{
         TextRenderer,
         DEFAULT_FONT
     },
-    ecs::{
+    qp_ecs::{
         components::register_components,
         resources::register_resources
     }
@@ -41,9 +41,6 @@ impl QuiPi {
         height: u32,
     ) -> Result<Self, Box<dyn std::error::Error>> {
         let registry = setup()?;
-
-        #[cfg(feature = "profile-with-tracy")]
-        println!("tracy");
 
         let mut winapi = sdl2::QuiPiWindow::init()?;
         let _window = winapi.opengl_window(

@@ -7,9 +7,9 @@ use std::{
 };
 
 use crate::prelude::{
-    core::to_abs_path,
-    schemas::SchemaScene2D,
-    data::ISchema,
+    qp_core::to_abs_path,
+    qp_schemas::SchemaScene2D,
+    qp_data::ISchema,
     Registry,
     VersionedIndex,
 };

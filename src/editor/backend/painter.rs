@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 /*
 * Modeled after equi_sdl2_gl's upload_egui_texture.
 * https://github.com/ArjunNair/egui_sdl2_gl/blob/main/src/painter.rs
@@ -15,7 +13,7 @@ use egui::{
 };
 
 use crate::{
-    prelude::gfx::{
+    prelude::qp_gfx::{
         texture::*,
         viewport
     },
@@ -80,7 +78,7 @@ impl Painter {
         &mut self,
         ctx: &egui::Context,
         full_output: egui::FullOutput
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) {
         unsafe {
             gl::PixelStorei(gl::UNPACK_ROW_LENGTH, 0);
             gl::PixelStorei(gl::UNPACK_ALIGNMENT, 4);
@@ -101,7 +99,7 @@ impl Painter {
 
         let t_delta = full_output.textures_delta;
         for (texture_id, delta) in &t_delta.set {
-            self.upload_egui_texture(*texture_id, delta)?;
+            self.upload_egui_texture(*texture_id, delta);
         }
 
         let (self_x, self_y) = (self.screen_rect.width(), self.screen_rect.height());
@@ -135,7 +133,7 @@ impl Painter {
                         clip_max_y - clip_min_y,
                     );
 
-                    self.draw_mesh(mesh)?;
+                    self.draw_mesh(mesh);
                 }
             }
         }
@@ -143,14 +141,12 @@ impl Painter {
         gl_disable(GLCapability::FrameBufferSRGB);
         gl_disable(GLCapability::AlphaBlending);
         gl_disable(GLCapability::ScissorTest);
-
-        Ok(())
     }
 
     fn draw_mesh(
         &self,
         mesh: &Mesh,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) {
         let (points, colors, uv_coords) = parse_vertices(mesh);
 
         let vao = VertexArray::new();
@@ -182,15 +178,13 @@ impl Painter {
         gl_use_texture_unit(0);
         gl_draw(DrawBuffer::Elements, DrawMode::Triangles, mesh.indices.len() as i32);
         vao.unbind();
-
-        Ok(())
     }
 
     fn upload_egui_texture(
         &mut self,
         id: egui::TextureId,
         delta: &egui::epaint::ImageDelta
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) {
         let pixels: Vec<u8> = match &delta.image {
             egui::ImageData::Color(image) => {
                 assert_eq!(
@@ -248,8 +242,6 @@ impl Painter {
 
             self.textures.insert(id, texture);
         }
-
-        Ok(())
     }
 }
 

@@ -1,11 +1,11 @@
 use crate::{
-    ecs::resources::RCamera2D,
-    schemas::SchemaCamera2D,
-    gfx::viewport::{
+    qp_ecs::resources::RCamera2D,
+    qp_schemas::SchemaCamera2D,
+    qp_gfx::viewport::{
         get_dimensions,
         set_dimensions
     },
-    data::{
+    qp_data::{
         FrameResponse,
         FrameState,
         IController,

@@ -1,5 +1,5 @@
 use crate::{
-    ecs::{
+    qp_ecs::{
         components::{
             CQuad,
             CSprite,
@@ -7,11 +7,11 @@ use crate::{
         },
         resources::RTileMap,
     },
-    core::{
+    qp_core::{
         random::Random,
         now_secs
     },
-    data::{
+    qp_data::{
         FrameResponse,
         FrameState,
         IController,

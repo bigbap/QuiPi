@@ -1,19 +1,19 @@
 use crate::{
-    ecs::components::{
+    qp_ecs::components::{
         CQuad,
         CTransform2D,
          CVelocity2D,
          CTag
     },
-    schemas::SchemaSprite,
-    data::{
+    qp_schemas::SchemaSprite,
+    qp_data::{
         ISchema,
         IController,
         FrameResponse,
         FrameState,
     },
-    gfx::viewport::get_dimensions,
-    core::{
+    qp_gfx::viewport::get_dimensions,
+    qp_core::{
         random::Random,
         now_secs
     },

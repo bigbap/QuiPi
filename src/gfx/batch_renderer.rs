@@ -20,11 +20,11 @@ use crate::{
         },
         textures::use_texture
     },
-    prelude::ecs::resources::{
+    prelude::qp_ecs::resources::{
         RShader,
         RTexture
     },
-    prelude::data::{
+    prelude::qp_data::{
         Vertex,
         IMesh
     }

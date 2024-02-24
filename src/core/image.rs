@@ -5,13 +5,13 @@ use image::{
     ImageError,
 };
 
-pub struct Image {
+pub struct QPImage {
     pub width: u32,
     pub height: u32,
     img: DynamicImage
 }
 
-impl Image {
+impl QPImage {
     pub fn from_file(path: &str) -> Result<Self, ImageError> {
         let img = image::open(path)?;
         let width = img.width();

@@ -1,6 +1,6 @@
 use crate::prelude::{
     Event,
-    gfx::TextRenderer
+    qp_gfx::TextRenderer
 };
 
 #[derive(Debug)]

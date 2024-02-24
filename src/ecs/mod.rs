@@ -5,7 +5,7 @@ mod resources;
 mod components;
 mod tests;
 
-pub mod api {
+pub mod prelude {
     use super::*;
 
     pub use component_derive::Component;

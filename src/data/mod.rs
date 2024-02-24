@@ -2,7 +2,7 @@ mod structs;
 mod enums;
 mod traits;
 
-pub mod api {
+pub mod prelude {
     use super::*;
 
     pub use structs::*;

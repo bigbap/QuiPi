@@ -1,14 +1,14 @@
 use crate::{
-    ecs::{
+    qp_ecs::{
         components::CTransform2D,
         resources::RCamera2D,
     },
-    schemas::SchemaCamera2D,
-    gfx::viewport::{
+    qp_schemas::SchemaCamera2D,
+    qp_gfx::viewport::{
         get_dimensions,
         set_dimensions
     },
-    data::{
+    qp_data::{
         FrameResponse,
         FrameState,
         IController,

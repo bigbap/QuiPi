@@ -1,17 +1,17 @@
 use serde::{Serialize, Deserialize};
 
 use crate::prelude::{
-    ecs::components::{
+    qp_ecs::components::{
         CScene,
         CSprite,
         CTransform2D
     },
-    ecs::VersionedIndex,
+    qp_ecs::VersionedIndex,
     Registry,
-    data::ISchema
+    qp_data::ISchema
 };
 
-use super::api::{
+use super::prelude::{
     SchemaCamera2D,
     SchemaShader,
     SchemaSprite,

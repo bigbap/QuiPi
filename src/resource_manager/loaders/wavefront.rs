@@ -1,6 +1,6 @@
 use std::io;
 
-use crate::core::utils::to_abs_path;
+use crate::prelude::qp_core::to_abs_path;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ObjectError {

@@ -1,6 +1,6 @@
 use crate::{
     prelude::{
-        ecs::{
+        qp_ecs::{
             components::{
                 CSprite,
                 CTransform2D
@@ -10,7 +10,7 @@ use crate::{
                 RShader
             },
         },
-        data::{
+        qp_data::{
             FrameState,
             IRenderer,
         },

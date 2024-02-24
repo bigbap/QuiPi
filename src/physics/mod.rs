@@ -1,7 +1,7 @@
 pub mod movement;
 pub mod rotation;
 
-pub mod api {
+pub mod prelude {
     use super::*;
 
     pub use movement::*;

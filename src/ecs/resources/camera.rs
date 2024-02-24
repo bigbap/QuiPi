@@ -1,10 +1,10 @@
 use serde::{Serialize, Deserialize};
 
-use super::super::api::Component;
+use super::super::prelude::Component;
 
 use crate::prelude::{
-    data::OrthographicCameraParams,
-    ecs::components::CTransform2D
+    qp_data::OrthographicCameraParams,
+    qp_ecs::components::CTransform2D
 };
 
 #[derive(Debug, Component, Serialize, Deserialize, PartialEq)]

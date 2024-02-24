@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::super::api::Component;
+use super::super::prelude::Component;
 
 
 #[derive(Debug, Component, Serialize, Deserialize, PartialEq)]

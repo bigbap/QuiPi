@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::super::api::Component;
+use super::super::prelude::Component;
 
 /**
 * https://en.wikipedia.org/wiki/Euler_angles

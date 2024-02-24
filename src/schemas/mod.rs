@@ -5,7 +5,7 @@ mod shader;
 mod texture;
 mod scene;
 
-pub mod api {
+pub mod prelude {
     use super::*;
 
     pub use camera2d::SchemaCamera2D;

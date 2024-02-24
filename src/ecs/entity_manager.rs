@@ -1,11 +1,11 @@
-use crate::prelude::core::AnyMap;
+use crate::prelude::qp_core::AnyMap;
 use super::{
     indexed_array::{
         IndexedArray,
         VersionedIndexAllocator,
         VersionedIndex
     },
-    api::Component
+    prelude::Component
 };
 
 type EntityMap<C> = IndexedArray<C>;

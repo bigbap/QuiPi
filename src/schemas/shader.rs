@@ -1,12 +1,12 @@
 use serde::{Serialize, Deserialize};
 
 use crate::prelude::{
-    ecs::resources::RShader,
-    data::{
+    qp_ecs::resources::RShader,
+    qp_data::{
         ShaderUniforms,
         ISchema
     },
-    gfx::get_shader,
+    qp_gfx::get_shader,
     Registry
 };
 

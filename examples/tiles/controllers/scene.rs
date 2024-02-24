@@ -1,13 +1,13 @@
 use crate::{
-    gfx::Renderer2D,
-    schemas::{
+    qp_gfx::Renderer2D,
+    qp_schemas::{
         SchemaScene2D,
         SchemaShader,
         SchemaTexture,
         load_scene_2d
     },
-    core::Timer,
-    data::{
+    qp_core::Timer,
+    qp_data::{
         FrameResponse,
         FrameState,
         IController,

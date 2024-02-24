@@ -1,8 +1,8 @@
 use std::{collections::HashMap, fmt::Debug};
 
 use crate::prelude::{
-    core::StringInterner,
-    ecs::{
+    qp_core::StringInterner,
+    qp_ecs::{
         ECSError,
         EntityManager,
         Component,
@@ -133,7 +133,7 @@ impl Registry {
 
 #[cfg(test)]
 mod tests {
-    use crate::prelude::ecs::Component;
+    use crate::prelude::qp_ecs::Component;
 
     use super::*;
 

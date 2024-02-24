@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use crate::{
-    prelude::core::to_abs_path,
+    prelude::qp_core::to_abs_path,
     platform::opengl::{
         buffer::{
             vertex_attribute_pointer,
@@ -15,7 +15,7 @@ use crate::{
         textures::gl_use_texture_unit
     }
 };
-use super::api::viewport::get_dimensions;
+use super::prelude::viewport::get_dimensions;
 
 mod characters;
 

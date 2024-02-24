@@ -1,7 +1,7 @@
 use crate::prelude::{
     Registry,
     VersionedIndex,
-    ecs::components::{
+    qp_ecs::components::{
         CEulerAngles,
         CGizmo
     }

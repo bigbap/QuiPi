@@ -1,10 +1,10 @@
 use serde::{Serialize, Deserialize};
 
 use crate::prelude::{
-    ecs::components::CTransform2D,
-    ecs::resources::RCamera2D,
+    qp_ecs::components::CTransform2D,
+    qp_ecs::resources::RCamera2D,
     Registry,
-    data::{
+    qp_data::{
         ISchema,
         OrthographicCameraParams
     }

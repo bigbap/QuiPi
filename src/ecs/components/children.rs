@@ -1,4 +1,4 @@
-use super::super::api::{
+use super::super::prelude::{
     Component,
     VersionedIndex
 };

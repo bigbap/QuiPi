@@ -1,12 +1,12 @@
 use crate::{
-    gfx::Renderer2D,
-    schemas::{
+    qp_gfx::Renderer2D,
+    qp_schemas::{
         SchemaScene2D,
         SchemaShader,
         SchemaTexture,
         load_scene_2d
     },
-    data::{
+    qp_data::{
         ISchema,
         ShaderUniforms,
         FrameResponse,
@@ -14,7 +14,7 @@ use crate::{
         IController,
         IRenderer
     },
-    core::Timer,
+    qp_core::Timer,
     QuiPi,
     Registry
 };

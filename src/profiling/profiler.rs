@@ -1,4 +1,4 @@
-use crate::prelude::core::Timer;
+use crate::prelude::qp_core::Timer;
 
 pub struct Profiler {
     timer: Timer

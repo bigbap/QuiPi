@@ -1,0 +1,11 @@
+[alias]
+b = "build"
+br = "build --release"
+c = "check"
+t = "test"
+r = "run"
+rr = "run --release"
+bubbles_debug = "r --example bubbles --features=qp_editor"
+tiles_debug = "r --example tiles --features=qp_editor"
+bubbles = "rr --example bubbles"
+tiles = "rr --example tiles"

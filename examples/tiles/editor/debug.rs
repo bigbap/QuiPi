@@ -1,24 +1,30 @@
+use egui::Context;
 use crate::{
-    data::FrameState,
-    Registry,
-    GUI
+    qp_data::FrameState,
+    qp_editor::IGuiController,
+    Registry
 };
 
-pub fn debug(
-    gui: &GUI,
-    app_state: &FrameState,
-    registry: &Registry
-) {
-    egui::Window::new("Debug Info")
-        .show(&gui.ctx, |ui| {
-            ui.set_width(200.0);
-            ui.label(format!("fps: {}", app_state.debug_info.fps));
-            ui.label(format!("ms (frame): {}", app_state.debug_info.frame_ms));
-            ui.label(format!("ms (draw time): {}", app_state.debug_info.render_ms));
-            ui.label(format!("ms (editor time): {}", app_state.debug_info.editor_ms));
-            ui.label(format!("draw calls: {}", app_state.debug_info.draw_calls));
-            ui.separator();
-            ui.label(format!("entity count: {}", registry.entities.count()));
-            ui.label(format!("allocator size: {}", registry.entities.allocator_size()));
-        });
+pub struct DebugUi {}
+
+impl IGuiController for DebugUi {
+    fn update(
+        &mut self,
+        ctx: &Context,
+        frame_state: &mut FrameState,
+        registry: &mut Registry
+    ) {
+        egui::Window::new("Debug Info")
+            .show(ctx, |ui| {
+                ui.set_width(200.0);
+                ui.label(format!("fps: {}", frame_state.debug_info.fps));
+                ui.label(format!("frame time (ms): {}", frame_state.debug_info.frame_ms));
+                ui.label(format!("draw time (ms): {}", frame_state.debug_info.render_ms));
+                ui.label(format!("editor time (ms): {}", frame_state.debug_info.editor_ms));
+                ui.label(format!("draw calls: {}", frame_state.debug_info.draw_calls));
+                ui.separator();
+                ui.label(format!("entity count: {}", registry.entities.count()));
+                ui.label(format!("allocator size: {}", registry.entities.allocator_size()));
+            });
+    }
 }

@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod ecs_tests {
-    use super::super::*;
+    use super::super::prelude::*;
 
     #[derive(Component, Debug, PartialEq)]
     struct DrawComponent {}
