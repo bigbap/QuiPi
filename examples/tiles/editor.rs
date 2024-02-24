@@ -1,6 +1,7 @@
 mod debug;
 
 use crate::{
+    QPError,
     qp_core::Timer,
     qp_data::{
         FrameResponse,
@@ -17,7 +18,7 @@ pub struct AppEditor {
 }
 
 impl AppEditor {
-    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new() -> Result<Self, QPError> {
         let mut gui = GuiManager::new(1.0)?;
         let debug_ui = debug::DebugUi {};
 

@@ -1,19 +1,19 @@
 use std::collections::HashMap;
 use crate::{
-    prelude::qp_core::to_abs_path,
     platform::opengl::{
         buffer::{
-            vertex_attribute_pointer,
-            Buffer,
-            VertexArray,
-            BufferUsage,
-            VBO
+            vertex_attribute_pointer, Buffer, BufferUsage, VertexArray, VBO
         },
         capabilities::*,
         draw::*,
         shader::ShaderProgram,
         textures::gl_use_texture_unit
-    }
+    },
+    prelude::{
+        QPError,
+        qp_core::to_abs_path
+    },
+    QPResult
 };
 use super::prelude::viewport::get_dimensions;
 
@@ -36,8 +36,9 @@ pub struct TextRenderer {
 impl TextRenderer {
     pub fn new(
         font: &str
-    ) -> Result<Self, Box<dyn std::error::Error>> {
-        let char_map = characters::load_char_textures(&to_abs_path(font)?)?;
+    ) -> QPResult<Self> {
+        let char_map = characters::load_char_textures(&to_abs_path(font)?)
+            .map_err(|e| QPError::Generic(e.to_string()))?;
         let shader = ShaderProgram::from_str(
             VERT_SHADER,
             FRAG_SHADER,

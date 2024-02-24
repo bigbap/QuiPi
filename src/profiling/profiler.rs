@@ -1,10 +1,10 @@
 use crate::prelude::qp_core::Timer;
 
-pub struct Profiler {
+pub struct QPProfiler {
     timer: Timer
 }
 
-impl Profiler {
+impl QPProfiler {
     pub fn new() -> Self {
         Self {
             timer: Timer::new()

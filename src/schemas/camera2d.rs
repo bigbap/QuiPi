@@ -1,5 +1,6 @@
 use serde::{Serialize, Deserialize};
 
+use crate::QPResult;
 use crate::prelude::{
     qp_ecs::components::CTransform2D,
     qp_ecs::resources::RCamera2D,
@@ -43,15 +44,17 @@ impl ISchema for SchemaCamera2D {
     fn load_resource(
         &self,
         registry: &mut Registry
-    ) -> Result<u64, Box<dyn std::error::Error>> {
+    ) -> QPResult<u64> {
 
-        Ok(registry.load_resourse(
-            self.name.clone(),
-            RCamera2D::new(
-                self.params(),
-                self.transform
+        Ok(
+            registry.load_resourse(
+                self.name.clone(),
+                RCamera2D::new(
+                    self.params(),
+                    self.transform
+                )?
             )?
-        )?)
+        )
     }
 
     fn from_resource(id: u64, registry: &Registry) -> Option<Self> {

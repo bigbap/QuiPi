@@ -4,6 +4,7 @@ mod backend;
 pub mod prelude {
     use egui::Context;
     use super::backend::prelude::*;
+    use crate::QPResult;
     use crate::prelude::{
         qp_core::Timer,
         qp_data::{FrameResponse, FrameState, IController},
@@ -18,7 +19,7 @@ pub mod prelude {
     }
     
     impl GuiManager {
-        pub fn new(scale: f32) -> Result<Self, Box<dyn std::error::Error>> {
+        pub fn new(scale: f32) -> QPResult<Self> {
             Ok(Self {
                 backend: EguiBackend::new(scale)?,
                 timer: Timer::new(),

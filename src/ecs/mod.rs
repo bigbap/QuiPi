@@ -17,7 +17,6 @@ pub mod prelude {
     pub use indexed_array::IndexedArray;
     
     pub use entity_manager::EntityManager;
-    pub use entity_manager::ECSError;
     pub use query::EMQuery;
     pub use components::components;
     pub use resources::resources;

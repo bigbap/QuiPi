@@ -1,6 +1,6 @@
 use super::super::prelude::Component;
 use serde::{Deserialize, Serialize};
-use crate::prelude::qp_data::ValidTile;
+use crate::{prelude::qp_data::ValidTile, QPResult};
 
 #[derive(Debug, Component, PartialEq, Clone, Serialize, Deserialize)]
 pub struct RTileMap {
@@ -16,7 +16,7 @@ impl RTileMap {
         rows: usize,
         data: Vec<u16>,
         tile_size: glm::Vec2
-    ) -> Result<Self, Box<dyn std::error::Error>> {
+    ) -> QPResult<Self> {
         assert!(data.len() == columns * rows);
 
         Ok(Self {

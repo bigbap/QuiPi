@@ -18,6 +18,7 @@ use crate::{
     QuiPi,
     Registry
 };
+use quipi::prelude::QPError;
 use sdl2::{
     event::Event,
     keyboard::Keycode
@@ -32,7 +33,7 @@ use super::{
 pub struct SceneController {}
 
 impl SceneController {
-    pub fn load(engine: &mut QuiPi) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn load(engine: &mut QuiPi) -> Result<Self, QPError> {
         let scene = load_scene_2d(
             "tile_map",
             scene_schema()

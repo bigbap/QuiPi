@@ -1,5 +1,6 @@
 use serde::{Serialize, Deserialize};
 
+use crate::QPResult;
 use crate::prelude::{
     qp_ecs::components::{
         CScene,
@@ -37,7 +38,7 @@ impl ISchema for SchemaScene2D {
     fn build_entity(
         &self,
         registry: &mut Registry
-    ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
+    ) -> QPResult<VersionedIndex> {
         // 1. build cameras
         let mut cameras = vec![];
         for camera in self.cameras.iter() {

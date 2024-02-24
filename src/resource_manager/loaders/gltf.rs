@@ -4,7 +4,7 @@
 // pub fn s_create_model_from_gltf(
 //     file_path: &str,
 //     _tag: &str,
-// ) -> Result<Vec<ObjectConfig>, Box<dyn std::error::Error>> {
+// ) -> QPResult<Vec<ObjectConfig>> {
 //     let mut result: Vec<ObjectConfig> = vec![];
 //     let (document, _buffers, _images) = gltf::import(file_path)?;
    

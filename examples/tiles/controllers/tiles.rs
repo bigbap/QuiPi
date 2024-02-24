@@ -1,3 +1,5 @@
+use quipi::prelude::QPError;
+
 use crate::{
     qp_ecs::{
         components::{
@@ -42,7 +44,7 @@ pub struct TileControler {
 }
 
 impl TileControler {
-    pub fn new(registry: &mut Registry) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(registry: &mut Registry) -> Result<Self, QPError> {
         let mut _rand = Random::from_seed(now_secs()?);
         let columns = 10; // rand.range(10, 30);
         let rows = 10; // rand.range(8, 20);

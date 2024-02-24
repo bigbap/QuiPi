@@ -9,12 +9,13 @@ pub mod shader;
 mod c_str;
 
 use super::sdl2::QuiPiWindow;
+use crate::QPResult;
 
 pub fn init(
     window_api: &QuiPiWindow,
     width: i32,
     height: i32,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> QPResult<()> {
     let _opengl = MyOpenGL::init(window_api)?;
 
     functions::gl_set_viewport_dimensions(
@@ -32,7 +33,7 @@ pub struct MyOpenGL {}
 impl MyOpenGL {
     pub fn init(
         window_api: &QuiPiWindow
-    ) -> Result<Self, Box<dyn std::error::Error>> {
+    ) -> QPResult<Self> {
         gl::load_with(
             |name| window_api.video_subsystem.gl_get_proc_address(name) as *const _
         );

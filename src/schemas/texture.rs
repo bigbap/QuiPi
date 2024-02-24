@@ -4,12 +4,13 @@ use crate::{
         ParameterValue
     },
     prelude::{
-        qp_gfx::texture::from_image,
         qp_core::to_abs_path,
-        qp_ecs::resources::RTexture,
         qp_data::ISchema,
+        qp_ecs::resources::RTexture,
+        qp_gfx::texture::from_image,
         Registry
     },
+    QPResult,
 };
 use serde::{Serialize, Deserialize};
 
@@ -23,7 +24,7 @@ impl ISchema for SchemaTexture {
     fn load_resource(
         &self,
         registry: &mut Registry
-    ) -> Result<u64, Box<dyn std::error::Error>> {
+    ) -> QPResult<u64> {
         let path = format!("assets/textures/{}", self.name);
 
         let texture = from_image(&to_abs_path(&path)?)?;

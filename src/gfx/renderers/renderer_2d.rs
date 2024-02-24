@@ -1,6 +1,14 @@
 use crate::{
-    prelude::{
-        qp_ecs::{
+    platform::opengl::capabilities::{
+        gl_blending_func,
+        gl_enable,
+        GLBlendingFactor,
+        GLCapability
+    }, prelude::{
+        qp_data::{
+            FrameState,
+            IRenderer,
+        }, qp_ecs::{
             components::{
                 CSprite,
                 CTransform2D
@@ -9,19 +17,9 @@ use crate::{
                 RCamera2D,
                 RShader
             },
-        },
-        qp_data::{
-            FrameState,
-            IRenderer,
-        },
-        Registry
+        }, QPError, Registry
     },
-    platform::opengl::capabilities::{
-        gl_blending_func,
-        gl_enable,
-        GLBlendingFactor,
-        GLCapability
-    },
+    QPResult
 };
 
 use super::super::batch_renderer::BatchRenderer;
@@ -38,13 +36,13 @@ impl Renderer2D {
         registry: &mut Registry,
         camera: &str,
         shader: &str
-    ) -> Result<Self, Box<dyn std::error::Error>> {
+    ) -> QPResult<Self> {
         let Some(camera) = registry.get_resource_id(camera) else {
-            return Err("[2d renderer] camera is not loaded".into());
+            return Err(QPError::CameraNotLoaded);
         };
 
         let Some(shader) = registry.get_resource_id(shader) else {
-            return Err("[2d renderer] shader is not loaded".into());
+            return Err(QPError::ShaderNotLoaded);
         };
 
         Ok(Self {

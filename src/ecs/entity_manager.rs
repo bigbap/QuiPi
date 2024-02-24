@@ -1,4 +1,7 @@
-use crate::prelude::qp_core::AnyMap;
+use crate::{
+    QPResult,
+    prelude::qp_core::AnyMap
+};
 use super::{
     indexed_array::{
         IndexedArray,
@@ -10,12 +13,6 @@ use super::{
 
 type EntityMap<C> = IndexedArray<C>;
 
-#[derive(Debug, thiserror::Error)]
-pub enum ECSError {
-    #[error("there was a problem creating a new component registry")]
-    ProblemCreatingNewComponentRegistry
-}
-
 #[derive(Debug)]
 pub struct EntityManager {
     entity_allocator: VersionedIndexAllocator,
@@ -26,7 +23,7 @@ pub struct EntityManager {
 }
 
 impl EntityManager {
-    pub fn new() -> Result<Self, ECSError> {
+    pub fn new() -> QPResult<Self> {
         let entity_manager = Self {
             entity_allocator: VersionedIndexAllocator::default(),
             component_maps: AnyMap::new(),
@@ -159,7 +156,7 @@ impl EntityManager {
         result
     }
 
-    pub fn reset(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn reset(&mut self) -> QPResult<()> {
         for entity in self.entities.iter() {
             self.entity_allocator.deallocate(*entity);
         }

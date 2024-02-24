@@ -1,4 +1,5 @@
 use super::super::prelude::Component;
+use crate::QPResult;
 use crate::platform::opengl::shader::ShaderProgram;
 use crate::prelude::qp_data::ShaderUniforms;
 
@@ -12,7 +13,7 @@ impl RShader {
     pub fn new(
         file_name: &str,
         uniforms: Vec<ShaderUniforms>
-    ) -> Result<Self, Box<dyn std::error::Error>> {
+    ) -> QPResult<Self> {
         Ok(Self {
             program: ShaderProgram::new(file_name)?,
             uniforms
@@ -23,7 +24,7 @@ impl RShader {
         vert: &str,
         frag: &str,
         uniforms: Vec<ShaderUniforms>
-    ) -> Result<Self, Box<dyn std::error::Error>> {
+    ) -> QPResult<Self> {
         Ok(Self {
             program: ShaderProgram::from_str(vert, frag)?,
             uniforms

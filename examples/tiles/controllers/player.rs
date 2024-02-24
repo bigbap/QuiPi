@@ -17,6 +17,7 @@ use crate::{
     Registry,
     VersionedIndex
 };
+use quipi::prelude::QPError;
 use sdl2::{event::Event, keyboard::Keycode};
 
 const PLAYER_SIZE: f32 = 54.0;
@@ -31,13 +32,13 @@ impl PlayerController {
     pub fn new(
         registry: &mut Registry,
         tile_map: u64
-    ) -> Result<Self, Box<dyn std::error::Error>> {
+    ) -> Result<Self, QPError> {
         let r_tile_map = registry.get_resource::<RTileMap>(tile_map).unwrap();
         let mut this_schema = SchemaSprite::default();
         let start_tile = glm::vec2(1.0, 7.0);
 
         let ValidTile::Valid(tile_pos) = r_tile_map.get_tile_pos(start_tile) else {
-            return Err("[player controller] invalid start tile".into())
+            return Err(QPError::Generic("[player controller] invalid start tile".into()))
         };
         let transform = CTransform2D {
             translate: tile_pos.xy(),

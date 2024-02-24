@@ -20,6 +20,7 @@ use crate::{
     Registry,
     VersionedIndex
 };
+use quipi::prelude::QPError;
 use sdl2::{event::Event, keyboard::Keycode};
 
 pub struct BubbleController {
@@ -28,7 +29,7 @@ pub struct BubbleController {
 }
 
 impl BubbleController {
-    pub fn new(registry: &mut Registry) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(registry: &mut Registry) -> Result<Self, QPError> {
         let mut bubbles = registry.entities.query(CTag { tag: "sprite".to_string() });
         let mut rand = Random::from_seed(now_secs()?);
 
@@ -79,7 +80,7 @@ impl IController for BubbleController {
 fn spawn(
     rand: &mut Random,
     registry: &mut Registry,
-) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
+) -> Result<VersionedIndex, QPError> {
     let mut this_schema = SchemaSprite::default();
 
     let (_x, _y, width, height) = get_dimensions();

@@ -5,6 +5,7 @@ mod debug;
 use scene::SceneEditor;
 
 use crate::{
+    QPError,
     qp_editor::GuiManager,
     qp_core::Timer,
     qp_data::{
@@ -22,7 +23,7 @@ pub struct AppEditor {
 }
 
 impl AppEditor {
-    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new() -> Result<Self, QPError> {
         let mut gui = GuiManager::new(1.0)?;
         let scene = SceneEditor::new();
         let debug_ui = DebugUi {};

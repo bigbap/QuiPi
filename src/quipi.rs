@@ -1,7 +1,8 @@
 use crate::platform::sdl2;
 use crate::platform::opengl;
-
+use crate::QPResult;
 use crate::prelude::{
+    QPError,
     qp_core::Timer,
     Registry,
     qp_data::{
@@ -11,7 +12,6 @@ use crate::prelude::{
         IRenderer,
         DebugInfo
     },
-    qp_profiling::Profiler,
     qp_gfx::{
         TextRenderer,
         DEFAULT_FONT
@@ -22,10 +22,15 @@ use crate::prelude::{
     }
 };
 
+#[cfg(feature = "qp_profiling")]
+use crate::prelude::QPProfiler;
+
 pub struct QuiPi {
     pub registry: Registry,
     winapi: sdl2::QuiPiWindow,
-    profiler: Profiler,
+
+    #[cfg(feature = "qp_profiling")]
+    profiler: QPProfiler,
 
     frame_timer: Timer,
     frame_state: FrameState,
@@ -39,7 +44,7 @@ impl QuiPi {
         title: &str,
         width: u32,
         height: u32,
-    ) -> Result<Self, Box<dyn std::error::Error>> {
+    ) -> QPResult<Self> {
         let registry = setup()?;
 
         let mut winapi = sdl2::QuiPiWindow::init()?;
@@ -62,7 +67,10 @@ impl QuiPi {
         Ok(Self {
             registry,
             winapi,
-            profiler: Profiler::new(),
+
+            #[cfg(feature = "qp_profiling")]
+            profiler: QPProfiler::new(),
+
             frame_timer,
             frame_state,
             controllers: vec![],
@@ -78,7 +86,7 @@ impl QuiPi {
         self.renderers.push(Box::new(renderer));
     }
 
-    pub fn run(&mut self, clear_color: (f32, f32, f32, f32)) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn run(&mut self, clear_color: (f32, f32, f32, f32)) -> QPResult<()> {
         'running: loop {
             self.registry.entities.flush();
             self.registry.flush_resources();
@@ -89,7 +97,9 @@ impl QuiPi {
             self.frame_state.events = self.winapi.get_event_queue()?;
 
             // update controllers
+            #[cfg(feature = "qp_profiling")]
             self.profiler.begin();
+
             for controller in self.controllers.iter_mut() {
                 match controller.update(&mut self.frame_state, &mut self.registry) {
                     FrameResponse::Quit => break 'running,
@@ -97,12 +107,18 @@ impl QuiPi {
                     FrameResponse::None => ()
                 }
             }
-            let controller_ms = self.profiler.end();
+
+            #[cfg(feature = "qp_profiling")]
+            {
+                self.frame_state.debug_info.controller_ms = self.profiler.end() as u32;
+            }
 
             // call renderers
             let mut draw_calls = 0;
-
+            
+            #[cfg(feature = "qp_profiling")]
             self.profiler.begin();
+
             for renderer in self.renderers.iter_mut() {
                 if let Some(m_draw_calls) = renderer.draw(
                     &mut self.frame_state,
@@ -115,12 +131,14 @@ impl QuiPi {
             if let Some(window) = &self.winapi.window {
                 window.gl_swap_window();
             } else {
-                return Err("There was a problem drawing the frame".into())
+                return Err(QPError::ProblemSwappingFrameBuffers)
             }
-            let render_ms = self.profiler.end();
-    
-            self.frame_state.debug_info.controller_ms = controller_ms as u32;
-            self.frame_state.debug_info.render_ms = render_ms as u32;
+
+            #[cfg(feature = "qp_profiling")]
+            {
+                self.frame_state.debug_info.render_ms = self.profiler.end() as u32;
+            }
+            
             self.frame_state.debug_info.draw_calls = draw_calls;
             self.frame_state.delta = self.frame_timer.delta();
         }
@@ -129,7 +147,7 @@ impl QuiPi {
     }
 }
 
-fn setup() -> Result<Registry, Box<dyn std::error::Error>> {
+fn setup() -> QPResult<Registry> {
     let mut registry = Registry::init()?;
 
     register_components(&mut registry);

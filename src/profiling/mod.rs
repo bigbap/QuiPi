@@ -1,7 +1,3 @@
 mod profiler;
 
-pub mod prelude {
-    use super::*;
-
-    pub use profiler::*;
-}
+pub use profiler::QPProfiler;

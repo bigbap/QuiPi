@@ -1,7 +1,9 @@
 use serde::{Serialize, Deserialize};
 
-use crate::prelude::{
-    qp_ecs::{
+use crate::{errors::QPError, prelude::{
+    qp_data::{
+        ISchema, TextureAtlas
+    }, qp_ecs::{
         components::{
             CQuad,
             CSprite,
@@ -11,13 +13,9 @@ use crate::prelude::{
         },
         resources::RTexture,
         VersionedIndex
-    },
-    qp_data::{
-        TextureAtlas,
-        ISchema
-    },
-    Registry
-};
+    }, Registry
+}};
+use crate::QPResult;
 
 pub const DEFAULT_RECT_TAG: &str = "default_rect";
 
@@ -36,11 +34,11 @@ impl ISchema for SchemaSprite {
     fn build_entity(
         &self,
         registry: &mut Registry,
-    ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
+    ) -> QPResult<VersionedIndex> {
         let texture_atlas = match &self.texture {
             Some(id_as_str) => {
                 let Some(id) = registry.get_resource_id(&id_as_str) else {
-                    return Err("[sprite schema] texture doesn't exist".into())
+                    return Err(QPError::SpriteTextureDoesntExist)
                 };
 
                 let texture = registry.get_resource::<RTexture>(id).unwrap();
@@ -112,20 +110,4 @@ impl Default for SchemaSprite {
             color: glm::vec4(1.0, 1.0, 1.0, 1.0)
         }
     }
-}
-
-#[derive(Debug, thiserror::Error)]
-pub enum SchemaEntityError {
-    // SchemaRect errors
-    #[error("[sprite schema] shader not found")]
-    ShaderNotFound,
-
-    #[error("[sprite schema] camera not found")]
-    CameraNotFound,
-
-    #[error("Other error")]
-    OtherError(
-        #[from]
-        Box<dyn std::error::Error>
-    ),
 }

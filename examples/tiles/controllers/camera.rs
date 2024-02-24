@@ -16,6 +16,7 @@ use crate::{
     Registry,
     VersionedIndex
 };
+use quipi::prelude::QPError;
 use sdl2::event::{Event, WindowEvent};
 
 pub const MAIN_CAMERA: &str = "main_camera";
@@ -27,10 +28,12 @@ pub struct CameraController {
 }
 
 impl CameraController {
-    pub fn new(player: VersionedIndex, registry: &mut Registry) -> Result<Self, Box<dyn std::error::Error>> {
-
+    pub fn new(
+        player: VersionedIndex,
+        registry: &mut Registry
+    ) -> Result<Self, QPError> {
         let Some(camera) = registry.get_resource_id(MAIN_CAMERA) else {
-            return Err("[camera controller] camera resource has not been loaded".into());
+            return Err(QPError::Generic("[camera controller] camera resource has not been loaded".into()));
         };
 
         Ok(Self {

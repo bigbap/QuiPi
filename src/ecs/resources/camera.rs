@@ -2,9 +2,12 @@ use serde::{Serialize, Deserialize};
 
 use super::super::prelude::Component;
 
-use crate::prelude::{
-    qp_data::OrthographicCameraParams,
-    qp_ecs::components::CTransform2D
+use crate::{
+    QPResult,
+    prelude::{
+        qp_data::OrthographicCameraParams,
+        qp_ecs::components::CTransform2D
+    }
 };
 
 #[derive(Debug, Component, Serialize, Deserialize, PartialEq)]
@@ -33,7 +36,7 @@ impl RCamera2D {
     pub fn new(
         params: OrthographicCameraParams,
         transform: CTransform2D,
-    ) -> Result<Self, Box<dyn std::error::Error>> {
+    ) -> QPResult<Self> {
         let camera = Self {
             projection: RCamera2D::calc_projection_matrix(&params),
             view: RCamera2D::calc_view_matrix(&transform),

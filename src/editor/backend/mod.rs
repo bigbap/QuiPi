@@ -14,7 +14,7 @@ pub mod prelude {
         Event,
         WindowEvent
     };
-
+    use crate::QPResult;
     use crate::prelude::{
         qp_gfx::viewport::set_dimensions,
         qp_data::FrameState
@@ -29,7 +29,7 @@ pub mod prelude {
     impl EguiBackend {
         pub fn new(
             scale: f32
-        ) -> Result<Self, Box<dyn std::error::Error>> {
+        ) -> QPResult<Self> {
             let ctx = egui::Context::default();
             let painter = Painter::new(scale)?;
             let raw_input = RawInput::default();

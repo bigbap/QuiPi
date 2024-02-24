@@ -1,5 +1,6 @@
 use serde::{Serialize, Deserialize};
 
+use crate::QPResult;
 use crate::prelude::{
     qp_ecs::resources::RShader,
     qp_data::{
@@ -34,7 +35,7 @@ impl ISchema for SchemaShader {
     fn load_resource(
         &self,
         registry: &mut Registry
-    ) -> Result<u64, Box<dyn std::error::Error>> {
+    ) -> QPResult<u64> {
         let shader = get_shader(&self.name);
         let id = registry.load_resourse(
             self.name.to_string(),

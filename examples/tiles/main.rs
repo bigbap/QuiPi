@@ -8,10 +8,12 @@ pub static WIDTH: u32 = 1600;
 pub static HEIGHT: u32 = 900;
 
 mod controllers;
+
 #[cfg(debug_assertions)]
+#[cfg(feature = "qp_editor")]
 mod editor;
 
-pub fn run() -> Result<(), Box<dyn std::error::Error>> {
+pub fn run() -> Result<(), QPError> {
     let mut app = QuiPi::init(
         "Tiles",
         WIDTH,
@@ -19,12 +21,13 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     )?;
 
     let scene = SceneController::load(&mut app)?;
-    #[cfg(debug_assertions)]
-    let editor = editor::AppEditor::new()?;
 
     app.register_controller(scene);
+
     #[cfg(debug_assertions)]
-    app.register_controller(editor);
+    #[cfg(feature = "qp_editor")]
+    app.register_controller(editor::AppEditor::new()?);
+
     app.run((0.3, 0.3, 0.3, 1.0))
 }
 

@@ -1,13 +1,16 @@
-use crate::prelude::{
-    qp_ecs::VersionedIndex,
-    Registry
+use crate::{
+    prelude::{
+        qp_ecs::VersionedIndex,
+        Registry
+    },
+    QPResult
 };
 
 pub trait ISchema: Clone {
     fn build_entity(
         &self,
         _registry: &mut Registry
-    ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
+    ) -> QPResult<VersionedIndex> {
         unimplemented!()
     }
 
@@ -21,7 +24,7 @@ pub trait ISchema: Clone {
     fn load_resource(
         &self,
         _registry: &mut Registry
-    ) -> Result<u64, Box<dyn std::error::Error>> {
+    ) -> QPResult<u64> {
         unimplemented!()
     }
 

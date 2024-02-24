@@ -7,7 +7,8 @@ use sdl2::{
     Sdl,
     event::Event
 };
-
+use crate::QPResult;
+use crate::prelude::QPError;
 use super::super::opengl;
 
 pub struct QuiPiWindow {
@@ -18,9 +19,9 @@ pub struct QuiPiWindow {
 }
 
 impl QuiPiWindow {
-    pub fn init() -> Result<Self, Box<dyn std::error::Error>> {
-        let sdl_ctx = sdl2::init()?;
-        let video_subsystem = sdl_ctx.video()?;
+    pub fn init() -> QPResult<Self> {
+        let sdl_ctx = sdl2::init().map_err(|e| QPError::Generic(e.to_string()))?;
+        let video_subsystem = sdl_ctx.video().map_err(|e| QPError::Generic(e.to_string()))?;
 
         Ok(Self {
             ctx: sdl_ctx,
@@ -36,7 +37,7 @@ impl QuiPiWindow {
         width: u32,
         height: u32,
         gl_version: (u8, u8)
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> QPResult<()> {
         let gl_attr = self.video_subsystem.gl_attr();
         gl_attr.set_context_profile(GLProfile::Core);
         gl_attr.set_context_version(gl_version.0, gl_version.1);
@@ -47,9 +48,11 @@ impl QuiPiWindow {
         let window = self.video_subsystem.window(title, width, height)
             .opengl()
             .resizable()
-            .build()?;
+            .build()
+            .map_err(|e| QPError::Generic(e.to_string()))?;
 
-        self.gl_ctx = Some(window.gl_create_context()?);
+        self.gl_ctx = Some(window.gl_create_context()
+            .map_err(|e| QPError::Generic(e.to_string()))?);
 
         debug_assert_eq!(gl_attr.context_profile(), GLProfile::Core);
         debug_assert_eq!(gl_attr.context_version(), (gl_version.0, gl_version.1));
@@ -60,15 +63,18 @@ impl QuiPiWindow {
             self,
             width as i32,
             height as i32,
-        )?;
+        ).map_err(|e| QPError::Generic(e.to_string()))?;
 
         Ok(())
     }
 
-    pub fn get_event_queue(&self) -> Result<Vec<Event>, Box<dyn std::error::Error>> {
+    pub fn get_event_queue(&self) -> QPResult<Vec<Event>> {
         let mut events: Vec<Event> = vec![];
         
-        for event in self.ctx.event_pump()?.poll_iter() {
+        for event in self.ctx.event_pump()
+            .map_err(|e| QPError::Generic(e.to_string()))?
+            .poll_iter()
+        {
             events.push(event);
         }
         

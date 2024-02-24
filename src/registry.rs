@@ -1,29 +1,17 @@
-use std::{collections::HashMap, fmt::Debug};
+use std::collections::HashMap;
 
-use crate::prelude::{
-    qp_core::StringInterner,
-    qp_ecs::{
-        ECSError,
-        EntityManager,
-        Component,
-        VersionedIndex
+use crate::{
+    errors::QPError,
+    QPResult,
+    prelude::{
+        qp_core::StringInterner,
+        qp_ecs::{
+            Component,
+            EntityManager,
+            VersionedIndex
+        }
     }
 };
-
-#[derive(Debug, thiserror::Error)]
-pub enum RegistryError {
-    #[error("there was a problem initializing the registry")]
-    ProblemInitialisingRegistry(
-        #[from]
-        ECSError
-    ),
-
-    #[error("there was a problem creating a new entity")]
-    ProblemCreatingEntity,
-
-    #[error("trying to load existing resource")]
-    DuplicateResource
-}
 
 pub struct Registry {
     pub entities: EntityManager,
@@ -34,7 +22,7 @@ pub struct Registry {
 }
 
 impl Registry {
-    pub fn init() -> Result<Self, RegistryError> {
+    pub fn init() -> QPResult<Self> {
         let entities = EntityManager::new()?;
         let resources = EntityManager::new()?;
 
@@ -58,11 +46,11 @@ impl Registry {
         &mut self,
         unique_name: String,
         resource: C
-    ) -> Result<u64, RegistryError> {
+    ) -> QPResult<u64> {
         let id = self.string_interner.intern(unique_name);
 
         if self.index_map.get(&id).is_some() {
-            return Err(RegistryError::DuplicateResource)
+            return Err(QPError::DuplicateResource)
         }
 
         let index = self.resources.create();

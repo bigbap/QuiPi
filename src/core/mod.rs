@@ -1,16 +1,18 @@
 mod collections;
 mod image;
 mod math;
+mod path;
 mod strings;
-mod utils;
+mod time;
 
 pub mod prelude {
     use super::*;
 
-    pub use utils::*;
     pub use collections::*;
     pub use math::*;
+    pub use path::*;
     pub use strings::*;
+    pub use time::*;
 
     pub use self::image::QPImage;
 }

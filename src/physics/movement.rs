@@ -1,13 +1,12 @@
-use crate::prelude::{
-    Registry,
-    VersionedIndex,
-    qp_ecs::components::{
-        CGizmo,
-        CTarget,
-        CEulerAngles,
-        CDistance,
-        CTransform
-    }
+use crate::{
+    prelude::{
+        qp_ecs::components::{
+            CDistance, CEulerAngles, CGizmo, CTarget, CTransform
+        },
+        Registry,
+        VersionedIndex
+    },
+    QPResult
 };
 
 /**
@@ -22,7 +21,7 @@ pub fn apply_velocity(
     entity: &VersionedIndex,
     delta: f32,
     velocity: glm::Vec3
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> QPResult<()> {
     if let (Some(gizmo), Some(_)) = (
         registry.entities.get::<CGizmo>(entity),
         registry.entities.get::<CTransform>(entity)
@@ -45,7 +44,7 @@ pub fn apply_velocity(
 pub fn apply_follow_target(
     registry: &mut Registry,
     entity: &VersionedIndex
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> QPResult<()> {
     if let (Some(_), Some(distance), Some(target), Some(angles)) = (
         registry.entities.get::<CTransform>(entity),
         registry.entities.get::<CDistance>(entity),

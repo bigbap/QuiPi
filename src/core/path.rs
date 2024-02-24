@@ -1,4 +1,6 @@
-pub fn to_abs_path(rel_path: &str) -> Result<String, std::io::Error> {
+use crate::QPResult;
+
+pub fn to_abs_path(rel_path: &str) -> QPResult<String> {
     let mut app_path = ::std::env::current_exe()?;
 
     app_path.pop();

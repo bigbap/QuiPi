@@ -1,4 +1,7 @@
-use quipi_core::Component;
+use crate::{
+    Component,
+    QPResult
+};
 use serde::{Serialize, Deserialize};
 
 
@@ -19,7 +22,7 @@ impl Default for CCamera {
 }
 
 impl CCamera {
-    pub fn new(params: CameraParams) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(params: CameraParams) -> QPResult<Self> {
         let camera = Self {
             projection: CCamera::calc_projection_matrix(&params),
             params

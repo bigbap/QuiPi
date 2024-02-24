@@ -1,52 +1,18 @@
-use std::io;
-use ft::Face;
-
-use crate::{
-    prelude::qp_core::{
-        QPImage,
-        to_abs_path,
-    },
-    platform::opengl::textures::{
-        Texture,
-        Format,
-        Target,
-    },
-};
-
 pub mod texture {
-    use super::*;
-
-    #[derive(Debug, thiserror::Error)]
-    pub enum TextureError {
-        #[error("There was a problem loading the image")]
-        ImageError(
-            #[from]
-            image::ImageError
-        ),
-
-        #[error("There was a problem adding the texture image")]
-        FailedAddingTextureImage,
-        
-        #[error("There was a problem adding a parameter to the texture")]
-        FailedAddingParameter,
-
-        #[error("there was a problem reading from file")]
-        ProblemReadingFile(
-            #[from]
-            #[source]
-            io::Error
-        ),
-
-        #[error("there was a problem loading wavefront file")]
-        ProblemLoadingWavefrontObj(
-            #[from]
-            #[source]
-            tobj::LoadError
-        ),
-
-        #[error("the wavefront material file doesn't have a texture path")]
-        CouldntFindWavefrontTexture
-    }
+    use ft::Face;
+    use crate::{
+        QPResult,
+        prelude::QPError,
+        prelude::qp_core::{
+            QPImage,
+            to_abs_path,
+        },
+        platform::opengl::textures::{
+            Texture,
+            Format,
+            Target,
+        },
+    };
 
     pub fn from_buffer_rgba(
         width: i32,
@@ -68,18 +34,18 @@ pub mod texture {
 
     pub fn from_wavefront_material(
         material: &tobj::Material,
-    ) -> Result<Texture, TextureError> {
+    ) -> QPResult<Texture> {
 
         if let Some(map_kd) = &material.diffuse_texture {
             return from_image(map_kd);
         };
 
-        Err(TextureError::CouldntFindWavefrontTexture)
+        Err(QPError::CouldntFindWavefrontTexture)
     }
 
     pub fn from_image(
         file_path: &str,
-    ) -> Result<Texture, TextureError> {
+    ) -> QPResult<Texture> {
         let file_path = &to_abs_path(file_path)?;
         let format = get_format(file_path);
         let img = QPImage::from_file(file_path)?;
@@ -102,7 +68,7 @@ pub mod texture {
         face: &Face,
         width: i32,
         height: i32
-    ) -> Result<Texture, TextureError>{
+    ) -> QPResult<Texture>{
         let texture = Texture::new(
             width,
             height,

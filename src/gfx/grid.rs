@@ -4,7 +4,8 @@ use crate::prelude::ecs::{
     CMesh,
     CModelMatrix
 };
-use quipi_core::{
+use crate::{
+    QPResult,
     components::{
         CName,
         CTag
@@ -33,7 +34,7 @@ impl Grid {
     pub fn new(
         registry: &mut Registry,
         camera: VersionedIndex
-    ) -> Result<Self, Box<dyn std::error::Error>>{
+    ) -> QPResult<Self>{
         let indices = &[0, 1, 2, 2, 3, 0];
         let vertices = &[
             -1.0, -1.0, 0.0,
@@ -80,7 +81,7 @@ impl Grid {
         &self,
         registry: &mut Registry,
         camera: &VersionedIndex
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> QPResult<()> {
         let grid = registry.entities.query::<CTag>(CTag { tag: GRID_TAG.to_string() });
 
         for line in grid {
@@ -107,7 +108,7 @@ fn build_axis(
     mesh: ElementArrayMesh,
     translate: glm::Vec3,
     scale: glm::Vec3
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> QPResult<()> {
     let transform = CTransform {
         translate,
         scale,

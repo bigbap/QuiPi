@@ -2,6 +2,7 @@
 #![allow(clippy::upper_case_acronyms)]
 
 use serde::{Serialize, Deserialize};
+use crate::QPResult;
 
 pub static mut BUFFER_FLAGS: u32 = gl::COLOR_BUFFER_BIT;
 
@@ -140,7 +141,7 @@ pub fn create_vbo<T>(
     buffer_length: usize, // this is the number of vertex elements in the buffer
     stride: usize,
     usage: &BufferUsage
-) -> Result<Buffer<VBO>, Box<dyn std::error::Error>> {
+) -> QPResult<Buffer<VBO>> {
     let buffer = Buffer::<VBO>::new();
     buffer.bind();
     buffer.buffer_data::<T>(buffer_length, data, usage);

@@ -1,8 +1,8 @@
 use std::time::{
     Instant,
-    SystemTime,
-    SystemTimeError
+    SystemTime
 };
+use crate::QPResult;
 
 #[derive(Debug)]
 pub struct Timer {
@@ -34,9 +34,9 @@ impl Timer {
     }
 }
 
-pub fn now_milis() -> Result<u128, SystemTimeError> {
+pub fn now_milis() -> QPResult<u128> {
     Ok(SystemTime::now().duration_since(SystemTime::UNIX_EPOCH)?.as_millis())
 }
-pub fn now_secs() -> Result<u64, SystemTimeError> {
+pub fn now_secs() -> QPResult<u64> {
     Ok(SystemTime::now().duration_since(SystemTime::UNIX_EPOCH)?.as_secs())
 }

@@ -13,6 +13,7 @@ use egui::{
 };
 
 use crate::{
+    QPResult,
     prelude::qp_gfx::{
         texture::*,
         viewport
@@ -51,7 +52,7 @@ pub struct Painter {
 impl Painter {
     pub fn new(
         scale: f32
-    ) -> Result<Self, Box<dyn std::error::Error>> {
+    ) -> QPResult<Self> {
         let shader = ShaderProgram::from_str(VERT_SHADER, FRAG_SHADER)?;
 
         let pixels_per_point = scale;

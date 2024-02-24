@@ -1,29 +1,17 @@
 use std::{
     fs,
-    io::{self, Read},
+    io::Read,
     ffi
 };
 
 use super::c_str::*;
-use crate::prelude::qp_core::to_abs_path;
-
-#[derive(Debug, thiserror::Error)]
-pub enum ShaderError {
-    #[error("I/O Error")]
-    Io(
-        #[from]
-        io::Error
-    ),
-    
-    #[error("File contains nil value")]
-    FileContainsNil,
-    
-    #[error("There was an error compiling the shader: {}", .0)]
-    CompileError(String),
-    
-    #[error("There was a problem linking the program")]
-    LinkingError
-}
+use crate::{
+    QPResult,
+    prelude::{
+        QPError,
+        qp_core::to_abs_path
+    }
+};
 
 #[derive(Debug, PartialEq)]
 pub struct ShaderProgram {
@@ -41,20 +29,20 @@ impl Drop for ShaderProgram {
 }
 
 impl ShaderProgram {
-    pub fn new(name: &str) -> Result<Self, ShaderError> {
+    pub fn new(name: &str) -> QPResult<Self> {
         Self::from_file(name)
     }
 
     pub fn from_str(
         vert: &str,
         frag: &str,
-    ) -> Result<Self, ShaderError> {
+    ) -> QPResult<Self> {
         let c_vert = str_to_cstring(vert)?;
         let c_frag = str_to_cstring(frag)?;
 
         let shaders = vec![
-            compile_shader(c_vert, gl::VERTEX_SHADER, ShaderError::CompileError(vert.to_string()))?,
-            compile_shader(c_frag, gl::FRAGMENT_SHADER, ShaderError::CompileError(frag.to_string()))?
+            compile_shader(c_vert, gl::VERTEX_SHADER, QPError::CompileError(vert.to_string()))?,
+            compile_shader(c_frag, gl::FRAGMENT_SHADER, QPError::CompileError(frag.to_string()))?
         ];
 
         Ok(ShaderProgram {
@@ -63,14 +51,14 @@ impl ShaderProgram {
         })
     }
 
-    pub fn from_file(name: &str) -> Result<Self, ShaderError> {
+    pub fn from_file(name: &str) -> QPResult<Self> {
         let name = &to_abs_path(&format!("assets/shaders/{}", name))?;
         let vert = shader_to_cstring(&format!("{name}.vert"))?;
         let frag = shader_to_cstring(&format!("{name}.frag"))?;
 
         let shaders = vec![
-            compile_shader(vert, gl::VERTEX_SHADER, ShaderError::CompileError(name.to_string()))?,
-            compile_shader(frag, gl::FRAGMENT_SHADER, ShaderError::CompileError(name.to_string()))?
+            compile_shader(vert, gl::VERTEX_SHADER, QPError::CompileError(name.to_string()))?,
+            compile_shader(frag, gl::FRAGMENT_SHADER, QPError::CompileError(name.to_string()))?
         ];
 
         Ok(ShaderProgram {
@@ -147,7 +135,7 @@ impl ShaderProgram {
 
 fn link_program(
     shaders: &[gl::types::GLuint]
-) -> Result<gl::types::GLuint, ShaderError> {
+) -> QPResult<gl::types::GLuint> {
     let id: gl::types::GLuint = unsafe { gl::CreateProgram() };
 
     for shader in shaders {
@@ -178,7 +166,7 @@ fn link_program(
                 println!("{:?}", error);
             }
 
-            return Err(ShaderError::LinkingError);
+            return Err(QPError::LinkingError);
         }
     }
 
@@ -195,8 +183,8 @@ fn link_program(
 fn compile_shader(
     source: ffi::CString,
     kind: gl::types::GLenum,
-    err: ShaderError
-) -> Result<gl::types::GLuint, ShaderError> {
+    err: QPError
+) -> QPResult<gl::types::GLuint> {
     let id = unsafe { gl::CreateShader(kind) };
 
     unsafe {
@@ -234,18 +222,18 @@ fn compile_shader(
     Ok(id)
 }
 
-fn str_to_cstring(shader: &str) -> Result<ffi::CString, ShaderError> {
+fn str_to_cstring(shader: &str) -> QPResult<ffi::CString> {
     let buffer = shader.as_bytes();
 
     // check for null byte
     if buffer.iter().any(|i| *i == 0) {
-        return Err(ShaderError::FileContainsNil);
+        return Err(QPError::FileContainsNil);
     }
 
     Ok(unsafe { ffi::CString::from_vec_unchecked(buffer.to_vec()) })
 }
 
-fn shader_to_cstring(shader_path: &str) -> Result<ffi::CString, ShaderError> {
+fn shader_to_cstring(shader_path: &str) -> QPResult<ffi::CString> {
     let mut file = fs::File::open(shader_path)?;
 
     // allocate buffer of the same size as file
@@ -256,7 +244,7 @@ fn shader_to_cstring(shader_path: &str) -> Result<ffi::CString, ShaderError> {
 
     // check for null byte
     if buffer.iter().any(|i| *i == 0) {
-        return Err(ShaderError::FileContainsNil);
+        return Err(QPError::FileContainsNil);
     }
 
     Ok(unsafe { ffi::CString::from_vec_unchecked(buffer) })
