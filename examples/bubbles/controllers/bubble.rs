@@ -98,10 +98,10 @@ fn spawn(
     let s_factor = rand.range(5, 25) as f32 / 100.0;
     let transform = CTransform2D {
         translate: glm::vec2(
-            width as f32 / 2.0,
-            height as f32 / 2.0
-            // rand.range(25, width) as f32,
-            // rand.range(25, height) as f32,
+            // width as f32 / 2.0,
+            // height as f32 / 2.0
+            rand.range(25, width) as f32,
+            rand.range(25, height) as f32,
         ),
         scale: glm::vec2(s_factor, s_factor),
         ..CTransform2D::default()
@@ -132,7 +132,7 @@ pub fn update(
     for bubble in bubbles {
         let Some(vel)       = registry.entity_manager.get::<CVelocity2D>(&bubble)    else { continue };
         let Some(transform) = registry.entity_manager.get::<CTransform2D>(&bubble)   else { continue };
-        let Some(quad)      = registry.entity_manager.get::<CQuad>(&bubble)           else { continue };
+        let Some(quad)      = registry.entity_manager.get::<CQuad>(&bubble)          else { continue };
         
         let scale = transform.scale;
 
@@ -141,21 +141,21 @@ pub fn update(
         let w = quad.width * scale.x;
         let h = quad.height * scale.y;
         let (colided_x, colided_y) = check_screen_collision(
+            &frame_state,
             translate,
             w,
             h
         );
 
-        let (_x, _y, width, height) = get_dimensions();
         let Some(transform) = registry.entity_manager.get_mut::<CTransform2D>(&bubble) else { continue };
         match colided_x {
             -1 => transform.translate.x = 0.0 + w * 0.5,
-            1 => transform.translate.x = width as f32 - w * 0.5,
+            1 => transform.translate.x = frame_state.viewport.width as f32 - w * 0.5,
             _ => transform.translate.x = translate.x
         }
         match colided_y {
             -1 => transform.translate.y = 0.0 + h * 0.5,
-            1 => transform.translate.y = height as f32 - h * 0.5,
+            1 => transform.translate.y = frame_state.viewport.height as f32 - h * 0.5,
             _ => transform.translate.y = translate.y
         }
 
@@ -166,6 +166,7 @@ pub fn update(
 }
 
 fn check_screen_collision(
+    frame_state: &FrameState,
     pos: glm::Vec2,
     w: f32,
     h: f32
@@ -173,14 +174,12 @@ fn check_screen_collision(
     let offset_x = w * 0.5;
     let offset_y = h * 0.5;
 
-    let (_x, _y, width, height) = get_dimensions();
-
     let mut colided_x = 0;
     let mut colided_y = 0;
 
     if pos.x <= (0.0 + offset_x) { colided_x = -1; }
-    if pos.x >= (width as f32 - offset_x) { colided_x = 1; }
-    if pos.y >= (height as f32 - offset_y) { colided_y = 1; }
+    if pos.x >= (frame_state.viewport.width as f32 - offset_x) { colided_x = 1; }
+    if pos.y >= (frame_state.viewport.height as f32 - offset_y) { colided_y = 1; }
     if pos.y <= (0.0 + offset_y) {  colided_y = -1; }
 
     (colided_x, colided_y)

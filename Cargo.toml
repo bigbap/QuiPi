@@ -28,7 +28,7 @@ field-offset = "0.3.6"
 walkdir = "2.4"
 
 [features]
-default = ["qp_debug"]
+# default = ["qp_profiling"]
 qp_debug = ["qp_editor", "qp_profiling"]
 qp_editor = ["dep:egui"]
 qp_profiling = []

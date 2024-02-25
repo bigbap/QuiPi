@@ -10,6 +10,7 @@ pub struct FrameState {
     pub text_buffer: Vec<QPText>,
     pub debug_mode: bool,
     pub debug_info: DebugInfo,
+    pub viewport: Viewport,
 }
 
 #[derive(Debug, Default)]
@@ -21,4 +22,10 @@ pub struct DebugInfo {
     pub controller_ms: u32,
     pub render_ms: u32,
     pub draw_calls: u32,
+}
+
+#[derive(Debug)]
+pub struct Viewport {
+    pub width: i32,
+    pub height: i32,
 }

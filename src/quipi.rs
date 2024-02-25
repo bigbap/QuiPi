@@ -1,5 +1,6 @@
 use crate::platform::sdl2;
 use crate::platform::opengl;
+use crate::prelude::qp_gfx::viewport::get_dimensions;
 use crate::QPResult;
 use crate::prelude::{
     QPError,
@@ -10,7 +11,8 @@ use crate::prelude::{
         FrameResponse,
         IController,
         IRenderer,
-        DebugInfo
+        DebugInfo,
+        Viewport
     },
     qp_gfx::TextRenderer,
     qp_ecs::components::register_components
@@ -56,9 +58,13 @@ impl QuiPi {
             text_buffer: vec![],
             debug_mode: false,
             debug_info: DebugInfo::default(),
+            viewport: Viewport {
+                width: width as i32,
+                height: height as i32
+            }
         };
 
-        let mut app = Self {
+        Ok(Self {
             registry,
             winapi,
 
@@ -69,11 +75,7 @@ impl QuiPi {
             frame_state,
             controllers: vec![],
             renderers: vec![]
-        };
-
-        app.register_renderer(TextRenderer::new()?);
-
-        Ok(app)
+        })
     }
 
     pub fn register_controller(&mut self, controller: impl IController + 'static) {
@@ -85,11 +87,17 @@ impl QuiPi {
     }
 
     pub fn run(&mut self, clear_color: (f32, f32, f32, f32)) -> QPResult<()> {
+        self.register_renderer(TextRenderer::new()?);
+
         'running: loop {
             self.registry.entity_manager.flush();
             self.registry.asset_manager.flush();
 
             self.frame_state.text_buffer.clear();
+
+            let (_x, _y, width, height) = get_dimensions();
+            self.frame_state.viewport.width = width;
+            self.frame_state.viewport.height = height;
     
             set_frame_debug_info(&mut self.frame_state);
             self.frame_state.events = self.winapi.get_event_queue()?;
