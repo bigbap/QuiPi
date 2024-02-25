@@ -30,11 +30,8 @@ pub struct GlobalRegistry {
 impl GlobalRegistry {
     pub fn init() -> QPResult<Self> {
         let strings = Rc::from(RefCell::from(StringInterner::new()));
-        dbg!(Rc::strong_count(&strings));
-
         let entity_manager = EntityManager::new()?;
         let asset_manager = AssetManager::init(Rc::downgrade(&strings))?;
-        dbg!(Rc::strong_count(&strings));
 
         Ok(Self {
             entity_manager,

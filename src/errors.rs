@@ -18,6 +18,9 @@ pub enum QPError {
     #[error(transparent)]
     SystemTimeError(#[from] std::time::SystemTimeError),
 
+    #[error(transparent)]
+    FontError(#[from] ft::Error),
+
     #[error("There was a problem drawing the frame")]
     ProblemSwappingFrameBuffers,
 

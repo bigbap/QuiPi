@@ -1,5 +1,4 @@
 pub mod texture {
-    use ft::Face;
     use crate::{
         QPResult,
         prelude::QPError,
@@ -60,31 +59,6 @@ pub mod texture {
             .bind()
             .add_image_data(Format::Rgba, format, &img.flipv());
             
-
-        Ok(texture)
-    }
-
-    pub fn from_font(
-        face: &Face,
-        width: i32,
-        height: i32
-    ) -> QPResult<Texture>{
-        let texture = Texture::new(
-            width,
-            height,
-            Target::Texture2D
-        );
-
-        texture
-            .bind()
-            .add_image_data(
-                Format::Red,
-                Format::Red,
-                face
-                    .glyph()
-                    .bitmap()
-                    .buffer(),
-            );
 
         Ok(texture)
     }

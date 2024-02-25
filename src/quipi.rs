@@ -12,10 +12,7 @@ use crate::prelude::{
         IRenderer,
         DebugInfo
     },
-    qp_gfx::{
-        TextRenderer,
-        DEFAULT_FONT
-    },
+    qp_gfx::TextRenderer,
     qp_ecs::components::register_components
 };
 
@@ -56,12 +53,12 @@ impl QuiPi {
         let frame_state = FrameState {
             delta: frame_timer.delta(),
             events: vec![],
-            text_render: TextRenderer::new(DEFAULT_FONT)?,
+            text_buffer: vec![],
             debug_mode: false,
             debug_info: DebugInfo::default(),
         };
 
-        Ok(Self {
+        let mut app = Self {
             registry,
             winapi,
 
@@ -72,7 +69,11 @@ impl QuiPi {
             frame_state,
             controllers: vec![],
             renderers: vec![]
-        })
+        };
+
+        app.register_renderer(TextRenderer::new()?);
+
+        Ok(app)
     }
 
     pub fn register_controller(&mut self, controller: impl IController + 'static) {
@@ -87,6 +88,8 @@ impl QuiPi {
         'running: loop {
             self.registry.entity_manager.flush();
             self.registry.asset_manager.flush();
+
+            self.frame_state.text_buffer.clear();
     
             set_frame_debug_info(&mut self.frame_state);
             self.frame_state.events = self.winapi.get_event_queue()?;

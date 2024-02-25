@@ -1,24 +1,22 @@
 use crate::{
-    qp_gfx::Renderer2D,
+    qp_gfx::SpriteRenderer,
     qp_schemas::{
         SchemaScene2D,
         SchemaShader,
         SchemaTexture,
         load_scene_2d
     },
-    qp_core::Timer,
     qp_data::{
         FrameResponse,
         FrameState,
         IController,
-        IRenderer,
         ISchema,
         ShaderUniforms
     },
     QuiPi,
     GlobalRegistry
 };
-use quipi::prelude::QPError;
+use quipi::prelude::{qp_assets::RFont, qp_gfx::{QPText, QPTextStyle}, QPError};
 use sdl2::{
     event::Event,
     keyboard::Keycode
@@ -42,25 +40,28 @@ impl SceneController {
         scene.build_entity(&mut engine.registry)?;
 
         let tile_controller = TileControler::new(&mut engine.registry)?;
-
-        let player_controller = PlayerController::new(&mut engine.registry, tile_controller.tile_map)?;
+        let player_controller = PlayerController::new(
+            &mut engine.registry,
+            tile_controller.tile_map
+        )?;
         let camera_controller = CameraController::new(
             player_controller.player,
             &mut engine.registry
         )?;
+        let text_controller = DebugInfoText::new(&mut engine.registry)?;
 
         engine.register_controller(tile_controller);
         engine.register_controller(player_controller);
         engine.register_controller(camera_controller);
+        engine.register_controller(text_controller);
 
-        let renderer = Renderer2D::new(
+        let renderer = SpriteRenderer::new(
             &mut engine.registry,
             "main_camera",
             "sprite"
         )?;
 
         engine.register_renderer(renderer);
-        engine.register_renderer(DebugInfoText::new());
 
         Ok(Self {})
     }
@@ -116,54 +117,67 @@ fn scene_schema() -> SchemaScene2D {
 }
 
 struct DebugInfoText {
-    timer: Timer
+    font: u64
 }
 
 impl DebugInfoText {
-    pub fn new() -> Self {
-        Self {
-            timer: Timer::new()
-        }
+    pub fn new(
+        registry: &mut GlobalRegistry
+    ) -> Result<Self, QPError> {
+        let font = registry.asset_manager.load_asset(
+            "Poppins-Regular".to_string(),
+            RFont::new("Poppins-Regular")?
+        )?;
+
+        Ok(Self {
+            font
+        })
     }
 }
 
-impl IRenderer for DebugInfoText {
-    fn draw(
+impl IController for DebugInfoText {
+    fn update(
         &mut self,
         frame_state: &mut FrameState,
         registry: &mut GlobalRegistry
-    ) -> Option<u32> {
-        self.timer.delta();
-
-        // draw the entity count
+    ) -> FrameResponse {
         let entity_count = registry.entity_manager.count();
-        frame_state.text_render.color = glm::vec4(0.9, 0.9, 0.9, 1.0);
-        frame_state.text_render.scale = 0.6;
-        frame_state.text_render.draw(
-            format!("entities: {}", entity_count),
-            glm::vec2(20.0, 20.0)
-        );
-        frame_state.text_render.draw(
-            format!("draw calls: {}", frame_state.debug_info.draw_calls),
-            glm::vec2(20.0, 40.0)
-        );
-        frame_state.text_render.draw(
-            format!("render ms: {}", frame_state.debug_info.render_ms),
-            glm::vec2(20.0, 60.0)
-        );
-        frame_state.text_render.draw(
-            format!("controller ms: {}", frame_state.debug_info.controller_ms),
-            glm::vec2(20.0, 80.0)
-        );
-        frame_state.text_render.draw(
-            format!("fps: {}", frame_state.debug_info.fps as u32),
-            glm::vec2(20.0, 100.0)
-        );
-        frame_state.text_render.draw(
-            format!("ms: {}", frame_state.debug_info.frame_ms as u32),
-            glm::vec2(20.0, 120.0)
-        );
+        let style = QPTextStyle {
+            font: self.font,
+            color: glm::vec4(1.0, 1.0, 1.0, 1.0),
+            scale: 0.6
+        };
+        frame_state.text_buffer.push(QPText {
+            text: format!("entities: {}", entity_count),
+            pos: glm::vec2(20.0, 20.0),
+            style: style.clone()
+        });
+        frame_state.text_buffer.push(QPText {
+            text: format!("draw calls: {}", frame_state.debug_info.draw_calls),
+            pos: glm::vec2(20.0, 40.0),
+            style: style.clone()
+        });
+        frame_state.text_buffer.push(QPText {
+            text: format!("render ms: {}", frame_state.debug_info.render_ms),
+            pos: glm::vec2(20.0, 60.0),
+            style: style.clone()
+        });
+        frame_state.text_buffer.push(QPText {
+            text: format!("controller ms: {}", frame_state.debug_info.controller_ms),
+            pos: glm::vec2(20.0, 80.0),
+            style: style.clone()
+        });
+        frame_state.text_buffer.push(QPText {
+            text: format!("fps: {}", frame_state.debug_info.fps as u32),
+            pos: glm::vec2(20.0, 100.0),
+            style: style.clone()
+        });
+        frame_state.text_buffer.push(QPText {
+            text: format!("ms: {}", frame_state.debug_info.frame_ms as u32),
+            pos: glm::vec2(20.0, 120.0),
+            style: style.clone()
+        });
 
-        Some(6)
+        FrameResponse::None
     }
 }

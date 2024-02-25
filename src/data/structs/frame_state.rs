@@ -1,13 +1,13 @@
 use crate::prelude::{
-    Event,
-    qp_gfx::TextRenderer
+    qp_gfx::QPText,
+    Event
 };
 
 #[derive(Debug)]
 pub struct FrameState {
     pub delta: f32,
     pub events: Vec<Event>,
-    pub text_render: TextRenderer,
+    pub text_buffer: Vec<QPText>,
     pub debug_mode: bool,
     pub debug_info: DebugInfo,
 }

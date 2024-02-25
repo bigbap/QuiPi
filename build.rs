@@ -13,7 +13,8 @@ fn main() {
     
     let executable_path = locate_target_dir_from_output_dir(&out_dir)
         .expect("failed to find target dir")
-        .join(env::var("PROFILE").unwrap());
+        .join(env::var("PROFILE").unwrap())
+        .join("examples");
 
     copy(
         &manifest_dir.join("assets"),

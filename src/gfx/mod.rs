@@ -2,7 +2,6 @@
 mod batch_renderer;
 mod renderers;
 mod shaders;
-mod text;
 mod texture;
 mod viewport;
 
@@ -13,7 +12,6 @@ pub mod prelude {
     pub use batch_renderer::BatchRenderer;
     pub use renderers::*;
     pub use shaders::*;
-    pub use text::*;
     pub use texture::texture;
     pub use viewport::viewport;
 }

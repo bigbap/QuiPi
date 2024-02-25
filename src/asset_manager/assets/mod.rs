@@ -1,8 +1,10 @@
+mod font;
 mod shader;
 mod texture;
 mod camera;
 mod tilemap;
 
+pub use font::RFont;
 pub use camera::RCamera2D;
 pub use tilemap::RTileMap;
 pub use shader::RShader;

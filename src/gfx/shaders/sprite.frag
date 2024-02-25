@@ -16,6 +16,4 @@ void main() {
     } else {
         fragColor = color * texture(u_textures[texId], texCoords);
     }
-    
-    // fragColor = color;
 }

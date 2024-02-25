@@ -35,6 +35,7 @@ impl AssetManager {
         };
 
         manager.asset_store
+            .register_component::<assets::RFont>()
             .register_component::<assets::RShader>()
             .register_component::<assets::RCamera2D>()
             .register_component::<assets::RTileMap>()

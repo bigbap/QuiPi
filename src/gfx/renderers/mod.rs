@@ -1,5 +1,5 @@
-mod renderer_2d;
-mod renderer_text;
+mod sprite;
+mod text;
 
-pub use renderer_2d::Renderer2D;
-pub use renderer_text::RendererText;
+pub use sprite::SpriteRenderer;
+pub use text::*;

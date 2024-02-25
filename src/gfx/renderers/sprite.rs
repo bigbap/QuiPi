@@ -6,18 +6,9 @@ use crate::{
         GLCapability
     },
     prelude::{
-        qp_data::{
-            FrameState,
-            IRenderer,
-        },
-        qp_assets::{
-            RCamera2D,
-            RShader
-        },
-        qp_ecs::components::{
-            CSprite,
-            CTransform2D,
-        },
+        qp_data::{ FrameState, IRenderer, },
+        qp_assets::{ RCamera2D, RShader },
+        qp_ecs::components::{ CSprite, CTransform2D, },
         QPError,
         GlobalRegistry
     },
@@ -26,14 +17,14 @@ use crate::{
 
 use super::super::batch_renderer::BatchRenderer;
 
-pub struct Renderer2D {
+pub struct SpriteRenderer {
     camera: u64,
     shader: u64,
 
     renderer: BatchRenderer<10000, CSprite>
 }
 
-impl Renderer2D {
+impl SpriteRenderer {
     pub fn new(
         registry: &mut GlobalRegistry,
         camera: &str,
@@ -55,7 +46,7 @@ impl Renderer2D {
     }
 }
 
-impl IRenderer for Renderer2D {
+impl IRenderer for SpriteRenderer {
     fn draw(
         &mut self,
         _frame_state: &mut FrameState,
