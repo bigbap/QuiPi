@@ -175,6 +175,9 @@ impl Painter {
         self.shader.use_program();
         self.shader.set_float_2("u_screenSize", (self.screen_rect.width(), self.screen_rect.height()));
 
+        vao.unbind();
+        ebo.unbind();
+
         vao.bind();
         gl_use_texture_unit(0);
         gl_draw(DrawBuffer::Elements, DrawMode::Triangles, mesh.indices.len() as i32);
