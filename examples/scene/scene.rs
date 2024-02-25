@@ -1,7 +1,7 @@
 use quipi::{
     wrappers::opengl::buffer::BufferUsage,
     VersionedIndex,
-    Registry,
+    GlobalRegistry,
     resources::{
         register_resources,
         Shader,
@@ -38,8 +38,8 @@ use quipi::{
 
 use crate::config;
 
-pub fn create_registry() -> Result<Registry, Box<dyn std::error::Error>> {
-    let mut registry = Registry::init()?;
+pub fn create_registry() -> Result<GlobalRegistry, Box<dyn std::error::Error>> {
+    let mut registry = GlobalRegistry::init()?;
 
     register_resources(&mut registry);
     register_components(&mut registry);
@@ -48,7 +48,7 @@ pub fn create_registry() -> Result<Registry, Box<dyn std::error::Error>> {
 }
 
 pub fn create_crates(
-    registry: &mut Registry,
+    registry: &mut GlobalRegistry,
     _shader_id: VersionedIndex,
     _camera_id: VersionedIndex,
     material: CMaterial
@@ -118,7 +118,7 @@ pub fn create_crates(
 }
 
 pub fn create_texture(
-    registry: &mut Registry,
+    registry: &mut GlobalRegistry,
     image_file: &str,
 ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
     registry.create_resource(
@@ -127,7 +127,7 @@ pub fn create_texture(
 }
 
 pub fn directional_light(
-    registry: &mut Registry,
+    registry: &mut GlobalRegistry,
     obj_shader_id: VersionedIndex,
     model_config: &ObjectConfig
 ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
@@ -192,7 +192,7 @@ pub fn directional_light(
 }
 
 pub fn point_light(
-    registry: &mut Registry,
+    registry: &mut GlobalRegistry,
     obj_shader_id: VersionedIndex,
     model_config: &ObjectConfig
 ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {
@@ -266,7 +266,7 @@ pub fn point_light(
 }
 
 pub fn spot_light(
-    registry: &mut Registry,
+    registry: &mut GlobalRegistry,
     obj_shader_id: VersionedIndex,
     model_config: &ObjectConfig
 ) -> Result<VersionedIndex, Box<dyn std::error::Error>> {

@@ -2,13 +2,13 @@ use serde::{Serialize, Deserialize};
 
 use crate::QPResult;
 use crate::prelude::{
-    qp_ecs::resources::RShader,
+    qp_assets::RShader,
     qp_data::{
         ShaderUniforms,
         ISchema
     },
     qp_gfx::get_shader,
-    Registry
+    GlobalRegistry
 };
 
 pub const DEFAULT_SHADER: &str = "sprite";
@@ -34,10 +34,10 @@ impl Default for SchemaShader {
 impl ISchema for SchemaShader {
     fn load_resource(
         &self,
-        registry: &mut Registry
+        registry: &mut GlobalRegistry
     ) -> QPResult<u64> {
         let shader = get_shader(&self.name);
-        let id = registry.load_resourse(
+        let id = registry.asset_manager.load_asset(
             self.name.to_string(),
             RShader::from_str(shader.vert, shader.frag, self.uniforms.to_vec())?
         )?;
@@ -45,10 +45,10 @@ impl ISchema for SchemaShader {
         Ok(id)
     }
 
-    fn from_resource(id: u64, registry: &Registry) -> Option<Self> {
+    fn from_resource(id: u64, registry: &GlobalRegistry) -> Option<Self> {
         if let (Some(shader), Some(name)) = (
-            registry.get_resource::<RShader>(id),
-            registry.string_interner.get_string(id)
+            registry.asset_manager.get::<RShader>(id),
+            registry.string_interner.borrow().get_string(id)
          ) {
             let schema = SchemaShader {
                 name,

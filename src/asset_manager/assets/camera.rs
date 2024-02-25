@@ -1,12 +1,13 @@
 use serde::{Serialize, Deserialize};
 
-use super::super::prelude::Component;
-
 use crate::{
     QPResult,
     prelude::{
         qp_data::OrthographicCameraParams,
-        qp_ecs::components::CTransform2D
+        qp_ecs::{
+            components::CTransform2D,
+            Component
+        }
     }
 };
 

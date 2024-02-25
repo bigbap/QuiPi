@@ -6,9 +6,9 @@ use crate::{
     prelude::{
         qp_core::to_abs_path,
         qp_data::ISchema,
-        qp_ecs::resources::RTexture,
+        qp_assets::RTexture,
         qp_gfx::texture::from_image,
-        Registry
+        GlobalRegistry
     },
     QPResult,
 };
@@ -23,7 +23,7 @@ pub struct SchemaTexture {
 impl ISchema for SchemaTexture {
     fn load_resource(
         &self,
-        registry: &mut Registry
+        registry: &mut GlobalRegistry
     ) -> QPResult<u64> {
         let path = format!("assets/textures/{}", self.name);
 
@@ -34,7 +34,7 @@ impl ISchema for SchemaTexture {
             .set_parameter(ParameterName::MinFilter, ParameterValue::LinearMipmapNearest)
             .set_parameter(ParameterName::MagFilter, ParameterValue::Nearest);
 
-        let id = registry.load_resourse(self.name.clone(), RTexture {
+        let id = registry.asset_manager.load_asset(self.name.clone(), RTexture {
             texture,
             texture_dims: self.texture_dims
         })?;
@@ -42,10 +42,10 @@ impl ISchema for SchemaTexture {
         Ok(id)
     }
 
-    fn from_resource(id: u64, registry: &Registry) -> Option<Self> {
+    fn from_resource(id: u64, registry: &GlobalRegistry) -> Option<Self> {
         if let (Some(texture), Some(name)) = (
-            registry.get_resource::<RTexture>(id),
-            registry.string_interner.get_string(id)
+            registry.asset_manager.get::<RTexture>(id),
+            registry.string_interner.borrow().get_string(id)
          ) {
             let schema = SchemaTexture {
                 name,

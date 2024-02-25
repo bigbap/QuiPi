@@ -1,6 +1,6 @@
 use quipi::{
     VersionedIndex,
-    Registry,
+    GlobalRegistry,
     systems::{
         rotation::s_rotate_camera,
         mvp_matrices::s_set_view_matrix,
@@ -11,7 +11,7 @@ use quipi::{
 
 pub fn s_update_camera(
     camera: &VersionedIndex,
-    registry: &mut Registry,
+    registry: &mut GlobalRegistry,
     delta: f32
 ) -> Result<(), Box<dyn std::error::Error>> {
     if let Some(vel) = registry.get_component::<CVelocity>(camera) {

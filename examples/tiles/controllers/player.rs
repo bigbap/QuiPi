@@ -1,10 +1,8 @@
 use crate::{
-    qp_ecs::{
-        components::{
-            CQuad,
-            CTransform2D
-        },
-        resources::RTileMap,
+    qp_assets::RTileMap,
+    qp_ecs::components::{
+        CQuad,
+        CTransform2D
     },
     qp_data::{
         ISchema,
@@ -14,7 +12,7 @@ use crate::{
         IController,
     },
     qp_schemas::SchemaSprite,
-    Registry,
+    GlobalRegistry,
     VersionedIndex
 };
 use quipi::prelude::QPError;
@@ -30,10 +28,10 @@ pub struct PlayerController {
 
 impl PlayerController {
     pub fn new(
-        registry: &mut Registry,
+        registry: &mut GlobalRegistry,
         tile_map: u64
     ) -> Result<Self, QPError> {
-        let r_tile_map = registry.get_resource::<RTileMap>(tile_map).unwrap();
+        let r_tile_map = registry.asset_manager.get::<RTileMap>(tile_map).unwrap();
         let mut this_schema = SchemaSprite::default();
         let start_tile = glm::vec2(1.0, 7.0);
 
@@ -67,7 +65,7 @@ impl PlayerController {
 }
 
 impl IController for PlayerController {
-    fn update(&mut self, frame_state: &mut FrameState, registry: &mut Registry) -> FrameResponse {
+    fn update(&mut self, frame_state: &mut FrameState, registry: &mut GlobalRegistry) -> FrameResponse {
         let mut new_tile = self.tile;
         for event in frame_state.events.iter() {
             match event {
@@ -84,7 +82,7 @@ impl IController for PlayerController {
             };
         }
 
-        let Some(tile_map) = registry.get_resource::<RTileMap>(self.tile_map) else {
+        let Some(tile_map) = registry.asset_manager.get::<RTileMap>(self.tile_map) else {
             return FrameResponse::None
         };
         let ValidTile::Valid(tile_val) = tile_map.get_tile_value(new_tile) else {
@@ -99,7 +97,7 @@ impl IController for PlayerController {
         };
 
         let new_translate = tile_pos.xy();
-        if let Some(transform) = registry.entities.get_mut::<CTransform2D>(&self.player) {
+        if let Some(transform) = registry.entity_manager.get_mut::<CTransform2D>(&self.player) {
             self.tile = new_tile;
             transform.translate = new_translate;
         }

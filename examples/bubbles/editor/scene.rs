@@ -13,7 +13,7 @@ use crate::{
         save_scene_2d
     },
     qp_data::ISchema,
-    Registry
+    GlobalRegistry
 };
 
 use super::components::EntityEditor;
@@ -35,10 +35,10 @@ impl IGuiController for SceneEditor {
         &mut self,
         ctx: &Context,
         frame_state: &mut FrameState,
-        registry: &mut Registry
+        registry: &mut GlobalRegistry
     ) {
         self.entity_editor.update(ctx, frame_state, registry);
-        let entities = registry.entities.query_all::<CSprite>();
+        let entities = registry.entity_manager.query_all::<CSprite>();
     
         egui::Window::new("Scene").show(ctx, |ui| {
             ui.horizontal(|ui| {
@@ -50,11 +50,14 @@ impl IGuiController for SceneEditor {
                     }
                 }
                 if ui.button("save scene").clicked() {
-                    let scenes = registry.entities.query_all::<CScene>();
+                    let scenes = registry.entity_manager.query_all::<CScene>();
                     let Some(scene_id) = scenes.first() else { return };
     
-                    if let Some(scene) = registry.entities.get::<CScene>(scene_id) {
-                        let scene_name = registry.string_interner.get_string(scene.id).unwrap();
+                    if let Some(scene) = registry.entity_manager.get::<CScene>(scene_id) {
+                        let scene_name = registry.string_interner
+                            .borrow()
+                            .get_string(scene.id)
+                            .unwrap();
                         if let Err(e) = save_scene_2d(&scene_name, *scene_id, &registry) {
                             println!("there was a problem saving scene {}: {:?}", scene_name, e);
                         }
@@ -69,7 +72,7 @@ impl IGuiController for SceneEditor {
                 for entity in entities.iter() {
                     ui.horizontal(|ui| {
                         let default = CTag { tag: entity.to_string() };
-                        let tag = registry.entities.get::<CTag>(entity)
+                        let tag = registry.entity_manager.get::<CTag>(entity)
                             .unwrap_or(&default);
 
                         ui.selectable_value(
@@ -81,7 +84,7 @@ impl IGuiController for SceneEditor {
                             if self.entity_editor.active_entity == Some(*entity) {
                                 self.entity_editor.active_entity = None;
                             }
-                            registry.entities.set_to_delete(*entity);
+                            registry.entity_manager.set_to_delete(*entity);
                         }
                     });
                     ui.allocate_space(Vec2::new(0.0, 5.0));

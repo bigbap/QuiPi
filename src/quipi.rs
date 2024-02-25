@@ -4,7 +4,7 @@ use crate::QPResult;
 use crate::prelude::{
     QPError,
     qp_core::Timer,
-    Registry,
+    GlobalRegistry,
     qp_data::{
         FrameState,
         FrameResponse,
@@ -16,17 +16,14 @@ use crate::prelude::{
         TextRenderer,
         DEFAULT_FONT
     },
-    qp_ecs::{
-        components::register_components,
-        resources::register_resources
-    }
+    qp_ecs::components::register_components
 };
 
 #[cfg(feature = "qp_profiling")]
 use crate::prelude::QPProfiler;
 
 pub struct QuiPi {
-    pub registry: Registry,
+    pub registry: GlobalRegistry,
     winapi: sdl2::QuiPiWindow,
 
     #[cfg(feature = "qp_profiling")]
@@ -88,10 +85,8 @@ impl QuiPi {
 
     pub fn run(&mut self, clear_color: (f32, f32, f32, f32)) -> QPResult<()> {
         'running: loop {
-            self.registry.entities.flush();
-            self.registry.flush_resources();
-    
-            opengl::buffer::clear_buffers(clear_color);
+            self.registry.entity_manager.flush();
+            self.registry.asset_manager.flush();
     
             set_frame_debug_info(&mut self.frame_state);
             self.frame_state.events = self.winapi.get_event_queue()?;
@@ -119,6 +114,7 @@ impl QuiPi {
             #[cfg(feature = "qp_profiling")]
             self.profiler.begin();
 
+            opengl::buffer::clear_buffers(clear_color);
             for renderer in self.renderers.iter_mut() {
                 if let Some(m_draw_calls) = renderer.draw(
                     &mut self.frame_state,
@@ -147,11 +143,10 @@ impl QuiPi {
     }
 }
 
-fn setup() -> QPResult<Registry> {
-    let mut registry = Registry::init()?;
+fn setup() -> QPResult<GlobalRegistry> {
+    let mut registry = GlobalRegistry::init()?;
 
     register_components(&mut registry);
-    register_resources(&mut registry);
 
     Ok(registry)
 }

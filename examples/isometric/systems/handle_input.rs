@@ -1,6 +1,6 @@
 use quipi::{
     FrameState,
-    Registry,
+    GlobalRegistry,
     VersionedIndex,
     components::*,
     systems::rendering::canvas,
@@ -14,7 +14,7 @@ use sdl2::mouse::MouseButton;
 
 pub fn s_handle_input(
     frame_state: &mut FrameState,
-    registry: &mut Registry,
+    registry: &mut GlobalRegistry,
     camera: &VersionedIndex,
 ) -> Result<(), Box<dyn std::error::Error>> {
     for event in frame_state.event_pump.poll_iter() {

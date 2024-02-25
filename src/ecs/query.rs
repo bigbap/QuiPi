@@ -1,6 +1,6 @@
 use crate::prelude::{
     qp_ecs::Component,
-    Registry,
+    GlobalRegistry,
     VersionedIndex
 };
 
@@ -22,16 +22,16 @@ impl<A, B, C> EMQuery<A, B, C>
         C: Component + PartialEq + 'static,
 {
     pub fn query_all(
-        registry: & Registry
+        registry: & GlobalRegistry
     ) -> Vec<VersionedIndex> {
-        let entities_a = registry.entities.query_all::<A>();
+        let entities_a = registry.entity_manager.query_all::<A>();
 
         let entities = match std::any::type_name::<B>()  {
             "()" => entities_a,
             _ => {
                 let mut entities_b = vec![];
                 for entity in entities_a {
-                    if registry.entities.get::<B>(&entity).is_some() {
+                    if registry.entity_manager.get::<B>(&entity).is_some() {
                         entities_b.push(entity);
                     }
                 }
@@ -45,7 +45,7 @@ impl<A, B, C> EMQuery<A, B, C>
             _ => {
                 let mut entities_c = vec![];
                 for entity in entities {
-                    if registry.entities.get::<C>(&entity).is_some() {
+                    if registry.entity_manager.get::<C>(&entity).is_some() {
                         entities_c.push(entity);
                     }
                 }

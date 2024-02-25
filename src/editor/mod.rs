@@ -8,7 +8,7 @@ pub mod prelude {
     use crate::prelude::{
         qp_core::Timer,
         qp_data::{FrameResponse, FrameState, IController},
-        Registry
+        GlobalRegistry
     };
     
     pub struct GuiManager {
@@ -40,7 +40,7 @@ pub mod prelude {
         fn update(
             &mut self,
             frame_state: &mut FrameState,
-            registry: &mut Registry,
+            registry: &mut GlobalRegistry,
         ) -> FrameResponse {
             self.timer.delta();
     
@@ -63,7 +63,7 @@ pub mod prelude {
             &mut self,
             ctx: &Context,
             frame_state: &mut FrameState,
-            registry: &mut Registry
+            registry: &mut GlobalRegistry
         );
     }
 }

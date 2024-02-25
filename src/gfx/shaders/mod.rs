@@ -1,5 +1,5 @@
-pub static SPRITE_VERT: &str = include_str!("shaders/sprite.vert");
-pub static SPRITE_FRAG: &str = include_str!("shaders/sprite.frag");
+pub static SPRITE_VERT: &str = include_str!("sprite.vert");
+pub static SPRITE_FRAG: &str = include_str!("sprite.frag");
 
 pub fn get_shader(shader: &str) -> ShaderResult {
     match shader {

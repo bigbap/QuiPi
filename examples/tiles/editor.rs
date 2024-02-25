@@ -9,7 +9,7 @@ use crate::{
         IController,
     },
     qp_editor::GuiManager,
-    Registry
+    GlobalRegistry
 };
 
 pub struct AppEditor {
@@ -35,7 +35,7 @@ impl IController for AppEditor {
     fn update(
         &mut self,
         frame_state: &mut FrameState,
-        registry: &mut Registry,
+        registry: &mut GlobalRegistry,
     ) -> FrameResponse {
         if !frame_state.debug_mode {
             return FrameResponse::None

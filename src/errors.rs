@@ -22,13 +22,13 @@ pub enum QPError {
     ProblemSwappingFrameBuffers,
 
     #[error("there was a problem creating a new component registry")]
-    ProblemCreatingNewComponentRegistry,
+    ProblemCreatingNewComponentGlobalRegistry,
 
     #[error("there was a problem creating a new entity")]
     ProblemCreatingEntity,
 
-    #[error("trying to load existing resource")]
-    DuplicateResource,
+    #[error("trying to load as existing asset")]
+    DuplicateAsset,
 
     #[error("shader not found")]
     ShaderNotFound,

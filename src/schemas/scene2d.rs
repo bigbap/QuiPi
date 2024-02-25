@@ -8,7 +8,7 @@ use crate::prelude::{
         CTransform2D
     },
     qp_ecs::VersionedIndex,
-    Registry,
+    GlobalRegistry,
     qp_data::ISchema
 };
 
@@ -37,7 +37,7 @@ pub struct SchemaScene2D {
 impl ISchema for SchemaScene2D {
     fn build_entity(
         &self,
-        registry: &mut Registry
+        registry: &mut GlobalRegistry
     ) -> QPResult<VersionedIndex> {
         // 1. build cameras
         let mut cameras = vec![];
@@ -62,9 +62,9 @@ impl ISchema for SchemaScene2D {
             rect.build_entity(registry)?;
         }
 
-        let entity = registry.entities.create();
-        registry.entities.add(&entity, CScene {
-            id: registry.string_interner.intern(self.name.clone()),
+        let entity = registry.entity_manager.create();
+        registry.entity_manager.add(&entity, CScene {
+            id: registry.string_interner.borrow_mut().intern(self.name.clone()),
             cameras,
             shaders,
             textures
@@ -73,11 +73,11 @@ impl ISchema for SchemaScene2D {
         Ok(entity)
     }
 
-    fn from_entity(entity: VersionedIndex, registry: &Registry) -> Option<Self> {
-        if let Some(scene) = registry.entities.get::<CScene>(&entity) {
+    fn from_entity(entity: VersionedIndex, registry: &GlobalRegistry) -> Option<Self> {
+        if let Some(scene) = registry.entity_manager.get::<CScene>(&entity) {
             // 1. new default scene schema
             let mut schema = Self {
-                name: registry.string_interner.get_string(scene.id)?,
+                name: registry.string_interner.borrow().get_string(scene.id)?,
                 cameras: vec![],
                 shaders: vec![],
                 textures: vec![],
@@ -100,7 +100,7 @@ impl ISchema for SchemaScene2D {
             }
 
             // 4. parse the entities
-            let entities = registry.entities.query_all::<CSprite>();
+            let entities = registry.entity_manager.query_all::<CSprite>();
             for entity in entities {
                 schema.sprites.push(SchemaSprite::from_entity(entity, registry)?);
             }

@@ -28,7 +28,7 @@ use quipi::{
     FrameState,
     FrameResponse,
     QuiPiApp,
-    Registry,
+    GlobalRegistry,
     VersionedIndex
 };
 use quipi_core::{
@@ -80,7 +80,7 @@ impl MyGame {
 impl QuiPiApp for MyGame {
     fn init(
         &mut self,
-        registry: &mut Registry,
+        registry: &mut GlobalRegistry,
         winapi: &QuiPiWindow
     ) -> Result<(), Box<dyn std::error::Error>> {
         let shader = registry.resources.create()?;
@@ -91,16 +91,16 @@ impl QuiPiApp for MyGame {
             ]
         });
 
-        let camera = registry.entities.create()?;
-        registry.entities.add(&camera, CCamera::new(CameraParams {
+        let camera = registry.entity_manager.create()?;
+        registry.entity_manager.add(&camera, CCamera::new(CameraParams {
             aspect: WIDTH as f32 / HEIGHT as f32,
             ..CameraParams::default()
         })?);
-        registry.entities.add(&camera, CTransform {
+        registry.entity_manager.add(&camera, CTransform {
             translate: glm::vec3(5.0, 5.0, 5.0),
             ..CTransform::default()
         });
-        registry.entities.add(&camera, CEulerAngles {
+        registry.entity_manager.add(&camera, CEulerAngles {
             pitch: 45.0,
             yaw: -90.0,
             roll: 35.0
@@ -124,7 +124,7 @@ impl QuiPiApp for MyGame {
 
     fn handle_frame(
         &mut self,
-        registry: &mut Registry,
+        registry: &mut GlobalRegistry,
         frame_state: &mut FrameState
     ) -> Result<FrameResponse, Box<dyn std::error::Error>> {
         handle_input::s_handle_input(

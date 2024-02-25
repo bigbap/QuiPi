@@ -17,7 +17,7 @@ use crate::{
         random::Random,
         now_secs
     },
-    Registry,
+    GlobalRegistry,
     VersionedIndex
 };
 use quipi::prelude::QPError;
@@ -29,8 +29,8 @@ pub struct BubbleController {
 }
 
 impl BubbleController {
-    pub fn new(registry: &mut Registry) -> Result<Self, QPError> {
-        let mut bubbles = registry.entities.query(CTag { tag: "sprite".to_string() });
+    pub fn new(registry: &mut GlobalRegistry) -> Result<Self, QPError> {
+        let mut bubbles = registry.entity_manager.query(CTag { tag: "sprite".to_string() });
         let mut rand = Random::from_seed(now_secs()?);
 
         // for stress testing
@@ -49,7 +49,7 @@ impl IController for BubbleController {
     fn update(
         &mut self,
         frame_state: &mut FrameState,
-        registry: &mut Registry
+        registry: &mut GlobalRegistry
     ) -> FrameResponse {
         if frame_state.debug_mode { return FrameResponse::None; }
 
@@ -79,7 +79,7 @@ impl IController for BubbleController {
 
 fn spawn(
     rand: &mut Random,
-    registry: &mut Registry,
+    registry: &mut GlobalRegistry,
 ) -> Result<VersionedIndex, QPError> {
     let mut this_schema = SchemaSprite::default();
 
@@ -126,13 +126,13 @@ fn spawn(
 
 pub fn update(
     bubbles: &[VersionedIndex],
-    registry: &mut Registry,
+    registry: &mut GlobalRegistry,
     frame_state: &mut FrameState
 ) {
     for bubble in bubbles {
-        let Some(vel)       = registry.entities.get::<CVelocity2D>(&bubble)    else { continue };
-        let Some(transform) = registry.entities.get::<CTransform2D>(&bubble)   else { continue };
-        let Some(quad)      = registry.entities.get::<CQuad>(&bubble)           else { continue };
+        let Some(vel)       = registry.entity_manager.get::<CVelocity2D>(&bubble)    else { continue };
+        let Some(transform) = registry.entity_manager.get::<CTransform2D>(&bubble)   else { continue };
+        let Some(quad)      = registry.entity_manager.get::<CQuad>(&bubble)           else { continue };
         
         let scale = transform.scale;
 
@@ -147,7 +147,7 @@ pub fn update(
         );
 
         let (_x, _y, width, height) = get_dimensions();
-        let Some(transform) = registry.entities.get_mut::<CTransform2D>(&bubble) else { continue };
+        let Some(transform) = registry.entity_manager.get_mut::<CTransform2D>(&bubble) else { continue };
         match colided_x {
             -1 => transform.translate.x = 0.0 + w * 0.5,
             1 => transform.translate.x = width as f32 - w * 0.5,
@@ -159,7 +159,7 @@ pub fn update(
             _ => transform.translate.y = translate.y
         }
 
-        let Some(vel) = registry.entities.get_mut::<CVelocity2D>(&bubble) else { continue };
+        let Some(vel) = registry.entity_manager.get_mut::<CVelocity2D>(&bubble) else { continue };
         if colided_x != 0 { vel.x *= -1.0 }
         if colided_y != 0 { vel.y *= -1.0 }
     }

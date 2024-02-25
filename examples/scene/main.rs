@@ -75,7 +75,7 @@ type Light = VersionedIndex;
 const CAMERA_SPEED: f32 = 5.0;
 
 pub struct MyGame {
-    registry: quipi::Registry,
+    registry: quipi::GlobalRegistry,
     grid: Option<Grid>,
     renderer: Renderer,
    

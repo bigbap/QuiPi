@@ -1,5 +1,5 @@
 use crate::{
-    qp_ecs::resources::RCamera2D,
+    qp_assets::RCamera2D,
     qp_schemas::SchemaCamera2D,
     qp_gfx::viewport::{
         get_dimensions,
@@ -10,7 +10,7 @@ use crate::{
         FrameState,
         IController,
     },
-    Registry
+    GlobalRegistry
 };
 use quipi::prelude::QPError;
 use sdl2::event::{Event, WindowEvent};
@@ -22,9 +22,9 @@ pub struct CameraController {
 }
 
 impl CameraController {
-    pub fn new(registry: &mut Registry) -> Result<Self, QPError> {
+    pub fn new(registry: &mut GlobalRegistry) -> Result<Self, QPError> {
 
-        let Some(camera) = registry.get_resource_id(MAIN_CAMERA) else {
+        let Some(camera) = registry.asset_manager.get_asset_id(MAIN_CAMERA) else {
             return Err(QPError::Generic("[camera controller] camera resource has not been loaded".to_string()));
         };
 
@@ -35,7 +35,7 @@ impl CameraController {
 }
 
 impl IController for CameraController {
-    fn update(&mut self, frame_state: &mut FrameState, registry: &mut Registry) -> FrameResponse {
+    fn update(&mut self, frame_state: &mut FrameState, registry: &mut GlobalRegistry) -> FrameResponse {
         for event in frame_state.events.iter() {
             match event {
                 Event::Window {
@@ -44,7 +44,7 @@ impl IController for CameraController {
                 } => {
                     set_dimensions(0, 0, *w, *h);
 
-                    if let Some(camera) = registry.get_resource_mut::<RCamera2D>(self.camera) {
+                    if let Some(camera) = registry.asset_manager.get_mut::<RCamera2D>(self.camera) {
                         camera.params.right = *w as f32;
                         camera.params.top = *h as f32;
                     }

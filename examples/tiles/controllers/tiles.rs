@@ -1,13 +1,11 @@
 use quipi::prelude::QPError;
 
 use crate::{
-    qp_ecs::{
-        components::{
-            CQuad,
-            CSprite,
-            CTransform2D
-        },
-        resources::RTileMap,
+    qp_assets::RTileMap,
+    qp_ecs::components::{
+        CQuad,
+        CSprite,
+        CTransform2D
     },
     qp_core::{
         random::Random,
@@ -19,7 +17,7 @@ use crate::{
         IController,
         TextureAtlas
     },
-    Registry,
+    GlobalRegistry,
     VersionedIndex
 };
 
@@ -44,7 +42,7 @@ pub struct TileControler {
 }
 
 impl TileControler {
-    pub fn new(registry: &mut Registry) -> Result<Self, QPError> {
+    pub fn new(registry: &mut GlobalRegistry) -> Result<Self, QPError> {
         let mut _rand = Random::from_seed(now_secs()?);
         let columns = 10; // rand.range(10, 30);
         let rows = 10; // rand.range(8, 20);
@@ -61,7 +59,7 @@ impl TileControler {
             }
         }
 
-        let tile_map = registry.load_resourse(
+        let tile_map = registry.asset_manager.load_asset(
             "tile_map".to_string(),
             RTileMap::new(columns as usize, rows as usize, data, glm::vec2(TILE_SIZE, TILE_SIZE))?
         )?;
@@ -74,7 +72,7 @@ impl TileControler {
 }
 
 impl IController for TileControler {
-    fn update(&mut self, _frame_state: &mut FrameState, _registry: &mut Registry) -> FrameResponse {
+    fn update(&mut self, _frame_state: &mut FrameState, _registry: &mut GlobalRegistry) -> FrameResponse {
         FrameResponse::None
     }
 }
@@ -83,7 +81,7 @@ fn tile(
     x: u32,
     y: u32,
     tile_val: u16,
-    registry: &mut Registry
+    registry: &mut GlobalRegistry
 ) -> VersionedIndex {
     let x_offset = (x + 0) as f32 * TILE_SIZE;
     let y_offset = (y + 0) as f32 * TILE_SIZE;
@@ -101,9 +99,9 @@ fn tile(
         height: TILE_SIZE,
     };
 
-    let entity = registry.entities.create();
-    registry.entities.add(&entity, transform);
-    registry.entities.add(&entity, CSprite::new(
+    let entity = registry.entity_manager.create();
+    registry.entity_manager.add(&entity, transform);
+    registry.entity_manager.add(&entity, CSprite::new(
         &quad,
         match tile_val {
             9 => Some(glm::vec4(0.0, 0.0, 0.0, 0.0)),
@@ -112,7 +110,7 @@ fn tile(
         match tile_val {
             9 => None,
             _ => Some(TextureAtlas {
-                texture: registry.string_interner.intern("tiles.png".to_string()),
+                texture: registry.string_interner.borrow_mut().intern("tiles.png".to_string()),
                 active_texture: glm::vec2(tile_val as f32, 0.0),
                 texture_dims: glm::vec2(4.0, 1.0)
             })

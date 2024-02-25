@@ -1,8 +1,8 @@
-use quipi::Registry;
+use quipi::GlobalRegistry;
 
 pub fn update_entities(
     _tag: &str,
-    _registry: &Registry
+    _registry: &GlobalRegistry
 ) {
 
 }

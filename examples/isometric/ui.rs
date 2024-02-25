@@ -1,6 +1,6 @@
 use quipi::{
     VersionedIndex,
-    Registry,
+    GlobalRegistry,
     resources::{
         register_resources,
         Shader,
@@ -34,14 +34,14 @@ use quipi::{
 use crate::{WIDTH, HEIGHT};
 
 pub struct MyUI {
-    registry: Registry,
+    registry: GlobalRegistry,
     shader: VersionedIndex,
     renderer: Renderer2D
 }
 
 impl MyUI {
     pub fn init() -> Result<Self, Box<dyn std::error::Error>> {
-        let mut registry = Registry::init()?;
+        let mut registry = GlobalRegistry::init()?;
 
         register_resources(&mut registry);
         register_components(&mut registry);

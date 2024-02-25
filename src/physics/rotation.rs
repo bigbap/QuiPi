@@ -1,5 +1,5 @@
 use crate::prelude::{
-    Registry,
+    GlobalRegistry,
     VersionedIndex,
     qp_ecs::components::{
         CEulerAngles,
@@ -8,10 +8,10 @@ use crate::prelude::{
 };
 
 pub fn s_rotate_camera(
-    registry: &mut Registry,
+    registry: &mut GlobalRegistry,
     camera: &VersionedIndex,
 ) {
-    let Some(euler_angles) = registry.entities.get::<CEulerAngles>(camera) else { return };
+    let Some(euler_angles) = registry.entity_manager.get::<CEulerAngles>(camera) else { return };
 
     let front = glm::normalize(&-glm::vec3(
         euler_angles.yaw.to_radians().cos() * euler_angles.pitch.to_radians().cos(),
@@ -19,20 +19,20 @@ pub fn s_rotate_camera(
         euler_angles.yaw.to_radians().sin() * euler_angles.pitch.to_radians().cos()
     ));
 
-    let Some(gizmo) = registry.entities.get_mut::<CGizmo>(camera) else { return };
+    let Some(gizmo) = registry.entity_manager.get_mut::<CGizmo>(camera) else { return };
     gizmo.front = front;
     gizmo.update_vectors();
 }
 
 pub fn s_update_angles(
-    registry: &mut Registry,
+    registry: &mut GlobalRegistry,
     camera: &VersionedIndex,
     x_offset: f32,
     y_offset: f32,
     min_pitch: f32,
     max_pitch: f32
 ) -> Option<CEulerAngles> {
-    let euler_angle = match registry.entities.get_mut::<CEulerAngles>(camera) {
+    let euler_angle = match registry.entity_manager.get_mut::<CEulerAngles>(camera) {
         Some(val) => val,
         _ => return None
     };

@@ -1,121 +1,37 @@
-use std::collections::HashMap;
+use std::{cell::RefCell, rc::Rc};
 
 use crate::{
-    errors::QPError,
-    QPResult,
+    asset_manager::AssetManager,
     prelude::{
         qp_core::StringInterner,
-        qp_ecs::{
-            Component,
-            EntityManager,
-            VersionedIndex
-        }
-    }
+        qp_ecs::EntityManager,
+    },
+    QPResult
 };
 
-pub struct Registry {
-    pub entities: EntityManager,
-    resources: EntityManager,
-
-    pub string_interner: StringInterner,
-    index_map: HashMap<u64, VersionedIndex>
+/**
+ * Anything that must be global to the aplication is can be accessed
+ * from here. This should be the only thing that is passed around. 
+ */
+pub struct GlobalRegistry {
+    pub string_interner: Rc<RefCell<StringInterner>>,
+    pub entity_manager: EntityManager,
+    pub asset_manager: AssetManager
 }
 
-impl Registry {
+impl GlobalRegistry {
     pub fn init() -> QPResult<Self> {
-        let entities = EntityManager::new()?;
-        let resources = EntityManager::new()?;
+        let string_interner = Rc::new(RefCell::new(StringInterner::new()));
+
+        // let mut string_interner = StringInterner::new();
+        let entity_manager = EntityManager::new()?;
+        let asset_manager = AssetManager::init(string_interner.clone())?;
 
         Ok(Self {
-            entities,
-            resources,
-            string_interner: StringInterner::new(),
-            index_map: HashMap::new()
+            entity_manager,
+            asset_manager,
+            string_interner
         })
-    }
-
-    pub fn register_resource<C: Component + std::fmt::Debug + PartialEq + 'static>(
-        &mut self
-    ) -> &mut Self {
-        self.resources.register_component::<C>();
-
-        self
-    }
-
-    pub fn load_resourse<C: Component + std::fmt::Debug + PartialEq + 'static>(
-        &mut self,
-        unique_name: String,
-        resource: C
-    ) -> QPResult<u64> {
-        let id = self.string_interner.intern(unique_name);
-
-        if self.index_map.get(&id).is_some() {
-            return Err(QPError::DuplicateResource)
-        }
-
-        let index = self.resources.create();
-        self.resources.add(&index, resource);
-
-        self.index_map.insert(id, index);
-
-        Ok(id)
-    }
-
-    pub fn get_resource<C: Component + std::fmt::Debug + PartialEq + 'static>(
-        &self,
-        id: u64
-    ) -> Option<&C> {
-        if let Some(index) = self.index_map.get(&id) {
-            return self.resources.get::<C>(index)
-        }
-
-        None
-    }
-
-    pub fn get_resource_mut<C: Component + std::fmt::Debug + PartialEq + 'static>(
-        &mut self,
-        id: u64
-    ) -> Option<&mut C> {
-        if let Some(index) = self.index_map.get(&id) {
-            return self.resources.get_mut::<C>(index)
-        }
-
-        None
-    }
-
-    pub fn get_resource_id(
-        &mut self,
-        id_as_str: &str
-    ) -> Option<u64> {
-        let id = self.string_interner.intern(id_as_str.to_string());
-
-        match self.index_map.contains_key(&id) {
-            true => Some(id),
-            _ => None
-        }
-    }
-
-    pub fn unload_resource<C: Component + std::fmt::Debug + PartialEq + 'static>(
-        &mut self,
-        id: u64
-    ) {
-        if let Some(index) = self.index_map.get(&id) {
-            self.resources.remove::<C>(index);
-
-            self.index_map.remove(&id);
-        }
-    }
-
-    pub fn store_index(&mut self, id: u64, index: VersionedIndex) {
-        self.index_map.insert(id, index);
-    }
-
-    pub fn lookup_index(&self, id: u64) -> Option<VersionedIndex> {
-        self.index_map.get(&id).cloned()
-    }
-
-    pub fn flush_resources(&mut self) {
-        self.resources.flush();
     }
 }
 
@@ -137,10 +53,10 @@ mod tests {
         rotate: glm::Vec3
     }
 
-    fn create_registry() -> Registry {
-        let mut registry = Registry::init().unwrap();
+    fn create_registry() -> GlobalRegistry {
+        let mut registry = GlobalRegistry::init().unwrap();
 
-        registry.entities
+        registry.entity_manager
             .register_component::<DrawComponent>()
             .register_component::<TransformComponent>();
 
@@ -151,20 +67,23 @@ mod tests {
     fn registry_create_entities() {
         let mut registry = create_registry();
 
-        let player = registry.entities.create();
-        registry.entities.add(&player, DrawComponent { shader_id: Some(1234) });
-        registry.entities.add(&player, TransformComponent {
+        let player = registry.entity_manager.create();
+        registry.entity_manager.add(&player, DrawComponent { shader_id: Some(1234) });
+        registry.entity_manager.add(&player, TransformComponent {
             translate: glm::vec3(1.0, 1.0, 1.0),
             ..TransformComponent::default()
         });
 
         assert_eq!(
-            *registry.entities.get::<DrawComponent>(&player).unwrap(),
+            *registry.entity_manager.get::<DrawComponent>(&player).unwrap(),
             DrawComponent { shader_id: Some(1234) }
         );
         assert_eq!(
-            *registry.entities.get::<TransformComponent>(&player).unwrap(),
-            TransformComponent { translate: glm::vec3(1.0, 1.0, 1.0), ..TransformComponent::default() }
+            *registry.entity_manager.get::<TransformComponent>(&player).unwrap(),
+            TransformComponent {
+                translate: glm::vec3(1.0, 1.0, 1.0),
+                ..TransformComponent::default()
+            }
         );
     }
 }

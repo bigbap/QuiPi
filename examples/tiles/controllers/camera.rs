@@ -1,8 +1,6 @@
 use crate::{
-    qp_ecs::{
-        components::CTransform2D,
-        resources::RCamera2D,
-    },
+    qp_assets::RCamera2D,
+    qp_ecs::components::CTransform2D,
     qp_schemas::SchemaCamera2D,
     qp_gfx::viewport::{
         get_dimensions,
@@ -13,7 +11,7 @@ use crate::{
         FrameState,
         IController,
     },
-    Registry,
+    GlobalRegistry,
     VersionedIndex
 };
 use quipi::prelude::QPError;
@@ -30,9 +28,9 @@ pub struct CameraController {
 impl CameraController {
     pub fn new(
         player: VersionedIndex,
-        registry: &mut Registry
+        registry: &mut GlobalRegistry
     ) -> Result<Self, QPError> {
-        let Some(camera) = registry.get_resource_id(MAIN_CAMERA) else {
+        let Some(camera) = registry.asset_manager.get_asset_id(MAIN_CAMERA) else {
             return Err(QPError::Generic("[camera controller] camera resource has not been loaded".into()));
         };
 
@@ -44,7 +42,7 @@ impl CameraController {
 }
 
 impl IController for CameraController {
-    fn update(&mut self, frame_state: &mut FrameState, registry: &mut Registry) -> FrameResponse {
+    fn update(&mut self, frame_state: &mut FrameState, registry: &mut GlobalRegistry) -> FrameResponse {
         for event in frame_state.events.iter() {
             match event {
                 Event::Window {
@@ -53,7 +51,7 @@ impl IController for CameraController {
                 } => {
                     set_dimensions(0, 0, *w, *h);
 
-                    if let Some(camera) = registry.get_resource_mut::<RCamera2D>(self.camera) {
+                    if let Some(camera) = registry.asset_manager.get_mut::<RCamera2D>(self.camera) {
                         camera.params.right = *w as f32;
                         camera.params.top = *h as f32;
                     }
@@ -64,12 +62,12 @@ impl IController for CameraController {
 
         let mut x = 0.0;
         let mut y = 0.0;
-        if let Some(player) = registry.entities.get::<CTransform2D>(&self.player) {
+        if let Some(player) = registry.entity_manager.get::<CTransform2D>(&self.player) {
             x = player.translate.x;
             y = player.translate.y;
         }
 
-        if let Some(camera) = registry.get_resource_mut::<RCamera2D>(self.camera) {
+        if let Some(camera) = registry.asset_manager.get_mut::<RCamera2D>(self.camera) {
             camera.transform.translate.x = x - (camera.params.right / 2.0);
             camera.transform.translate.y = y - (camera.params.top / 2.0);
         }

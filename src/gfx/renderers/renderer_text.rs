@@ -4,7 +4,7 @@ use crate::prelude::{
         IRenderer,
         FrameState
     },
-    Registry
+    GlobalRegistry
 };
 
 use super::super::batch_renderer::BatchRenderer;
@@ -21,7 +21,7 @@ impl IRenderer for RendererText {
     fn draw(
         &mut self,
         _frame_state: &mut FrameState,
-        _registry: &mut Registry
+        _registry: &mut GlobalRegistry
     ) -> Option<u32> {
         None
     }

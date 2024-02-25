@@ -11,14 +11,14 @@ use crate::prelude::{
     qp_core::to_abs_path,
     qp_schemas::SchemaScene2D,
     qp_data::ISchema,
-    Registry,
+    GlobalRegistry,
     VersionedIndex,
 };
 
 pub fn save_scene_2d(
     name: &str,
     scene: VersionedIndex,
-    registry: &Registry
+    registry: &GlobalRegistry
 ) -> QPResult<()> {
     if let Some(scene) = SchemaScene2D::from_entity(scene, registry) {
         let str = serde_yaml::to_string(&scene)

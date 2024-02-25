@@ -1,5 +1,5 @@
 use quipi::{
-    Registry,
+    GlobalRegistry,
     systems::{
         rendering::{
             texture::*,
@@ -27,7 +27,7 @@ use quipi::{
 };
 
 pub fn s_load_scene(
-    registry: &mut Registry
+    registry: &mut GlobalRegistry
 ) -> Result<(), Box<dyn std::error::Error>> {
     let (models, _) = obj_loader::s_load_obj_file(to_abs_path("assets/objects/cube.obj")?)?;
     let obj_configs = ObjectConfig::from_obj(models)?;

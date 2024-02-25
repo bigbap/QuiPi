@@ -16,7 +16,7 @@ use crate::{
     },
     qp_core::Timer,
     QuiPi,
-    Registry
+    GlobalRegistry
 };
 use quipi::prelude::QPError;
 use sdl2::{
@@ -60,7 +60,7 @@ impl SceneController {
 }
 
 impl IController for SceneController {
-    fn update(&mut self, frame_state: &mut FrameState, _registry: &mut Registry) -> FrameResponse {
+    fn update(&mut self, frame_state: &mut FrameState, _registry: &mut GlobalRegistry) -> FrameResponse {
         for event in frame_state.events.iter() {
             match event {
                 Event::Quit {..} => {
@@ -116,12 +116,12 @@ impl IRenderer for DebugInfoText {
     fn draw(
         &mut self,
         frame_state: &mut FrameState,
-        registry: &mut Registry
+        registry: &mut GlobalRegistry
     ) -> Option<u32> {
         self.timer.delta();
 
         // draw the entity count
-        let entity_count = registry.entities.count();
+        let entity_count = registry.entity_manager.count();
         frame_state.text_render.color = glm::vec4(0.1, 0.1, 0.1, 1.0);
         frame_state.text_render.scale = 0.6;
         frame_state.text_render.draw(

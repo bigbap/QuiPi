@@ -20,7 +20,7 @@ use crate::{
         },
         textures::use_texture
     },
-    prelude::qp_ecs::resources::{
+    prelude::qp_assets::{
         RShader,
         RTexture
     },

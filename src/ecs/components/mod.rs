@@ -38,10 +38,10 @@ pub mod components {
     pub use states::CMouseBtnState;
     pub use target::CTarget;
 
-    use crate::prelude::Registry;
+    use crate::prelude::GlobalRegistry;
 
-    pub fn register_components(registry: &mut Registry) {
-        registry.entities
+    pub fn register_components(registry: &mut GlobalRegistry) {
+        registry.entity_manager
             .register_component::<CChildren>()
             .register_component::<CDistance>()
             .register_component::<CEulerAngles>()

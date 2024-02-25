@@ -1,7 +1,6 @@
 mod indexed_array;
 mod entity_manager;
 mod query;
-mod resources;
 mod components;
 mod tests;
 
@@ -19,5 +18,4 @@ pub mod prelude {
     pub use entity_manager::EntityManager;
     pub use query::EMQuery;
     pub use components::components;
-    pub use resources::resources;
 }

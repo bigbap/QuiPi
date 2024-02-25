@@ -9,14 +9,14 @@ use crate::{
         CVelocity2D,
     },
     qp_editor::IGuiController,
-    Registry,
+    GlobalRegistry,
     VersionedIndex
 };
 
 pub struct EntityEditor {
     pub active_entity: Option<VersionedIndex>,
 
-    to_remove: Vec<Box<dyn FnMut(&mut Registry, VersionedIndex)>>
+    to_remove: Vec<Box<dyn FnMut(&mut GlobalRegistry, VersionedIndex)>>
 }
 
 impl EntityEditor {
@@ -31,18 +31,18 @@ impl EntityEditor {
         &self,
         ui: &mut Ui,
         entity: VersionedIndex,
-        registry: &mut Registry
+        registry: &mut GlobalRegistry
     ) {
         ui.menu_button("Add component", |ui| {
-            if registry.entities.get::<CVelocity2D>(&entity).is_none() {
+            if registry.entity_manager.get::<CVelocity2D>(&entity).is_none() {
                 if ui.button("CVelocity").clicked() {
-                    registry.entities.add(&entity, CVelocity2D::default());
+                    registry.entity_manager.add(&entity, CVelocity2D::default());
                 }
             } else { ui.label("CVelocity"); }
 
-            if registry.entities.get::<CQuad>(&entity).is_none() {
+            if registry.entity_manager.get::<CQuad>(&entity).is_none() {
                 if ui.button("CQuad").clicked() {
-                    registry.entities.add(&entity, CQuad::default());
+                    registry.entity_manager.add(&entity, CQuad::default());
                 }
             } else { ui.label("CQuad"); }
         });
@@ -54,7 +54,7 @@ impl IGuiController for EntityEditor {
         &mut self,
         ctx: &Context,
         _frame_state: &mut FrameState,
-        registry: &mut Registry
+        registry: &mut GlobalRegistry
     ) {
         if let Some(entity) = self.active_entity {
             while !self.to_remove.is_empty() {
@@ -66,12 +66,12 @@ impl IGuiController for EntityEditor {
                 self.add_component(ui, entity, registry);
                 ui.add_space(10.0);
 
-                if let Some(tag) = registry.entities.get_mut::<CTag>(&entity) {
+                if let Some(tag) = registry.entity_manager.get_mut::<CTag>(&entity) {
                     ui.collapsing("Tag", |ui| {
                         ui.add(egui::TextEdit::singleline(&mut tag.tag));
                     });
                 }
-                if let Some(transform) = registry.entities.get_mut::<CTransform2D>(&entity) {
+                if let Some(transform) = registry.entity_manager.get_mut::<CTransform2D>(&entity) {
                     ui.collapsing("Transforms", |ui| {
                         ui.label("translate");
                         ui.horizontal(|ui| {
@@ -94,11 +94,11 @@ impl IGuiController for EntityEditor {
                         });
                     });
                 }
-                if let Some(velocity) = registry.entities.get_mut::<CVelocity2D>(&entity) {
+                if let Some(velocity) = registry.entity_manager.get_mut::<CVelocity2D>(&entity) {
                     ui.collapsing("Velocity", |ui| {
                         if ui.button("del").clicked() {
                             self.to_remove.push(Box::new(|registry, entity: VersionedIndex| {
-                                registry.entities.remove::<CVelocity2D>(&entity);
+                                registry.entity_manager.remove::<CVelocity2D>(&entity);
                             }))
                         }
 
@@ -110,11 +110,11 @@ impl IGuiController for EntityEditor {
                         });
                     });
                 }
-                if let Some(rect) = registry.entities.get_mut::<CQuad>(&entity) {
+                if let Some(rect) = registry.entity_manager.get_mut::<CQuad>(&entity) {
                     ui.collapsing("Quad", |ui| {
                         if ui.button("del").clicked() {
                             self.to_remove.push(Box::new(|registry, entity: VersionedIndex| {
-                                registry.entities.remove::<CQuad>(&entity);
+                                registry.entity_manager.remove::<CQuad>(&entity);
                             }))
                         }
 

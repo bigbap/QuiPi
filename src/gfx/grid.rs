@@ -21,7 +21,7 @@ use crate::{
     utils::to_abs_path,
     wrappers::opengl::{
         buffer::BufferUsage, draw::DrawMode
-    }, Registry, VersionedIndex
+    }, GlobalRegistry, VersionedIndex
 };
 
 use super::draw::draw_entity;
@@ -32,7 +32,7 @@ pub struct Grid {}
 
 impl Grid {
     pub fn new(
-        registry: &mut Registry,
+        registry: &mut GlobalRegistry,
         camera: VersionedIndex
     ) -> QPResult<Self>{
         let indices = &[0, 1, 2, 2, 3, 0];
@@ -79,13 +79,13 @@ impl Grid {
 
     pub fn draw(
         &self,
-        registry: &mut Registry,
+        registry: &mut GlobalRegistry,
         camera: &VersionedIndex
     ) -> QPResult<()> {
-        let grid = registry.entities.query::<CTag>(CTag { tag: GRID_TAG.to_string() });
+        let grid = registry.entity_manager.query::<CTag>(CTag { tag: GRID_TAG.to_string() });
 
         for line in grid {
-            if let Some(drawable) = registry.entities.get::<CDrawable>(&line) {
+            if let Some(drawable) = registry.entity_manager.get::<CDrawable>(&line) {
                 let shader = drawable.shader;
                 draw_entity(
                     &line,
@@ -102,7 +102,7 @@ impl Grid {
 }
 
 fn build_axis(
-    registry: &mut Registry,
+    registry: &mut GlobalRegistry,
     shader: VersionedIndex,
     camera: VersionedIndex,
     mesh: ElementArrayMesh,
@@ -120,12 +120,12 @@ fn build_axis(
         ..CMesh::default()
     };
 
-    let entity = registry.entities.create()?;
-    registry.entities.add(&entity, CTag { tag: GRID_TAG.to_string() });
-    registry.entities.add(&entity, mesh);
-    registry.entities.add(&entity, CDrawable { shader, camera, textures: vec![], active: true });
-    registry.entities.add(&entity, transform);
-    registry.entities.add(&entity, model_matrix);
+    let entity = registry.entity_manager.create()?;
+    registry.entity_manager.add(&entity, CTag { tag: GRID_TAG.to_string() });
+    registry.entity_manager.add(&entity, mesh);
+    registry.entity_manager.add(&entity, CDrawable { shader, camera, textures: vec![], active: true });
+    registry.entity_manager.add(&entity, transform);
+    registry.entity_manager.add(&entity, model_matrix);
 
     Ok(())
 }

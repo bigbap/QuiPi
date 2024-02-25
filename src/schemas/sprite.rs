@@ -1,20 +1,26 @@
 use serde::{Serialize, Deserialize};
 
-use crate::{errors::QPError, prelude::{
-    qp_data::{
-        ISchema, TextureAtlas
-    }, qp_ecs::{
-        components::{
-            CQuad,
-            CSprite,
-            CTag,
-            CTransform2D,
-            CVelocity2D
+use crate::{
+    errors::QPError,
+    prelude::{
+        qp_data::{
+            ISchema,
+            TextureAtlas
         },
-        resources::RTexture,
-        VersionedIndex
-    }, Registry
-}};
+        qp_assets::RTexture,
+        qp_ecs::{
+            components::{
+                CQuad,
+                CSprite,
+                CTag,
+                CTransform2D,
+                CVelocity2D
+            },
+            VersionedIndex
+        },
+        GlobalRegistry
+    }
+};
 use crate::QPResult;
 
 pub const DEFAULT_RECT_TAG: &str = "default_rect";
@@ -33,15 +39,15 @@ pub struct SchemaSprite {
 impl ISchema for SchemaSprite {
     fn build_entity(
         &self,
-        registry: &mut Registry,
+        registry: &mut GlobalRegistry,
     ) -> QPResult<VersionedIndex> {
         let texture_atlas = match &self.texture {
             Some(id_as_str) => {
-                let Some(id) = registry.get_resource_id(&id_as_str) else {
+                let Some(id) = registry.asset_manager.get_asset_id(&id_as_str) else {
                     return Err(QPError::SpriteTextureDoesntExist)
                 };
 
-                let texture = registry.get_resource::<RTexture>(id).unwrap();
+                let texture = registry.asset_manager.get::<RTexture>(id).unwrap();
 
                 Some(TextureAtlas {
                     texture: id,
@@ -52,14 +58,14 @@ impl ISchema for SchemaSprite {
             None => None
         };
 
-        let entity = registry.entities.create();
-        registry.entities.add(&entity, CTag { tag: self.tag.clone() });
+        let entity = registry.entity_manager.create();
+        registry.entity_manager.add(&entity, CTag { tag: self.tag.clone() });
         if let Some(velocity) = self.velocity {
-            registry.entities.add(&entity, velocity);
+            registry.entity_manager.add(&entity, velocity);
         }
-        registry.entities.add(&entity, self.quad.clone());
-        registry.entities.add(&entity, self.transform);
-        registry.entities.add(&entity, CSprite::new(
+        registry.entity_manager.add(&entity, self.quad.clone());
+        registry.entity_manager.add(&entity, self.transform);
+        registry.entity_manager.add(&entity, CSprite::new(
             &self.quad,
             Some(self.color),
             texture_atlas
@@ -68,24 +74,24 @@ impl ISchema for SchemaSprite {
         Ok(entity)
     }
 
-    fn from_entity(entity: VersionedIndex, registry: &Registry) -> Option<Self> {
-        let Some(sprite) = registry.entities.get::<CSprite>(&entity) else { return None; };
+    fn from_entity(entity: VersionedIndex, registry: &GlobalRegistry) -> Option<Self> {
+        let Some(sprite) = registry.entity_manager.get::<CSprite>(&entity) else { return None; };
 
         if let (Some(tag), Some(transform), Some(quad)) = (
-            registry.entities.get::<CTag>(&entity),
-            registry.entities.get::<CTransform2D>(&entity),
-            registry.entities.get::<CQuad>(&entity),
+            registry.entity_manager.get::<CTag>(&entity),
+            registry.entity_manager.get::<CTransform2D>(&entity),
+            registry.entity_manager.get::<CQuad>(&entity),
         ) {
             let schema = Self {
                 tag: tag.tag.clone(),
                 transform: transform.clone(),
                 quad: quad.clone(),
                 texture: match &sprite.texture_atlas {
-                    Some(atlas) => registry.string_interner.get_string(atlas.texture),
+                    Some(atlas) => registry.string_interner.borrow().get_string(atlas.texture),
                     None => None
                 },
                 color: sprite.color,
-                velocity: registry.entities.get::<CVelocity2D>(&entity).cloned(),
+                velocity: registry.entity_manager.get::<CVelocity2D>(&entity).cloned(),
             };
 
             return Some(schema)

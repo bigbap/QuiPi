@@ -2,7 +2,7 @@ use egui::Context;
 use crate::{
     qp_data::FrameState,
     qp_editor::IGuiController,
-    Registry
+    GlobalRegistry
 };
 
 pub struct DebugUi {}
@@ -12,7 +12,7 @@ impl IGuiController for DebugUi {
         &mut self,
         ctx: &Context,
         frame_state: &mut FrameState,
-        registry: &mut Registry
+        registry: &mut GlobalRegistry
     ) {
         egui::Window::new("Debug Info")
             .show(ctx, |ui| {
@@ -23,8 +23,8 @@ impl IGuiController for DebugUi {
                 ui.label(format!("editor time (ms): {}", frame_state.debug_info.editor_ms));
                 ui.label(format!("draw calls: {}", frame_state.debug_info.draw_calls));
                 ui.separator();
-                ui.label(format!("entity count: {}", registry.entities.count()));
-                ui.label(format!("allocator size: {}", registry.entities.allocator_size()));
+                ui.label(format!("entity count: {}", registry.entity_manager.count()));
+                ui.label(format!("allocator size: {}", registry.entity_manager.allocator_size()));
             });
     }
 }

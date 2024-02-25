@@ -13,7 +13,7 @@ use crate::{
         FrameState,
         IController,
     },
-    Registry
+    GlobalRegistry
 };
 use crate::editor::debug::DebugUi;
 
@@ -42,7 +42,7 @@ impl IController for AppEditor {
     fn update(
         &mut self,
         frame_state: &mut FrameState,
-        registry: &mut Registry,
+        registry: &mut GlobalRegistry,
     ) -> FrameResponse {
         if !frame_state.debug_mode {
             return FrameResponse::None

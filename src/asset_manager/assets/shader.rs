@@ -1,7 +1,7 @@
-use super::super::prelude::Component;
 use crate::QPResult;
 use crate::platform::opengl::shader::ShaderProgram;
 use crate::prelude::qp_data::ShaderUniforms;
+use crate::prelude::qp_ecs::Component;
 
 #[derive(Debug, Component, PartialEq)]
 pub struct RShader {

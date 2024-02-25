@@ -1,4 +1,4 @@
-pub struct Input {
+pub struct QPInput {
     
 }
 
