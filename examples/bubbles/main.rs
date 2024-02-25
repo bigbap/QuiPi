@@ -21,15 +21,14 @@ pub fn run() -> Result<(), QPError> {
     )?;
 
     let scene = SceneController::load(&mut app)?;
-    #[cfg(debug_assertions)]
-    #[cfg(feature = "qp_editor")]
-    let editor = editor::AppEditor::new()?;
-
     app.register_controller(scene);
 
     #[cfg(debug_assertions)]
     #[cfg(feature = "qp_editor")]
-    app.register_controller(editor);
+    {
+        let editor = editor::AppEditor::new()?;
+        app.register_controller(editor);
+    }
 
     app.run((0.8, 0.8, 0.4, 1.0))
 }

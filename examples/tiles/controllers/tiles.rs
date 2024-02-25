@@ -110,7 +110,7 @@ fn tile(
         match tile_val {
             9 => None,
             _ => Some(TextureAtlas {
-                texture: registry.string_interner.borrow_mut().intern("tiles.png".to_string()),
+                texture: registry.strings_mut().intern("tiles.png".to_string()),
                 active_texture: glm::vec2(tile_val as f32, 0.0),
                 texture_dims: glm::vec2(4.0, 1.0)
             })

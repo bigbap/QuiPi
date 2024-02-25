@@ -87,7 +87,7 @@ impl ISchema for SchemaSprite {
                 transform: transform.clone(),
                 quad: quad.clone(),
                 texture: match &sprite.texture_atlas {
-                    Some(atlas) => registry.string_interner.borrow().get_string(atlas.texture),
+                    Some(atlas) => registry.strings().get_string(atlas.texture),
                     None => None
                 },
                 color: sprite.color,

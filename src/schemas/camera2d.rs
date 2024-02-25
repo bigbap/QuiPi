@@ -60,7 +60,7 @@ impl ISchema for SchemaCamera2D {
     fn from_resource(id: u64, registry: &GlobalRegistry) -> Option<Self> {
         if let Some(camera) = registry.asset_manager.get::<RCamera2D>(id) {
             let schema = Self {
-                name: registry.string_interner.borrow().get_string(id)?,
+                name: registry.strings().get_string(id)?,
                 transform: camera.transform,
                 left: camera.params.left,
                 right: camera.params.right,

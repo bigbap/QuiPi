@@ -62,4 +62,10 @@ pub enum QPError {
 
     #[error("shader is not loaded")]
     ShaderNotLoaded,
+
+    #[error("failed to upgrade weak reference")]
+    SharedReferenceDropped,
+
+    #[error("failed to get a lock: {0}")]
+    MutexLockFailed(String),
 }

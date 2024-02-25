@@ -1,4 +1,11 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{
+    cell::{
+        Ref,
+        RefCell,
+        RefMut
+    },
+    rc::Rc
+};
 
 use crate::{
     asset_manager::AssetManager,
@@ -14,24 +21,34 @@ use crate::{
  * from here. This should be the only thing that is passed around. 
  */
 pub struct GlobalRegistry {
-    pub string_interner: Rc<RefCell<StringInterner>>,
+    strings: Rc<RefCell<StringInterner>>,
+
     pub entity_manager: EntityManager,
     pub asset_manager: AssetManager
 }
 
 impl GlobalRegistry {
     pub fn init() -> QPResult<Self> {
-        let string_interner = Rc::new(RefCell::new(StringInterner::new()));
+        let strings = Rc::from(RefCell::from(StringInterner::new()));
+        dbg!(Rc::strong_count(&strings));
 
-        // let mut string_interner = StringInterner::new();
         let entity_manager = EntityManager::new()?;
-        let asset_manager = AssetManager::init(string_interner.clone())?;
+        let asset_manager = AssetManager::init(Rc::downgrade(&strings))?;
+        dbg!(Rc::strong_count(&strings));
 
         Ok(Self {
             entity_manager,
             asset_manager,
-            string_interner
+            strings
         })
+    }
+
+    pub fn strings(&self) -> Ref<StringInterner> {
+        self.strings.borrow()
+    }
+
+    pub fn strings_mut(&self) -> RefMut<StringInterner> {
+        self.strings.borrow_mut()
     }
 }
 

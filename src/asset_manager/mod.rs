@@ -1,16 +1,18 @@
 pub mod assets;
 mod loaders;
 
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::{
+    cell::RefCell,
+    collections::HashMap,
+    rc::{Rc, Weak}
+};
 
 use crate::{
     prelude::{
         qp_core::StringInterner, qp_ecs::{
             Component,
             EntityManager
-        },
-        QPError,
-        VersionedIndex
+        }, QPError, VersionedIndex
     },
     QPResult
 };
@@ -19,17 +21,17 @@ pub struct AssetManager {
     asset_store: EntityManager,
     asset_map: HashMap<u64, VersionedIndex>,
 
-    string_interner: Rc<RefCell<StringInterner>>
+    strings: Weak<RefCell<StringInterner>>
 }
 
 impl AssetManager {
     pub fn init(
-        string_interner: Rc<RefCell<StringInterner>>
+        strings: Weak<RefCell<StringInterner>>
     ) -> QPResult<Self> {
         let mut manager = Self {
             asset_store: EntityManager::new()?,
             asset_map: HashMap::new(),
-            string_interner
+            strings
         };
 
         manager.asset_store
@@ -47,16 +49,21 @@ impl AssetManager {
         name: String,
         asset: A
     ) -> QPResult<u64> {
-        let id = self.string_interner.borrow_mut().intern(name);
+        let Some(interner) = self.string_interner() else {
+            return Err(QPError::SharedReferenceDropped);
+        };
 
-        if self.asset_map.get(&id).is_some() {
-            return Err(QPError::DuplicateAsset)
+        let id = interner.borrow_mut().intern(name);
+
+        if self.asset_map.get(&id).is_none() {
+            let index = self.asset_store.create();
+            self.asset_store.add(&index, asset);
+
+            self.asset_map.insert(id, index);
+        } else {
+            #[cfg(debug_assertions)]
+            println!("tried to load an already loaded asset");
         }
-
-        let index = self.asset_store.create();
-        self.asset_store.add(&index, asset);
-
-        self.asset_map.insert(id, index);
 
         Ok(id)
     }
@@ -93,7 +100,11 @@ impl AssetManager {
     }
 
     pub fn get_asset_id(&mut self, name: &str) -> Option<u64> {
-        let id = self.string_interner.borrow_mut().intern(name.to_string());
+        let Some(interner) = self.string_interner() else {
+            return None;
+        };
+
+        let id = interner.borrow_mut().intern(name.to_string());
 
         match self.asset_map.contains_key(&id) {
             true => Some(id),
@@ -117,5 +128,16 @@ impl AssetManager {
         &mut self
     ) {
         self.asset_store.register_component::<A>();
+    }
+
+    fn string_interner(&mut self) -> Option<Rc<RefCell<StringInterner>>> {
+        let Some(string_interner) = self.strings.upgrade() else {
+            #[cfg(debug_assertions)]
+            println!("[asset manager] weak reference to string_interner returned None");
+
+            return None;
+        };
+
+        Some(string_interner)
     }
 }

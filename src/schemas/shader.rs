@@ -48,7 +48,7 @@ impl ISchema for SchemaShader {
     fn from_resource(id: u64, registry: &GlobalRegistry) -> Option<Self> {
         if let (Some(shader), Some(name)) = (
             registry.asset_manager.get::<RShader>(id),
-            registry.string_interner.borrow().get_string(id)
+            registry.strings().get_string(id)
          ) {
             let schema = SchemaShader {
                 name,

@@ -62,13 +62,18 @@ impl ISchema for SchemaScene2D {
             rect.build_entity(registry)?;
         }
 
+        let id = registry.strings_mut().intern(self.name.clone());
+
         let entity = registry.entity_manager.create();
-        registry.entity_manager.add(&entity, CScene {
-            id: registry.string_interner.borrow_mut().intern(self.name.clone()),
-            cameras,
-            shaders,
-            textures
-        });
+        registry.entity_manager.add(
+            &entity,
+            CScene {
+                id,
+                cameras,
+                shaders,
+                textures
+            }
+        );
 
         Ok(entity)
     }
@@ -77,7 +82,7 @@ impl ISchema for SchemaScene2D {
         if let Some(scene) = registry.entity_manager.get::<CScene>(&entity) {
             // 1. new default scene schema
             let mut schema = Self {
-                name: registry.string_interner.borrow().get_string(scene.id)?,
+                name: registry.strings().get_string(scene.id)?,
                 cameras: vec![],
                 shaders: vec![],
                 textures: vec![],

@@ -54,8 +54,7 @@ impl IGuiController for SceneEditor {
                     let Some(scene_id) = scenes.first() else { return };
     
                     if let Some(scene) = registry.entity_manager.get::<CScene>(scene_id) {
-                        let scene_name = registry.string_interner
-                            .borrow()
+                        let scene_name = registry.strings()
                             .get_string(scene.id)
                             .unwrap();
                         if let Err(e) = save_scene_2d(&scene_name, *scene_id, &registry) {
