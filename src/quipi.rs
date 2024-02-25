@@ -94,6 +94,8 @@ impl QuiPi {
             set_frame_debug_info(&mut self.frame_state);
             self.frame_state.events = self.winapi.get_event_queue()?;
 
+            opengl::buffer::clear_buffers(clear_color);
+
             // update controllers
             #[cfg(feature = "qp_profiling")]
             self.profiler.begin();
@@ -117,7 +119,6 @@ impl QuiPi {
             #[cfg(feature = "qp_profiling")]
             self.profiler.begin();
 
-            opengl::buffer::clear_buffers(clear_color);
             for renderer in self.renderers.iter_mut() {
                 if let Some(m_draw_calls) = renderer.draw(
                     &mut self.frame_state,
