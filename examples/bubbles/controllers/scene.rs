@@ -128,7 +128,7 @@ impl IController for DebugInfoText {
         let style = QPTextStyle {
             font: self.font,
             color: glm::vec4(0.1, 0.1, 0.1, 1.0),
-            scale: 0.6
+            scale: 0.4
         };
         frame_state.text_buffer.push(QPText {
             text: format!("entities: {}", entity_count),

@@ -13,43 +13,44 @@ use crate::{
         textures::gl_use_texture_unit
     },
     prelude::{
-        qp_data::{
-            IRenderer,
-            FrameState,
-        },
-        qp_assets::RFont,
-        GlobalRegistry,
-        qp_gfx::viewport::get_dimensions
+        qp_assets::{QPCharacter, RFont, RShader}, qp_data::{
+            FrameState, IRenderer
+        }, qp_gfx::{viewport::get_dimensions, BatchRenderer}, GlobalRegistry
     },
     QPResult
 };
 
-#[derive(Debug)]
 pub struct TextRenderer {
-    shader: ShaderProgram,
-    vao: VertexArray,
-    vbo: Buffer<VBO>,
+    shader: RShader,
+    // vao: VertexArray,
+    // vbo: Buffer<VBO>,
+
+    renderer: BatchRenderer<10000, QPCharacter>
 }
 
 impl TextRenderer {
     pub fn new() -> QPResult<Self> {
-        let shader = ShaderProgram::from_str(
+        let shader = RShader::from_str(
             VERT_SHADER,
             FRAG_SHADER,
+            vec![]
         )?;
         
-        let vao = VertexArray::new();
-        vao.bind();
+        // let vao = VertexArray::new();
+        // vao.bind();
 
-        let vbo = Buffer::<VBO>::new();
-        vbo.bind();
-        vbo.buffer_data::<f32>(6 * 4, None, &BufferUsage::DynamicDraw);
-        vertex_attribute_pointer(0, 4, std::mem::size_of::<f32>() * 4, 0);
+        // let vbo = Buffer::<VBO>::new();
+        // vbo.bind();
+        // vbo.buffer_data::<f32>(6 * 4, None, &BufferUsage::DynamicDraw);
+        // vertex_attribute_pointer(0, 4, std::mem::size_of::<f32>() * 4, 0);
+        // vertex_attribute_pointer(1, 4, std::mem::size_of::<f32>() * 4, 0);
 
         Ok(Self {
             shader,
-            vao,
-            vbo,
+            // vao,
+            // vbo,
+
+            renderer: BatchRenderer::new()
         })
     }
 }
@@ -63,20 +64,22 @@ impl IRenderer for TextRenderer {
         gl_enable(GLCapability::AlphaBlending);
         gl_blending_func(GLBlendingFactor::SrcAlpha, GLBlendingFactor::OneMinusSrcAlpha);
 
-        let (_x, _y, width, height) = get_dimensions();
-        self.shader.use_program();
-        self.shader.set_mat4("projection", &glm::ortho(
+        let projection = &glm::ortho(
             0.0,
-            width as f32,
+            frame_state.viewport.width as f32,
             0.0,
-            height as f32,
+            frame_state.viewport.height as f32,
             0.0,
             0.2
-        ));
+        );
+
+        // self.shader.use_program();
+        // self.shader.set_mat4("projection", );
         
         gl_use_texture_unit(0);
 
-        let mut draw_calls = 0;
+        self.renderer.reset_info();
+        self.renderer.begin_batch();
         for text_obj in frame_state.text_buffer.iter_mut() {
             let Some(font) = registry.asset_manager.get::<RFont>(text_obj.style.font) else {
                 #[cfg(debug_assertions)]
@@ -88,14 +91,14 @@ impl IRenderer for TextRenderer {
                 continue
             };
 
-            self.shader.set_float_4("textColor", (
-                text_obj.style.color.x,
-                text_obj.style.color.y,
-                text_obj.style.color.z,
-                text_obj.style.color.w
-            ));
+            // self.shader.set_float_4("textColor", (
+            //     text_obj.style.color.x,
+            //     text_obj.style.color.y,
+            //     text_obj.style.color.z,
+            //     text_obj.style.color.w
+            // ));
 
-            self.vao.bind();
+            // self.vao.bind();
 
             // TODO: batch this
             // let mut vertices: Vec<f32> = vec![];
@@ -109,81 +112,92 @@ impl IRenderer for TextRenderer {
                 let h = ch.size.y * text_obj.style.scale;
     
                 let vertices = vec![
-                    x_pos,      y_pos + h,  0.0, 0.0,
-                    x_pos,      y_pos,      0.0, 1.0,
-                    x_pos + w,  y_pos,      1.0, 1.0,
-                    x_pos,      y_pos + h,  0.0, 0.0,
-                    x_pos + w,  y_pos,      1.0, 1.0,
-                    x_pos + w,  y_pos + h,  1.0, 0.0
+                    x_pos,      y_pos + h,  0.0, 0.0, // 0
+                    x_pos,      y_pos,      0.0, 1.0, // 1
+                    x_pos + w,  y_pos,      1.0, 1.0, // 2
+                    x_pos,      y_pos + h,  0.0, 0.0, // 0
+                    x_pos + w,  y_pos,      1.0, 1.0, // 2
+                    x_pos + w,  y_pos + h,  1.0, 0.0, // 3
                 ];
     
-                ch.texture.use_texture(0);
-                self.vbo.bind();
-                self.vbo.buffer_sub_data(
-                    0,
-                    vertices.len(),
-                    Some(&vertices)
-                );
-                self.vbo.unbind();
+                // ch.texture.use_texture(0);
+                // self.vbo.bind();
+                // self.vbo.buffer_sub_data(
+                //     0,
+                //     vertices.len(),
+                //     Some(&vertices)
+                // );
+                // self.vbo.unbind();
     
-                gl_draw(
-                    DrawBuffer::Arrays,
-                    DrawMode::Triangles,
-                    6
-                );
-                draw_calls += 1;
+                // gl_draw(
+                //     DrawBuffer::Arrays,
+                //     DrawMode::Triangles,
+                //     6
+                // );
     
-                text_obj.pos.x += (ch.advance >> 6) as f32 * text_obj.style.scale;
+                text_obj.pos.x += (ch.advance_x >> 6) as f32 * text_obj.style.scale;
             }
     
-            self.vao.unbind();
+            // self.vao.unbind();
         }
+        self.renderer.end_batch();
+        self.renderer.flush_batch(&self.shader);
 
-        Some(draw_calls)
+        Some(self.renderer.draw_calls)
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct QPText {
     pub text: String,
     pub pos: glm::Vec2,
     pub style: QPTextStyle,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct QPTextStyle {
     pub font: u64,
     pub color: glm::Vec4,
     pub scale: f32
 }
 
-// copied from https://learnopengl.com/In-Practice/Text-Rendering
 const VERT_SHADER: &str = r#"
 #version 450 core
-layout (location = 0) in vec4 vertex; // <vec2 pos, vec2 tex>
-out vec2 TexCoords;
 
-uniform mat4 projection;
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec4 aColor;
+layout (location = 2) in vec2 aTexCoords;
+layout (location = 3) in float aTexIndex;
+
+out vec4 color;
+out vec2 texCoords;
+out float texIndex;
 
 void main()
 {
-    gl_Position = projection * vec4(vertex.xy, 0.0, 1.0);
-    TexCoords = vertex.zw;
+    gl_Position = vec4(aPos, 1.0);
+    
+    color = aColor;
+    texCoords = aTexCoords;
+    texIndex = aTexIndex;
 }
 "#;
 
-// copied from https://learnopengl.com/In-Practice/Text-Rendering
 const FRAG_SHADER: &str = r#"
 #version 450 core
-in vec2 TexCoords;
-out vec4 color;
 
-uniform sampler2D text;
-uniform vec4 textColor;
+in vec4 color;
+in vec2 texCoords;
+in float texIndex;
+
+uniform sampler2D u_textures[16];
+
+out vec4 fragColor;
 
 void main()
-{    
-    vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r);
-    color = textColor * sampled;
-}  
+{
+    int texId = int(texIndex);
+    vec4 sampled = vec4(1.0, 1.0, 1.0, texture(u_textures[texId], texCoords).r);
+    fragColor = color * sampled;
+}
 "#;

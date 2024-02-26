@@ -1,4 +1,5 @@
 use crate::core::prelude::to_abs_path;
+use crate::prelude::qp_data::{IMesh, Vertex};
 use crate::prelude::qp_ecs::Component;
 use crate::platform::opengl::{
     pixel_store,
@@ -19,7 +20,7 @@ const CHARACTER_COUNT: usize = 128;
 #[derive(Debug, Component, PartialEq)]
 pub struct RFont {
     // pub texture: Texture,
-    pub characters: Vec<Character>
+    pub characters: Vec<QPCharacter>
 }
 
 impl RFont {
@@ -30,10 +31,10 @@ impl RFont {
 
         pixel_store::set_unpack_alignment(1);
 
-        let mut characters = Vec::<Character>::with_capacity(CHARACTER_COUNT);
+        let mut characters = Vec::<QPCharacter>::with_capacity(CHARACTER_COUNT);
 
         for c in 0..CHARACTER_COUNT {
-            face.set_char_size(40 * 64, 0, 50, 0)?;
+            face.set_char_size(40 * 64, 0, 96, 0)?;
 
             if let Err(_e) = face.load_char(c, LoadFlag::RENDER) {
                 #[cfg(debug_assertions)]
@@ -53,11 +54,14 @@ impl RFont {
                 rows
             );
     
-            let m_char = Character {
+            let m_char = QPCharacter {
                 texture,
                 size: glm::vec2(width as f32, rows as f32),
                 bearing: glm::vec2(left as f32, top as f32),
-                advance: face.glyph().advance().x
+                advance_x: face.glyph().advance().x,
+                advance_y: face.glyph().advance().y,
+                pos: glm::vec2(0.0, 0.0),
+                scale: 1.0
             };
     
             if char::from_u32(c as u32).is_some() {
@@ -72,11 +76,56 @@ impl RFont {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Character {
+pub struct QPCharacter {
     pub texture: Texture,
     pub size: glm::Vec2,
     pub bearing: glm::Vec2,
-    pub advance: i32
+    pub advance_x: i32,
+    pub advance_y: i32,
+
+    // used to determine the vertices
+    pub pos: glm::Vec2,
+    pub scale: f32
+}
+
+impl IMesh for QPCharacter {
+    fn indices() -> Vec<i32> { vec![0, 1, 2, 0, 2, 3] }
+    fn vertex_count() -> usize { 6 }
+
+    fn vertices(&self) -> Vec<Vertex> {
+        let x_pos = self.pos.x + self.bearing.x * self.scale;
+        let y_pos = self.pos.y - (self.size.y - self.bearing.y) * self.scale;
+
+        let w = self.size.x * self.scale;
+        let h = self.size.y * self.scale;
+
+        vec![
+            Vertex {
+                position: glm::vec3(x_pos, y_pos + h, 0.0),
+                color: glm::vec4(1.0, 1.0, 1.0, 1.0),
+                tex_coords: glm::vec2(0.0, 0.0),
+                tex_index: 0.0
+            },
+            Vertex {
+                position: glm::vec3(x_pos, y_pos, 0.0),
+                color: glm::vec4(1.0, 1.0, 1.0, 1.0),
+                tex_coords: glm::vec2(0.0, 1.0),
+                tex_index: 0.0
+            },
+            Vertex {
+                position: glm::vec3(x_pos + w, y_pos, 0.0),
+                color: glm::vec4(1.0, 1.0, 1.0, 1.0),
+                tex_coords: glm::vec2(1.0, 1.0),
+                tex_index: 0.0
+            },
+            Vertex {
+                position: glm::vec3(x_pos + w, y_pos + h, 0.0),
+                color: glm::vec4(1.0, 1.0, 1.0, 1.0),
+                tex_coords: glm::vec2(1.0, 0.0),
+                tex_index: 0.0
+            },
+        ]
+    }
 }
 
 // helpers
