@@ -27,7 +27,7 @@ pub fn run() -> Result<(), QPError> {
     #[cfg(feature = "qp_editor")]
     {
         let editor = editor::AppEditor::new()?;
-        app.register_controller(editor);
+        app.register_renderer(editor);
     }
 
     app.run((0.8, 0.8, 0.4, 1.0))

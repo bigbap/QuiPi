@@ -2,6 +2,7 @@ mod scene;
 mod components;
 mod debug;
 
+use quipi::prelude::qp_data::IRenderer;
 use scene::SceneEditor;
 
 use crate::{
@@ -9,7 +10,6 @@ use crate::{
     qp_editor::GuiManager,
     qp_core::Timer,
     qp_data::{
-        FrameResponse,
         FrameState,
         IController,
     },
@@ -38,14 +38,14 @@ impl AppEditor {
     }
 }
 
-impl IController for AppEditor {
-    fn update(
+impl IRenderer for AppEditor {
+    fn draw(
         &mut self,
         frame_state: &mut FrameState,
         registry: &mut GlobalRegistry,
-    ) -> FrameResponse {
+    ) -> Option<u32> {
         if !frame_state.debug_mode {
-            return FrameResponse::None
+            return None
         }
 
         self.timer.delta();
@@ -54,6 +54,6 @@ impl IController for AppEditor {
 
         frame_state.debug_info.editor_ms = (self.timer.delta() * 1000.0) as u32;
 
-        FrameResponse::None
+        None
     }
 }

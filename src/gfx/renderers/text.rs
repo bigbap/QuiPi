@@ -185,7 +185,7 @@ in vec4 color;
 in vec2 texCoords;
 in float texIndex;
 
-uniform sampler2D u_textures[16];
+uniform sampler2D u_textures[32];
 
 out vec4 fragColor;
 

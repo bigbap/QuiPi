@@ -179,17 +179,24 @@ impl Drop for Texture {
     }
 }
 
-pub fn gl_use_texture_unit(unit: i32) {
+pub fn use_texture_unit(unit: i32) {
     unsafe {
         gl::ActiveTexture(gl::TEXTURE0 + unit as gl::types::GLuint);
     }
 }
 
 pub fn use_texture(texture_id: u32, unit: i32) {
+    use_texture_unit(unit);
     unsafe {
-        gl::ActiveTexture(gl::TEXTURE0 + unit as gl::types::GLuint);
         gl::BindTexture(gl::TEXTURE_2D, texture_id);
     }
+}
+
+pub fn max_texture_slots() -> i32 {
+    let mut max_textures = 0;
+    unsafe { gl::GetIntegerv(gl::MAX_TEXTURE_IMAGE_UNITS, &mut max_textures) };
+
+    max_textures
 }
 
 /**

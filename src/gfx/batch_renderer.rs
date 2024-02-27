@@ -18,7 +18,10 @@ use crate::{
             DrawBuffer,
             DrawMode
         },
-        textures::use_texture
+        textures::{
+            use_texture,
+            max_texture_slots
+        }
     },
     prelude::qp_assets::{
         RShader,
@@ -36,7 +39,7 @@ pub struct BatchRenderer<const C: usize, M: IMesh> {
     vbo: Buffer<VBO>,
 
     indices_count: usize,
-    max_textures: u32,
+    max_textures: i32,
     textures: Vec<u32>,
     mesh_count: usize,
     vertices: Vec<Vertex>,
@@ -86,7 +89,7 @@ impl<const C: usize, M: IMesh> BatchRenderer<C, M> {
             vbo,
 
             indices_count: M::indices().len(),
-            max_textures: 16, // TODO: this is hardcoded
+            max_textures: max_texture_slots(),
             textures: vec![],
             mesh_count: 0,
             vertices: Vec::<Vertex>::with_capacity(vertex_capacity),
@@ -150,7 +153,7 @@ impl<const C: usize, M: IMesh> BatchRenderer<C, M> {
             {
                 texture_slot = i;
             } else {
-                if self.textures.len() as u32 >= self.max_textures {
+                if self.textures.len() >= self.max_textures as usize {
                     self.batch_reset(shader);
                 }
 

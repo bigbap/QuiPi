@@ -11,13 +11,9 @@ use egui::{
     Rect,
     vec2,
 };
+use field_offset::offset_of;
 
 use crate::{
-    QPResult,
-    prelude::qp_gfx::{
-        texture::*,
-        viewport
-    },
     platform::opengl::{
         buffer::{
             create_ebo,
@@ -32,13 +28,16 @@ use crate::{
         functions::gl_scissor,
         shader::ShaderProgram,
         textures::{
-            gl_use_texture_unit,
+            use_texture_unit,
             Format,
             ParameterName,
             ParameterValue,
             Texture
         }
-    }
+    }, prelude::{qp_data::Vertex, qp_gfx::{
+        texture::*,
+        viewport
+    }}, QPResult
 };
 
 pub struct Painter {
@@ -148,7 +147,7 @@ impl Painter {
         &self,
         mesh: &Mesh,
     ) {
-        let (points, colors, uv_coords) = parse_vertices(mesh);
+        let vertices = parse_vertices(mesh);
 
         let vao = VertexArray::new();
         let ebo = create_ebo(&mesh.indices, &BufferUsage::StaticDraw);
@@ -156,21 +155,15 @@ impl Painter {
         vao.bind();
         ebo.bind();
 
-        let vbo_points = Buffer::<VBO>::new();
-        let vbo_colors = Buffer::<VBO>::new();
-        let vbo_uv_coords = Buffer::<VBO>::new();
+        let vbo = Buffer::<VBO>::new();
 
-        vbo_points.bind();
-        vbo_points.buffer_data::<f32>(mesh.indices.len() * 2, Some(&points), &BufferUsage::StreamDraw);
-        vertex_attribute_pointer(0, 2, std::mem::size_of::<f32>() * 2, 0);
+        vbo.bind();
+        vbo.buffer_data::<Vertex>(vertices.len(), Some(&vertices), &BufferUsage::StreamDraw);
 
-        vbo_colors.bind();
-        vbo_colors.buffer_data::<f32>(mesh.indices.len() * 4, Some(&colors), &BufferUsage::StreamDraw);
-        vertex_attribute_pointer(1, 4, std::mem::size_of::<f32>() * 4, 0);
-
-        vbo_uv_coords.bind();
-        vbo_uv_coords.buffer_data::<f32>(mesh.indices.len() * 2, Some(&uv_coords), &BufferUsage::StreamDraw);
-        vertex_attribute_pointer(2, 2, std::mem::size_of::<f32>() * 2, 0);
+        let stride = std::mem::size_of::<Vertex>();
+        vertex_attribute_pointer(0, 3, stride, offset_of!(Vertex => position).get_byte_offset());
+        vertex_attribute_pointer(1, 4, stride, offset_of!(Vertex => color).get_byte_offset());
+        vertex_attribute_pointer(2, 2, stride, offset_of!(Vertex => tex_coords).get_byte_offset());
 
         self.shader.use_program();
         self.shader.set_float_2("u_screenSize", (self.screen_rect.width(), self.screen_rect.height()));
@@ -179,7 +172,7 @@ impl Painter {
         ebo.unbind();
 
         vao.bind();
-        gl_use_texture_unit(0);
+        use_texture_unit(0);
         gl_draw(DrawBuffer::Elements, DrawMode::Triangles, mesh.indices.len() as i32);
         vao.unbind();
     }
@@ -249,32 +242,31 @@ impl Painter {
     }
 }
 
-fn parse_vertices(mesh: &Mesh) -> (Vec<f32>, Vec<f32>, Vec<f32>) {
-    let mut pos = Vec::<f32>::new();
-    let mut color = Vec::<f32>::new();
-    let mut uv_coords = Vec::<f32>::new();
+fn parse_vertices(mesh: &Mesh) -> Vec<Vertex> {
+    let mut vertices: Vec<Vertex> = Vec::with_capacity(mesh.vertices.len());
 
     for row in &mesh.vertices {
-        pos.push(row.pos.x);
-        pos.push(row.pos.y);
-
-        color.push(row.color.r() as f32);
-        color.push(row.color.g() as f32);
-        color.push(row.color.b() as f32);
-        color.push(row.color.a() as f32);
-
-        uv_coords.push(row.uv.x);
-        uv_coords.push(row.uv.y);
+        vertices.push(Vertex {
+            position: glm::vec3(row.pos.x, row.pos.y, 0.0),
+            color: glm::vec4(
+                row.color.r() as f32,
+                row.color.g() as f32,
+                row.color.b() as f32,
+                row.color.a() as f32
+            ),
+            tex_coords: glm::vec2(row.uv.x, row.uv.y),
+            tex_index: 0.0
+        });
     }
 
-    (pos, color, uv_coords)
+    vertices
 }
 
 // copied from https://github.com/ArjunNair/egui_sdl2_gl/tree/main
 const VERT_SHADER: &str = r#"
 #version 450 core
 
-layout (location = 0) in vec2 aPos;
+layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec4 aColor;
 layout (location = 2) in vec2 aUVCoords; 
 
