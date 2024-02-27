@@ -34,7 +34,7 @@ impl BubbleController {
         let mut rand = Random::from_seed(now_secs()?);
 
         // for stress testing
-        for _ in 0..1 {
+        for _ in 0..1000 {
             bubbles.push(spawn(&mut rand, registry)?);
         }
 

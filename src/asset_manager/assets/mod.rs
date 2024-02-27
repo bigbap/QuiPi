@@ -10,5 +10,3 @@ pub use tilemap::RTileMap;
 pub use shader::RShader;
 pub use texture::RTexture;
 pub use texture::RTextureAtlas;
-
-pub use font::QPCharacter;

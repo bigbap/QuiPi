@@ -1,5 +1,4 @@
 use crate::core::prelude::to_abs_path;
-use crate::prelude::qp_data::{IMesh, Vertex};
 use crate::prelude::qp_ecs::Component;
 use crate::platform::opengl::{
     pixel_store,
@@ -15,12 +14,14 @@ use ft::{
     Face,
 };
 
+use super::RTexture;
+
 const CHARACTER_COUNT: usize = 128;
 
 #[derive(Debug, Component, PartialEq)]
 pub struct RFont {
     // pub texture: Texture,
-    pub characters: Vec<QPCharacter>
+    pub characters: Vec<Character>
 }
 
 impl RFont {
@@ -31,7 +32,7 @@ impl RFont {
 
         pixel_store::set_unpack_alignment(1);
 
-        let mut characters = Vec::<QPCharacter>::with_capacity(CHARACTER_COUNT);
+        let mut characters = Vec::<Character>::with_capacity(CHARACTER_COUNT);
 
         for c in 0..CHARACTER_COUNT {
             face.set_char_size(40 * 64, 0, 96, 0)?;
@@ -48,20 +49,21 @@ impl RFont {
             let left = face.glyph().bitmap_left();
             let top = face.glyph().bitmap_top();
 
-            let texture = texture_from_font(
-                &face,
-                width,
-                rows
-            );
+            let texture = RTexture {
+                texture: texture_from_font(
+                    &face,
+                    width,
+                    rows
+                ),
+                texture_dims: glm::vec2(width as f32, rows as f32)
+            };
     
-            let m_char = QPCharacter {
+            let m_char = Character {
                 texture,
                 size: glm::vec2(width as f32, rows as f32),
                 bearing: glm::vec2(left as f32, top as f32),
                 advance_x: face.glyph().advance().x,
                 advance_y: face.glyph().advance().y,
-                pos: glm::vec2(0.0, 0.0),
-                scale: 1.0
             };
     
             if char::from_u32(c as u32).is_some() {
@@ -76,56 +78,12 @@ impl RFont {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct QPCharacter {
-    pub texture: Texture,
+pub struct Character {
+    pub texture: RTexture,
     pub size: glm::Vec2,
     pub bearing: glm::Vec2,
     pub advance_x: i32,
     pub advance_y: i32,
-
-    // used to determine the vertices
-    pub pos: glm::Vec2,
-    pub scale: f32
-}
-
-impl IMesh for QPCharacter {
-    fn indices() -> Vec<i32> { vec![0, 1, 2, 0, 2, 3] }
-    fn vertex_count() -> usize { 6 }
-
-    fn vertices(&self) -> Vec<Vertex> {
-        let x_pos = self.pos.x + self.bearing.x * self.scale;
-        let y_pos = self.pos.y - (self.size.y - self.bearing.y) * self.scale;
-
-        let w = self.size.x * self.scale;
-        let h = self.size.y * self.scale;
-
-        vec![
-            Vertex {
-                position: glm::vec3(x_pos, y_pos + h, 0.0),
-                color: glm::vec4(1.0, 1.0, 1.0, 1.0),
-                tex_coords: glm::vec2(0.0, 0.0),
-                tex_index: 0.0
-            },
-            Vertex {
-                position: glm::vec3(x_pos, y_pos, 0.0),
-                color: glm::vec4(1.0, 1.0, 1.0, 1.0),
-                tex_coords: glm::vec2(0.0, 1.0),
-                tex_index: 0.0
-            },
-            Vertex {
-                position: glm::vec3(x_pos + w, y_pos, 0.0),
-                color: glm::vec4(1.0, 1.0, 1.0, 1.0),
-                tex_coords: glm::vec2(1.0, 1.0),
-                tex_index: 0.0
-            },
-            Vertex {
-                position: glm::vec3(x_pos + w, y_pos + h, 0.0),
-                color: glm::vec4(1.0, 1.0, 1.0, 1.0),
-                tex_coords: glm::vec2(1.0, 0.0),
-                tex_index: 0.0
-            },
-        ]
-    }
 }
 
 // helpers

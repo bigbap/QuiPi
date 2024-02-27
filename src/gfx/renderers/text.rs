@@ -1,31 +1,20 @@
 use crate::{
-    platform::opengl::{
-        buffer::{
-            vertex_attribute_pointer,
-            Buffer,
-            BufferUsage,
-            VertexArray,
-            VBO
-        },
-        capabilities::*,
-        draw::*,
-        shader::ShaderProgram,
-        textures::gl_use_texture_unit
-    },
+    platform::opengl::capabilities::*,
     prelude::{
-        qp_assets::{QPCharacter, RFont, RShader}, qp_data::{
-            FrameState, IRenderer
-        }, qp_gfx::{viewport::get_dimensions, BatchRenderer}, GlobalRegistry
+        qp_assets::{RFont, RShader},
+        qp_data::{
+            FrameState, IMesh, IRenderer, Vertex
+        },
+        qp_gfx::BatchRenderer,
+        GlobalRegistry
     },
     QPResult
 };
 
 pub struct TextRenderer {
     shader: RShader,
-    // vao: VertexArray,
-    // vbo: Buffer<VBO>,
 
-    renderer: BatchRenderer<10000, QPCharacter>
+    renderer: BatchRenderer<10000, CharacterMesh>
 }
 
 impl TextRenderer {
@@ -35,21 +24,9 @@ impl TextRenderer {
             FRAG_SHADER,
             vec![]
         )?;
-        
-        // let vao = VertexArray::new();
-        // vao.bind();
-
-        // let vbo = Buffer::<VBO>::new();
-        // vbo.bind();
-        // vbo.buffer_data::<f32>(6 * 4, None, &BufferUsage::DynamicDraw);
-        // vertex_attribute_pointer(0, 4, std::mem::size_of::<f32>() * 4, 0);
-        // vertex_attribute_pointer(1, 4, std::mem::size_of::<f32>() * 4, 0);
 
         Ok(Self {
             shader,
-            // vao,
-            // vbo,
-
             renderer: BatchRenderer::new()
         })
     }
@@ -73,11 +50,6 @@ impl IRenderer for TextRenderer {
             0.2
         );
 
-        // self.shader.use_program();
-        // self.shader.set_mat4("projection", );
-        
-        gl_use_texture_unit(0);
-
         self.renderer.reset_info();
         self.renderer.begin_batch();
         for text_obj in frame_state.text_buffer.iter_mut() {
@@ -91,17 +63,6 @@ impl IRenderer for TextRenderer {
                 continue
             };
 
-            // self.shader.set_float_4("textColor", (
-            //     text_obj.style.color.x,
-            //     text_obj.style.color.y,
-            //     text_obj.style.color.z,
-            //     text_obj.style.color.w
-            // ));
-
-            // self.vao.bind();
-
-            // TODO: batch this
-            // let mut vertices: Vec<f32> = vec![];
             for c in text_obj.text.chars() {
                 let Some(ch) = font.characters.get(c as usize) else { continue; };
     
@@ -110,35 +71,23 @@ impl IRenderer for TextRenderer {
     
                 let w = ch.size.x * text_obj.style.scale;
                 let h = ch.size.y * text_obj.style.scale;
-    
-                let vertices = vec![
-                    x_pos,      y_pos + h,  0.0, 0.0, // 0
-                    x_pos,      y_pos,      0.0, 1.0, // 1
-                    x_pos + w,  y_pos,      1.0, 1.0, // 2
-                    x_pos,      y_pos + h,  0.0, 0.0, // 0
-                    x_pos + w,  y_pos,      1.0, 1.0, // 2
-                    x_pos + w,  y_pos + h,  1.0, 0.0, // 3
-                ];
-    
-                // ch.texture.use_texture(0);
-                // self.vbo.bind();
-                // self.vbo.buffer_sub_data(
-                //     0,
-                //     vertices.len(),
-                //     Some(&vertices)
-                // );
-                // self.vbo.unbind();
-    
-                // gl_draw(
-                //     DrawBuffer::Arrays,
-                //     DrawMode::Triangles,
-                //     6
-                // );
+
+                let mesh = CharacterMesh {
+                    pos: glm::vec4(x_pos, y_pos, 0.0, 1.0),
+                    projection: *projection,
+                    color: text_obj.style.color,
+                    w,
+                    h
+                };
+
+                self.renderer.draw_mesh(
+                    &mesh,
+                    &self.shader,
+                    Some(&ch.texture)
+                );
     
                 text_obj.pos.x += (ch.advance_x >> 6) as f32 * text_obj.style.scale;
             }
-    
-            // self.vao.unbind();
         }
         self.renderer.end_batch();
         self.renderer.flush_batch(&self.shader);
@@ -159,6 +108,52 @@ pub struct QPTextStyle {
     pub font: u64,
     pub color: glm::Vec4,
     pub scale: f32
+}
+
+struct CharacterMesh {
+    pos: glm::Vec4,
+    projection: glm::Mat4,
+    color: glm::Vec4,
+    w: f32,
+    h: f32
+}
+
+impl IMesh for CharacterMesh {
+    fn indices() -> Vec<i32> { vec![0, 1, 2, 0, 2, 3] }
+    fn vertex_count() -> usize { 4 }
+    fn vertices(&self) -> Vec<crate::prelude::qp_data::Vertex> {
+        let pos1 = self.projection * glm::vec4(self.pos.x, self.pos.y + self.h, 0.0, 1.0);
+        let pos2 = self.projection * glm::vec4(self.pos.x, self.pos.y, 0.0, 1.0);
+        let pos3 = self.projection * glm::vec4(self.pos.x + self.w, self.pos.y, 0.0, 1.0);
+        let pos4 = self.projection * glm::vec4(self.pos.x + self.w, self.pos.y + self.h, 0.0, 1.0);
+
+        vec![
+            Vertex {
+                position: pos1.xyz(),
+                color: self.color,
+                tex_coords: glm::vec2(0.0, 0.0),
+                tex_index: 0.0
+            },
+            Vertex {
+                position: pos2.xyz(),
+                color: self.color,
+                tex_coords: glm::vec2(0.0, 1.0),
+                tex_index: 0.0
+            },
+            Vertex {
+                position: pos3.xyz(),
+                color: self.color,
+                tex_coords: glm::vec2(1.0, 1.0),
+                tex_index: 0.0
+            },
+            Vertex {
+                position: pos4.xyz(),
+                color: self.color,
+                tex_coords: glm::vec2(1.0, 0.0),
+                tex_index: 0.0
+            },
+        ]
+    }
 }
 
 const VERT_SHADER: &str = r#"
