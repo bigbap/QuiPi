@@ -31,7 +31,7 @@ impl ISchema for SchemaTexture {
         texture
             .set_parameter(ParameterName::WrapS, ParameterValue::ClampToEdge)
             .set_parameter(ParameterName::WrapT, ParameterValue::ClampToEdge)
-            .set_parameter(ParameterName::MinFilter, ParameterValue::LinearMipmapNearest)
+            .set_parameter(ParameterName::MinFilter, ParameterValue::Linear)
             .set_parameter(ParameterName::MagFilter, ParameterValue::Nearest);
 
         let id = registry.asset_manager.load_asset(self.name.clone(), RTexture {

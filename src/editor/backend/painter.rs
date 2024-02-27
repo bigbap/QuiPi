@@ -241,7 +241,7 @@ impl Painter {
                 .set_parameter(ParameterName::WrapS, ParameterValue::ClampToEdge)
                 .set_parameter(ParameterName::WrapT, ParameterValue::ClampToEdge)
                 .set_parameter(ParameterName::MinFilter, ParameterValue::Linear)
-                .set_parameter(ParameterName::MagFilter, ParameterValue::Linear);
+                .set_parameter(ParameterName::MagFilter, ParameterValue::Nearest);
 
 
             self.textures.insert(id, texture);

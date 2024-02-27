@@ -1,4 +1,5 @@
 use crate::core::prelude::to_abs_path;
+use crate::platform::opengl::textures::{ParameterName, ParameterValue};
 use crate::prelude::qp_ecs::Component;
 use crate::platform::opengl::{
     pixel_store,
@@ -98,6 +99,12 @@ fn texture_from_font(
         height,
         Target::Texture2D
     );
+
+    texture.bind()
+        .set_parameter(ParameterName::WrapS, ParameterValue::ClampToEdge)
+        .set_parameter(ParameterName::WrapT, ParameterValue::ClampToEdge)
+        .set_parameter(ParameterName::MinFilter, ParameterValue::Linear)
+        .set_parameter(ParameterName::MagFilter, ParameterValue::Nearest);
 
     texture
         .bind()
