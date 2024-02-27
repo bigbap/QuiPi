@@ -1,3 +1,4 @@
+use crate::audio::QPAudio;
 use crate::platform::sdl2;
 use crate::platform::opengl;
 use crate::prelude::qp_gfx::viewport::get_dimensions;
@@ -50,6 +51,8 @@ impl QuiPi {
             height,
             (4, 5)
         )?;
+
+        let audio = QPAudio::new(&winapi.ctx)?;
 
         let mut frame_timer = Timer::new();
         let frame_state = FrameState {
