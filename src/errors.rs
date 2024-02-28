@@ -12,8 +12,8 @@ pub enum QPError {
     #[error(transparent)]
     TobjError(#[from] tobj::LoadError),
 
-    #[error(transparent)]
-    GltfError(#[from] gltf::Error),
+    // #[error(transparent)]
+    // GltfError(#[from] gltf::Error),
 
     #[error(transparent)]
     SystemTimeError(#[from] std::time::SystemTimeError),

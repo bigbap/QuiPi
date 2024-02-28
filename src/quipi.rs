@@ -52,7 +52,8 @@ impl QuiPi {
             (4, 5)
         )?;
 
-        let audio = QPAudio::new(&winapi.ctx)?;
+        let audio = QPAudio::new()?;
+        audio.play();
 
         let mut frame_timer = Timer::new();
         let frame_state = FrameState {

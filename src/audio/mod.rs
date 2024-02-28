@@ -1,68 +1,30 @@
-use std::time::Duration;
+use std::fs::File;
+use std::thread;
+use std::io::BufReader;
+use rodio::{Decoder, OutputStream, Sink};
 
-use sdl2::{audio::{AudioCallback, AudioSpecDesired}, AudioSubsystem, Sdl};
-use crate::{
-    prelude::QPError,
-    QPResult
-};
+use crate::{core::prelude::to_abs_path, QPResult};
 
-pub mod prelude {
-    pub use super::QPAudio;
-    pub use super::SquareWave;
-}
-
-pub struct QPAudio {
-    audio_subsystem: AudioSubsystem
-}
+pub struct QPAudio {}
 
 impl QPAudio {
-    pub fn new(ctx: &Sdl) -> QPResult<Self> {
-        let audio_subsystem = ctx.audio().map_err(|e| QPError::Generic(e.to_string()))?;
-
-        let desired_spec = AudioSpecDesired {
-            freq: Some(44100),
-            channels: Some(1),  // mono
-            samples: None       // default sample size
-        };
-        
-        let device = audio_subsystem.open_playback(None, &desired_spec, |spec| {
-            // initialize the audio callback
-            SquareWave {
-                phase_inc: 440.0 / spec.freq as f32,
-                phase: 0.0,
-                volume: 0.25
-            }
-        }).unwrap();
-        
-        // Start playback
-        device.resume();
-
-        // std::thread::sleep(Duration::from_millis(2000));
-
-        Ok(Self {
-            audio_subsystem
-        })
+    pub fn new() -> QPResult<Self> {
+        Ok(Self {})
     }
-}
 
-pub struct SquareWave {
-    phase_inc: f32,
-    phase: f32,
-    volume: f32
-}
+    pub fn play(&self) {
+        thread::spawn(|| {
+            let (_stream, stream_handle) = OutputStream::try_default().unwrap();
+            let sink = Sink::try_new(&stream_handle).unwrap();
 
-impl AudioCallback for SquareWave {
-    type Channel = f32;
+            // Add a dummy source of the sake of the example.
+            let file = BufReader::new(File::open(to_abs_path("assets/audio/jingles_NES00.ogg").unwrap()).unwrap());
+            let source = Decoder::new(file).unwrap();
+            sink.append(source);
 
-    fn callback(&mut self, out: &mut [f32]) {
-        // Generate a square wave
-        for x in out.iter_mut() {
-            *x = if self.phase <= 0.5 {
-                self.volume
-            } else {
-                -self.volume
-            };
-            self.phase = (self.phase + self.phase_inc) % 1.0;
-        }
+            // The sound plays in a separate thread. This call will block the current thread until the sink
+            // has finished playing all its queued sounds.
+            sink.sleep_until_end();
+        });
     }
 }

@@ -5,18 +5,18 @@ extern crate freetype as ft;
 extern crate serde;
 // extern crate gltf;
 
-mod asset_manager;
-mod audio;
-mod core;
-mod data;
-mod ecs;
-mod errors;
-mod gfx;
-mod physics;
-mod platform;
-mod quipi;
-mod registry;
-mod schemas;
+pub mod asset_manager;
+pub mod audio;
+pub mod core;
+pub mod data;
+pub mod ecs;
+pub mod errors;
+pub mod gfx;
+pub mod physics;
+pub mod platform;
+pub mod quipi;
+pub mod registry;
+pub mod schemas;
 
 #[cfg(feature = "qp_editor")]
 mod editor;
@@ -30,7 +30,7 @@ pub mod prelude {
     use super::*;
 
     pub use self::asset_manager::assets as qp_assets;
-    pub use self::audio::prelude as qp_audio;
+    pub use self::audio::QPAudio as qp_audio;
     pub use self::core::prelude as qp_core;
     pub use self::data::prelude as qp_data;
     pub use self::ecs::prelude as qp_ecs;
