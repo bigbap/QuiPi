@@ -14,7 +14,7 @@ mod controllers;
 mod editor;
 
 pub fn run() -> Result<(), QPError> {
-    let mut app = QuiPi::init(
+    let mut app = App::init(
         "Bouncing Shapes",
         WIDTH,
         HEIGHT,

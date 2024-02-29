@@ -13,7 +13,7 @@ use crate::{
         ISchema,
         ShaderUniforms
     },
-    QuiPi,
+    App,
     GlobalRegistry
 };
 use quipi::prelude::{qp_assets::RFont, qp_gfx::{QPText, QPTextStyle}, QPError};
@@ -31,7 +31,7 @@ use super::{
 pub struct SceneController {}
 
 impl SceneController {
-    pub fn load(engine: &mut QuiPi) -> Result<Self, QPError> {
+    pub fn load(engine: &mut App) -> Result<Self, QPError> {
         let scene = load_scene_2d(
             "tile_map",
             scene_schema()

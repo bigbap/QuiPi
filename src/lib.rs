@@ -5,6 +5,7 @@ extern crate freetype as ft;
 extern crate serde;
 // extern crate gltf;
 
+pub mod app;
 pub mod asset_manager;
 pub mod audio;
 pub mod core;
@@ -14,7 +15,6 @@ pub mod errors;
 pub mod gfx;
 pub mod physics;
 pub mod platform;
-pub mod quipi;
 pub mod registry;
 pub mod schemas;
 
@@ -38,7 +38,7 @@ pub mod prelude {
     pub use self::physics::prelude as qp_physics;
     pub use self::schemas::prelude as qp_schemas;
 
-    pub use self::quipi::QuiPi;
+    pub use self::app::App;
     pub use self::errors::QPError;
     pub use self::registry::GlobalRegistry;
     pub use self::qp_ecs::VersionedIndex;

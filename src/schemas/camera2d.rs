@@ -51,6 +51,7 @@ impl ISchema for SchemaCamera2D {
                 self.name.clone(),
                 RCamera2D::new(
                     self.params(),
+                    1.0,
                     self.transform
                 )?
             )?

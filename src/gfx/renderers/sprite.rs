@@ -72,7 +72,9 @@ impl IRenderer for SpriteRenderer {
         };
 
         let view = RCamera2D::calc_view_matrix(&camera.transform);
-        let projection = RCamera2D::calc_projection_matrix(&camera.params);
+        // let projection = RCamera2D::calc_projection_matrix(&camera.params);
+        // let view = camera.view;
+        let projection = camera.projection;
 
         self.renderer.reset_info();
         self.renderer.begin_batch();

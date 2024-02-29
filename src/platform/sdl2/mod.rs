@@ -1,3 +1,3 @@
 mod window;
 
-pub use window::QuiPiWindow;
+pub use window::QPWindow;

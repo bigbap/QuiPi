@@ -17,6 +17,7 @@ pub struct RCamera2D {
     pub view: glm::Mat4,
 
     pub params: OrthographicCameraParams,
+    pub zoom: f32,
     pub transform: CTransform2D,
 }
 
@@ -28,6 +29,7 @@ impl Default for RCamera2D {
             projection: RCamera2D::calc_projection_matrix(&params),
             view: RCamera2D::calc_view_matrix(&transform),
             params,
+            zoom: 1.0,
             transform
         }
     }
@@ -36,16 +38,33 @@ impl Default for RCamera2D {
 impl RCamera2D {
     pub fn new(
         params: OrthographicCameraParams,
+        zoom: f32,
         transform: CTransform2D,
     ) -> QPResult<Self> {
         let camera = Self {
             projection: RCamera2D::calc_projection_matrix(&params),
             view: RCamera2D::calc_view_matrix(&transform),
             params,
+            zoom,
             transform,
         };
 
         Ok(camera)
+    }
+
+    pub fn set_zoom(&mut self, delta: f32) {
+        println!("setting zoom: {}", delta);
+        self.zoom += delta;
+
+        let params = OrthographicCameraParams {
+            left: self.params.left / self.zoom,
+            right: self.params.right / self.zoom,
+            top: self.params.top / self.zoom,
+            bottom: self.params.bottom / self.zoom,
+            ..OrthographicCameraParams::default()
+        };
+
+        self.projection = RCamera2D::calc_projection_matrix(&params);
     }
 
     pub fn calc_projection_matrix(params: &OrthographicCameraParams) -> glm::Mat4 {

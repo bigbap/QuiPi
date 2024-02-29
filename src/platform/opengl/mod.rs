@@ -8,11 +8,11 @@ pub mod shader;
 
 mod c_str;
 
-use super::sdl2::QuiPiWindow;
+use super::sdl2::QPWindow;
 use crate::QPResult;
 
 pub fn init(
-    window_api: &QuiPiWindow,
+    window_api: &QPWindow,
     width: i32,
     height: i32,
 ) -> QPResult<()> {
@@ -32,7 +32,7 @@ pub struct MyOpenGL {}
 
 impl MyOpenGL {
     pub fn init(
-        window_api: &QuiPiWindow
+        window_api: &QPWindow
     ) -> QPResult<Self> {
         gl::load_with(
             |name| window_api.video_subsystem.gl_get_proc_address(name) as *const _

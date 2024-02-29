@@ -11,14 +11,14 @@ use crate::QPResult;
 use crate::prelude::QPError;
 use super::super::opengl;
 
-pub struct QuiPiWindow {
+pub struct QPWindow {
     pub ctx: Sdl,
     pub video_subsystem: VideoSubsystem,
     pub window: Option<Window>,
     pub gl_ctx: Option<GLContext>,
 }
 
-impl QuiPiWindow {
+impl QPWindow {
     pub fn init() -> QPResult<Self> {
         let sdl_ctx = sdl2::init().map_err(|e| QPError::Generic(e.to_string()))?;
         let video_subsystem = sdl_ctx.video().map_err(|e| QPError::Generic(e.to_string()))?;

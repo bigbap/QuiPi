@@ -22,9 +22,9 @@ use crate::prelude::{
 #[cfg(feature = "qp_profiling")]
 use crate::prelude::QPProfiler;
 
-pub struct QuiPi {
+pub struct App {
     pub registry: GlobalRegistry,
-    winapi: sdl2::QuiPiWindow,
+    winapi: sdl2::QPWindow,
 
     #[cfg(feature = "qp_profiling")]
     profiler: QPProfiler,
@@ -36,7 +36,7 @@ pub struct QuiPi {
     renderers: Vec<Box<dyn IRenderer>>
 }
 
-impl QuiPi {
+impl App {
     pub fn init(
         title: &str,
         width: u32,
@@ -44,7 +44,7 @@ impl QuiPi {
     ) -> QPResult<Self> {
         let registry = setup()?;
 
-        let mut winapi = sdl2::QuiPiWindow::init()?;
+        let mut winapi = sdl2::QPWindow::init()?;
         let _window = winapi.opengl_window(
             title,
             width,

@@ -13,7 +13,7 @@ use crate::{
     GlobalRegistry
 };
 use quipi::prelude::QPError;
-use sdl2::event::{Event, WindowEvent};
+use sdl2::{event::{Event, WindowEvent}, mouse::MouseWheelDirection};
 
 pub const MAIN_CAMERA: &str = "main_camera";
 
@@ -47,6 +47,11 @@ impl IController for CameraController {
                     if let Some(camera) = registry.asset_manager.get_mut::<RCamera2D>(self.camera) {
                         camera.params.right = *w as f32;
                         camera.params.top = *h as f32;
+                    }
+                },
+                Event::MouseWheel { timestamp, window_id, which, x, y, direction, precise_x, precise_y } => {
+                    if let Some(camera) = registry.asset_manager.get_mut::<RCamera2D>(self.camera) {
+                        camera.set_zoom(*precise_y * frame_state.delta);
                     }
                 },
                 _ => ()
