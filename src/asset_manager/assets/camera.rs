@@ -54,13 +54,13 @@ impl RCamera2D {
 
     pub fn set_zoom(&mut self, delta: f32) {
         println!("setting zoom: {}", delta);
-        self.zoom += delta;
+        self.zoom += delta * 100.0;
 
         let params = OrthographicCameraParams {
-            left: self.params.left / self.zoom,
-            right: self.params.right / self.zoom,
-            top: self.params.top / self.zoom,
-            bottom: self.params.bottom / self.zoom,
+            left: self.params.left + self.zoom,
+            right: self.params.right - self.zoom,
+            top: self.params.top - self.zoom,
+            bottom: self.params.bottom + self.zoom,
             ..OrthographicCameraParams::default()
         };
 
