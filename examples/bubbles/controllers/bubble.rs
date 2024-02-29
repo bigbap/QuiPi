@@ -1,36 +1,25 @@
 use crate::{
-    qp_ecs::components::{
-        CQuad,
-        CTransform2D,
-         CVelocity2D,
-         CTag
-    },
-    qp_schemas::SchemaSprite,
-    qp_data::{
-        ISchema,
-        IController,
-        FrameResponse,
-        FrameState,
-    },
+    qp_core::{now_secs, random::Random},
+    qp_data::{FrameResponse, FrameState, IController, ISchema},
+    qp_ecs::components::{CQuad, CTag, CTransform2D, CVelocity2D},
     qp_gfx::viewport::get_dimensions,
-    qp_core::{
-        random::Random,
-        now_secs
-    },
-    GlobalRegistry,
-    VersionedIndex
+    qp_schemas::SchemaSprite,
+    GlobalRegistry, VersionedIndex,
 };
-use quipi::prelude::QPError;
+use quipi::{asset_manager::assets::RCamera2D, prelude::QPError};
 use sdl2::{event::Event, keyboard::Keycode};
 
 pub struct BubbleController {
     bubbles: Vec<VersionedIndex>,
-    rand: Random
+    camera: u64,
+    rand: Random,
 }
 
 impl BubbleController {
-    pub fn new(registry: &mut GlobalRegistry) -> Result<Self, QPError> {
-        let mut bubbles = registry.entity_manager.query(CTag { tag: "sprite".to_string() });
+    pub fn new(registry: &mut GlobalRegistry, camera: u64) -> Result<Self, QPError> {
+        let mut bubbles = registry.entity_manager.query(CTag {
+            tag: "sprite".to_string(),
+        });
         let mut rand = Random::from_seed(now_secs()?);
 
         // for stress testing
@@ -40,7 +29,8 @@ impl BubbleController {
 
         Ok(Self {
             bubbles,
-            rand
+            camera,
+            rand,
         })
     }
 }
@@ -49,52 +39,49 @@ impl IController for BubbleController {
     fn update(
         &mut self,
         frame_state: &mut FrameState,
-        registry: &mut GlobalRegistry
+        registry: &mut GlobalRegistry,
     ) -> FrameResponse {
-        if frame_state.debug_mode { return FrameResponse::None; }
+        if frame_state.debug_mode {
+            return FrameResponse::None;
+        }
 
         // handle input
         for event in frame_state.events.iter() {
             match event {
-                Event::KeyDown { keycode: Some(Keycode::Space), .. } => {
+                Event::KeyDown {
+                    keycode: Some(Keycode::Space),
+                    ..
+                } => {
                     match spawn(&mut self.rand, registry) {
                         Ok(index) => self.bubbles.push(index),
                         Err(_e) => {
                             #[cfg(debug_assertions)]
-                            println!("[bubble controller] there was a problem spawning a bubble: {}", _e.to_string());
+                            println!(
+                                "[bubble controller] there was a problem spawning a bubble: {}",
+                                _e.to_string()
+                            );
                         }
                     }
 
                     break;
-                },
-                _ => ()
+                }
+                _ => (),
             };
         }
 
-        update(&self.bubbles, registry, frame_state);
+        update(&self.bubbles, registry, frame_state, self.camera);
 
         FrameResponse::None
     }
 }
 
-fn spawn(
-    rand: &mut Random,
-    registry: &mut GlobalRegistry,
-) -> Result<VersionedIndex, QPError> {
+fn spawn(rand: &mut Random, registry: &mut GlobalRegistry) -> Result<VersionedIndex, QPError> {
     let mut this_schema = SchemaSprite::default();
 
     let (_x, _y, width, height) = get_dimensions();
 
-    let vel = (
-        rand.range(-200, 200) as f32,
-        rand.range(-200, 200) as f32,
-    );
-    let color = glm::vec4(
-        rand.random(),
-        rand.random(),
-        rand.random(),
-        1.0
-    );
+    let vel = (rand.range(-200, 200) as f32, rand.range(-200, 200) as f32);
+    let color = glm::vec4(rand.random(), rand.random(), rand.random(), 1.0);
     let s_factor = rand.range(5, 25) as f32 / 100.0;
     let transform = CTransform2D {
         translate: glm::vec2(
@@ -127,60 +114,82 @@ fn spawn(
 pub fn update(
     bubbles: &[VersionedIndex],
     registry: &mut GlobalRegistry,
-    frame_state: &mut FrameState
+    frame_state: &mut FrameState,
+    camera: u64,
 ) {
+    let Some(camera) = registry.asset_manager.get::<RCamera2D>(camera) else {
+        println!("couldn't find camera");
+
+        return;
+    };
+
     for bubble in bubbles {
-        let Some(vel)       = registry.entity_manager.get::<CVelocity2D>(&bubble)    else { continue };
-        let Some(transform) = registry.entity_manager.get::<CTransform2D>(&bubble)   else { continue };
-        let Some(quad)      = registry.entity_manager.get::<CQuad>(&bubble)          else { continue };
-        
+        let Some(vel) = registry.entity_manager.get::<CVelocity2D>(&bubble) else {
+            continue;
+        };
+        let Some(transform) = registry.entity_manager.get::<CTransform2D>(&bubble) else {
+            continue;
+        };
+        let Some(quad) = registry.entity_manager.get::<CQuad>(&bubble) else {
+            continue;
+        };
+
         let scale = transform.scale;
 
         let vel = glm::vec2(vel.x, vel.y);
         let translate = transform.translate + (vel * frame_state.delta);
         let w = quad.width * scale.x;
         let h = quad.height * scale.y;
-        let (colided_x, colided_y) = check_screen_collision(
-            &frame_state,
-            translate,
-            w,
-            h
-        );
+        let (colided_x, colided_y) = check_screen_collision(&camera, translate, w, h);
 
-        let Some(transform) = registry.entity_manager.get_mut::<CTransform2D>(&bubble) else { continue };
+        let Some(transform) = registry.entity_manager.get_mut::<CTransform2D>(&bubble) else {
+            continue;
+        };
         match colided_x {
             -1 => transform.translate.x = 0.0 + w * 0.5,
             1 => transform.translate.x = frame_state.viewport.width as f32 - w * 0.5,
-            _ => transform.translate.x = translate.x
+            _ => transform.translate.x = translate.x,
         }
         match colided_y {
             -1 => transform.translate.y = 0.0 + h * 0.5,
             1 => transform.translate.y = frame_state.viewport.height as f32 - h * 0.5,
-            _ => transform.translate.y = translate.y
+            _ => transform.translate.y = translate.y,
         }
 
-        let Some(vel) = registry.entity_manager.get_mut::<CVelocity2D>(&bubble) else { continue };
-        if colided_x != 0 { vel.x *= -1.0 }
-        if colided_y != 0 { vel.y *= -1.0 }
+        let Some(vel) = registry.entity_manager.get_mut::<CVelocity2D>(&bubble) else {
+            continue;
+        };
+        if colided_x != 0 {
+            vel.x *= -1.0
+        }
+        if colided_y != 0 {
+            vel.y *= -1.0
+        }
     }
 }
 
-fn check_screen_collision(
-    frame_state: &FrameState,
-    pos: glm::Vec2,
-    w: f32,
-    h: f32
-) -> (i32, i32) {
+fn check_screen_collision(camera: &RCamera2D, pos: glm::Vec2, w: f32, h: f32) -> (i32, i32) {
     let offset_x = w * 0.5;
     let offset_y = h * 0.5;
 
     let mut colided_x = 0;
     let mut colided_y = 0;
 
-    if pos.x <= (0.0 + offset_x) { colided_x = -1; }
-    if pos.x >= (frame_state.viewport.width as f32 - offset_x) { colided_x = 1; }
-    if pos.y >= (frame_state.viewport.height as f32 - offset_y) { colided_y = 1; }
-    if pos.y <= (0.0 + offset_y) {  colided_y = -1; }
+    let cam_width = (camera.params().right - camera.params().left).abs() as f32;
+    let cam_height = (camera.params().bottom - camera.params().top).abs() as f32;
+
+    if pos.x <= (0.0 + offset_x) {
+        colided_x = -1;
+    }
+    if pos.x >= (cam_width - offset_x) {
+        colided_x = 1;
+    }
+    if pos.y >= (cam_height - offset_y) {
+        colided_y = 1;
+    }
+    if pos.y <= (0.0 + offset_y) {
+        colided_y = -1;
+    }
 
     (colided_x, colided_y)
 }

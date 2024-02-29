@@ -1,15 +1,13 @@
-use crate::{
-    QPResult,
-    prelude::qp_core::AnyMap
+use std::{
+    cell::RefCell,
+    rc::{Rc, Weak},
 };
+
 use super::{
-    indexed_array::{
-        IndexedArray,
-        VersionedIndexAllocator,
-        VersionedIndex
-    },
-    prelude::Component
+    indexed_array::{IndexedArray, VersionedIndex, VersionedIndexAllocator},
+    prelude::Component,
 };
+use crate::{prelude::qp_core::AnyMap, QPResult};
 
 type EntityMap<C> = IndexedArray<C>;
 
@@ -35,7 +33,8 @@ impl EntityManager {
     }
 
     pub fn register_component<C: Component + PartialEq + 'static>(&mut self) -> &mut Self {
-        self.component_maps.insert::<EntityMap<C>>(EntityMap::<C>::default());
+        self.component_maps
+            .insert::<EntityMap<C>>(EntityMap::<C>::default());
 
         self
     }
@@ -63,34 +62,41 @@ impl EntityManager {
     pub fn add<C: Component + std::fmt::Debug + PartialEq + 'static>(
         &mut self,
         entity: &VersionedIndex,
-        component: C
+        component: C,
     ) {
         match self.component_maps.get_mut::<EntityMap<C>>() {
             None => {
                 #[cfg(debug_assertions)]
-                println!("component {:?} has not been registered", std::any::type_name::<C>());
-            },
-            Some(cmp_map) => { cmp_map.set(&entity, component); }
+                println!(
+                    "component {:?} has not been registered",
+                    std::any::type_name::<C>()
+                );
+            }
+            Some(cmp_map) => {
+                cmp_map.set(&entity, component);
+            }
         }
     }
 
     pub fn remove<C: Component + std::fmt::Debug + PartialEq + 'static>(
         &mut self,
-        entity: &VersionedIndex
+        entity: &VersionedIndex,
     ) {
         match self.component_maps.get_mut::<EntityMap<C>>() {
             None => {
                 #[cfg(debug_assertions)]
-                println!("component {:?} has not been registered", std::any::type_name::<C>());
-            },
-            Some(cmp_map) => { cmp_map.unset(&entity); }
+                println!(
+                    "component {:?} has not been registered",
+                    std::any::type_name::<C>()
+                );
+            }
+            Some(cmp_map) => {
+                cmp_map.unset(&entity);
+            }
         }
     }
 
-    pub fn get<C: Component + PartialEq + 'static>(
-        &self,
-        entity: &VersionedIndex
-    ) -> Option<&C> {
+    pub fn get<C: Component + PartialEq + 'static>(&self, entity: &VersionedIndex) -> Option<&C> {
         if !self.entity_allocator.validate(entity) {
             return None;
         }
@@ -98,20 +104,23 @@ impl EntityManager {
         match self.component_maps.get::<EntityMap<C>>() {
             None => {
                 #[cfg(debug_assertions)]
-                println!("component {:?} has not been registered", std::any::type_name::<C>());
+                println!(
+                    "component {:?} has not been registered",
+                    std::any::type_name::<C>()
+                );
 
                 return None;
-            },
+            }
             Some(cmp_map) => match cmp_map.get(entity) {
                 None => None,
-                Some(cmp) => Some(cmp)
-            }
+                Some(cmp) => Some(cmp),
+            },
         }
     }
 
     pub fn get_mut<C: Component + PartialEq + 'static>(
         &mut self,
-        entity: &VersionedIndex
+        entity: &VersionedIndex,
     ) -> Option<&mut C> {
         if !self.entity_allocator.validate(entity) {
             return None;
@@ -120,27 +129,32 @@ impl EntityManager {
         match self.component_maps.get_mut::<EntityMap<C>>() {
             None => {
                 #[cfg(debug_assertions)]
-                println!("component {:?} has not been registered", std::any::type_name::<C>());
+                println!(
+                    "component {:?} has not been registered",
+                    std::any::type_name::<C>()
+                );
 
                 return None;
-            },
+            }
             Some(cmp_map) => match cmp_map.get_mut(entity) {
                 None => None,
-                Some(cmp) => Some(cmp)
-            }
+                Some(cmp) => Some(cmp),
+            },
         }
     }
 
-    pub fn query_all<C: Component + PartialEq + 'static>(
-        &self,
-    ) -> Vec<VersionedIndex> {
-        let Some(cmp_map) = self.component_maps.get::<EntityMap<C>>() else { return vec![] };
-        
+    pub fn query_all<C: Component + PartialEq + 'static>(&self) -> Vec<VersionedIndex> {
+        let Some(cmp_map) = self.component_maps.get::<EntityMap<C>>() else {
+            return vec![];
+        };
+
         cmp_map.get_entities(&self.entity_allocator)
     }
 
     pub fn query<C: Component + PartialEq + 'static>(&self, filter: C) -> Vec<VersionedIndex> {
-        let Some(cmp_map) = self.component_maps.get::<EntityMap<C>>() else { return vec![] };
+        let Some(cmp_map) = self.component_maps.get::<EntityMap<C>>() else {
+            return vec![];
+        };
         let all_entities = cmp_map.get_entities(&self.entity_allocator);
 
         let mut result = Vec::<VersionedIndex>::new();
@@ -188,5 +202,36 @@ impl EntityManager {
         }
 
         result
+    }
+}
+
+pub struct EntityBuilder {
+    entity_manager: Weak<RefCell<EntityManager>>,
+    entity: VersionedIndex,
+}
+
+impl EntityBuilder {
+    pub fn create(entity_manager: Rc<RefCell<EntityManager>>) -> Self {
+        let mut em = entity_manager.borrow_mut();
+        let entity = em.entity_allocator.allocate();
+
+        em.entities.push(entity);
+
+        Self {
+            entity_manager: Rc::downgrade(&entity_manager),
+            entity,
+        }
+    }
+
+    pub fn with<C: Component + std::fmt::Debug + PartialEq + 'static>(self, component: C) -> Self {
+        if let Some(entity_manager) = self.entity_manager.upgrade() {
+            entity_manager.borrow_mut().add(&self.entity, component);
+        }
+
+        self
+    }
+
+    pub fn build(self) -> VersionedIndex {
+        self.entity
     }
 }

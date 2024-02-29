@@ -1,5 +1,5 @@
-extern crate quipi;
 extern crate nalgebra_glm as glm;
+extern crate quipi;
 
 use controllers::scene::SceneController;
 pub use quipi::prelude::*;
@@ -14,11 +14,7 @@ mod controllers;
 mod editor;
 
 pub fn run() -> Result<(), QPError> {
-    let mut app = App::init(
-        "Bouncing Shapes",
-        WIDTH,
-        HEIGHT,
-    )?;
+    let mut app = App::init("Bouncing Shapes", WIDTH, HEIGHT)?;
 
     let scene = SceneController::load(&mut app)?;
     app.register_controller(scene);
@@ -32,7 +28,6 @@ pub fn run() -> Result<(), QPError> {
 
     app.run((0.8, 0.8, 0.4, 1.0))
 }
-
 
 fn main() {
     if let Err(e) = run() {

@@ -1,41 +1,37 @@
 use crate::{
     qp_assets::RCamera2D,
+    qp_data::{FrameResponse, FrameState, IController},
+    qp_gfx::viewport::{get_dimensions, set_dimensions},
     qp_schemas::SchemaCamera2D,
-    qp_gfx::viewport::{
-        get_dimensions,
-        set_dimensions
-    },
-    qp_data::{
-        FrameResponse,
-        FrameState,
-        IController,
-    },
-    GlobalRegistry
+    GlobalRegistry,
 };
 use quipi::prelude::QPError;
-use sdl2::{event::{Event, WindowEvent}, mouse::MouseWheelDirection};
+use sdl2::event::{Event, WindowEvent};
 
 pub const MAIN_CAMERA: &str = "main_camera";
 
 pub struct CameraController {
-    camera: u64,
+    pub camera: u64,
 }
 
 impl CameraController {
     pub fn new(registry: &mut GlobalRegistry) -> Result<Self, QPError> {
-
         let Some(camera) = registry.asset_manager.get_asset_id(MAIN_CAMERA) else {
-            return Err(QPError::Generic("[camera controller] camera resource has not been loaded".to_string()));
+            return Err(QPError::Generic(
+                "[camera controller] camera resource has not been loaded".to_string(),
+            ));
         };
 
-        Ok(Self {
-            camera,
-        })
+        Ok(Self { camera })
     }
 }
 
 impl IController for CameraController {
-    fn update(&mut self, frame_state: &mut FrameState, registry: &mut GlobalRegistry) -> FrameResponse {
+    fn update(
+        &mut self,
+        frame_state: &mut FrameState,
+        registry: &mut GlobalRegistry,
+    ) -> FrameResponse {
         for event in frame_state.events.iter() {
             match event {
                 Event::Window {
@@ -48,16 +44,16 @@ impl IController for CameraController {
                         camera.params.right = *w as f32;
                         camera.params.top = *h as f32;
                     }
-                },
-                Event::MouseWheel { timestamp, window_id, which, x, y, direction, precise_x, precise_y } => {
+                }
+                Event::MouseWheel { precise_y, .. } => {
                     if let Some(camera) = registry.asset_manager.get_mut::<RCamera2D>(self.camera) {
-                        camera.set_zoom(*precise_y * frame_state.delta);
+                        camera.set_zoom(camera.zoom + (*precise_y * frame_state.delta * 7.0));
                     }
-                },
-                _ => ()
+                }
+                _ => (),
             };
         }
-    
+
         FrameResponse::None
     }
 }
