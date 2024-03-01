@@ -43,6 +43,9 @@ impl IController for CameraController {
                     if let Some(camera) = registry.asset_manager.get_mut::<RCamera2D>(self.camera) {
                         camera.params.right = *w as f32;
                         camera.params.top = *h as f32;
+
+                        camera.view = camera.calc_view_matrix();
+                        camera.projection = camera.calc_projection_matrix();
                     }
                 }
                 Event::MouseWheel { precise_y, .. } => {

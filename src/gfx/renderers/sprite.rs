@@ -1,18 +1,12 @@
 use crate::{
-    platform::opengl::capabilities::{
-        gl_blending_func,
-        gl_enable,
-        GLBlendingFactor,
-        GLCapability
-    },
+    platform::opengl::capabilities::{gl_blending_func, gl_enable, GLBlendingFactor, GLCapability},
     prelude::{
-        qp_data::{ FrameState, IRenderer, },
-        qp_assets::{ RCamera2D, RShader },
-        qp_ecs::components::{ CSprite, CTransform2D, },
-        QPError,
-        GlobalRegistry
+        qp_assets::{RCamera2D, RShader},
+        qp_data::{FrameState, IRenderer},
+        qp_ecs::components::{CSprite, CTransform2D},
+        GlobalRegistry, QPError,
     },
-    QPResult
+    QPResult,
 };
 
 use super::super::batch_renderer::BatchRenderer;
@@ -21,15 +15,11 @@ pub struct SpriteRenderer {
     camera: u64,
     shader: u64,
 
-    renderer: BatchRenderer<10000, CSprite>
+    renderer: BatchRenderer<10000, CSprite>,
 }
 
 impl SpriteRenderer {
-    pub fn new(
-        registry: &mut GlobalRegistry,
-        camera: &str,
-        shader: &str
-    ) -> QPResult<Self> {
+    pub fn new(registry: &mut GlobalRegistry, camera: &str, shader: &str) -> QPResult<Self> {
         let Some(camera) = registry.asset_manager.get_asset_id(camera) else {
             return Err(QPError::CameraNotLoaded);
         };
@@ -50,12 +40,15 @@ impl IRenderer for SpriteRenderer {
     fn draw(
         &mut self,
         _frame_state: &mut FrameState,
-        registry: &mut GlobalRegistry
+        registry: &mut GlobalRegistry,
     ) -> Option<u32> {
         let entities = registry.entity_manager.query_all::<CSprite>();
 
         gl_enable(GLCapability::AlphaBlending);
-        gl_blending_func(GLBlendingFactor::SrcAlpha, GLBlendingFactor::OneMinusSrcAlpha);
+        gl_blending_func(
+            GLBlendingFactor::SrcAlpha,
+            GLBlendingFactor::OneMinusSrcAlpha,
+        );
 
         if registry.asset_manager.get::<RShader>(self.shader).is_none() {
             #[cfg(debug_assertions)]
@@ -71,17 +64,14 @@ impl IRenderer for SpriteRenderer {
             return None;
         };
 
-        let view = RCamera2D::calc_view_matrix(&camera.transform);
-        // let projection = RCamera2D::calc_projection_matrix(&camera.params);
-        // let view = camera.view;
-        let projection = camera.projection;
-
         self.renderer.reset_info();
         self.renderer.begin_batch();
         for entity in entities.iter() {
             let Some(transform) = registry.entity_manager.get::<CTransform2D>(&entity) else {
                 #[cfg(debug_assertions)]
-                println!("[sprite controller] tried to render a sprite without a tranform component");
+                println!(
+                    "[sprite controller] tried to render a sprite without a tranform component"
+                );
 
                 continue;
             };
@@ -93,22 +83,20 @@ impl IRenderer for SpriteRenderer {
 
                 continue;
             };
-            sprite.apply_matrices(model, view, projection);
+            sprite.apply_matrices(model, camera.view, camera.projection);
 
             let sprite = registry.entity_manager.get::<CSprite>(&entity).unwrap();
             let texture = match &sprite.texture_atlas {
                 Some(atlas) => registry.asset_manager.get(atlas.texture),
-                _ => None
+                _ => None,
             };
 
-            self.renderer.draw_mesh(
-                sprite,
-                registry.asset_manager.get(self.shader)?,
-                texture
-            );
+            self.renderer
+                .draw_mesh(sprite, registry.asset_manager.get(self.shader)?, texture);
         }
         self.renderer.end_batch();
-        self.renderer.flush_batch(registry.asset_manager.get(self.shader)?);
+        self.renderer
+            .flush_batch(registry.asset_manager.get(self.shader)?);
 
         Some(self.renderer.draw_calls)
     }
