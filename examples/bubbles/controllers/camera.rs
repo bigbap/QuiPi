@@ -1,11 +1,10 @@
 use crate::{
     qp_assets::RCamera2D,
-    qp_data::{FrameResponse, FrameState, IController},
-    qp_gfx::viewport::{get_dimensions, set_dimensions},
+    qp_data::{FrameState, IController},
     qp_schemas::SchemaCamera2D,
     GlobalRegistry,
 };
-use quipi::prelude::QPError;
+use quipi::{app::FrameResult, prelude::QPError};
 use sdl2::event::{Event, WindowEvent};
 
 pub const MAIN_CAMERA: &str = "main_camera";
@@ -31,14 +30,14 @@ impl IController for CameraController {
         &mut self,
         frame_state: &mut FrameState,
         registry: &mut GlobalRegistry,
-    ) -> FrameResponse {
-        for event in frame_state.events.iter() {
+    ) -> FrameResult {
+        for event in registry.events.iter() {
             match event {
                 Event::Window {
                     win_event: WindowEvent::Resized(w, h),
                     ..
                 } => {
-                    set_dimensions(0, 0, *w, *h);
+                    registry.gfx.viewport.set_dimensions(0, 0, *w, *h);
 
                     if let Some(camera) = registry.asset_manager.get_mut::<RCamera2D>(self.camera) {
                         camera.params.right = *w as f32;
@@ -57,16 +56,15 @@ impl IController for CameraController {
             };
         }
 
-        FrameResponse::None
+        FrameResult::None
     }
 }
 
-pub fn camera_schema() -> SchemaCamera2D {
-    let (_x, _y, width, height) = get_dimensions();
+pub fn camera_schema(width: f32, height: f32) -> SchemaCamera2D {
     SchemaCamera2D {
         name: MAIN_CAMERA.to_string(),
-        right: width as f32,
-        top: height as f32,
+        right: width,
+        top: height,
         ..SchemaCamera2D::default()
     }
 }

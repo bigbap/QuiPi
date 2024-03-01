@@ -1,13 +1,8 @@
-use crate::prelude::{
-    qp_gfx::QPText,
-    Event
-};
+use crate::prelude::{qp_gfx::QPText, Event};
 
 #[derive(Debug)]
-pub struct FrameState {
+pub struct World {
     pub delta: f32,
-    pub events: Vec<Event>,
-    pub text_buffer: Vec<QPText>,
     pub debug_mode: bool,
     pub debug_info: DebugInfo,
     pub viewport: Viewport,

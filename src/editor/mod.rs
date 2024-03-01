@@ -2,28 +2,28 @@ mod backend;
 
 #[cfg(feature = "qp_editor")]
 pub mod prelude {
-    use egui::Context;
     use super::backend::prelude::*;
-    use crate::QPResult;
     use crate::prelude::{
         qp_core::Timer,
-        qp_data::{FrameResponse, FrameState, IController},
-        GlobalRegistry
+        qp_data::{FrameState, IController},
+        FrameResult, GlobalRegistry,
     };
-    
+    use crate::QPResult;
+    use egui::Context;
+
     pub struct GuiManager {
         backend: EguiBackend,
         timer: Timer,
-    
-        controllers: Vec<Box<dyn IGuiController>>
+
+        controllers: Vec<Box<dyn IGuiController>>,
     }
-    
+
     impl GuiManager {
         pub fn new(scale: f32) -> QPResult<Self> {
             Ok(Self {
                 backend: EguiBackend::new(scale)?,
                 timer: Timer::new(),
-                controllers: vec![]
+                controllers: vec![],
             })
         }
 
@@ -35,26 +35,26 @@ pub mod prelude {
             &self.backend.ctx
         }
     }
-    
+
     impl IController for GuiManager {
         fn update(
             &mut self,
             frame_state: &mut FrameState,
             registry: &mut GlobalRegistry,
-        ) -> FrameResponse {
+        ) -> FrameResult {
             self.timer.delta();
-    
+
             self.backend.begin_frame();
-            
+
             for controller in self.controllers.iter_mut() {
                 controller.update(&self.backend.ctx, frame_state, registry);
             }
-    
-            self.backend.end_frame(frame_state);
-    
+
+            self.backend.end_frame(registry);
+
             frame_state.debug_info.editor_ms = (self.timer.delta() * 1000.0) as u32;
-    
-            FrameResponse::None
+
+            FrameResult::None
         }
     }
 
@@ -63,7 +63,7 @@ pub mod prelude {
             &mut self,
             ctx: &Context,
             frame_state: &mut FrameState,
-            registry: &mut GlobalRegistry
+            registry: &mut GlobalRegistry,
         );
     }
 }

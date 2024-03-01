@@ -1,12 +1,11 @@
 use crate::{
     qp_core::{now_secs, random::Random},
-    qp_data::{FrameResponse, FrameState, IController, ISchema},
+    qp_data::{FrameState, IController, ISchema},
     qp_ecs::components::{CQuad, CTag, CTransform2D, CVelocity2D},
-    qp_gfx::viewport::get_dimensions,
     qp_schemas::SchemaSprite,
     GlobalRegistry, VersionedIndex,
 };
-use quipi::{asset_manager::assets::RCamera2D, prelude::QPError};
+use quipi::{app::FrameResult, asset_manager::assets::RCamera2D, prelude::QPError};
 use sdl2::{event::Event, keyboard::Keycode};
 
 pub struct BubbleController {
@@ -40,13 +39,13 @@ impl IController for BubbleController {
         &mut self,
         frame_state: &mut FrameState,
         registry: &mut GlobalRegistry,
-    ) -> FrameResponse {
+    ) -> FrameResult {
         if frame_state.debug_mode {
-            return FrameResponse::None;
+            return FrameResult::None;
         }
 
         // handle input
-        for event in frame_state.events.iter() {
+        for event in registry.events.iter() {
             match event {
                 Event::KeyDown {
                     keycode: Some(Keycode::Space),
@@ -71,14 +70,14 @@ impl IController for BubbleController {
 
         update(&self.bubbles, registry, frame_state, self.camera);
 
-        FrameResponse::None
+        FrameResult::None
     }
 }
 
 fn spawn(rand: &mut Random, registry: &mut GlobalRegistry) -> Result<VersionedIndex, QPError> {
     let mut this_schema = SchemaSprite::default();
 
-    let (_x, _y, width, height) = get_dimensions();
+    let (_x, _y, width, height) = registry.gfx.viewport.get_dimensions();
 
     let vel = (rand.range(-200, 200) as f32, rand.range(-200, 200) as f32);
     let color = glm::vec4(rand.random(), rand.random(), rand.random(), 1.0);

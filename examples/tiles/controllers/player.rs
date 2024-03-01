@@ -1,21 +1,11 @@
 use crate::{
     qp_assets::RTileMap,
-    qp_ecs::components::{
-        CQuad,
-        CTransform2D
-    },
-    qp_data::{
-        ISchema,
-        ValidTile,
-        FrameResponse,
-        FrameState,
-        IController,
-    },
+    qp_data::{FrameState, IController, ISchema, ValidTile},
+    qp_ecs::components::{CQuad, CTransform2D},
     qp_schemas::SchemaSprite,
-    GlobalRegistry,
-    VersionedIndex
+    GlobalRegistry, VersionedIndex,
 };
-use quipi::prelude::QPError;
+use quipi::{app::FrameResult, prelude::QPError};
 use sdl2::{event::Event, keyboard::Keycode};
 
 const PLAYER_SIZE: f32 = 54.0;
@@ -23,20 +13,19 @@ const PLAYER_SIZE: f32 = 54.0;
 pub struct PlayerController {
     pub player: VersionedIndex,
     tile_map: u64,
-    tile: glm::Vec2
+    tile: glm::Vec2,
 }
 
 impl PlayerController {
-    pub fn new(
-        registry: &mut GlobalRegistry,
-        tile_map: u64
-    ) -> Result<Self, QPError> {
+    pub fn new(registry: &mut GlobalRegistry, tile_map: u64) -> Result<Self, QPError> {
         let r_tile_map = registry.asset_manager.get::<RTileMap>(tile_map).unwrap();
         let mut this_schema = SchemaSprite::default();
         let start_tile = glm::vec2(1.0, 7.0);
 
         let ValidTile::Valid(tile_pos) = r_tile_map.get_tile_pos(start_tile) else {
-            return Err(QPError::Generic("[player controller] invalid start tile".into()))
+            return Err(QPError::Generic(
+                "[player controller] invalid start tile".into(),
+            ));
         };
         let transform = CTransform2D {
             translate: tile_pos.xy(),
@@ -59,49 +48,58 @@ impl PlayerController {
         Ok(Self {
             player: id,
             tile: start_tile,
-            tile_map
+            tile_map,
         })
     }
 }
 
 impl IController for PlayerController {
-    fn update(&mut self, frame_state: &mut FrameState, registry: &mut GlobalRegistry) -> FrameResponse {
+    fn update(
+        &mut self,
+        _frame_state: &mut FrameState,
+        registry: &mut GlobalRegistry,
+    ) -> FrameResult {
         let mut new_tile = self.tile;
-        for event in frame_state.events.iter() {
+        for event in registry.events.iter() {
             match event {
-                Event::KeyDown { keycode, repeat: false, .. } => {
-                    match keycode {
-                        Some(Keycode::W) => new_tile.y += 1.0,
-                        Some(Keycode::S) => new_tile.y -= 1.0,
-                        Some(Keycode::A) => new_tile.x -= 1.0,
-                        Some(Keycode::D) => new_tile.x += 1.0,
-                        _ => ()
-                    }
+                Event::KeyDown {
+                    keycode,
+                    repeat: false,
+                    ..
+                } => match keycode {
+                    Some(Keycode::W) => new_tile.y += 1.0,
+                    Some(Keycode::S) => new_tile.y -= 1.0,
+                    Some(Keycode::A) => new_tile.x -= 1.0,
+                    Some(Keycode::D) => new_tile.x += 1.0,
+                    _ => (),
                 },
-                _ => ()
+                _ => (),
             };
         }
 
         let Some(tile_map) = registry.asset_manager.get::<RTileMap>(self.tile_map) else {
-            return FrameResponse::None
+            return FrameResult::None;
         };
         let ValidTile::Valid(tile_val) = tile_map.get_tile_value(new_tile) else {
-            return FrameResponse::None
+            return FrameResult::None;
         };
         if tile_val == 3 || tile_val == 1 {
-            return FrameResponse::None
+            return FrameResult::None;
         }
 
         let ValidTile::Valid(tile_pos) = tile_map.get_tile_pos(new_tile) else {
-            return FrameResponse::None
+            return FrameResult::None;
         };
 
         let new_translate = tile_pos.xy();
-        if let Some(transform) = registry.entity_manager.get_mut::<CTransform2D>(&self.player) {
+        if let Some(transform) = registry
+            .entity_manager
+            .get_mut::<CTransform2D>(&self.player)
+        {
             self.tile = new_tile;
             transform.translate = new_translate;
         }
 
-        FrameResponse::None
+        FrameResult::None
     }
 }

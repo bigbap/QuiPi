@@ -1,24 +1,11 @@
-use quipi::prelude::QPError;
+use quipi::{app::FrameResult, prelude::QPError};
 
 use crate::{
     qp_assets::RTileMap,
-    qp_ecs::components::{
-        CQuad,
-        CSprite,
-        CTransform2D
-    },
-    qp_core::{
-        random::Random,
-        now_secs
-    },
-    qp_data::{
-        FrameResponse,
-        FrameState,
-        IController,
-        TextureAtlas
-    },
-    GlobalRegistry,
-    VersionedIndex
+    qp_core::{now_secs, random::Random},
+    qp_data::{FrameState, IController, TextureAtlas},
+    qp_ecs::components::{CQuad, CSprite, CTransform2D},
+    GlobalRegistry, VersionedIndex,
 };
 
 const TILE_SIZE: f32 = 64.0;
@@ -38,7 +25,7 @@ const TILE_MAP: [[u16; 10]; 10] = [
 pub struct TileControler {
     _tiles: Vec<VersionedIndex>,
 
-    pub tile_map: u64
+    pub tile_map: u64,
 }
 
 impl TileControler {
@@ -61,28 +48,32 @@ impl TileControler {
 
         let tile_map = registry.asset_manager.load_asset(
             "tile_map".to_string(),
-            RTileMap::new(columns as usize, rows as usize, data, glm::vec2(TILE_SIZE, TILE_SIZE))?
+            RTileMap::new(
+                columns as usize,
+                rows as usize,
+                data,
+                glm::vec2(TILE_SIZE, TILE_SIZE),
+            )?,
         )?;
 
         Ok(Self {
             _tiles: tiles,
-            tile_map
+            tile_map,
         })
     }
 }
 
 impl IController for TileControler {
-    fn update(&mut self, _frame_state: &mut FrameState, _registry: &mut GlobalRegistry) -> FrameResponse {
-        FrameResponse::None
+    fn update(
+        &mut self,
+        _frame_state: &mut FrameState,
+        _registry: &mut GlobalRegistry,
+    ) -> FrameResult {
+        FrameResult::None
     }
 }
 
-fn tile(
-    x: u32,
-    y: u32,
-    tile_val: u16,
-    registry: &mut GlobalRegistry
-) -> VersionedIndex {
+fn tile(x: u32, y: u32, tile_val: u16, registry: &mut GlobalRegistry) -> VersionedIndex {
     let x_offset = (x + 0) as f32 * TILE_SIZE;
     let y_offset = (y + 0) as f32 * TILE_SIZE;
 
@@ -101,21 +92,24 @@ fn tile(
 
     let entity = registry.entity_manager.create();
     registry.entity_manager.add(&entity, transform);
-    registry.entity_manager.add(&entity, CSprite::new(
-        &quad,
-        match tile_val {
-            9 => Some(glm::vec4(0.0, 0.0, 0.0, 0.0)),
-            _ => None
-        },
-        match tile_val {
-            9 => None,
-            _ => Some(TextureAtlas {
-                texture: registry.strings_mut().intern("tiles.png".to_string()),
-                active_texture: glm::vec2(tile_val as f32, 0.0),
-                texture_dims: glm::vec2(4.0, 1.0)
-            })
-        }
-    ));
+    registry.entity_manager.add(
+        &entity,
+        CSprite::new(
+            &quad,
+            match tile_val {
+                9 => Some(glm::vec4(0.0, 0.0, 0.0, 0.0)),
+                _ => None,
+            },
+            match tile_val {
+                9 => None,
+                _ => Some(TextureAtlas {
+                    texture: registry.strings_mut().intern("tiles.png".to_string()),
+                    active_texture: glm::vec2(tile_val as f32, 0.0),
+                    texture_dims: glm::vec2(4.0, 1.0),
+                }),
+            },
+        ),
+    );
 
     entity
 }
@@ -124,11 +118,11 @@ fn _choose(rand: &mut Random) -> u16 {
     let n = rand.random();
 
     if n < 0.7 {
-        return 0
+        return 0;
     }
 
     if n < 0.95 {
-        return 1
+        return 1;
     }
 
     2

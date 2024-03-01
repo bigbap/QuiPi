@@ -2,44 +2,37 @@ use crate::{
     platform::opengl::capabilities::*,
     prelude::{
         qp_assets::{RFont, RShader},
-        qp_data::{
-            FrameState, IMesh, IRenderer, Vertex
-        },
+        qp_data::{FrameState, IMesh, IRenderer, Vertex},
         qp_gfx::BatchRenderer,
-        GlobalRegistry
+        GlobalRegistry,
     },
-    QPResult
+    QPResult,
 };
 
 pub struct TextRenderer {
     shader: RShader,
 
-    renderer: BatchRenderer<10000, CharacterMesh>
+    renderer: BatchRenderer<10000, CharacterMesh>,
 }
 
 impl TextRenderer {
     pub fn new() -> QPResult<Self> {
-        let shader = RShader::from_str(
-            VERT_SHADER,
-            FRAG_SHADER,
-            vec![]
-        )?;
+        let shader = RShader::from_str(VERT_SHADER, FRAG_SHADER, vec![])?;
 
         Ok(Self {
             shader,
-            renderer: BatchRenderer::new()
+            renderer: BatchRenderer::new(),
         })
     }
 }
 
 impl IRenderer for TextRenderer {
-    fn draw(
-        &mut self,
-        frame_state: &mut FrameState,
-        registry: &mut GlobalRegistry
-    ) -> Option<u32> {
+    fn draw(&mut self, frame_state: &mut FrameState, registry: &mut GlobalRegistry) -> Option<u32> {
         gl_enable(GLCapability::AlphaBlending);
-        gl_blending_func(GLBlendingFactor::SrcAlpha, GLBlendingFactor::OneMinusSrcAlpha);
+        gl_blending_func(
+            GLBlendingFactor::SrcAlpha,
+            GLBlendingFactor::OneMinusSrcAlpha,
+        );
 
         let projection = &glm::ortho(
             0.0,
@@ -47,28 +40,29 @@ impl IRenderer for TextRenderer {
             0.0,
             frame_state.viewport.height as f32,
             0.0,
-            0.2
+            0.2,
         );
 
         self.renderer.reset_info();
         self.renderer.begin_batch();
-        for text_obj in frame_state.text_buffer.iter_mut() {
+        for text_obj in registry.text_buffer.iter_mut() {
             let Some(font) = registry.asset_manager.get::<RFont>(text_obj.style.font) else {
                 #[cfg(debug_assertions)]
                 {
-                    let font_str = registry.strings().get_string(text_obj.style.font)?;
-                    println!("font '{}' is not loaded", font_str);
+                    println!("font is not loaded");
                 }
 
-                continue
+                continue;
             };
 
             for c in text_obj.text.chars() {
-                let Some(ch) = font.characters.get(c as usize) else { continue; };
-    
+                let Some(ch) = font.characters.get(c as usize) else {
+                    continue;
+                };
+
                 let x_pos = text_obj.pos.x + ch.bearing.x * text_obj.style.scale;
                 let y_pos = text_obj.pos.y - (ch.size.y - ch.bearing.y) * text_obj.style.scale;
-    
+
                 let w = ch.size.x * text_obj.style.scale;
                 let h = ch.size.y * text_obj.style.scale;
 
@@ -77,15 +71,12 @@ impl IRenderer for TextRenderer {
                     projection: *projection,
                     color: text_obj.style.color,
                     w,
-                    h
+                    h,
                 };
 
-                self.renderer.draw_mesh(
-                    &mesh,
-                    &self.shader,
-                    Some(&ch.texture)
-                );
-    
+                self.renderer
+                    .draw_mesh(&mesh, &self.shader, Some(&ch.texture));
+
                 text_obj.pos.x += (ch.advance_x >> 6) as f32 * text_obj.style.scale;
             }
         }
@@ -107,7 +98,7 @@ pub struct QPText {
 pub struct QPTextStyle {
     pub font: u64,
     pub color: glm::Vec4,
-    pub scale: f32
+    pub scale: f32,
 }
 
 struct CharacterMesh {
@@ -115,12 +106,16 @@ struct CharacterMesh {
     projection: glm::Mat4,
     color: glm::Vec4,
     w: f32,
-    h: f32
+    h: f32,
 }
 
 impl IMesh for CharacterMesh {
-    fn indices() -> Vec<i32> { vec![0, 1, 2, 0, 2, 3] }
-    fn vertex_count() -> usize { 4 }
+    fn indices() -> Vec<i32> {
+        vec![0, 1, 2, 0, 2, 3]
+    }
+    fn vertex_count() -> usize {
+        4
+    }
     fn vertices(&self) -> Vec<crate::prelude::qp_data::Vertex> {
         let pos1 = self.projection * glm::vec4(self.pos.x, self.pos.y + self.h, 0.0, 1.0);
         let pos2 = self.projection * glm::vec4(self.pos.x, self.pos.y, 0.0, 1.0);
@@ -132,25 +127,25 @@ impl IMesh for CharacterMesh {
                 position: pos1.xyz(),
                 color: self.color,
                 tex_coords: glm::vec2(0.0, 0.0),
-                tex_index: 0.0
+                tex_index: 0.0,
             },
             Vertex {
                 position: pos2.xyz(),
                 color: self.color,
                 tex_coords: glm::vec2(0.0, 1.0),
-                tex_index: 0.0
+                tex_index: 0.0,
             },
             Vertex {
                 position: pos3.xyz(),
                 color: self.color,
                 tex_coords: glm::vec2(1.0, 1.0),
-                tex_index: 0.0
+                tex_index: 0.0,
             },
             Vertex {
                 position: pos4.xyz(),
                 color: self.color,
                 tex_coords: glm::vec2(1.0, 0.0),
-                tex_index: 0.0
+                tex_index: 0.0,
             },
         ]
     }

@@ -1,20 +1,11 @@
 use crate::{
     qp_assets::RCamera2D,
+    qp_data::{FrameState, IController},
     qp_ecs::components::CTransform2D,
     qp_schemas::SchemaCamera2D,
-    qp_gfx::viewport::{
-        get_dimensions,
-        set_dimensions
-    },
-    qp_data::{
-        FrameResponse,
-        FrameState,
-        IController,
-    },
-    GlobalRegistry,
-    VersionedIndex
+    GlobalRegistry, VersionedIndex,
 };
-use quipi::prelude::QPError;
+use quipi::{app::FrameResult, prelude::QPError};
 use sdl2::event::{Event, WindowEvent};
 
 pub const MAIN_CAMERA: &str = "main_camera";
@@ -22,41 +13,41 @@ pub const MAIN_CAMERA: &str = "main_camera";
 pub struct CameraController {
     camera: u64,
 
-    player: VersionedIndex // camera will follow player
+    player: VersionedIndex, // camera will follow player
 }
 
 impl CameraController {
-    pub fn new(
-        player: VersionedIndex,
-        registry: &mut GlobalRegistry
-    ) -> Result<Self, QPError> {
+    pub fn new(player: VersionedIndex, registry: &mut GlobalRegistry) -> Result<Self, QPError> {
         let Some(camera) = registry.asset_manager.get_asset_id(MAIN_CAMERA) else {
-            return Err(QPError::Generic("[camera controller] camera resource has not been loaded".into()));
+            return Err(QPError::Generic(
+                "[camera controller] camera resource has not been loaded".into(),
+            ));
         };
 
-        Ok(Self {
-            camera,
-            player
-        })
+        Ok(Self { camera, player })
     }
 }
 
 impl IController for CameraController {
-    fn update(&mut self, frame_state: &mut FrameState, registry: &mut GlobalRegistry) -> FrameResponse {
-        for event in frame_state.events.iter() {
+    fn update(
+        &mut self,
+        _frame_state: &mut FrameState,
+        registry: &mut GlobalRegistry,
+    ) -> FrameResult {
+        for event in registry.events.iter() {
             match event {
                 Event::Window {
                     win_event: WindowEvent::Resized(w, h),
                     ..
                 } => {
-                    set_dimensions(0, 0, *w, *h);
+                    registry.gfx.viewport.set_dimensions(0, 0, *w, *h);
 
                     if let Some(camera) = registry.asset_manager.get_mut::<RCamera2D>(self.camera) {
                         camera.params.right = *w as f32;
                         camera.params.top = *h as f32;
                     }
-                },
-                _ => ()
+                }
+                _ => (),
             };
         }
 
@@ -71,13 +62,12 @@ impl IController for CameraController {
             camera.transform.translate.x = x - (camera.params.right / 2.0);
             camera.transform.translate.y = y - (camera.params.top / 2.0);
         }
-    
-        FrameResponse::None
+
+        FrameResult::None
     }
 }
 
-pub fn camera_schema() -> SchemaCamera2D {
-    let (_x, _y, width, height) = get_dimensions();
+pub fn camera_schema(width: f32, height: f32) -> SchemaCamera2D {
     SchemaCamera2D {
         name: MAIN_CAMERA.to_string(),
         right: width as f32,

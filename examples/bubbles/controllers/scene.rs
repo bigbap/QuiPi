@@ -1,13 +1,16 @@
 use crate::{
-    qp_data::{FrameResponse, FrameState, IController, ISchema, ShaderUniforms},
+    qp_data::{FrameState, IController, ISchema, ShaderUniforms},
     qp_gfx::SpriteRenderer,
     qp_schemas::{load_scene_2d, SchemaScene2D, SchemaShader, SchemaTexture},
     App, GlobalRegistry,
 };
-use quipi::prelude::{
-    qp_assets::RFont,
-    qp_gfx::{QPText, QPTextStyle},
-    QPError,
+use quipi::{
+    app::FrameResult,
+    prelude::{
+        qp_assets::RFont,
+        qp_gfx::{QPText, QPTextStyle},
+        QPError,
+    },
 };
 use sdl2::{event::Event, keyboard::Keycode};
 
@@ -20,7 +23,7 @@ pub struct SceneController {}
 
 impl SceneController {
     pub fn load(engine: &mut App) -> Result<Self, QPError> {
-        let scene = load_scene_2d("bubbles", scene_schema())?;
+        let scene = load_scene_2d("bubbles", scene_schema(&engine.registry))?;
 
         scene.build_entity(&mut engine.registry)?;
 
@@ -45,12 +48,12 @@ impl IController for SceneController {
     fn update(
         &mut self,
         frame_state: &mut FrameState,
-        _registry: &mut GlobalRegistry,
-    ) -> FrameResponse {
-        for event in frame_state.events.iter() {
+        registry: &mut GlobalRegistry,
+    ) -> FrameResult {
+        for event in registry.events.iter() {
             match event {
                 Event::Quit { .. } => {
-                    return FrameResponse::Quit;
+                    return FrameResult::Quit;
                 }
                 Event::KeyDown {
                     keycode: Some(Keycode::Escape),
@@ -64,14 +67,15 @@ impl IController for SceneController {
             };
         }
 
-        FrameResponse::None
+        FrameResult::None
     }
 }
 
-fn scene_schema() -> SchemaScene2D {
+fn scene_schema(registry: &GlobalRegistry) -> SchemaScene2D {
+    let (_x, _y, width, height) = registry.gfx.viewport.get_dimensions();
     SchemaScene2D {
         name: "bubbles".to_string(),
-        cameras: vec![camera_schema()],
+        cameras: vec![camera_schema(width as f32, height as f32)],
         sprites: vec![],
         shaders: vec![SchemaShader {
             name: "sprite".to_string(),
@@ -107,44 +111,44 @@ impl IController for DebugInfoText {
         &mut self,
         frame_state: &mut FrameState,
         registry: &mut GlobalRegistry,
-    ) -> FrameResponse {
+    ) -> FrameResult {
         let entity_count = registry.entity_manager.count();
         let style = QPTextStyle {
             font: self.font,
             color: glm::vec4(0.1, 0.1, 0.1, 1.0),
             scale: 0.4,
         };
-        frame_state.text_buffer.push(QPText {
+        registry.text_buffer.push(QPText {
             text: format!("entities: {}", entity_count),
             pos: glm::vec2(20.0, 20.0),
             style: style.clone(),
         });
-        frame_state.text_buffer.push(QPText {
+        registry.text_buffer.push(QPText {
             text: format!("draw calls: {}", frame_state.debug_info.draw_calls),
             pos: glm::vec2(20.0, 40.0),
             style: style.clone(),
         });
-        frame_state.text_buffer.push(QPText {
+        registry.text_buffer.push(QPText {
             text: format!("render ms: {}", frame_state.debug_info.render_ms),
             pos: glm::vec2(20.0, 60.0),
             style: style.clone(),
         });
-        frame_state.text_buffer.push(QPText {
+        registry.text_buffer.push(QPText {
             text: format!("controller ms: {}", frame_state.debug_info.controller_ms),
             pos: glm::vec2(20.0, 80.0),
             style: style.clone(),
         });
-        frame_state.text_buffer.push(QPText {
+        registry.text_buffer.push(QPText {
             text: format!("fps: {}", frame_state.debug_info.fps as u32),
             pos: glm::vec2(20.0, 100.0),
             style: style.clone(),
         });
-        frame_state.text_buffer.push(QPText {
+        registry.text_buffer.push(QPText {
             text: format!("ms: {}", frame_state.debug_info.frame_ms as u32),
             pos: glm::vec2(20.0, 120.0),
             style: style.clone(),
         });
 
-        FrameResponse::None
+        FrameResult::None
     }
 }

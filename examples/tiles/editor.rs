@@ -1,20 +1,17 @@
 mod debug;
 
+use quipi::app::FrameResult;
+
 use crate::{
-    QPError,
     qp_core::Timer,
-    qp_data::{
-        FrameResponse,
-        FrameState,
-        IController,
-    },
+    qp_data::{FrameState, IController},
     qp_editor::GuiManager,
-    GlobalRegistry
+    GlobalRegistry, QPError,
 };
 
 pub struct AppEditor {
     gui: GuiManager,
-    timer: Timer
+    timer: Timer,
 }
 
 impl AppEditor {
@@ -26,7 +23,7 @@ impl AppEditor {
 
         Ok(Self {
             gui,
-            timer: Timer::new()
+            timer: Timer::new(),
         })
     }
 }
@@ -36,9 +33,9 @@ impl IController for AppEditor {
         &mut self,
         frame_state: &mut FrameState,
         registry: &mut GlobalRegistry,
-    ) -> FrameResponse {
+    ) -> FrameResult {
         if !frame_state.debug_mode {
-            return FrameResponse::None
+            return FrameResult::None;
         }
 
         self.timer.delta();
@@ -47,6 +44,6 @@ impl IController for AppEditor {
 
         frame_state.debug_info.editor_ms = (self.timer.delta() * 1000.0) as u32;
 
-        FrameResponse::None
+        FrameResult::None
     }
 }

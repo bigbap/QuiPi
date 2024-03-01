@@ -1,7 +1,7 @@
-extern crate sdl2;
+extern crate freetype as ft;
 extern crate gl;
 extern crate nalgebra_glm as glm;
-extern crate freetype as ft;
+extern crate sdl2;
 extern crate serde;
 // extern crate gltf;
 
@@ -39,9 +39,13 @@ pub mod prelude {
     pub use self::schemas::prelude as qp_schemas;
 
     pub use self::app::App;
+    pub use self::app::FrameResult;
     pub use self::errors::QPError;
-    pub use self::registry::GlobalRegistry;
+    pub use self::qp_data::FrameState;
+    pub use self::qp_data::IController;
+    pub use self::qp_data::IRenderer;
     pub use self::qp_ecs::VersionedIndex;
+    pub use self::registry::GlobalRegistry;
 
     #[cfg(feature = "qp_editor")]
     pub use self::editor::prelude as qp_editor;

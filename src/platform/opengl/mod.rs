@@ -3,40 +3,19 @@ pub mod capabilities;
 pub mod draw;
 pub mod functions;
 pub mod pixel_store;
-pub mod textures;
 pub mod shader;
+pub mod textures;
 
 mod c_str;
 
 use super::sdl2::QPWindow;
 use crate::QPResult;
 
-pub fn init(
-    window_api: &QPWindow,
-    width: i32,
-    height: i32,
-) -> QPResult<()> {
-    let _opengl = MyOpenGL::init(window_api)?;
-
-    functions::gl_set_viewport_dimensions(
-        0,
-        0,
-        width,
-        height
-    );
-
-    Ok(())
-}
-
 pub struct MyOpenGL {}
 
 impl MyOpenGL {
-    pub fn init(
-        window_api: &QPWindow
-    ) -> QPResult<Self> {
-        gl::load_with(
-            |name| window_api.video_subsystem.gl_get_proc_address(name) as *const _
-        );
+    pub fn init(window_api: &QPWindow) -> QPResult<Self> {
+        gl::load_with(|name| window_api.video_subsystem.gl_get_proc_address(name) as *const _);
 
         let mut flags: gl::types::GLint = 0;
         unsafe {
@@ -55,7 +34,7 @@ impl MyOpenGL {
                     gl::types::GLenum,
                     gl::types::GLsizei,
                     *const i8,
-                    *mut gl::types::GLvoid
+                    *mut gl::types::GLvoid,
                 ) = debug_callback;
                 gl::DebugMessageCallback(Some(ptr), std::ptr::null());
                 gl::DebugMessageControl(
@@ -64,7 +43,7 @@ impl MyOpenGL {
                     gl::DONT_CARE,
                     0,
                     std::ptr::null(),
-                    gl::TRUE
+                    gl::TRUE,
                 );
             }
         }
@@ -80,7 +59,7 @@ extern "system" fn debug_callback(
     severity: gl::types::GLenum,
     _length: gl::types::GLsizei,
     message: *const i8,
-    _user_params: *mut gl::types::GLvoid
+    _user_params: *mut gl::types::GLvoid,
 ) {
     if id == 131169 || id == 131185 || id == 131218 || id == 131204 {
         return;
@@ -96,7 +75,7 @@ extern "system" fn debug_callback(
         gl::DEBUG_SOURCE_THIRD_PARTY => println!("Source: Third Party"),
         gl::DEBUG_SOURCE_APPLICATION => println!("Source: Application"),
         gl::DEBUG_SOURCE_OTHER => println!("Source: Other"),
-        _ => ()
+        _ => (),
     }
 
     match kind {
@@ -109,7 +88,7 @@ extern "system" fn debug_callback(
         gl::DEBUG_TYPE_PUSH_GROUP => println!("Type: Push Group"),
         gl::DEBUG_TYPE_POP_GROUP => println!("Type: Pop Group"),
         gl::DEBUG_TYPE_OTHER => println!("Type: Other"),
-        _ => ()
+        _ => (),
     }
 
     match severity {
@@ -117,6 +96,6 @@ extern "system" fn debug_callback(
         gl::DEBUG_SEVERITY_MEDIUM => println!("Severity: medium"),
         gl::DEBUG_SEVERITY_LOW => println!("Severity: low"),
         gl::DEBUG_SEVERITY_NOTIFICATION => println!("Severity: notification"),
-        _ => ()
+        _ => (),
     }
 }
