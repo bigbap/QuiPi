@@ -26,7 +26,7 @@ impl Schema for SchemaTexture {
             .set_parameter(ParameterName::MagFilter, ParameterValue::Nearest);
 
         let id = registry.asset_manager.load_asset(
-            self.name.clone(),
+            &self.name,
             RTexture {
                 texture,
                 texture_dims: self.texture_dims,

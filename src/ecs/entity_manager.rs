@@ -1,8 +1,3 @@
-use std::{
-    cell::RefCell,
-    rc::{Rc, Weak},
-};
-
 use super::{
     indexed_array::{IndexedArray, VersionedIndex, VersionedIndexAllocator},
     prelude::Component,
@@ -205,28 +200,25 @@ impl EntityManager {
     }
 }
 
-pub struct EntityBuilder {
-    entity_manager: Weak<RefCell<EntityManager>>,
+pub struct EntityBuilder<'a> {
+    entity_manager: &'a mut EntityManager,
     entity: VersionedIndex,
 }
 
-impl EntityBuilder {
-    pub fn create(entity_manager: Rc<RefCell<EntityManager>>) -> Self {
-        let mut em = entity_manager.borrow_mut();
-        let entity = em.entity_allocator.allocate();
+impl<'a> EntityBuilder<'a> {
+    pub fn create(entity_manager: &'a mut EntityManager) -> Self {
+        let entity = entity_manager.entity_allocator.allocate();
 
-        em.entities.push(entity);
+        entity_manager.entities.push(entity);
 
         Self {
-            entity_manager: Rc::downgrade(&entity_manager),
+            entity_manager,
             entity,
         }
     }
 
     pub fn with<C: Component + std::fmt::Debug + PartialEq + 'static>(self, component: C) -> Self {
-        if let Some(entity_manager) = self.entity_manager.upgrade() {
-            entity_manager.borrow_mut().add(&self.entity, component);
-        }
+        self.entity_manager.add(&self.entity, component);
 
         self
     }

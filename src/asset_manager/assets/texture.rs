@@ -13,10 +13,3 @@ pub struct RTextureAtlas {
     pub texture: Texture,
     pub texture_dims: glm::Vec2,
 }
-
-// #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-// pub struct TextureAtlas {
-//     pub texture: u64,
-//     pub texture_dims: glm::Vec2,
-//     pub active_texture: glm::Vec2,
-// }

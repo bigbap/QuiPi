@@ -37,8 +37,8 @@ impl Default for SchemaCamera2D {
 impl Schema for SchemaCamera2D {
     fn load_resource(&self, registry: &mut GlobalRegistry) -> QPResult<u64> {
         Ok(registry.asset_manager.load_asset(
-            self.name.clone(),
-            RCamera2D::new(self.params(), 1.0, self.transform)?,
+            &self.name,
+            RCamera2D::new(self.params(), 1.0, self.transform),
         )?)
     }
 

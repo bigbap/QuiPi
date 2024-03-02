@@ -4,37 +4,35 @@ mod loaders;
 use std::{
     cell::RefCell,
     collections::HashMap,
-    rc::{Rc, Weak}
+    rc::{Rc, Weak},
 };
 
 use crate::{
     prelude::{
-        qp_core::StringInterner, qp_ecs::{
-            Component,
-            EntityManager
-        }, QPError, VersionedIndex
+        qp_core::StringInterner,
+        qp_ecs::{Component, EntityManager},
+        QPError, VersionedIndex,
     },
-    QPResult
+    QPResult,
 };
 
 pub struct AssetManager {
     asset_store: EntityManager,
     asset_map: HashMap<u64, VersionedIndex>,
 
-    strings: Weak<RefCell<StringInterner>>
+    strings: Weak<RefCell<StringInterner>>,
 }
 
 impl AssetManager {
-    pub fn init(
-        strings: Weak<RefCell<StringInterner>>
-    ) -> QPResult<Self> {
+    pub fn init(strings: Weak<RefCell<StringInterner>>) -> QPResult<Self> {
         let mut manager = Self {
             asset_store: EntityManager::new()?,
             asset_map: HashMap::new(),
-            strings
+            strings,
         };
 
-        manager.asset_store
+        manager
+            .asset_store
             .register_component::<assets::RFont>()
             .register_component::<assets::RShader>()
             .register_component::<assets::RCamera2D>()
@@ -47,14 +45,14 @@ impl AssetManager {
 
     pub fn load_asset<A: Component + std::fmt::Debug + PartialEq + 'static>(
         &mut self,
-        name: String,
-        asset: A
+        name: &str,
+        asset: A,
     ) -> QPResult<u64> {
         let Some(interner) = self.string_interner() else {
             return Err(QPError::SharedReferenceDropped);
         };
 
-        let id = interner.borrow_mut().intern(name);
+        let id = interner.borrow_mut().intern(name.to_string());
 
         if self.asset_map.get(&id).is_none() {
             let index = self.asset_store.create();
@@ -69,10 +67,7 @@ impl AssetManager {
         Ok(id)
     }
 
-    pub fn unload_asset<A: Component + std::fmt::Debug + PartialEq + 'static>(
-        &mut self,
-        id: u64
-    ) {
+    pub fn unload_asset<A: Component + std::fmt::Debug + PartialEq + 'static>(&mut self, id: u64) {
         if let Some(index) = self.asset_map.get(&id) {
             self.asset_store.remove::<A>(index);
 
@@ -80,23 +75,20 @@ impl AssetManager {
         }
     }
 
-    pub fn get<A: Component + std::fmt::Debug + PartialEq + 'static>(
-        &self,
-        id: u64
-    ) -> Option<&A> {
+    pub fn get<A: Component + std::fmt::Debug + PartialEq + 'static>(&self, id: u64) -> Option<&A> {
         match self.asset_map.get(&id) {
             Some(index) => self.asset_store.get::<A>(index),
-            None => None
+            None => None,
         }
     }
 
     pub fn get_mut<A: Component + std::fmt::Debug + PartialEq + 'static>(
         &mut self,
-        id: u64
+        id: u64,
     ) -> Option<&mut A> {
         match self.asset_map.get(&id) {
             Some(index) => self.asset_store.get_mut::<A>(index),
-            None => None
+            None => None,
         }
     }
 
@@ -109,7 +101,7 @@ impl AssetManager {
 
         match self.asset_map.contains_key(&id) {
             true => Some(id),
-            _ => None
+            _ => None,
         }
     }
 
@@ -125,9 +117,7 @@ impl AssetManager {
         self.asset_store.flush();
     }
 
-    pub fn register_asset<A: Component + std::fmt::Debug + PartialEq + 'static>(
-        &mut self
-    ) {
+    pub fn register_asset<A: Component + std::fmt::Debug + PartialEq + 'static>(&mut self) {
         self.asset_store.register_component::<A>();
     }
 

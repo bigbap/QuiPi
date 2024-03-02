@@ -11,8 +11,7 @@ use crate::prelude::QPProfiler;
 
 pub struct App {
     pub world: World,
-
-    winapi: sdl2::QPWindow,
+    pub winapi: sdl2::QPWindow,
 
     #[cfg(feature = "qp_profiling")]
     profiler: QPProfiler,
