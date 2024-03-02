@@ -1,50 +1,38 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
+use crate::prelude::Schema;
+use crate::QPResult;
 use crate::{
     errors::QPError,
     prelude::{
-        qp_data::{
-            ISchema,
-            TextureAtlas
-        },
         qp_assets::RTexture,
         qp_ecs::{
-            components::{
-                CQuad,
-                CSprite,
-                CTag,
-                CTransform2D,
-                CVelocity2D
-            },
-            VersionedIndex
+            components::{CQuad, CSprite, CTag, CTransform2D, CVelocity2D},
+            VersionedIndex,
         },
-        GlobalRegistry
-    }
+        GlobalRegistry,
+    },
 };
-use crate::QPResult;
 
 pub const DEFAULT_RECT_TAG: &str = "default_rect";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SchemaSprite {
-    pub tag:                String,
-    pub transform:          CTransform2D,
-    pub quad:               CQuad,
+    pub tag: String,
+    pub transform: CTransform2D,
+    pub quad: CQuad,
 
-    pub velocity:           Option<CVelocity2D>,
-    pub color:              glm::Vec4,
-    pub texture:            Option<String>,
+    pub velocity: Option<CVelocity2D>,
+    pub color: glm::Vec4,
+    pub texture: Option<String>,
 }
 
-impl ISchema for SchemaSprite {
-    fn build_entity(
-        &self,
-        registry: &mut GlobalRegistry,
-    ) -> QPResult<VersionedIndex> {
+impl Schema for SchemaSprite {
+    fn build_entity(&self, registry: &mut GlobalRegistry) -> QPResult<VersionedIndex> {
         let texture_atlas = match &self.texture {
             Some(id_as_str) => {
                 let Some(id) = registry.asset_manager.get_asset_id(&id_as_str) else {
-                    return Err(QPError::SpriteTextureDoesntExist)
+                    return Err(QPError::SpriteTextureDoesntExist);
                 };
 
                 let texture = registry.asset_manager.get::<RTexture>(id).unwrap();
@@ -52,30 +40,36 @@ impl ISchema for SchemaSprite {
                 Some(TextureAtlas {
                     texture: id,
                     texture_dims: texture.texture_dims,
-                    active_texture: glm::vec2(0.0, 0.0)
+                    active_texture: glm::vec2(0.0, 0.0),
                 })
-            },
-            None => None
+            }
+            None => None,
         };
 
         let entity = registry.entity_manager.create();
-        registry.entity_manager.add(&entity, CTag { tag: self.tag.clone() });
+        registry.entity_manager.add(
+            &entity,
+            CTag {
+                tag: self.tag.clone(),
+            },
+        );
         if let Some(velocity) = self.velocity {
             registry.entity_manager.add(&entity, velocity);
         }
         registry.entity_manager.add(&entity, self.quad.clone());
         registry.entity_manager.add(&entity, self.transform);
-        registry.entity_manager.add(&entity, CSprite::new(
-            &self.quad,
-            Some(self.color),
-            texture_atlas
-        ));
+        registry.entity_manager.add(
+            &entity,
+            CSprite::new(&self.quad, Some(self.color), texture_atlas),
+        );
 
         Ok(entity)
     }
 
     fn from_entity(entity: VersionedIndex, registry: &GlobalRegistry) -> Option<Self> {
-        let Some(sprite) = registry.entity_manager.get::<CSprite>(&entity) else { return None; };
+        let Some(sprite) = registry.entity_manager.get::<CSprite>(&entity) else {
+            return None;
+        };
 
         if let (Some(tag), Some(transform), Some(quad)) = (
             registry.entity_manager.get::<CTag>(&entity),
@@ -88,13 +82,13 @@ impl ISchema for SchemaSprite {
                 quad: quad.clone(),
                 texture: match &sprite.texture_atlas {
                     Some(atlas) => registry.strings().get_string(atlas.texture),
-                    None => None
+                    None => None,
                 },
                 color: sprite.color,
                 velocity: registry.entity_manager.get::<CVelocity2D>(&entity).cloned(),
             };
 
-            return Some(schema)
+            return Some(schema);
         }
 
         None
@@ -113,7 +107,14 @@ impl Default for SchemaSprite {
             },
             velocity: None,
             texture: None,
-            color: glm::vec4(1.0, 1.0, 1.0, 1.0)
+            color: glm::vec4(1.0, 1.0, 1.0, 1.0),
         }
     }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct TextureAtlas {
+    pub texture: u64,
+    pub texture_dims: glm::Vec2,
+    pub active_texture: glm::Vec2,
 }

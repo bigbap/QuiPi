@@ -3,11 +3,8 @@ mod backend;
 #[cfg(feature = "qp_editor")]
 pub mod prelude {
     use super::backend::prelude::*;
-    use crate::prelude::{
-        qp_core::Timer,
-        qp_data::{FrameState, IController},
-        FrameResult, GlobalRegistry,
-    };
+    use crate::prelude::{qp_core::Timer, FrameResult};
+    use crate::prelude::{Controller, World};
     use crate::QPResult;
     use egui::Context;
 
@@ -36,34 +33,25 @@ pub mod prelude {
         }
     }
 
-    impl IController for GuiManager {
-        fn update(
-            &mut self,
-            frame_state: &mut FrameState,
-            registry: &mut GlobalRegistry,
-        ) -> FrameResult {
+    impl Controller for GuiManager {
+        fn update(&mut self, world: &mut World) -> FrameResult {
             self.timer.delta();
 
             self.backend.begin_frame();
 
             for controller in self.controllers.iter_mut() {
-                controller.update(&self.backend.ctx, frame_state, registry);
+                controller.update(&self.backend.ctx, world);
             }
 
-            self.backend.end_frame(registry);
+            self.backend.end_frame(world);
 
-            frame_state.debug_info.editor_ms = (self.timer.delta() * 1000.0) as u32;
+            world.debug_info.editor_ms = (self.timer.delta() * 1000.0) as u32;
 
             FrameResult::None
         }
     }
 
     pub trait IGuiController {
-        fn update(
-            &mut self,
-            ctx: &Context,
-            frame_state: &mut FrameState,
-            registry: &mut GlobalRegistry,
-        );
+        fn update(&mut self, ctx: &Context, world: &mut World);
     }
 }

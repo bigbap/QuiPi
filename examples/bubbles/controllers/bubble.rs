@@ -1,11 +1,10 @@
 use crate::{
+    qp_assets::RCamera2D,
     qp_core::{now_secs, random::Random},
-    qp_data::{FrameState, IController, ISchema},
     qp_ecs::components::{CQuad, CTag, CTransform2D, CVelocity2D},
     qp_schemas::SchemaSprite,
-    GlobalRegistry, VersionedIndex,
+    Controller, FrameResult, QPError, Schema, VersionedIndex, World,
 };
-use quipi::{app::FrameResult, asset_manager::assets::RCamera2D, prelude::QPError};
 use sdl2::{event::Event, keyboard::Keycode};
 
 pub struct BubbleController {
@@ -15,15 +14,15 @@ pub struct BubbleController {
 }
 
 impl BubbleController {
-    pub fn new(registry: &mut GlobalRegistry, camera: u64) -> Result<Self, QPError> {
-        let mut bubbles = registry.entity_manager.query(CTag {
+    pub fn new(world: &mut World, camera: u64) -> Result<Self, QPError> {
+        let mut bubbles = world.registry.entity_manager.query(CTag {
             tag: "sprite".to_string(),
         });
         let mut rand = Random::from_seed(now_secs()?);
 
         // for stress testing
         for _ in 0..1000 {
-            bubbles.push(spawn(&mut rand, registry)?);
+            bubbles.push(spawn(&mut rand, world)?);
         }
 
         Ok(Self {
@@ -34,24 +33,20 @@ impl BubbleController {
     }
 }
 
-impl IController for BubbleController {
-    fn update(
-        &mut self,
-        frame_state: &mut FrameState,
-        registry: &mut GlobalRegistry,
-    ) -> FrameResult {
-        if frame_state.debug_mode {
+impl Controller for BubbleController {
+    fn update(&mut self, world: &mut World) -> FrameResult {
+        if world.debug_mode {
             return FrameResult::None;
         }
 
         // handle input
-        for event in registry.events.iter() {
+        for event in world.events.iter() {
             match event {
                 Event::KeyDown {
                     keycode: Some(Keycode::Space),
                     ..
                 } => {
-                    match spawn(&mut self.rand, registry) {
+                    match spawn(&mut self.rand, world) {
                         Ok(index) => self.bubbles.push(index),
                         Err(_e) => {
                             #[cfg(debug_assertions)]
@@ -68,16 +63,16 @@ impl IController for BubbleController {
             };
         }
 
-        update(&self.bubbles, registry, frame_state, self.camera);
+        update(&self.bubbles, world, self.camera);
 
         FrameResult::None
     }
 }
 
-fn spawn(rand: &mut Random, registry: &mut GlobalRegistry) -> Result<VersionedIndex, QPError> {
+fn spawn(rand: &mut Random, world: &mut World) -> Result<VersionedIndex, QPError> {
     let mut this_schema = SchemaSprite::default();
 
-    let (_x, _y, width, height) = registry.gfx.viewport.get_dimensions();
+    let (_x, _y, width, height) = world.viewport.get_dimensions();
 
     let vel = (rand.range(-200, 200) as f32, rand.range(-200, 200) as f32);
     let color = glm::vec4(rand.random(), rand.random(), rand.random(), 1.0);
@@ -105,57 +100,62 @@ fn spawn(rand: &mut Random, registry: &mut GlobalRegistry) -> Result<VersionedIn
     this_schema.tag = "sprite".into();
     this_schema.texture = Some("Bubble.png".into());
 
-    let id = this_schema.build_entity(registry)?;
+    let id = this_schema.build_entity(&mut world.registry)?;
 
     Ok(id)
 }
 
-pub fn update(
-    bubbles: &[VersionedIndex],
-    registry: &mut GlobalRegistry,
-    frame_state: &mut FrameState,
-    camera: u64,
-) {
-    let Some(camera) = registry.asset_manager.get::<RCamera2D>(camera) else {
+pub fn update(bubbles: &[VersionedIndex], world: &mut World, camera: u64) {
+    let Some(camera) = world.registry.asset_manager.get::<RCamera2D>(camera) else {
         println!("couldn't find camera");
 
         return;
     };
 
+    let (_x, _y, width, height) = world.viewport.get_dimensions();
+
     for bubble in bubbles {
-        let Some(vel) = registry.entity_manager.get::<CVelocity2D>(&bubble) else {
+        let Some(vel) = world.registry.entity_manager.get::<CVelocity2D>(&bubble) else {
             continue;
         };
-        let Some(transform) = registry.entity_manager.get::<CTransform2D>(&bubble) else {
+        let Some(transform) = world.registry.entity_manager.get::<CTransform2D>(&bubble) else {
             continue;
         };
-        let Some(quad) = registry.entity_manager.get::<CQuad>(&bubble) else {
+        let Some(quad) = world.registry.entity_manager.get::<CQuad>(&bubble) else {
             continue;
         };
 
         let scale = transform.scale;
 
         let vel = glm::vec2(vel.x, vel.y);
-        let translate = transform.translate + (vel * frame_state.delta);
+        let translate = transform.translate + (vel * world.delta);
         let w = quad.width * scale.x;
         let h = quad.height * scale.y;
         let (colided_x, colided_y) = check_screen_collision(&camera, translate, w, h);
 
-        let Some(transform) = registry.entity_manager.get_mut::<CTransform2D>(&bubble) else {
+        let Some(transform) = world
+            .registry
+            .entity_manager
+            .get_mut::<CTransform2D>(&bubble)
+        else {
             continue;
         };
         match colided_x {
             -1 => transform.translate.x = 0.0 + w * 0.5,
-            1 => transform.translate.x = frame_state.viewport.width as f32 - w * 0.5,
+            1 => transform.translate.x = width as f32 - w * 0.5,
             _ => transform.translate.x = translate.x,
         }
         match colided_y {
             -1 => transform.translate.y = 0.0 + h * 0.5,
-            1 => transform.translate.y = frame_state.viewport.height as f32 - h * 0.5,
+            1 => transform.translate.y = height as f32 - h * 0.5,
             _ => transform.translate.y = translate.y,
         }
 
-        let Some(vel) = registry.entity_manager.get_mut::<CVelocity2D>(&bubble) else {
+        let Some(vel) = world
+            .registry
+            .entity_manager
+            .get_mut::<CVelocity2D>(&bubble)
+        else {
             continue;
         };
         if colided_x != 0 {
@@ -174,8 +174,8 @@ fn check_screen_collision(camera: &RCamera2D, pos: glm::Vec2, w: f32, h: f32) ->
     let mut colided_x = 0;
     let mut colided_y = 0;
 
-    let cam_width = (camera.params().right - camera.params().left).abs() as f32;
-    let cam_height = (camera.params().bottom - camera.params().top).abs() as f32;
+    let cam_width = (camera.params.right - camera.params.left).abs() as f32;
+    let cam_height = (camera.params.bottom - camera.params.top).abs() as f32;
 
     if pos.x <= (0.0 + offset_x) {
         colided_x = -1;

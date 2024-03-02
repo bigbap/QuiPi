@@ -9,7 +9,6 @@ pub mod app;
 pub mod asset_manager;
 pub mod audio;
 pub mod core;
-pub mod data;
 pub mod ecs;
 pub mod errors;
 pub mod gfx;
@@ -17,6 +16,7 @@ pub mod physics;
 pub mod platform;
 pub mod registry;
 pub mod schemas;
+pub mod world;
 
 #[cfg(feature = "qp_editor")]
 mod editor;
@@ -32,20 +32,20 @@ pub mod prelude {
     pub use self::asset_manager::assets as qp_assets;
     pub use self::audio::QPAudio as qp_audio;
     pub use self::core::prelude as qp_core;
-    pub use self::data::prelude as qp_data;
     pub use self::ecs::prelude as qp_ecs;
     pub use self::gfx::prelude as qp_gfx;
     pub use self::physics::prelude as qp_physics;
     pub use self::schemas::prelude as qp_schemas;
 
     pub use self::app::App;
+    pub use self::app::Controller;
     pub use self::app::FrameResult;
+    pub use self::app::Renderer;
     pub use self::errors::QPError;
-    pub use self::qp_data::FrameState;
-    pub use self::qp_data::IController;
-    pub use self::qp_data::IRenderer;
     pub use self::qp_ecs::VersionedIndex;
     pub use self::registry::GlobalRegistry;
+    pub use self::schemas::prelude::Schema;
+    pub use self::world::World;
 
     #[cfg(feature = "qp_editor")]
     pub use self::editor::prelude as qp_editor;

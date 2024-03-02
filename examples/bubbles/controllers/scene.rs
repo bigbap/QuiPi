@@ -1,16 +1,17 @@
 use crate::{
-    qp_data::{FrameState, IController, ISchema, ShaderUniforms},
+    qp_gfx::ShaderUniforms,
     qp_gfx::SpriteRenderer,
     qp_schemas::{load_scene_2d, SchemaScene2D, SchemaShader, SchemaTexture},
-    App, GlobalRegistry,
+    App, GlobalRegistry, Schema,
 };
 use quipi::{
-    app::FrameResult,
+    app::{Controller, FrameResult},
     prelude::{
         qp_assets::RFont,
         qp_gfx::{QPText, QPTextStyle},
         QPError,
     },
+    world::World,
 };
 use sdl2::{event::Event, keyboard::Keycode};
 
@@ -22,35 +23,30 @@ use super::{
 pub struct SceneController {}
 
 impl SceneController {
-    pub fn load(engine: &mut App) -> Result<Self, QPError> {
-        let scene = load_scene_2d("bubbles", scene_schema(&engine.registry))?;
+    pub fn load(app: &mut App) -> Result<Self, QPError> {
+        let scene = load_scene_2d("bubbles", scene_schema(&app.world))?;
 
-        scene.build_entity(&mut engine.registry)?;
+        scene.build_entity(&mut app.world.registry)?;
 
-        let camera_controller = CameraController::new(&mut engine.registry)?;
-        let bubble_controller =
-            BubbleController::new(&mut engine.registry, camera_controller.camera)?;
-        let text_controller = DebugInfoText::new(&mut engine.registry)?;
+        let camera_controller = CameraController::new(&mut app.world.registry)?;
+        let bubble_controller = BubbleController::new(&mut app.world, camera_controller.camera)?;
+        let text_controller = DebugInfoText::new(&mut app.world.registry)?;
 
-        let renderer = SpriteRenderer::new(&mut engine.registry, "main_camera", "sprite")?;
+        let renderer = SpriteRenderer::new(&mut app.world.registry, "main_camera", "sprite")?;
 
-        engine.register_controller(bubble_controller);
-        engine.register_controller(camera_controller);
-        engine.register_controller(text_controller);
+        app.register_controller(bubble_controller);
+        app.register_controller(camera_controller);
+        app.register_controller(text_controller);
 
-        engine.register_renderer(renderer);
+        app.register_renderer(renderer);
 
         Ok(Self {})
     }
 }
 
-impl IController for SceneController {
-    fn update(
-        &mut self,
-        frame_state: &mut FrameState,
-        registry: &mut GlobalRegistry,
-    ) -> FrameResult {
-        for event in registry.events.iter() {
+impl Controller for SceneController {
+    fn update(&mut self, world: &mut World) -> FrameResult {
+        for event in world.events.iter() {
             match event {
                 Event::Quit { .. } => {
                     return FrameResult::Quit;
@@ -60,7 +56,7 @@ impl IController for SceneController {
                     ..
                 } => {
                     if cfg!(debug_assertions) {
-                        frame_state.debug_mode = !frame_state.debug_mode;
+                        world.debug_mode = !world.debug_mode;
                     }
                 }
                 _ => (),
@@ -71,8 +67,8 @@ impl IController for SceneController {
     }
 }
 
-fn scene_schema(registry: &GlobalRegistry) -> SchemaScene2D {
-    let (_x, _y, width, height) = registry.gfx.viewport.get_dimensions();
+fn scene_schema(world: &World) -> SchemaScene2D {
+    let (_x, _y, width, height) = world.viewport.get_dimensions();
     SchemaScene2D {
         name: "bubbles".to_string(),
         cameras: vec![camera_schema(width as f32, height as f32)],
@@ -106,45 +102,41 @@ impl DebugInfoText {
     }
 }
 
-impl IController for DebugInfoText {
-    fn update(
-        &mut self,
-        frame_state: &mut FrameState,
-        registry: &mut GlobalRegistry,
-    ) -> FrameResult {
-        let entity_count = registry.entity_manager.count();
+impl Controller for DebugInfoText {
+    fn update(&mut self, world: &mut World) -> FrameResult {
+        let entity_count = world.registry.entity_manager.count();
         let style = QPTextStyle {
             font: self.font,
             color: glm::vec4(0.1, 0.1, 0.1, 1.0),
             scale: 0.4,
         };
-        registry.text_buffer.push(QPText {
+        world.text_buffer.push(QPText {
             text: format!("entities: {}", entity_count),
             pos: glm::vec2(20.0, 20.0),
             style: style.clone(),
         });
-        registry.text_buffer.push(QPText {
-            text: format!("draw calls: {}", frame_state.debug_info.draw_calls),
+        world.text_buffer.push(QPText {
+            text: format!("draw calls: {}", world.debug_info.draw_calls),
             pos: glm::vec2(20.0, 40.0),
             style: style.clone(),
         });
-        registry.text_buffer.push(QPText {
-            text: format!("render ms: {}", frame_state.debug_info.render_ms),
+        world.text_buffer.push(QPText {
+            text: format!("render ms: {}", world.debug_info.render_ms),
             pos: glm::vec2(20.0, 60.0),
             style: style.clone(),
         });
-        registry.text_buffer.push(QPText {
-            text: format!("controller ms: {}", frame_state.debug_info.controller_ms),
+        world.text_buffer.push(QPText {
+            text: format!("controller ms: {}", world.debug_info.controller_ms),
             pos: glm::vec2(20.0, 80.0),
             style: style.clone(),
         });
-        registry.text_buffer.push(QPText {
-            text: format!("fps: {}", frame_state.debug_info.fps as u32),
+        world.text_buffer.push(QPText {
+            text: format!("fps: {}", world.debug_info.fps as u32),
             pos: glm::vec2(20.0, 100.0),
             style: style.clone(),
         });
-        registry.text_buffer.push(QPText {
-            text: format!("ms: {}", frame_state.debug_info.frame_ms as u32),
+        world.text_buffer.push(QPText {
+            text: format!("ms: {}", world.debug_info.frame_ms as u32),
             pos: glm::vec2(20.0, 120.0),
             style: style.clone(),
         });

@@ -3,16 +3,9 @@ use std::{
     rc::Rc,
 };
 
-use sdl2::event::Event;
-
 use crate::{
     asset_manager::AssetManager,
-    platform::sdl2::QPWindow,
-    prelude::{
-        qp_core::StringInterner,
-        qp_ecs::EntityManager,
-        qp_gfx::{Gfx, QPText},
-    },
+    prelude::{qp_core::StringInterner, qp_ecs::EntityManager},
     QPResult,
 };
 
@@ -25,9 +18,6 @@ pub struct GlobalRegistry {
 
     pub entity_manager: EntityManager,
     pub asset_manager: AssetManager,
-
-    pub events: Vec<Event>,
-    pub text_buffer: Vec<QPText>,
 }
 
 impl GlobalRegistry {
@@ -40,8 +30,6 @@ impl GlobalRegistry {
             entity_manager,
             asset_manager,
             strings,
-            events: vec![],
-            text_buffer: vec![],
         })
     }
 
@@ -56,19 +44,12 @@ impl GlobalRegistry {
     pub fn flush(&mut self) {
         self.entity_manager.flush();
         self.asset_manager.flush();
-        self.text_buffer.clear();
-    }
-
-    pub fn new_frame(&mut self, winapi: &QPWindow) -> QPResult<()> {
-        self.events = winapi.get_event_queue()?;
-
-        Ok(())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::prelude::{qp_ecs::Component, qp_gfx::Viewport};
+    use crate::prelude::qp_ecs::Component;
 
     use super::*;
 
@@ -85,10 +66,7 @@ mod tests {
     }
 
     fn create_registry() -> GlobalRegistry {
-        let mut registry = GlobalRegistry::init(Gfx {
-            viewport: Viewport::new(0, 0, 800, 600),
-        })
-        .unwrap();
+        let mut registry = GlobalRegistry::init().unwrap();
 
         registry
             .entity_manager

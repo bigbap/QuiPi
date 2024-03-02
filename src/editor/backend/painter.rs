@@ -15,7 +15,7 @@ use crate::{
         shader::ShaderProgram,
         textures::{use_texture_unit, Format, ParameterName, ParameterValue, Texture},
     },
-    prelude::{qp_data::Vertex, qp_gfx::texture::*},
+    prelude::qp_gfx::{texture::*, Vertex},
     QPResult,
 };
 

@@ -9,12 +9,16 @@ pub struct Viewport {
 
 impl Viewport {
     pub fn new(x: i32, y: i32, width: i32, height: i32) -> Self {
-        Self {
+        let mut viewport = Self {
             x,
             y,
             width,
             height,
-        }
+        };
+
+        viewport.set_dimensions(x, y, width, height);
+
+        viewport
     }
 
     pub fn set_dimensions(&mut self, x: i32, y: i32, width: i32, height: i32) {

@@ -6,7 +6,7 @@ mod painter;
 #[cfg(feature = "qp_editor")]
 pub mod prelude {
     use super::{input::parse_event, painter::Painter};
-    use crate::registry::GlobalRegistry;
+    use crate::prelude::World;
     use crate::QPResult;
     use egui::RawInput;
     use sdl2::event::{Event, WindowEvent};
@@ -34,21 +34,21 @@ pub mod prelude {
             self.ctx.begin_frame(self.raw_input.take());
         }
 
-        pub fn end_frame(&mut self, registry: &mut GlobalRegistry) {
+        pub fn end_frame(&mut self, world: &mut World) {
             let full_output = self.ctx.end_frame();
 
             self.painter.paint(&self.ctx, full_output);
 
-            self.handle_input(registry)
+            self.handle_input(world)
         }
 
-        fn handle_input(&mut self, registry: &mut GlobalRegistry) {
-            for event in registry.events.iter() {
+        fn handle_input(&mut self, world: &mut World) {
+            for event in world.events.iter() {
                 match event {
                     Event::Window { win_event, .. } => match win_event {
                         WindowEvent::Resized(width, height)
                         | WindowEvent::SizeChanged(width, height) => {
-                            registry.gfx.viewport.set_dimensions(0, 0, *width, *height);
+                            world.viewport.set_dimensions(0, 0, *width, *height);
                             self.painter.update_screen_rect();
                             self.raw_input.screen_rect = Some(self.painter.screen_rect);
                         }

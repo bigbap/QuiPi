@@ -1,9 +1,5 @@
+use crate::{prelude::qp_ecs::Component, QPResult};
 use serde::{Deserialize, Serialize};
-use crate::{
-    prelude::qp_data::ValidTile,
-    prelude::qp_ecs::Component,
-    QPResult
-};
 
 #[derive(Debug, Component, PartialEq, Clone, Serialize, Deserialize)]
 pub struct RTileMap {
@@ -18,7 +14,7 @@ impl RTileMap {
         columns: usize,
         rows: usize,
         data: Vec<u16>,
-        tile_size: glm::Vec2
+        tile_size: glm::Vec2,
     ) -> QPResult<Self> {
         assert!(data.len() == columns * rows);
 
@@ -26,14 +22,12 @@ impl RTileMap {
             data,
             columns,
             rows,
-            tile_size
+            tile_size,
         })
     }
     pub fn get_tile_value(&self, tile: glm::Vec2) -> ValidTile<u16> {
         if self.is_valid(&tile) {
-            ValidTile::Valid(
-                self.data[(tile.x as usize * self.rows) + tile.y as usize]
-            )
+            ValidTile::Valid(self.data[(tile.x as usize * self.rows) + tile.y as usize])
         } else {
             ValidTile::Invalid
         }
@@ -51,9 +45,12 @@ impl RTileMap {
     }
 
     pub fn is_valid(&self, tile: &glm::Vec2) -> bool {
-        tile.x < self.columns as f32 &&
-        tile.x >= 0.0 &&
-        tile.y < self.rows as f32 &&
-        tile.y >= 0.0
+        tile.x < self.columns as f32 && tile.x >= 0.0 && tile.y < self.rows as f32 && tile.y >= 0.0
     }
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub enum ValidTile<T> {
+    Invalid,
+    Valid(T),
 }

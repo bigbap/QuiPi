@@ -20,12 +20,8 @@ fn main() {
 
 pub struct GameController {}
 
-impl IController for GameController {
-    fn update(
-        &mut self,
-        frame_state: &mut FrameState,
-        registry: &mut GlobalRegistry,
-    ) -> FrameResult {
+impl Controller for GameController {
+    fn update(&mut self, _world: &mut World) -> FrameResult {
         FrameResult::None
     }
 }

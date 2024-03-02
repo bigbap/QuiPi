@@ -1,10 +1,10 @@
 use crate::{
+    gfx::batch_renderer::{Mesh, Vertex},
     platform::opengl::capabilities::*,
     prelude::{
         qp_assets::{RFont, RShader},
-        qp_data::{FrameState, IMesh, IRenderer, Vertex},
         qp_gfx::BatchRenderer,
-        GlobalRegistry,
+        Renderer, World,
     },
     QPResult,
 };
@@ -26,27 +26,26 @@ impl TextRenderer {
     }
 }
 
-impl IRenderer for TextRenderer {
-    fn draw(&mut self, frame_state: &mut FrameState, registry: &mut GlobalRegistry) -> Option<u32> {
+impl Renderer for TextRenderer {
+    fn draw(&mut self, world: &mut World) -> Option<u32> {
         gl_enable(GLCapability::AlphaBlending);
         gl_blending_func(
             GLBlendingFactor::SrcAlpha,
             GLBlendingFactor::OneMinusSrcAlpha,
         );
 
-        let projection = &glm::ortho(
-            0.0,
-            frame_state.viewport.width as f32,
-            0.0,
-            frame_state.viewport.height as f32,
-            0.0,
-            0.2,
-        );
+        let (_x, _y, width, height) = world.viewport.get_dimensions();
+
+        let projection = &glm::ortho(0.0, width as f32, 0.0, height as f32, 0.0, 0.2);
 
         self.renderer.reset_info();
         self.renderer.begin_batch();
-        for text_obj in registry.text_buffer.iter_mut() {
-            let Some(font) = registry.asset_manager.get::<RFont>(text_obj.style.font) else {
+        for text_obj in world.text_buffer.iter_mut() {
+            let Some(font) = world
+                .registry
+                .asset_manager
+                .get::<RFont>(text_obj.style.font)
+            else {
                 #[cfg(debug_assertions)]
                 {
                     println!("font is not loaded");
@@ -109,14 +108,14 @@ struct CharacterMesh {
     h: f32,
 }
 
-impl IMesh for CharacterMesh {
+impl Mesh for CharacterMesh {
     fn indices() -> Vec<i32> {
         vec![0, 1, 2, 0, 2, 3]
     }
     fn vertex_count() -> usize {
         4
     }
-    fn vertices(&self) -> Vec<crate::prelude::qp_data::Vertex> {
+    fn vertices(&self) -> Vec<Vertex> {
         let pos1 = self.projection * glm::vec4(self.pos.x, self.pos.y + self.h, 0.0, 1.0);
         let pos2 = self.projection * glm::vec4(self.pos.x, self.pos.y, 0.0, 1.0);
         let pos3 = self.projection * glm::vec4(self.pos.x + self.w, self.pos.y, 0.0, 1.0);

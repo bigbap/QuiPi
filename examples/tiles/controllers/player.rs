@@ -1,11 +1,14 @@
 use crate::{
-    qp_assets::RTileMap,
-    qp_data::{FrameState, IController, ISchema, ValidTile},
+    qp_assets::{tilemap::ValidTile, RTileMap},
     qp_ecs::components::{CQuad, CTransform2D},
     qp_schemas::SchemaSprite,
-    GlobalRegistry, VersionedIndex,
+    GlobalRegistry, Schema, VersionedIndex,
 };
-use quipi::{app::FrameResult, prelude::QPError};
+use quipi::{
+    app::{Controller, FrameResult},
+    prelude::QPError,
+    world::World,
+};
 use sdl2::{event::Event, keyboard::Keycode};
 
 const PLAYER_SIZE: f32 = 54.0;
@@ -53,14 +56,10 @@ impl PlayerController {
     }
 }
 
-impl IController for PlayerController {
-    fn update(
-        &mut self,
-        _frame_state: &mut FrameState,
-        registry: &mut GlobalRegistry,
-    ) -> FrameResult {
+impl Controller for PlayerController {
+    fn update(&mut self, world: &mut World) -> FrameResult {
         let mut new_tile = self.tile;
-        for event in registry.events.iter() {
+        for event in world.events.iter() {
             match event {
                 Event::KeyDown {
                     keycode,
@@ -77,7 +76,7 @@ impl IController for PlayerController {
             };
         }
 
-        let Some(tile_map) = registry.asset_manager.get::<RTileMap>(self.tile_map) else {
+        let Some(tile_map) = world.registry.asset_manager.get::<RTileMap>(self.tile_map) else {
             return FrameResult::None;
         };
         let ValidTile::Valid(tile_val) = tile_map.get_tile_value(new_tile) else {
@@ -92,7 +91,8 @@ impl IController for PlayerController {
         };
 
         let new_translate = tile_pos.xy();
-        if let Some(transform) = registry
+        if let Some(transform) = world
+            .registry
             .entity_manager
             .get_mut::<CTransform2D>(&self.player)
         {

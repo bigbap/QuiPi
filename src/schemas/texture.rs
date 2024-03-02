@@ -1,30 +1,21 @@
 use crate::{
-    platform::opengl::textures::{
-        ParameterName,
-        ParameterValue
-    },
+    platform::opengl::textures::{ParameterName, ParameterValue},
     prelude::{
-        qp_core::to_abs_path,
-        qp_data::ISchema,
-        qp_assets::RTexture,
-        qp_gfx::texture::from_image,
-        GlobalRegistry
+        qp_assets::RTexture, qp_core::to_abs_path, qp_gfx::texture::from_image, GlobalRegistry,
+        Schema,
     },
     QPResult,
 };
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SchemaTexture {
     pub name: String,
-    pub texture_dims: glm::Vec2
+    pub texture_dims: glm::Vec2,
 }
 
-impl ISchema for SchemaTexture {
-    fn load_resource(
-        &self,
-        registry: &mut GlobalRegistry
-    ) -> QPResult<u64> {
+impl Schema for SchemaTexture {
+    fn load_resource(&self, registry: &mut GlobalRegistry) -> QPResult<u64> {
         let path = format!("assets/textures/{}", self.name);
 
         let texture = from_image(&to_abs_path(&path)?)?;
@@ -34,10 +25,13 @@ impl ISchema for SchemaTexture {
             .set_parameter(ParameterName::MinFilter, ParameterValue::Linear)
             .set_parameter(ParameterName::MagFilter, ParameterValue::Nearest);
 
-        let id = registry.asset_manager.load_asset(self.name.clone(), RTexture {
-            texture,
-            texture_dims: self.texture_dims
-        })?;
+        let id = registry.asset_manager.load_asset(
+            self.name.clone(),
+            RTexture {
+                texture,
+                texture_dims: self.texture_dims,
+            },
+        )?;
 
         Ok(id)
     }
@@ -45,11 +39,11 @@ impl ISchema for SchemaTexture {
     fn from_resource(id: u64, registry: &GlobalRegistry) -> Option<Self> {
         if let (Some(texture), Some(name)) = (
             registry.asset_manager.get::<RTexture>(id),
-            registry.strings().get_string(id)
-         ) {
+            registry.strings().get_string(id),
+        ) {
             let schema = SchemaTexture {
                 name,
-                texture_dims: texture.texture_dims
+                texture_dims: texture.texture_dims,
             };
 
             return Some(schema);

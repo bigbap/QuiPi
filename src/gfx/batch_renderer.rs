@@ -6,34 +6,15 @@ use crate::{
     platform::opengl::{
         self,
         buffer::{
-            create_ebo,
-            vertex_attribute_pointer,
-            Buffer,
-            BufferUsage,
-            VertexArray,
-            EBO,
-            VBO
+            create_ebo, vertex_attribute_pointer, Buffer, BufferUsage, VertexArray, EBO, VBO,
         },
-        draw::{
-            DrawBuffer,
-            DrawMode
-        },
-        textures::{
-            use_texture,
-            max_texture_slots
-        }
+        draw::{DrawBuffer, DrawMode},
+        textures::{max_texture_slots, use_texture},
     },
-    prelude::qp_assets::{
-        RShader,
-        RTexture
-    },
-    prelude::qp_data::{
-        Vertex,
-        IMesh
-    }
+    prelude::qp_assets::{RShader, RTexture},
 };
 
-pub struct BatchRenderer<const C: usize, M: IMesh> {
+pub struct BatchRenderer<const C: usize, M: Mesh> {
     vao: VertexArray,
     _ebo: Buffer<EBO>,
     vbo: Buffer<VBO>,
@@ -43,13 +24,13 @@ pub struct BatchRenderer<const C: usize, M: IMesh> {
     textures: Vec<u32>,
     mesh_count: usize,
     vertices: Vec<Vertex>,
-    
+
     pub draw_calls: u32,
 
-    _marker: PhantomData<M>
+    _marker: PhantomData<M>,
 }
 
-impl<const C: usize, M: IMesh> BatchRenderer<C, M> {
+impl<const C: usize, M: Mesh> BatchRenderer<C, M> {
     pub fn new() -> Self {
         let stride = std::mem::size_of::<Vertex>();
 
@@ -75,10 +56,25 @@ impl<const C: usize, M: IMesh> BatchRenderer<C, M> {
         vbo.bind();
         vbo.buffer_data::<Vertex>(vertex_capacity, None, &BufferUsage::DynamicDraw);
 
-        vertex_attribute_pointer(0, 3, stride, offset_of!(Vertex => position).get_byte_offset());
+        vertex_attribute_pointer(
+            0,
+            3,
+            stride,
+            offset_of!(Vertex => position).get_byte_offset(),
+        );
         vertex_attribute_pointer(1, 4, stride, offset_of!(Vertex => color).get_byte_offset());
-        vertex_attribute_pointer(2, 2, stride, offset_of!(Vertex => tex_coords).get_byte_offset());
-        vertex_attribute_pointer(3, 1, stride, offset_of!(Vertex => tex_index).get_byte_offset());
+        vertex_attribute_pointer(
+            2,
+            2,
+            stride,
+            offset_of!(Vertex => tex_coords).get_byte_offset(),
+        );
+        vertex_attribute_pointer(
+            3,
+            1,
+            stride,
+            offset_of!(Vertex => tex_index).get_byte_offset(),
+        );
 
         vao.unbind();
         ebo.unbind();
@@ -95,7 +91,7 @@ impl<const C: usize, M: IMesh> BatchRenderer<C, M> {
             vertices: Vec::<Vertex>::with_capacity(vertex_capacity),
             draw_calls: 0,
 
-            _marker: PhantomData
+            _marker: PhantomData,
         }
     }
 
@@ -106,20 +102,24 @@ impl<const C: usize, M: IMesh> BatchRenderer<C, M> {
     }
 
     pub fn flush_batch(&mut self, shader: &RShader) {
-        if self.vertices.is_empty() { return; }
+        if self.vertices.is_empty() {
+            return;
+        }
 
         shader.program.use_program();
 
         for i in 0..self.textures.len() {
             use_texture(self.textures[i], i as i32);
-            shader.program.set_int(&format!("u_textures[{}]", i), i as i32);
+            shader
+                .program
+                .set_int(&format!("u_textures[{}]", i), i as i32);
         }
 
         self.vao.bind();
         opengl::draw::gl_draw(
             DrawBuffer::Elements,
             DrawMode::Triangles, // TODO: this is hardcoded
-            (self.indices_count * self.mesh_count) as i32
+            (self.indices_count * self.mesh_count) as i32,
         );
         self.vao.unbind();
 
@@ -128,7 +128,8 @@ impl<const C: usize, M: IMesh> BatchRenderer<C, M> {
 
     pub fn end_batch(&self) {
         self.vbo.bind();
-        self.vbo.buffer_sub_data::<Vertex>(0, self.vertices.len(), Some(&self.vertices));
+        self.vbo
+            .buffer_sub_data::<Vertex>(0, self.vertices.len(), Some(&self.vertices));
         self.vbo.unbind();
     }
 
@@ -136,17 +137,13 @@ impl<const C: usize, M: IMesh> BatchRenderer<C, M> {
         self.draw_calls = 0;
     }
 
-    pub fn draw_mesh(
-        &mut self,
-        mesh: &M,
-        shader: &RShader,
-        texture: Option<&RTexture>
-    ) {
+    pub fn draw_mesh(&mut self, mesh: &M, shader: &RShader, texture: Option<&RTexture>) {
         let mut texture_slot = self.max_textures as usize;
         if let Some(texture) = texture {
             let id = texture.texture.id;
 
-            if let Some((i, _)) = self.textures
+            if let Some((i, _)) = self
+                .textures
                 .iter()
                 .enumerate()
                 .find(|(_, tex)| **tex == id)
@@ -180,4 +177,18 @@ impl<const C: usize, M: IMesh> BatchRenderer<C, M> {
         self.flush_batch(shader);
         self.begin_batch();
     }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Vertex {
+    pub position: glm::Vec3,
+    pub color: glm::Vec4,
+    pub tex_coords: glm::Vec2,
+    pub tex_index: f32,
+}
+
+pub trait Mesh {
+    fn vertices(&self) -> Vec<Vertex>;
+    fn indices() -> Vec<i32>;
+    fn vertex_count() -> usize;
 }

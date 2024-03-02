@@ -1,23 +1,15 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
-use crate::QPResult;
 use crate::prelude::{
-    qp_ecs::components::{
-        CScene,
-        CSprite,
-        CTransform2D
+    qp_ecs::{
+        components::{CScene, CSprite, CTransform2D},
+        VersionedIndex,
     },
-    qp_ecs::VersionedIndex,
-    GlobalRegistry,
-    qp_data::ISchema
+    GlobalRegistry, Schema,
 };
+use crate::QPResult;
 
-use super::prelude::{
-    SchemaCamera2D,
-    SchemaShader,
-    SchemaSprite,
-    SchemaTexture
-};
+use super::prelude::{SchemaCamera2D, SchemaShader, SchemaSprite, SchemaTexture};
 
 pub const DEFAULT_SCENE: &str = "default_scene";
 
@@ -26,19 +18,16 @@ pub const DEFAULT_SCENE: &str = "default_scene";
 */
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SchemaScene2D {
-    pub name:       String,
-    pub cameras:    Vec<SchemaCamera2D>,
-    pub shaders:    Vec<SchemaShader>,
-    pub textures:   Vec<SchemaTexture>,
+    pub name: String,
+    pub cameras: Vec<SchemaCamera2D>,
+    pub shaders: Vec<SchemaShader>,
+    pub textures: Vec<SchemaTexture>,
 
-    pub sprites:   Vec<SchemaSprite>,
+    pub sprites: Vec<SchemaSprite>,
 }
 
-impl ISchema for SchemaScene2D {
-    fn build_entity(
-        &self,
-        registry: &mut GlobalRegistry
-    ) -> QPResult<VersionedIndex> {
+impl Schema for SchemaScene2D {
+    fn build_entity(&self, registry: &mut GlobalRegistry) -> QPResult<VersionedIndex> {
         // 1. build cameras
         let mut cameras = vec![];
         for camera in self.cameras.iter() {
@@ -71,8 +60,8 @@ impl ISchema for SchemaScene2D {
                 id,
                 cameras,
                 shaders,
-                textures
-            }
+                textures,
+            },
         );
 
         Ok(entity)
@@ -91,26 +80,34 @@ impl ISchema for SchemaScene2D {
 
             // 2. parse the cameras
             for id in scene.cameras.iter() {
-                schema.cameras.push(SchemaCamera2D::from_resource(*id, registry)?);
+                schema
+                    .cameras
+                    .push(SchemaCamera2D::from_resource(*id, registry)?);
             }
 
             // 2. parse the shaders
             for id in scene.shaders.iter() {
-                schema.shaders.push(SchemaShader::from_resource(*id, registry)?);
+                schema
+                    .shaders
+                    .push(SchemaShader::from_resource(*id, registry)?);
             }
 
             // 3. parse textures
             for id in scene.textures.iter() {
-                schema.textures.push(SchemaTexture::from_resource(*id, registry)?);
+                schema
+                    .textures
+                    .push(SchemaTexture::from_resource(*id, registry)?);
             }
 
             // 4. parse the entities
             let entities = registry.entity_manager.query_all::<CSprite>();
             for entity in entities {
-                schema.sprites.push(SchemaSprite::from_entity(entity, registry)?);
+                schema
+                    .sprites
+                    .push(SchemaSprite::from_entity(entity, registry)?);
             }
 
-            return Some(schema)
+            return Some(schema);
         }
 
         None
@@ -124,10 +121,7 @@ impl Default for SchemaScene2D {
         let camera = SchemaCamera2D::default();
         let sprite = SchemaSprite {
             transform: CTransform2D {
-                translate: glm::vec2(
-                    camera.right / 2.0,
-                    camera.top / 2.0
-                ),
+                translate: glm::vec2(camera.right / 2.0, camera.top / 2.0),
                 ..CTransform2D::default()
             },
             ..SchemaSprite::default()
@@ -138,7 +132,7 @@ impl Default for SchemaScene2D {
             cameras: vec![camera],
             shaders: vec![shader],
             textures: vec![],
-            sprites: vec![sprite]
+            sprites: vec![sprite],
         }
     }
 }

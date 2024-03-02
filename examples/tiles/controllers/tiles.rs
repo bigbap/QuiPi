@@ -1,9 +1,13 @@
-use quipi::{app::FrameResult, prelude::QPError};
+use quipi::{
+    app::{Controller, FrameResult},
+    prelude::QPError,
+    schemas::sprite::TextureAtlas,
+    world::World,
+};
 
 use crate::{
     qp_assets::RTileMap,
     qp_core::{now_secs, random::Random},
-    qp_data::{FrameState, IController, TextureAtlas},
     qp_ecs::components::{CQuad, CSprite, CTransform2D},
     GlobalRegistry, VersionedIndex,
 };
@@ -63,12 +67,8 @@ impl TileControler {
     }
 }
 
-impl IController for TileControler {
-    fn update(
-        &mut self,
-        _frame_state: &mut FrameState,
-        _registry: &mut GlobalRegistry,
-    ) -> FrameResult {
+impl Controller for TileControler {
+    fn update(&mut self, _world: &mut World) -> FrameResult {
         FrameResult::None
     }
 }

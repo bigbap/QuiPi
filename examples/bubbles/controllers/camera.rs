@@ -1,10 +1,9 @@
-use crate::{
-    qp_assets::RCamera2D,
-    qp_data::{FrameState, IController},
-    qp_schemas::SchemaCamera2D,
-    GlobalRegistry,
+use crate::{qp_assets::RCamera2D, qp_schemas::SchemaCamera2D, GlobalRegistry};
+use quipi::{
+    app::{Controller, FrameResult},
+    prelude::QPError,
+    world::World,
 };
-use quipi::{app::FrameResult, prelude::QPError};
 use sdl2::event::{Event, WindowEvent};
 
 pub const MAIN_CAMERA: &str = "main_camera";
@@ -25,21 +24,21 @@ impl CameraController {
     }
 }
 
-impl IController for CameraController {
-    fn update(
-        &mut self,
-        frame_state: &mut FrameState,
-        registry: &mut GlobalRegistry,
-    ) -> FrameResult {
-        for event in registry.events.iter() {
+impl Controller for CameraController {
+    fn update(&mut self, world: &mut World) -> FrameResult {
+        for event in world.events.iter() {
             match event {
                 Event::Window {
                     win_event: WindowEvent::Resized(w, h),
                     ..
                 } => {
-                    registry.gfx.viewport.set_dimensions(0, 0, *w, *h);
+                    world.viewport.set_dimensions(0, 0, *w, *h);
 
-                    if let Some(camera) = registry.asset_manager.get_mut::<RCamera2D>(self.camera) {
+                    if let Some(camera) = world
+                        .registry
+                        .asset_manager
+                        .get_mut::<RCamera2D>(self.camera)
+                    {
                         camera.params.right = *w as f32;
                         camera.params.top = *h as f32;
 
@@ -48,8 +47,12 @@ impl IController for CameraController {
                     }
                 }
                 Event::MouseWheel { precise_y, .. } => {
-                    if let Some(camera) = registry.asset_manager.get_mut::<RCamera2D>(self.camera) {
-                        camera.set_zoom(camera.zoom + (*precise_y * frame_state.delta * 7.0));
+                    if let Some(camera) = world
+                        .registry
+                        .asset_manager
+                        .get_mut::<RCamera2D>(self.camera)
+                    {
+                        camera.set_zoom(camera.zoom + (*precise_y * world.delta * 7.0));
                     }
                 }
                 _ => (),

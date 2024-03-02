@@ -1,77 +1,73 @@
 use egui::{Context, Ui};
-use quipi::prelude::qp_data::FrameState;
+use quipi::world::World;
 
 use crate::{
-    qp_ecs::components::{
-        CQuad,
-        CTag,
-        CTransform2D,
-        CVelocity2D,
-    },
+    qp_ecs::components::{CQuad, CTag, CTransform2D, CVelocity2D},
     qp_editor::IGuiController,
-    GlobalRegistry,
-    VersionedIndex
+    GlobalRegistry, VersionedIndex,
 };
 
 pub struct EntityEditor {
     pub active_entity: Option<VersionedIndex>,
 
-    to_remove: Vec<Box<dyn FnMut(&mut GlobalRegistry, VersionedIndex)>>
+    to_remove: Vec<Box<dyn FnMut(&mut GlobalRegistry, VersionedIndex)>>,
 }
 
 impl EntityEditor {
     pub fn new() -> Self {
         Self {
             active_entity: None,
-            to_remove: vec![]
+            to_remove: vec![],
         }
     }
 
-    fn add_component(
-        &self,
-        ui: &mut Ui,
-        entity: VersionedIndex,
-        registry: &mut GlobalRegistry
-    ) {
+    fn add_component(&self, ui: &mut Ui, entity: VersionedIndex, registry: &mut GlobalRegistry) {
         ui.menu_button("Add component", |ui| {
-            if registry.entity_manager.get::<CVelocity2D>(&entity).is_none() {
+            if registry
+                .entity_manager
+                .get::<CVelocity2D>(&entity)
+                .is_none()
+            {
                 if ui.button("CVelocity").clicked() {
                     registry.entity_manager.add(&entity, CVelocity2D::default());
                 }
-            } else { ui.label("CVelocity"); }
+            } else {
+                ui.label("CVelocity");
+            }
 
             if registry.entity_manager.get::<CQuad>(&entity).is_none() {
                 if ui.button("CQuad").clicked() {
                     registry.entity_manager.add(&entity, CQuad::default());
                 }
-            } else { ui.label("CQuad"); }
+            } else {
+                ui.label("CQuad");
+            }
         });
     }
 }
 
 impl IGuiController for EntityEditor {
-    fn update(
-        &mut self,
-        ctx: &Context,
-        _frame_state: &mut FrameState,
-        registry: &mut GlobalRegistry
-    ) {
+    fn update(&mut self, ctx: &Context, world: &mut World) {
         if let Some(entity) = self.active_entity {
             while !self.to_remove.is_empty() {
-                self.to_remove.pop().unwrap()(registry, entity);
+                self.to_remove.pop().unwrap()(&mut world.registry, entity);
             }
 
             egui::Window::new("Entity").show(ctx, |ui| {
                 ui.add_space(10.0);
-                self.add_component(ui, entity, registry);
+                self.add_component(ui, entity, &mut world.registry);
                 ui.add_space(10.0);
 
-                if let Some(tag) = registry.entity_manager.get_mut::<CTag>(&entity) {
+                if let Some(tag) = world.registry.entity_manager.get_mut::<CTag>(&entity) {
                     ui.collapsing("Tag", |ui| {
                         ui.add(egui::TextEdit::singleline(&mut tag.tag));
                     });
                 }
-                if let Some(transform) = registry.entity_manager.get_mut::<CTransform2D>(&entity) {
+                if let Some(transform) = world
+                    .registry
+                    .entity_manager
+                    .get_mut::<CTransform2D>(&entity)
+                {
                     ui.collapsing("Transforms", |ui| {
                         ui.label("translate");
                         ui.horizontal(|ui| {
@@ -94,12 +90,17 @@ impl IGuiController for EntityEditor {
                         });
                     });
                 }
-                if let Some(velocity) = registry.entity_manager.get_mut::<CVelocity2D>(&entity) {
+                if let Some(velocity) = world
+                    .registry
+                    .entity_manager
+                    .get_mut::<CVelocity2D>(&entity)
+                {
                     ui.collapsing("Velocity", |ui| {
                         if ui.button("del").clicked() {
-                            self.to_remove.push(Box::new(|registry, entity: VersionedIndex| {
-                                registry.entity_manager.remove::<CVelocity2D>(&entity);
-                            }))
+                            self.to_remove
+                                .push(Box::new(|registry, entity: VersionedIndex| {
+                                    registry.entity_manager.remove::<CVelocity2D>(&entity);
+                                }))
                         }
 
                         ui.horizontal(|ui| {
@@ -110,12 +111,13 @@ impl IGuiController for EntityEditor {
                         });
                     });
                 }
-                if let Some(rect) = registry.entity_manager.get_mut::<CQuad>(&entity) {
+                if let Some(rect) = world.registry.entity_manager.get_mut::<CQuad>(&entity) {
                     ui.collapsing("Quad", |ui| {
                         if ui.button("del").clicked() {
-                            self.to_remove.push(Box::new(|registry, entity: VersionedIndex| {
-                                registry.entity_manager.remove::<CQuad>(&entity);
-                            }))
+                            self.to_remove
+                                .push(Box::new(|registry, entity: VersionedIndex| {
+                                    registry.entity_manager.remove::<CQuad>(&entity);
+                                }))
                         }
 
                         ui.horizontal(|ui| {

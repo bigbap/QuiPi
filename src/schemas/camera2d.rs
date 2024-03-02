@@ -1,9 +1,8 @@
 use serde::{Deserialize, Serialize};
 
 use crate::prelude::qp_assets::camera::OrthographicCameraParams;
-use crate::prelude::{
-    qp_assets::RCamera2D, qp_data::ISchema, qp_ecs::components::CTransform2D, GlobalRegistry,
-};
+use crate::prelude::Schema;
+use crate::prelude::{qp_assets::RCamera2D, qp_ecs::components::CTransform2D, GlobalRegistry};
 use crate::QPResult;
 
 pub const DEFAULT_CAMERA: &str = "default_camera";
@@ -35,7 +34,7 @@ impl Default for SchemaCamera2D {
     }
 }
 
-impl ISchema for SchemaCamera2D {
+impl Schema for SchemaCamera2D {
     fn load_resource(&self, registry: &mut GlobalRegistry) -> QPResult<u64> {
         Ok(registry.asset_manager.load_asset(
             self.name.clone(),

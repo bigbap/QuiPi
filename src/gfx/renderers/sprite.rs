@@ -2,9 +2,8 @@ use crate::{
     platform::opengl::capabilities::{gl_blending_func, gl_enable, GLBlendingFactor, GLCapability},
     prelude::{
         qp_assets::{RCamera2D, RShader},
-        qp_data::{FrameState, IRenderer},
         qp_ecs::components::{CSprite, CTransform2D},
-        GlobalRegistry, QPError,
+        GlobalRegistry, QPError, Renderer, World,
     },
     QPResult,
 };
@@ -36,13 +35,9 @@ impl SpriteRenderer {
     }
 }
 
-impl IRenderer for SpriteRenderer {
-    fn draw(
-        &mut self,
-        _frame_state: &mut FrameState,
-        registry: &mut GlobalRegistry,
-    ) -> Option<u32> {
-        let entities = registry.entity_manager.query_all::<CSprite>();
+impl Renderer for SpriteRenderer {
+    fn draw(&mut self, world: &mut World) -> Option<u32> {
+        let entities = world.registry.entity_manager.query_all::<CSprite>();
 
         gl_enable(GLCapability::AlphaBlending);
         gl_blending_func(
@@ -50,14 +45,19 @@ impl IRenderer for SpriteRenderer {
             GLBlendingFactor::OneMinusSrcAlpha,
         );
 
-        if registry.asset_manager.get::<RShader>(self.shader).is_none() {
+        if world
+            .registry
+            .asset_manager
+            .get::<RShader>(self.shader)
+            .is_none()
+        {
             #[cfg(debug_assertions)]
             println!("[sprite controller] tried to use a shader that is not loaded");
 
             return None;
         };
 
-        let Some(camera) = registry.asset_manager.get::<RCamera2D>(self.camera) else {
+        let Some(camera) = world.registry.asset_manager.get::<RCamera2D>(self.camera) else {
             #[cfg(debug_assertions)]
             println!("[sprite controller] tried to use a camera that is not loaded");
 
@@ -67,7 +67,7 @@ impl IRenderer for SpriteRenderer {
         self.renderer.reset_info();
         self.renderer.begin_batch();
         for entity in entities.iter() {
-            let Some(transform) = registry.entity_manager.get::<CTransform2D>(&entity) else {
+            let Some(transform) = world.registry.entity_manager.get::<CTransform2D>(&entity) else {
                 #[cfg(debug_assertions)]
                 println!(
                     "[sprite controller] tried to render a sprite without a tranform component"
@@ -77,7 +77,7 @@ impl IRenderer for SpriteRenderer {
             };
             let model = transform.to_matrix();
 
-            let Some(sprite) = registry.entity_manager.get_mut::<CSprite>(&entity) else {
+            let Some(sprite) = world.registry.entity_manager.get_mut::<CSprite>(&entity) else {
                 #[cfg(debug_assertions)]
                 println!("[sprite controller] tried to render a sprite without a sprite component");
 
@@ -85,18 +85,25 @@ impl IRenderer for SpriteRenderer {
             };
             sprite.apply_matrices(model, camera.view, camera.projection);
 
-            let sprite = registry.entity_manager.get::<CSprite>(&entity).unwrap();
+            let sprite = world
+                .registry
+                .entity_manager
+                .get::<CSprite>(&entity)
+                .unwrap();
             let texture = match &sprite.texture_atlas {
-                Some(atlas) => registry.asset_manager.get(atlas.texture),
+                Some(atlas) => world.registry.asset_manager.get(atlas.texture),
                 _ => None,
             };
 
-            self.renderer
-                .draw_mesh(sprite, registry.asset_manager.get(self.shader)?, texture);
+            self.renderer.draw_mesh(
+                sprite,
+                world.registry.asset_manager.get(self.shader)?,
+                texture,
+            );
         }
         self.renderer.end_batch();
         self.renderer
-            .flush_batch(registry.asset_manager.get(self.shader)?);
+            .flush_batch(world.registry.asset_manager.get(self.shader)?);
 
         Some(self.renderer.draw_calls)
     }

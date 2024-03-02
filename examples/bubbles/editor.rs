@@ -1,25 +1,17 @@
-mod scene;
 mod components;
 mod debug;
+mod scene;
 
-use quipi::prelude::qp_data::IRenderer;
+use quipi::app::Renderer;
+use quipi::world::World;
 use scene::SceneEditor;
 
-use crate::{
-    QPError,
-    qp_editor::GuiManager,
-    qp_core::Timer,
-    qp_data::{
-        FrameState,
-        IController,
-    },
-    GlobalRegistry
-};
 use crate::editor::debug::DebugUi;
+use crate::{qp_core::Timer, qp_editor::GuiManager, Controller, QPError};
 
 pub struct AppEditor {
     gui: GuiManager,
-    timer: Timer
+    timer: Timer,
 }
 
 impl AppEditor {
@@ -33,26 +25,22 @@ impl AppEditor {
 
         Ok(Self {
             gui,
-            timer: Timer::new()
+            timer: Timer::new(),
         })
     }
 }
 
-impl IRenderer for AppEditor {
-    fn draw(
-        &mut self,
-        frame_state: &mut FrameState,
-        registry: &mut GlobalRegistry,
-    ) -> Option<u32> {
-        if !frame_state.debug_mode {
-            return None
+impl Renderer for AppEditor {
+    fn draw(&mut self, world: &mut World) -> Option<u32> {
+        if !world.debug_mode {
+            return None;
         }
 
         self.timer.delta();
 
-        self.gui.update(frame_state, registry);
+        self.gui.update(world);
 
-        frame_state.debug_info.editor_ms = (self.timer.delta() * 1000.0) as u32;
+        world.debug_info.editor_ms = (self.timer.delta() * 1000.0) as u32;
 
         None
     }

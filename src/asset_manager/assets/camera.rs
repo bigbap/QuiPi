@@ -88,7 +88,7 @@ impl RCamera2D {
     }
 
     pub fn calc_projection_matrix(&self) -> glm::Mat4 {
-        let params = self.params();
+        let params = self.params;
 
         glm::ortho(
             params.left,
@@ -110,19 +110,19 @@ impl RCamera2D {
         )
     }
 
-    pub fn params(&self) -> OrthographicCameraParams {
-        let zoom_x = (self.params.right - self.params.left) / self.zoom;
-        let zoom_y = (self.params.top - self.params.bottom) / self.zoom;
+    // pub fn params(&self) -> OrthographicCameraParams {
+    //     let zoom_x = (self.params.right - self.params.left) / self.zoom;
+    //     let zoom_y = (self.params.top - self.params.bottom) / self.zoom;
 
-        OrthographicCameraParams {
-            left: self.params.left + zoom_x,
-            right: self.params.right - zoom_x,
-            bottom: self.params.bottom + zoom_y,
-            top: self.params.top - zoom_y,
-            near: self.params.near,
-            far: self.params.far,
-        }
-    }
+    //     OrthographicCameraParams {
+    //         left: self.params.left + zoom_x,
+    //         right: self.params.right - zoom_x,
+    //         bottom: self.params.bottom + zoom_y,
+    //         top: self.params.top - zoom_y,
+    //         near: self.params.near,
+    //         far: self.params.far,
+    //     }
+    // }
 }
 
 // 3D camera
