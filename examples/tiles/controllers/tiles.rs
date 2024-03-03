@@ -51,7 +51,7 @@ impl TileControler {
         }
 
         let tile_map = registry.asset_manager.load_asset(
-            "tile_map".to_string(),
+            "tile_map",
             RTileMap::new(
                 columns as usize,
                 rows as usize,

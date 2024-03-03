@@ -41,6 +41,40 @@ impl Timer {
     }
 }
 
+pub struct Interval {
+    timer: Timer,
+    interval: f32,
+    last_tick: f32,
+}
+
+impl Interval {
+    /*
+     * interval is in seconds
+     */
+    pub fn new(interval: f32) -> Self {
+        let timer = Timer::new();
+        let last_tick = timer.elapsed();
+
+        Self {
+            timer,
+            last_tick,
+            interval,
+        }
+    }
+
+    pub fn check(&mut self) -> bool {
+        let delta = self.timer.elapsed() - self.last_tick;
+
+        if delta >= self.interval {
+            self.last_tick += delta - (delta % self.interval);
+
+            return true;
+        }
+
+        false
+    }
+}
+
 pub fn now_milis() -> QPResult<u128> {
     Ok(SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)?

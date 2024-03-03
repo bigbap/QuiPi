@@ -14,7 +14,7 @@ mod controllers;
 mod editor;
 
 pub fn run() -> Result<(), QPError> {
-    let mut app = App::init("Bouncing Shapes", WIDTH, HEIGHT)?;
+    let mut app = App::init("Bouncing Shapes", WIDTH, HEIGHT, 8576394876)?;
 
     let scene = SceneController::load(&mut app)?;
     app.register_controller(scene);

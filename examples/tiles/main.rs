@@ -1,5 +1,5 @@
-extern crate quipi;
 extern crate nalgebra_glm as glm;
+extern crate quipi;
 
 use controllers::scene::SceneController;
 pub use quipi::prelude::*;
@@ -14,11 +14,7 @@ mod controllers;
 mod editor;
 
 pub fn run() -> Result<(), QPError> {
-    let mut app = App::init(
-        "Tiles",
-        WIDTH,
-        HEIGHT,
-    )?;
+    let mut app = App::init("Tiles", WIDTH, HEIGHT, 54875687)?;
 
     let scene = SceneController::load(&mut app)?;
 
@@ -30,7 +26,6 @@ pub fn run() -> Result<(), QPError> {
 
     app.run((0.3, 0.3, 0.3, 1.0))
 }
-
 
 fn main() {
     if let Err(e) = run() {

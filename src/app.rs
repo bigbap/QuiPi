@@ -21,7 +21,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn init(title: &str, width: u32, height: u32) -> QPResult<Self> {
+    pub fn init(title: &str, width: u32, height: u32, seed: u64) -> QPResult<Self> {
         let mut winapi = sdl2::QPWindow::init()?;
         let _window = winapi.opengl_window(title, width, height, (4, 5))?;
 
@@ -33,7 +33,7 @@ impl App {
         // let audio = QPAudio::new()?;
         // audio.play();
 
-        let world = World::new(viewport)?;
+        let world = World::new(viewport, seed)?;
 
         Ok(Self {
             winapi,

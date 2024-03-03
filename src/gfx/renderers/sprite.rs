@@ -67,6 +67,17 @@ impl Renderer for SpriteRenderer {
         self.renderer.reset_info();
         self.renderer.begin_batch();
         for entity in entities.iter() {
+            let Some(sprite) = world.registry.entity_manager.get::<CSprite>(&entity) else {
+                #[cfg(debug_assertions)]
+                println!("[sprite controller] tried to render a sprite without a sprite component");
+
+                continue;
+            };
+
+            if sprite.skip {
+                continue;
+            }
+
             let Some(transform) = world.registry.entity_manager.get::<CTransform2D>(&entity) else {
                 #[cfg(debug_assertions)]
                 println!(
@@ -78,9 +89,6 @@ impl Renderer for SpriteRenderer {
             let model = transform.to_matrix();
 
             let Some(sprite) = world.registry.entity_manager.get_mut::<CSprite>(&entity) else {
-                #[cfg(debug_assertions)]
-                println!("[sprite controller] tried to render a sprite without a sprite component");
-
                 continue;
             };
             sprite.apply_matrices(model, camera.view, camera.projection);

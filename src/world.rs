@@ -1,7 +1,7 @@
 use sdl2::event::Event;
 
 use crate::{
-    core::prelude::Timer,
+    core::prelude::{random::Random, Timer},
     platform::sdl2::QPWindow,
     prelude::{
         qp_ecs::components::register_components,
@@ -23,10 +23,11 @@ pub struct World {
 
     pub delta: f32,
     timer: Timer,
+    pub rand: Random,
 }
 
 impl World {
-    pub fn new(viewport: Viewport) -> QPResult<Self> {
+    pub fn new(viewport: Viewport, seed: u64) -> QPResult<Self> {
         let mut registry = GlobalRegistry::init()?;
         register_components(&mut registry);
 
@@ -37,6 +38,7 @@ impl World {
             registry,
             timer,
             delta,
+            rand: Random::from_seed(seed),
 
             debug_info: DebugInfo::default(),
             debug_mode: false,

@@ -1,3 +1,5 @@
+use crate::core::prelude::trig::rotate2d;
+
 use super::super::prelude::Component;
 use serde::{Deserialize, Serialize};
 
@@ -85,5 +87,13 @@ impl CTransform2D {
         let matrix = glm::rotate(&matrix, self.rotate, &rotate);
 
         glm::scale(&matrix, &scale)
+    }
+
+    /*
+     * return the normalised direction vector besed on the rotation.
+     * assumes a front vector point up in the y-axis
+     */
+    pub fn direction(&self) -> glm::Vec2 {
+        rotate2d(&glm::vec2(0.0, 1.0), self.rotate).normalize()
     }
 }

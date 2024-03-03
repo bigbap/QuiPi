@@ -107,10 +107,9 @@ struct DebugInfoText {
 
 impl DebugInfoText {
     pub fn new(registry: &mut GlobalRegistry) -> Result<Self, QPError> {
-        let font = registry.asset_manager.load_asset(
-            "Poppins-Regular".to_string(),
-            RFont::new("Poppins-Regular")?,
-        )?;
+        let font = registry
+            .asset_manager
+            .load_asset("Poppins-Regular", RFont::new("Poppins-Regular")?)?;
 
         Ok(Self { font })
     }

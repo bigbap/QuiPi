@@ -10,6 +10,7 @@ use super::components::CQuad;
 
 #[derive(Debug, Component, Serialize, Deserialize, Clone, PartialEq, Default)]
 pub struct CSprite {
+    pub skip: bool, // skip rendering
     pub color: glm::Vec4,
     pub texture_atlas: Option<TextureAtlas>,
 
@@ -24,6 +25,7 @@ impl CSprite {
         texture_atlas: Option<TextureAtlas>,
     ) -> Self {
         Self {
+            skip: false,
             color: match color {
                 Some(c) => c,
                 _ => glm::vec4(1.0, 1.0, 1.0, 1.0),

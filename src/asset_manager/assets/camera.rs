@@ -106,12 +106,12 @@ impl RCamera2D {
         )
     }
 
-    pub fn follow(&mut self, target: &CTransform2D) {
-        let x = target.translate.x;
-        let y = target.translate.y;
+    pub fn follow(&mut self, target: &CTransform2D, offset: f32, lerp_factor: f32) {
+        let center = glm::vec2(self.params.right / 2.0, self.params.top / 2.0);
+        let offset = target.direction() * offset;
+        let target = target.translate - center + offset;
 
-        self.transform.translate.x = x - (self.params.right / 2.0);
-        self.transform.translate.y = y - (self.params.top / 2.0);
+        self.transform.translate = glm::lerp(&self.transform.translate, &target, lerp_factor);
 
         self.view = self.calc_view_matrix();
     }
