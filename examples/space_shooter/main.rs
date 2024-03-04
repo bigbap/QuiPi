@@ -4,7 +4,7 @@ extern crate quipi;
 pub use quipi::prelude::*;
 use quipi::{
     asset_manager::assets::{camera::OrthographicCameraParams, RCamera2D, RShader},
-    core::prelude::{random::Random, trig::magnitude2d_squared, Interval, Timer},
+    core::prelude::{random::Random, trig::{magnitude2d_squared, rotate2d}, Interval, Timer},
     ecs::prelude::components::CTransform2D,
     gfx::prelude::{ShaderUniforms, SpriteRenderer, SPRITE_FRAG, SPRITE_VERT},
     schemas::sprite::TextureAtlas,
@@ -104,7 +104,7 @@ impl GameController {
 
         let ship_pos = ship_transform.translate;
         let mut stars = vec![];
-        for _ in 0..20 {
+        for _ in 0..100 {
             let star = Star::new(&mut app.world, ship_pos)?;
 
             stars.push(star);
@@ -121,7 +121,7 @@ impl GameController {
             score_interval: Interval::new(1.0),
             asteroid_spawn_interval: Interval::new(1.0),
             bullet_spawn_interval: Interval::new(0.2),
-            star_spawn_interval: Interval::new(0.2),
+            star_spawn_interval: Interval::new(0.02),
             game_over: false,
             firing: false,
         })
@@ -179,21 +179,15 @@ impl GameController {
             .unwrap();
 
         let ship_pos = ship.translate;
-
-        let x_pos = self.rand.range(
-            ship_pos.x as i32 - (width / 2),
-            ship_pos.x as i32 + (width / 2),
-        ) as f32;
-
-        let y_pos = self.rand.range(
-            ship_pos.y as i32 - (height / 2),
-            ship_pos.y as i32 + (height / 2),
-        ) as f32;
+        let offset = 100.0;
+        let pos_local = glm::vec2((width / 2) as f32 + offset, (height / 2) as f32 + offset);
+        let pos_local = rotate2d(&pos_local, self.rand.random() * 2.0 * glm::pi::<f32>());
+        let pos = ship_pos + pos_local;
 
         let asteroid = Asteroid::new(
             &mut world.registry,
             ship_pos,
-            glm::vec2(x_pos, y_pos),
+            pos,
             (self.rand.random() + 1.0) * 2.0,
             self.rand.random() * 2.0 * glm::pi::<f32>(),
             &mut world.rand,
@@ -304,13 +298,15 @@ impl Controller for GameController {
 
                 if asteroid.check_collision(&mut world.registry, &bullet_transform, 16.0) {
                     self.score.score += 5;
+                    bullet.lifetime = 0.0;
                 };
-
-                // update bullet while we're at it
-                bullet.update(world);
             }
 
             asteroid.update(world);
+        }
+
+        for bullet in self.bullets.iter_mut() {
+            bullet.update(world);
         }
 
         for star in self.stars.iter_mut() {
@@ -405,6 +401,7 @@ pub struct Ship {
     pub index: VersionedIndex,
     pub thruster: VersionedIndex,
 
+    mouse_pos: glm::Vec2,
     acceleration: f32,
     max_velocity: f32,
     thrust: bool,
@@ -482,42 +479,46 @@ impl Ship {
         Ok(Self {
             index,
             thruster,
-            acceleration: 20.0,
-            max_velocity: 200.0,
+            acceleration: 100.0,
+            max_velocity: 300.0,
             thrust: false,
             thruster_offset,
+            mouse_pos: glm::vec2(0.0, 0.0)
         })
+    }
+
+    fn rotate_ship(&mut self, world: &mut World) {
+        let (_x, _y, width, height) = world.viewport.get_dimensions();
+        let x = self.mouse_pos.x - width as f32 / 2.0;
+        let y = (self.mouse_pos.y - height as f32 / 2.0) * -1.0;
+        let angle = qp_core::trig::angle(
+            &glm::vec3(0.0, 1.0, 0.0),
+            &glm::vec3(x, y, 0.0),
+        );
+
+        if let Some(transform) = world
+            .registry
+            .entity_manager
+            .get_mut::<CTransform2D>(&self.index)
+        {
+            transform.rotate = match x > 0.0 {
+                true => {
+                    let angle = (2.0 * glm::pi::<f32>()) - angle;
+
+                    angle
+                }
+                false => angle,
+            };
+        }
     }
 }
 
 impl Controller for Ship {
     fn update(&mut self, world: &mut World) -> FrameResult {
-        let (_x, _y, width, height) = world.viewport.get_dimensions();
-
         for event in world.events.iter() {
             match event {
                 Event::MouseMotion { x, y, .. } => {
-                    let x = x - width / 2;
-                    let y = (y - height / 2) * -1;
-                    let angle = qp_core::trig::angle(
-                        &glm::vec3(0.0, 1.0, 0.0),
-                        &glm::vec3(x as f32, y as f32, 0.0),
-                    );
-
-                    if let Some(transform) = world
-                        .registry
-                        .entity_manager
-                        .get_mut::<CTransform2D>(&self.index)
-                    {
-                        transform.rotate = match x > 0 {
-                            true => {
-                                let angle = (2.0 * glm::pi::<f32>()) - angle;
-
-                                angle
-                            }
-                            false => angle,
-                        };
-                    }
+                    self.mouse_pos = glm::vec2(*x as f32, *y as f32);
                 }
                 Event::KeyDown {
                     keycode: Some(Keycode::W),
@@ -552,6 +553,8 @@ impl Controller for Ship {
             };
         }
 
+        self.rotate_ship(world);
+
         // match thruster transform to ship
         let transform = world
             .registry
@@ -577,10 +580,6 @@ impl Controller for Ship {
         thruster.translate = translate - offset;
         thruster.rotate = rotate;
 
-        if !self.thrust {
-            return FrameResult::None;
-        }
-
         // calculate velocity based on direction and acceleration
         let Some(velocity) = world
             .registry
@@ -590,8 +589,17 @@ impl Controller for Ship {
             return FrameResult::None;
         };
 
-        velocity.x = (velocity.x + self.acceleration).min(self.max_velocity);
-        velocity.y = (velocity.y + self.acceleration).min(self.max_velocity);
+        if !self.thrust && velocity.x <= 0.0 && velocity.y <= 0.0 {
+            return FrameResult::None;
+        }
+
+        let acceleration = world.delta * match self.thrust {
+            true => self.acceleration,
+            false => -self.acceleration
+        };
+
+        velocity.x = (velocity.x + acceleration).clamp(0.0, self.max_velocity);
+        velocity.y = (velocity.y + acceleration).clamp(0.0, self.max_velocity);
 
         // apply velocity to translation
         let Some(velocity) = world
@@ -650,7 +658,7 @@ impl Bullet {
             center_y: 0.0,
         };
 
-        let speed = 250.0;
+        let speed = 500.0;
 
         let index = EntityBuilder::create(&mut registry.entity_manager)
             .with(CTag {
@@ -687,6 +695,12 @@ impl Bullet {
     }
 
     pub fn update(&mut self, world: &mut World) -> bool {
+        let elapsed = self.timer.elapsed();
+        if elapsed > self.lifetime {
+            world.registry.entity_manager.set_to_delete(self.index);
+            self.alive = false
+        }
+
         let Some(velocity) = world
             .registry
             .entity_manager
@@ -707,8 +721,6 @@ impl Bullet {
             return false;
         }
 
-        let elapsed = self.timer.elapsed();
-
         let sprite = world
             .registry
             .entity_manager
@@ -716,11 +728,6 @@ impl Bullet {
             .unwrap();
 
         sprite.color.w = 1.0 - (elapsed / self.lifetime);
-
-        if elapsed > self.lifetime {
-            world.registry.entity_manager.set_to_delete(self.index);
-            self.alive = false
-        }
 
         false
     }
@@ -773,8 +780,8 @@ impl Asteroid {
                 ..CTransform2D::default()
             })
             .with(CVelocity2D {
-                x: direction.x * (rand.random() + 1.0),
-                y: direction.y * (rand.random() + 1.0),
+                x: direction.x * rand.range(100, 200) as f32,
+                y: direction.y * rand.range(100, 200) as f32,
             })
             .with(CSprite::new(
                 &quad,
@@ -794,7 +801,7 @@ impl Asteroid {
             rotation_step: (rand.random() + 0.7) * 2.0,
             alive: true,
             scale,
-            lifetime: 5.0,
+            lifetime: 30.0,
             timer,
         })
     }
@@ -810,7 +817,7 @@ impl Asteroid {
             .get::<CTransform2D>(&self.index)
             .unwrap();
 
-        let offset = 10.0;
+        let offset = 25.0;
         let threshold = obj_radius + (self.scale * 16.0) - offset;
         if magnitude2d_squared(&transform.translate, &obj.translate) < threshold.powf(2.0) {
             registry.entity_manager.set_to_delete(self.index);
@@ -846,8 +853,8 @@ impl Controller for Asteroid {
             .entity_manager
             .get_mut::<CTransform2D>(&self.index)
         {
-            transform.translate.x += velocity.x;
-            transform.translate.y += velocity.y;
+            transform.translate.x += velocity.x * world.delta;
+            transform.translate.y += velocity.y * world.delta;
 
             transform.rotate += world.delta * self.rotation_step;
         }
@@ -877,13 +884,13 @@ impl Star {
     pub fn new(world: &mut World, ship_pos: glm::Vec2) -> Result<Self, QPError> {
         let (_x, _y, width, height) = world.viewport.get_dimensions();
         let x_pos = world.rand.range(
-            ship_pos.x as i32 - (width / 2),
-            ship_pos.x as i32 + (width / 2),
+            ship_pos.x as i32 - width,
+            ship_pos.x as i32 + width,
         ) as f32;
 
         let y_pos = world.rand.range(
-            ship_pos.y as i32 - (height / 2),
-            ship_pos.y as i32 + (height / 2),
+            ship_pos.y as i32 - height,
+            ship_pos.y as i32 + height,
         ) as f32;
 
         let texture_id = world
