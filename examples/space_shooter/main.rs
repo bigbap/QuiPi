@@ -4,7 +4,11 @@ extern crate quipi;
 pub use quipi::prelude::*;
 use quipi::{
     asset_manager::assets::{camera::OrthographicCameraParams, RCamera2D, RShader},
-    core::prelude::{random::Random, trig::{magnitude2d_squared, rotate2d}, Interval, Timer},
+    core::prelude::{
+        random::Random,
+        trig::{magnitude2d_squared, rotate2d},
+        Countdown, Interval,
+    },
     ecs::prelude::components::CTransform2D,
     gfx::prelude::{ShaderUniforms, SpriteRenderer, SPRITE_FRAG, SPRITE_VERT},
     schemas::sprite::TextureAtlas,
@@ -95,21 +99,6 @@ impl GameController {
 
         let rand = Random::from_seed(1234);
 
-        let ship_transform = app
-            .world
-            .registry
-            .entity_manager
-            .get::<CTransform2D>(&ship.index)
-            .unwrap();
-
-        let ship_pos = ship_transform.translate;
-        let mut stars = vec![];
-        for _ in 0..100 {
-            let star = Star::new(&mut app.world, ship_pos)?;
-
-            stars.push(star);
-        }
-
         Ok(Self {
             rand,
             score,
@@ -117,11 +106,11 @@ impl GameController {
             ship,
             bullets: vec![],
             asteroids: vec![],
-            stars,
-            score_interval: Interval::new(1.0),
-            asteroid_spawn_interval: Interval::new(1.0),
+            stars: vec![],
+            score_interval: Interval::new(0.5),
+            asteroid_spawn_interval: Interval::new(0.5),
             bullet_spawn_interval: Interval::new(0.2),
-            star_spawn_interval: Interval::new(0.02),
+            star_spawn_interval: Interval::new(0.002),
             game_over: false,
             firing: false,
         })
@@ -298,7 +287,7 @@ impl Controller for GameController {
 
                 if asteroid.check_collision(&mut world.registry, &bullet_transform, 16.0) {
                     self.score.score += 5;
-                    bullet.lifetime = 0.0;
+                    bullet.destroy(&mut world.registry);
                 };
             }
 
@@ -399,13 +388,12 @@ impl Controller for Camera {
 
 pub struct Ship {
     pub index: VersionedIndex,
-    pub thruster: VersionedIndex,
+    particle_system: ParticleSystem,
 
     mouse_pos: glm::Vec2,
     acceleration: f32,
     max_velocity: f32,
     thrust: bool,
-    thruster_offset: glm::Vec2,
 }
 
 impl Ship {
@@ -422,68 +410,40 @@ impl Ship {
             .get::<qp_assets::RTexture>(texture_id)
             .ok_or(QPError::SpriteTextureDoesntExist)?;
 
-        let quad = CQuad {
-            width: 64.0,
-            height: 64.0,
-            center_x: 0.0,
-            center_y: 0.0,
-        };
-
-        let ship_transform = CTransform2D {
-            translate: glm::vec2(0.0, 0.0),
-            ..CTransform2D::default()
-        };
-        let thruster_offset = glm::vec2(0.0, 26.0);
-        let mut sprite = CSprite::new(
-            &quad,
-            Some(glm::vec4(1.0, 1.0, 1.0, 1.0)),
-            Some(TextureAtlas {
-                texture: texture_id,
-                texture_dims: texture.texture_dims,
-                active_texture: glm::vec2(7.0, 0.0),
-            }),
-        );
-        sprite.skip = true;
-
-        let thruster = EntityBuilder::create(&mut world.registry.entity_manager)
-            .with(CTag {
-                tag: "thruster".to_string(),
-            })
-            .with(CVelocity2D { x: 0.0, y: 0.0 })
-            .with(CTransform2D {
-                translate: ship_transform.translate - thruster_offset,
-                rotate: ship_transform.rotate,
-                scale: glm::vec2(0.5, 0.5),
-                ..CTransform2D::default()
-            })
-            .with(sprite)
-            .build();
-
         let index = EntityBuilder::create(&mut world.registry.entity_manager)
             .with(CTag {
                 tag: "ship".to_string(),
             })
             .with(CVelocity2D { x: 0.0, y: 0.0 })
-            .with(ship_transform)
+            .with(CTransform2D {
+                translate: glm::vec2(0.0, 0.0),
+                ..CTransform2D::default()
+            })
             .with(CSprite::new(
-                &quad,
+                &CQuad {
+                    width: 64.0,
+                    height: 64.0,
+                    center_x: 0.0,
+                    center_y: 0.0,
+                },
                 Some(glm::vec4(0.8, 0.2, 0.0, 1.0)),
                 Some(TextureAtlas {
                     texture: texture_id,
                     texture_dims: texture.texture_dims,
-                    active_texture: glm::vec2(6.0, 5.0),
+                    active_texture: glm::vec2(1.0, 3.0),
                 }),
             ))
             .build();
 
+        let particle_system = ParticleSystem::new(index);
+
         Ok(Self {
             index,
-            thruster,
             acceleration: 100.0,
-            max_velocity: 300.0,
+            max_velocity: 500.0,
             thrust: false,
-            thruster_offset,
-            mouse_pos: glm::vec2(0.0, 0.0)
+            mouse_pos: glm::vec2(0.0, 0.0),
+            particle_system,
         })
     }
 
@@ -491,10 +451,7 @@ impl Ship {
         let (_x, _y, width, height) = world.viewport.get_dimensions();
         let x = self.mouse_pos.x - width as f32 / 2.0;
         let y = (self.mouse_pos.y - height as f32 / 2.0) * -1.0;
-        let angle = qp_core::trig::angle(
-            &glm::vec3(0.0, 1.0, 0.0),
-            &glm::vec3(x, y, 0.0),
-        );
+        let angle = qp_core::trig::angle(&glm::vec3(0.0, 1.0, 0.0), &glm::vec3(x, y, 0.0));
 
         if let Some(transform) = world
             .registry
@@ -525,13 +482,6 @@ impl Controller for Ship {
                     repeat: false,
                     ..
                 } => {
-                    if let Some(thruster) = world
-                        .registry
-                        .entity_manager
-                        .get_mut::<CSprite>(&self.thruster)
-                    {
-                        thruster.skip = false;
-                    }
                     self.thrust = true;
                 }
                 Event::KeyUp {
@@ -539,14 +489,6 @@ impl Controller for Ship {
                     repeat: false,
                     ..
                 } => {
-                    if let Some(thruster) = world
-                        .registry
-                        .entity_manager
-                        .get_mut::<CSprite>(&self.thruster)
-                    {
-                        thruster.skip = true;
-                    }
-
                     self.thrust = false;
                 }
                 _ => (),
@@ -554,31 +496,7 @@ impl Controller for Ship {
         }
 
         self.rotate_ship(world);
-
-        // match thruster transform to ship
-        let transform = world
-            .registry
-            .entity_manager
-            .get::<CTransform2D>(&self.index)
-            .unwrap();
-
-        let translate = transform.translate.clone();
-        let rotate = transform.rotate.clone();
-        let offset = glm::vec2(
-            self.thruster_offset.y * transform.direction().x,
-            self.thruster_offset.y * transform.direction().y,
-        );
-
-        let Some(thruster) = world
-            .registry
-            .entity_manager
-            .get_mut::<CTransform2D>(&self.thruster)
-        else {
-            return FrameResult::None;
-        };
-
-        thruster.translate = translate - offset;
-        thruster.rotate = rotate;
+        self.particle_system.update(world, self.thrust);
 
         // calculate velocity based on direction and acceleration
         let Some(velocity) = world
@@ -593,10 +511,11 @@ impl Controller for Ship {
             return FrameResult::None;
         }
 
-        let acceleration = world.delta * match self.thrust {
-            true => self.acceleration,
-            false => -self.acceleration
-        };
+        let acceleration = world.delta
+            * match self.thrust {
+                true => self.acceleration,
+                false => -self.acceleration,
+            };
 
         velocity.x = (velocity.x + acceleration).clamp(0.0, self.max_velocity);
         velocity.y = (velocity.y + acceleration).clamp(0.0, self.max_velocity);
@@ -628,9 +547,7 @@ impl Controller for Ship {
 
 pub struct Bullet {
     index: VersionedIndex,
-    timer: Timer,
-
-    lifetime: f32,
+    countdown: Countdown,
     alive: bool,
 }
 
@@ -652,13 +569,13 @@ impl Bullet {
             .ok_or(QPError::SpriteTextureDoesntExist)?;
 
         let quad = CQuad {
-            width: 32.0,
-            height: 32.0,
+            width: 64.0,
+            height: 64.0,
             center_x: 0.0,
             center_y: 0.0,
         };
 
-        let speed = 500.0;
+        let speed = 700.0;
 
         let index = EntityBuilder::create(&mut registry.entity_manager)
             .with(CTag {
@@ -667,6 +584,7 @@ impl Bullet {
             .with(CTransform2D {
                 translate: position,
                 rotate: angle,
+                scale: glm::vec2(0.7, 0.7),
                 ..CTransform2D::default()
             })
             .with(CVelocity2D {
@@ -675,30 +593,33 @@ impl Bullet {
             })
             .with(CSprite::new(
                 &quad,
-                Some(glm::vec4(1.0, 1.0, 1.0, 1.0)),
+                Some(glm::vec4(0.0, 0.7, 1.0, 1.0)),
                 Some(TextureAtlas {
                     texture: texture_id,
                     texture_dims: texture.texture_dims,
-                    active_texture: glm::vec2(1.0, 5.0),
+                    active_texture: glm::vec2(4.0, 2.0),
                 }),
             ))
             .build();
 
-        let timer = Timer::new();
-
         Ok(Self {
             index,
-            timer,
-            lifetime: 1.5,
+            countdown: Countdown::new(1.5),
             alive: true,
         })
     }
 
+    pub fn destroy(&mut self, registry: &mut GlobalRegistry) {
+        registry.entity_manager.set_to_delete(self.index);
+        self.alive = false
+    }
+
     pub fn update(&mut self, world: &mut World) -> bool {
-        let elapsed = self.timer.elapsed();
-        if elapsed > self.lifetime {
-            world.registry.entity_manager.set_to_delete(self.index);
-            self.alive = false
+        let time_left = self.countdown.check();
+
+        if time_left == 0.0 {
+            self.destroy(&mut world.registry);
+            return false;
         }
 
         let Some(velocity) = world
@@ -727,7 +648,7 @@ impl Bullet {
             .get_mut::<CSprite>(&self.index)
             .unwrap();
 
-        sprite.color.w = 1.0 - (elapsed / self.lifetime);
+        sprite.color.w = time_left;
 
         false
     }
@@ -738,8 +659,7 @@ struct Asteroid {
     rotation_step: f32,
     scale: f32,
     alive: bool,
-    lifetime: f32,
-    timer: Timer,
+    countdown: Countdown,
 }
 
 impl Asteroid {
@@ -780,8 +700,8 @@ impl Asteroid {
                 ..CTransform2D::default()
             })
             .with(CVelocity2D {
-                x: direction.x * rand.range(100, 200) as f32,
-                y: direction.y * rand.range(100, 200) as f32,
+                x: direction.x * rand.range(150, 300) as f32,
+                y: direction.y * rand.range(150, 300) as f32,
             })
             .with(CSprite::new(
                 &quad,
@@ -794,15 +714,12 @@ impl Asteroid {
             ))
             .build();
 
-        let timer = Timer::new();
-
         Ok(Self {
             index,
             rotation_step: (rand.random() + 0.7) * 2.0,
             alive: true,
             scale,
-            lifetime: 30.0,
-            timer,
+            countdown: Countdown::new(30.0),
         })
     }
 
@@ -828,15 +745,19 @@ impl Asteroid {
 
         false
     }
+
+    pub fn destroy(&mut self, registry: &mut GlobalRegistry) {
+        registry.entity_manager.set_to_delete(self.index);
+        self.alive = false;
+    }
 }
 
 impl Controller for Asteroid {
     fn update(&mut self, world: &mut World) -> FrameResult {
-        let elapsed = self.timer.elapsed();
+        let time_left = self.countdown.check();
 
-        if elapsed > self.lifetime {
-            world.registry.entity_manager.set_to_delete(self.index);
-            self.alive = false;
+        if time_left == 0.0 {
+            self.destroy(&mut world.registry);
 
             return FrameResult::None;
         }
@@ -865,9 +786,9 @@ impl Controller for Asteroid {
             .get_mut::<CSprite>(&self.index)
             .unwrap();
 
-        sprite.color.y = 1.0 - (elapsed / self.lifetime);
-        sprite.color.z = 1.0 - (elapsed / self.lifetime);
-        sprite.color.w = 1.0 - (elapsed / self.lifetime);
+        sprite.color.y = time_left / self.countdown.countdown;
+        sprite.color.z = time_left / self.countdown.countdown;
+        sprite.color.w = time_left / self.countdown.countdown;
 
         FrameResult::None
     }
@@ -875,23 +796,21 @@ impl Controller for Asteroid {
 
 struct Star {
     index: VersionedIndex,
-    lifetime: f32,
-    timer: Timer,
     alive: bool,
+    countdown: Countdown,
 }
 
 impl Star {
     pub fn new(world: &mut World, ship_pos: glm::Vec2) -> Result<Self, QPError> {
         let (_x, _y, width, height) = world.viewport.get_dimensions();
-        let x_pos = world.rand.range(
-            ship_pos.x as i32 - width,
-            ship_pos.x as i32 + width,
-        ) as f32;
+        let x_pos = world
+            .rand
+            .range(ship_pos.x as i32 - width, ship_pos.x as i32 + width) as f32;
 
-        let y_pos = world.rand.range(
-            ship_pos.y as i32 - height,
-            ship_pos.y as i32 + height,
-        ) as f32;
+        let y_pos = world
+            .rand
+            .range(ship_pos.y as i32 - height, ship_pos.y as i32 + height)
+            as f32;
 
         let texture_id = world
             .registry
@@ -937,12 +856,9 @@ impl Star {
             ))
             .build();
 
-        let timer = Timer::new();
-
         Ok(Self {
             index,
-            lifetime: 3.0,
-            timer,
+            countdown: Countdown::new(3.0),
             alive: true,
         })
     }
@@ -954,9 +870,9 @@ impl Controller for Star {
             return FrameResult::None;
         }
 
-        let elapsed = self.timer.elapsed();
+        let time_left = self.countdown.check();
 
-        if elapsed > self.lifetime {
+        if time_left == 0.0 {
             world.registry.entity_manager.set_to_delete(self.index);
 
             return FrameResult::None;
@@ -968,9 +884,136 @@ impl Controller for Star {
             .get_mut::<CSprite>(&self.index)
             .unwrap();
 
-        sprite.color.w = 1.0 - (elapsed / self.lifetime);
+        sprite.color.w = time_left / self.countdown.countdown;
 
         FrameResult::None
+    }
+}
+
+struct ParticleSystem {
+    ship: VersionedIndex,
+    particles: Vec<Particle>,
+    interval: Interval,
+}
+
+impl ParticleSystem {
+    pub fn new(ship: VersionedIndex) -> Self {
+        Self {
+            ship,
+            particles: vec![],
+            interval: Interval::new(0.02),
+        }
+    }
+
+    fn spawn(&mut self, world: &mut World) -> Result<(), QPError> {
+        if !self.interval.check() {
+            return Ok(());
+        }
+
+        let Some(ship) = world
+            .registry
+            .entity_manager
+            .get::<CTransform2D>(&self.ship)
+        else {
+            return Ok(());
+        };
+
+        let ship_transform = ship.clone();
+
+        let particle = Particle::new(world, &ship_transform)?;
+        self.particles.push(particle);
+
+        Ok(())
+    }
+
+    pub fn update(&mut self, world: &mut World, spawn: bool) {
+        for particle in self.particles.iter_mut() {
+            particle.update(&mut world.registry);
+        }
+
+        if spawn {
+            self.spawn(world).unwrap();
+        }
+    }
+}
+
+struct Particle {
+    index: VersionedIndex,
+    alive: bool,
+    countdown: Countdown,
+}
+
+impl Particle {
+    pub fn new(world: &mut World, ship_transform: &CTransform2D) -> Result<Self, QPError> {
+        let texture_id = world
+            .registry
+            .asset_manager
+            .get_asset_id("space_tilesheet")
+            .ok_or(QPError::SpriteTextureDoesntExist)?;
+
+        let texture = world
+            .registry
+            .asset_manager
+            .get::<qp_assets::RTexture>(texture_id)
+            .ok_or(QPError::SpriteTextureDoesntExist)?;
+
+        let quad = CQuad {
+            width: 64.0,
+            height: 64.0,
+            center_x: 0.0,
+            center_y: 0.0,
+        };
+
+        let offset = ship_transform.direction() * 28.0;
+        let scale_factor = world.rand.random() + 1.0;
+        let index = EntityBuilder::create(&mut world.registry.entity_manager)
+            .with(CTag {
+                tag: "particle".to_string(),
+            })
+            .with(CTransform2D {
+                translate: ship_transform.translate - offset,
+                rotate: world.rand.random() * 2.0 * glm::pi::<f32>(),
+                scale: glm::vec2(scale_factor, scale_factor),
+                ..CTransform2D::default()
+            })
+            .with(CSprite::new(
+                &quad,
+                Some(glm::vec4(1.0, 0.7, 0.2, 1.0)),
+                Some(TextureAtlas {
+                    texture: texture_id,
+                    texture_dims: texture.texture_dims,
+                    active_texture: glm::vec2(4.0, 2.0),
+                }),
+            ))
+            .build();
+
+        Ok(Self {
+            index,
+            alive: true,
+            countdown: Countdown::new(0.4),
+        })
+    }
+
+    pub fn update(&mut self, registry: &mut GlobalRegistry) {
+        if !self.alive {
+            return;
+        }
+
+        let time_left = self.countdown.check();
+
+        if time_left == 0.0 {
+            self.alive = false;
+            registry.entity_manager.set_to_delete(self.index);
+
+            return;
+        }
+
+        let sprite = registry
+            .entity_manager
+            .get_mut::<CSprite>(&self.index)
+            .unwrap();
+
+        sprite.color.w = time_left;
     }
 }
 

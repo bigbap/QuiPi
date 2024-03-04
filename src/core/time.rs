@@ -75,6 +75,31 @@ impl Interval {
     }
 }
 
+pub struct Countdown {
+    timer: Timer,
+    pub countdown: f32,
+    start: f32,
+}
+
+impl Countdown {
+    pub fn new(countdown: f32) -> Self {
+        let timer = Timer::new();
+        let start = timer.elapsed();
+
+        Self {
+            timer,
+            countdown,
+            start,
+        }
+    }
+
+    pub fn check(&mut self) -> f32 {
+        let delta = self.timer.elapsed() - self.start;
+
+        (self.countdown - delta).max(0.0)
+    }
+}
+
 pub fn now_milis() -> QPResult<u128> {
     Ok(SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)?
