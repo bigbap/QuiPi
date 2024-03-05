@@ -6,7 +6,7 @@ use quipi::{
     asset_manager::assets::{camera::OrthographicCameraParams, RCamera2D, RShader},
     core::prelude::{
         random::Random,
-        trig::{magnitude2d_squared, rotate2d},
+        trig::{magnitude2d_squared, pi, rotate2d},
         Countdown, Interval,
     },
     ecs::prelude::components::CTransform2D,
@@ -338,7 +338,7 @@ impl Camera {
             .get::<CTransform2D>(&ship)
             .unwrap();
 
-        camera.follow(transform, 10.0, 1.0);
+        camera.follow(transform, 10.0, 0.6);
 
         let id = world.registry.asset_manager.load_asset("camera", camera)?;
 
@@ -380,7 +380,7 @@ impl Controller for Camera {
             return FrameResult::None;
         };
 
-        camera.follow(transform, 30.0, 0.06);
+        camera.follow(transform, 50.0, 0.5);
 
         FrameResult::None
     }
@@ -451,21 +451,16 @@ impl Ship {
         let (_x, _y, width, height) = world.viewport.get_dimensions();
         let x = self.mouse_pos.x - width as f32 / 2.0;
         let y = (self.mouse_pos.y - height as f32 / 2.0) * -1.0;
-        let angle = qp_core::trig::angle(&glm::vec3(0.0, 1.0, 0.0), &glm::vec3(x, y, 0.0));
+
+        let angle =
+            qp_core::trig::angle(&glm::vec3(0.0, 1.0, 0.0), &glm::vec3(x, y, 0.0)) - (pi() / 2.0);
 
         if let Some(transform) = world
             .registry
             .entity_manager
             .get_mut::<CTransform2D>(&self.index)
         {
-            transform.rotate = match x > 0.0 {
-                true => {
-                    let angle = (2.0 * glm::pi::<f32>()) - angle;
-
-                    angle
-                }
-                false => angle,
-            };
+            transform.rotate = angle;
         }
     }
 }
