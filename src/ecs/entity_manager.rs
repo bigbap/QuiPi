@@ -1,3 +1,5 @@
+use std::{cell::RefCell, rc::Rc};
+
 use super::{
     indexed_array::{IndexedArray, VersionedIndex, VersionedIndexAllocator},
     prelude::Component,
@@ -8,7 +10,7 @@ type EntityMap<C> = IndexedArray<C>;
 
 #[derive(Debug)]
 pub struct EntityManager {
-    entity_allocator: VersionedIndexAllocator,
+    entity_allocator: Rc<RefCell<VersionedIndexAllocator>>,
     component_maps: AnyMap,
 
     entities: Vec<VersionedIndex>,
@@ -18,7 +20,7 @@ pub struct EntityManager {
 impl EntityManager {
     pub fn new() -> QPResult<Self> {
         let entity_manager = Self {
-            entity_allocator: VersionedIndexAllocator::default(),
+            entity_allocator: Rc::new(RefCell::new(VersionedIndexAllocator::default())),
             component_maps: AnyMap::new(),
             entities: Vec::<VersionedIndex>::new(),
             to_delete: Vec::<VersionedIndex>::new(),
@@ -29,13 +31,13 @@ impl EntityManager {
 
     pub fn register_component<C: Component + PartialEq + 'static>(&mut self) -> &mut Self {
         self.component_maps
-            .insert::<EntityMap<C>>(EntityMap::<C>::default());
+            .insert::<EntityMap<C>>(EntityMap::<C>::new(Rc::clone(&self.entity_allocator)));
 
         self
     }
 
     pub fn create(&mut self) -> VersionedIndex {
-        let entity = self.entity_allocator.allocate();
+        let entity = self.entity_allocator.borrow_mut().allocate();
 
         self.entities.push(entity);
 
@@ -48,7 +50,7 @@ impl EntityManager {
 
     pub fn flush(&mut self) {
         for entity in self.to_delete.iter_mut() {
-            self.entity_allocator.deallocate(*entity);
+            self.entity_allocator.borrow_mut().deallocate(*entity);
         }
 
         self.to_delete.clear();
@@ -92,7 +94,7 @@ impl EntityManager {
     }
 
     pub fn get<C: Component + PartialEq + 'static>(&self, entity: &VersionedIndex) -> Option<&C> {
-        if !self.entity_allocator.validate(entity) {
+        if !self.entity_allocator.borrow().validate(entity) {
             return None;
         }
 
@@ -117,7 +119,7 @@ impl EntityManager {
         &mut self,
         entity: &VersionedIndex,
     ) -> Option<&mut C> {
-        if !self.entity_allocator.validate(entity) {
+        if !self.entity_allocator.borrow().validate(entity) {
             return None;
         }
 
@@ -138,19 +140,21 @@ impl EntityManager {
         }
     }
 
+    pub fn get_all<C: Component + PartialEq + 'static>(&self) {}
+
     pub fn query_all<C: Component + PartialEq + 'static>(&self) -> Vec<VersionedIndex> {
         let Some(cmp_map) = self.component_maps.get::<EntityMap<C>>() else {
             return vec![];
         };
 
-        cmp_map.get_entities(&self.entity_allocator)
+        cmp_map.get_entities()
     }
 
     pub fn query<C: Component + PartialEq + 'static>(&self, filter: C) -> Vec<VersionedIndex> {
         let Some(cmp_map) = self.component_maps.get::<EntityMap<C>>() else {
             return vec![];
         };
-        let all_entities = cmp_map.get_entities(&self.entity_allocator);
+        let all_entities = cmp_map.get_entities();
 
         let mut result = Vec::<VersionedIndex>::new();
 
@@ -167,7 +171,7 @@ impl EntityManager {
 
     pub fn reset(&mut self) -> QPResult<()> {
         for entity in self.entities.iter() {
-            self.entity_allocator.deallocate(*entity);
+            self.entity_allocator.borrow_mut().deallocate(*entity);
         }
 
         self.entities.clear();
@@ -180,18 +184,18 @@ impl EntityManager {
     }
 
     pub fn allocator_size(&self) -> usize {
-        self.entity_allocator.length()
+        self.entity_allocator.borrow().length()
     }
 
     pub fn count(&self) -> usize {
-        self.entity_allocator.valid_count()
+        self.entity_allocator.borrow().valid_count()
     }
 
     pub fn get_valid_entities(&mut self) -> Vec<VersionedIndex> {
         let mut result = Vec::<VersionedIndex>::new();
 
         for entity in self.entities.iter() {
-            if self.entity_allocator.validate(entity) {
+            if self.entity_allocator.borrow().validate(entity) {
                 result.push(*entity);
             }
         }
@@ -207,7 +211,7 @@ pub struct EntityBuilder<'a> {
 
 impl<'a> EntityBuilder<'a> {
     pub fn create(entity_manager: &'a mut EntityManager) -> Self {
-        let entity = entity_manager.entity_allocator.allocate();
+        let entity = entity_manager.entity_allocator.borrow_mut().allocate();
 
         entity_manager.entities.push(entity);
 
