@@ -14,7 +14,7 @@ pub struct SpriteRenderer {
     camera: u64,
     shader: u64,
 
-    renderer: BatchRenderer<10000, CSprite>,
+    renderer: BatchRenderer<10000, 4>,
 }
 
 impl SpriteRenderer {
@@ -30,7 +30,7 @@ impl SpriteRenderer {
         Ok(Self {
             camera,
             shader,
-            renderer: BatchRenderer::new(),
+            renderer: BatchRenderer::new(vec![0, 1, 3, 1, 2, 3]),
         })
     }
 }
@@ -103,8 +103,8 @@ impl Renderer for SpriteRenderer {
                 _ => None,
             };
 
-            self.renderer.draw_mesh(
-                sprite,
+            self.renderer.draw(
+                sprite.vertices(),
                 world.registry.asset_manager.get(self.shader)?,
                 texture,
             );

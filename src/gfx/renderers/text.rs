@@ -1,5 +1,5 @@
 use crate::{
-    gfx::batch_renderer::{Mesh, Vertex},
+    gfx::batch_renderer::Vertex,
     platform::opengl::capabilities::*,
     prelude::{
         qp_assets::{RFont, RShader},
@@ -12,7 +12,7 @@ use crate::{
 pub struct TextRenderer {
     shader: RShader,
 
-    renderer: BatchRenderer<10000, CharacterMesh>,
+    renderer: BatchRenderer<10000, 4>,
 }
 
 impl TextRenderer {
@@ -21,7 +21,7 @@ impl TextRenderer {
 
         Ok(Self {
             shader,
-            renderer: BatchRenderer::new(),
+            renderer: BatchRenderer::new(vec![0, 1, 2, 0, 2, 3]),
         })
     }
 }
@@ -74,7 +74,7 @@ impl Renderer for TextRenderer {
                 };
 
                 self.renderer
-                    .draw_mesh(&mesh, &self.shader, Some(&ch.texture));
+                    .draw(mesh.vertices(), &self.shader, Some(&ch.texture));
 
                 text_obj.pos.x += (ch.advance_x >> 6) as f32 * text_obj.style.scale;
             }
@@ -108,20 +108,14 @@ struct CharacterMesh {
     h: f32,
 }
 
-impl Mesh for CharacterMesh {
-    fn indices() -> Vec<i32> {
-        vec![0, 1, 2, 0, 2, 3]
-    }
-    fn vertex_count() -> usize {
-        4
-    }
-    fn vertices(&self) -> Vec<Vertex> {
+impl CharacterMesh {
+    fn vertices(&self) -> [Vertex; 4] {
         let pos1 = self.projection * glm::vec4(self.pos.x, self.pos.y + self.h, 0.0, 1.0);
         let pos2 = self.projection * glm::vec4(self.pos.x, self.pos.y, 0.0, 1.0);
         let pos3 = self.projection * glm::vec4(self.pos.x + self.w, self.pos.y, 0.0, 1.0);
         let pos4 = self.projection * glm::vec4(self.pos.x + self.w, self.pos.y + self.h, 0.0, 1.0);
 
-        vec![
+        [
             Vertex {
                 position: pos1.xyz(),
                 color: self.color,

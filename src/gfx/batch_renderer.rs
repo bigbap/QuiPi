@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::usize;
 
 use field_offset::offset_of;
 
@@ -14,7 +14,7 @@ use crate::{
     prelude::qp_assets::{RShader, RTexture},
 };
 
-pub struct BatchRenderer<const C: usize, M: Mesh> {
+pub struct BatchRenderer<const MESH_COUNT: usize, const VERTEX_COUNT: usize> {
     vao: VertexArray,
     _ebo: Buffer<EBO>,
     vbo: Buffer<VBO>,
@@ -26,19 +26,16 @@ pub struct BatchRenderer<const C: usize, M: Mesh> {
     vertices: Vec<Vertex>,
 
     pub draw_calls: u32,
-
-    _marker: PhantomData<M>,
 }
 
-impl<const C: usize, M: Mesh> BatchRenderer<C, M> {
-    pub fn new() -> Self {
+impl<const MESH_COUNT: usize, const VERTEX_COUNT: usize> BatchRenderer<MESH_COUNT, VERTEX_COUNT> {
+    pub fn new(base_indices: Vec<i32>) -> Self {
         let stride = std::mem::size_of::<Vertex>();
 
-        let base_indices = M::indices();
-        let vertex_capacity = C * M::vertex_count();
-        let mut indices = Vec::<u32>::with_capacity(base_indices.len() * C);
-        let offset_delta = M::vertex_count();
-        for i in 0..C {
+        let vertex_capacity = MESH_COUNT * VERTEX_COUNT;
+        let mut indices = Vec::<u32>::with_capacity(base_indices.len() * MESH_COUNT);
+        let offset_delta = VERTEX_COUNT;
+        for i in 0..MESH_COUNT {
             let offset = i * offset_delta;
             for index in &base_indices {
                 indices.push(*index as u32 + offset as u32);
@@ -84,14 +81,12 @@ impl<const C: usize, M: Mesh> BatchRenderer<C, M> {
             _ebo: ebo,
             vbo,
 
-            indices_count: M::indices().len(),
+            indices_count: base_indices.len(),
             max_textures: max_texture_slots(),
             textures: vec![],
             mesh_count: 0,
             vertices: Vec::<Vertex>::with_capacity(vertex_capacity),
             draw_calls: 0,
-
-            _marker: PhantomData,
         }
     }
 
@@ -137,7 +132,12 @@ impl<const C: usize, M: Mesh> BatchRenderer<C, M> {
         self.draw_calls = 0;
     }
 
-    pub fn draw_mesh(&mut self, mesh: &M, shader: &RShader, texture: Option<&RTexture>) {
+    pub fn draw(
+        &mut self,
+        vertices: [Vertex; VERTEX_COUNT],
+        shader: &RShader,
+        texture: Option<&RTexture>,
+    ) {
         let mut texture_slot = self.max_textures as usize;
         if let Some(texture) = texture {
             let id = texture.texture.id;
@@ -160,14 +160,14 @@ impl<const C: usize, M: Mesh> BatchRenderer<C, M> {
             }
         }
 
-        for mut vertex in mesh.vertices() {
+        for mut vertex in vertices {
             vertex.tex_index = texture_slot as f32;
             self.vertices.push(vertex);
         }
 
         self.mesh_count += 1;
 
-        if self.mesh_count >= C {
+        if self.mesh_count >= MESH_COUNT {
             self.batch_reset(shader);
         }
     }
@@ -185,10 +185,4 @@ pub struct Vertex {
     pub color: glm::Vec4,
     pub tex_coords: glm::Vec2,
     pub tex_index: f32,
-}
-
-pub trait Mesh {
-    fn vertices(&self) -> Vec<Vertex>;
-    fn indices() -> Vec<i32>;
-    fn vertex_count() -> usize;
 }

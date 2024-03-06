@@ -821,6 +821,16 @@ impl Controller for DebugInfoText {
             },
         });
 
+        world.text_buffer.push(qp_gfx::QPText {
+            text: format!("draw calls: {}", world.debug_info.draw_calls),
+            pos: glm::vec2(20.0, 40.0),
+            style: qp_gfx::QPTextStyle {
+                font: self.font,
+                color: glm::vec4(1.0, 1.0, 1.0, 1.0),
+                scale: 0.4,
+            },
+        });
+
         FrameResult::None
     }
 }

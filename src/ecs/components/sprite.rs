@@ -1,10 +1,7 @@
 use super::super::prelude::Component;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    prelude::qp_gfx::{Mesh, Vertex},
-    schemas::sprite::TextureAtlas,
-};
+use crate::{prelude::qp_gfx::Vertex, schemas::sprite::TextureAtlas};
 
 use super::components::CQuad;
 
@@ -39,17 +36,8 @@ impl CSprite {
     pub fn apply_matrices(&mut self, model: glm::Mat4, view: glm::Mat4, projection: glm::Mat4) {
         self.mvp = projection * view * model;
     }
-}
 
-impl Mesh for CSprite {
-    fn indices() -> Vec<i32> {
-        CQuad::indices().to_vec()
-    }
-    fn vertex_count() -> usize {
-        4
-    }
-
-    fn vertices(&self) -> Vec<Vertex> {
+    pub fn vertices(&self) -> [Vertex; 4] {
         let pos1 = self.mvp * self.positions[0];
         let pos2 = self.mvp * self.positions[1];
         let pos3 = self.mvp * self.positions[2];
@@ -66,7 +54,7 @@ impl Mesh for CSprite {
             y_offset = atlas.active_texture.y / y_dim;
         }
 
-        vec![
+        [
             Vertex {
                 position: pos1.xyz(),
                 color: self.color,
