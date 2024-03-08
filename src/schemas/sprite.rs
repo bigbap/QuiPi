@@ -46,22 +46,18 @@ impl Schema for SchemaSprite {
             None => None,
         };
 
-        let entity = registry.entity_manager.create();
-        registry.entity_manager.add(
-            &entity,
+        let entity = registry.entity_manager.create((
             CTag {
                 tag: self.tag.clone(),
             },
-        );
+            self.quad.clone(),
+            self.transform,
+            CSprite::new(&self.quad, Some(self.color), texture_atlas),
+        ));
+
         if let Some(velocity) = self.velocity {
             registry.entity_manager.add(&entity, velocity);
         }
-        registry.entity_manager.add(&entity, self.quad.clone());
-        registry.entity_manager.add(&entity, self.transform);
-        registry.entity_manager.add(
-            &entity,
-            CSprite::new(&self.quad, Some(self.color), texture_atlas),
-        );
 
         Ok(entity)
     }

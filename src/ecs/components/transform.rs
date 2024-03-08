@@ -1,6 +1,6 @@
 use crate::core::prelude::trig::rotate2d;
 
-use super::super::prelude::Component;
+use super::super::prelude::*;
 use serde::{Deserialize, Serialize};
 
 /**

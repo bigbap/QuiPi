@@ -3,10 +3,7 @@ use sdl2::event::Event;
 use crate::{
     core::prelude::{random::Random, Timer},
     platform::sdl2::QPWindow,
-    prelude::{
-        qp_ecs::components::register_components,
-        qp_gfx::{QPText, Viewport},
-    },
+    prelude::qp_gfx::{QPText, Viewport},
     registry::GlobalRegistry,
     QPResult,
 };
@@ -28,9 +25,7 @@ pub struct World {
 
 impl World {
     pub fn new(viewport: Viewport, seed: u64) -> QPResult<Self> {
-        let mut registry = GlobalRegistry::init()?;
-        register_components(&mut registry);
-
+        let registry = GlobalRegistry::init()?;
         let mut timer = Timer::new();
         let delta = timer.delta();
 

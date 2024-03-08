@@ -92,6 +92,7 @@ impl ComponentId {
     }
 }
 
+#[derive(Debug)]
 pub struct ComponentMap(HashMap<ComponentId, Box<dyn std::any::Any>>);
 
 impl ComponentMap {

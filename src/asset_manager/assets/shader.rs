@@ -1,5 +1,5 @@
 use crate::platform::opengl::shader::ShaderProgram;
-use crate::prelude::qp_ecs::Component;
+use crate::prelude::qp_ecs::*;
 use crate::prelude::qp_gfx::ShaderUniforms;
 use crate::QPResult;
 

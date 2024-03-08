@@ -53,16 +53,12 @@ impl Schema for SchemaScene2D {
 
         let id = registry.strings_mut().intern(self.name.clone());
 
-        let entity = registry.entity_manager.create();
-        registry.entity_manager.add(
-            &entity,
-            CScene {
-                id,
-                cameras,
-                shaders,
-                textures,
-            },
-        );
+        let entity = registry.entity_manager.create(CScene {
+            id,
+            cameras,
+            shaders,
+            textures,
+        });
 
         Ok(entity)
     }

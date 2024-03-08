@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::super::prelude::Component;
+use super::super::prelude::*;
 
 /**
 * https://en.wikipedia.org/wiki/Euler_angles
@@ -9,5 +9,5 @@ use super::super::prelude::Component;
 pub struct CEulerAngles {
     pub pitch: f32,
     pub yaw: f32,
-    pub roll: f32
+    pub roll: f32,
 }

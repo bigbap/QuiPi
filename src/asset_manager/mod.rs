@@ -31,15 +31,6 @@ impl AssetManager {
             strings,
         };
 
-        manager
-            .asset_store
-            .register_component::<assets::RFont>()
-            .register_component::<assets::RShader>()
-            .register_component::<assets::RCamera2D>()
-            .register_component::<assets::RTileMap>()
-            .register_component::<assets::RTexture>()
-            .register_component::<assets::RTextureAtlas>();
-
         Ok(manager)
     }
 
@@ -55,8 +46,7 @@ impl AssetManager {
         let id = interner.borrow_mut().intern(name.to_string());
 
         if self.asset_map.get(&id).is_none() {
-            let index = self.asset_store.create();
-            self.asset_store.add(&index, asset);
+            let index = self.asset_store.create(asset);
 
             self.asset_map.insert(id, index);
         } else {
@@ -115,10 +105,6 @@ impl AssetManager {
 
     pub fn flush(&mut self) {
         self.asset_store.flush();
-    }
-
-    pub fn register_asset<A: Component + std::fmt::Debug + PartialEq + 'static>(&mut self) {
-        self.asset_store.register_component::<A>();
     }
 
     fn string_interner(&mut self) -> Option<Rc<RefCell<StringInterner>>> {

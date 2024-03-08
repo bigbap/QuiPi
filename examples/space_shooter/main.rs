@@ -421,21 +421,21 @@ impl Bullet {
 
         let speed = 700.0;
 
-        let index = EntityBuilder::create(&mut registry.entity_manager)
-            .with(CTag {
+        let index = registry.entity_manager.create((
+            CTag {
                 tag: "bullet".to_string(),
-            })
-            .with(CTransform2D {
+            },
+            CTransform2D {
                 translate: position,
                 rotate: angle,
                 scale: glm::vec2(0.7, 0.7),
                 ..CTransform2D::default()
-            })
-            .with(CVelocity2D {
+            },
+            CVelocity2D {
                 x: speed * direction.x,
                 y: speed * direction.y,
-            })
-            .with(CSprite::new(
+            },
+            CSprite::new(
                 &quad,
                 Some(glm::vec4(0.0, 0.7, 1.0, 1.0)),
                 Some(TextureAtlas {
@@ -443,8 +443,8 @@ impl Bullet {
                     texture_dims: texture.texture_dims,
                     active_texture: glm::vec2(4.0, 2.0),
                 }),
-            ))
-            .build();
+            ),
+        ));
 
         Ok(Self {
             index,
@@ -533,21 +533,21 @@ impl Asteroid {
 
         let direction = (ship_pos - position).normalize();
 
-        let index = EntityBuilder::create(&mut registry.entity_manager)
-            .with(CTag {
+        let index = registry.entity_manager.create((
+            CTag {
                 tag: "asteroid".to_string(),
-            })
-            .with(CTransform2D {
+            },
+            CTransform2D {
                 translate: position,
                 rotate,
                 scale: glm::vec2(scale, scale),
                 ..CTransform2D::default()
-            })
-            .with(CVelocity2D {
+            },
+            CVelocity2D {
                 x: direction.x * rand.range(150, 300) as f32,
                 y: direction.y * rand.range(150, 300) as f32,
-            })
-            .with(CSprite::new(
+            },
+            CSprite::new(
                 &quad,
                 Some(glm::vec4(0.9, 0.9, 0.9, 1.0)),
                 Some(TextureAtlas {
@@ -555,8 +555,8 @@ impl Asteroid {
                     texture_dims: texture.texture_dims,
                     active_texture: glm::vec2(0.0, 1.0),
                 }),
-            ))
-            .build();
+            ),
+        ));
 
         Ok(Self {
             index,
@@ -674,16 +674,16 @@ impl Star {
             ..CQuad::default()
         };
 
-        let index = EntityBuilder::create(&mut world.registry.entity_manager)
-            .with(CTag {
+        let index = world.registry.entity_manager.create((
+            CTag {
                 tag: "asteroid".to_string(),
-            })
-            .with(CTransform2D {
+            },
+            CTransform2D {
                 translate: glm::vec2(x_pos, y_pos),
                 scale: glm::vec2(1.0, 1.0),
                 ..CTransform2D::default()
-            })
-            .with(CSprite::new(
+            },
+            CSprite::new(
                 &quad,
                 Some(glm::vec4(1.0, 1.0, 0.8, 1.0)),
                 Some(TextureAtlas {
@@ -697,8 +697,8 @@ impl Star {
                         2.0,
                     ),
                 }),
-            ))
-            .build();
+            ),
+        ));
 
         Ok(Self {
             index,

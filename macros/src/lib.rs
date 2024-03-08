@@ -9,7 +9,11 @@ pub fn component_derive_macro(item: TokenStream) -> TokenStream {
 
     // generate
     (quote::quote! {
-        impl Component for #ident {}
+        impl Component for #ident {
+            fn id() -> ComponentId {
+                ComponentId::new::<Self>()
+            }
+        }
     })
     .into()
 }

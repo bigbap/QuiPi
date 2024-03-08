@@ -1,17 +1,18 @@
 use std::{cell::RefCell, rc::Rc};
 
 use super::{
+    bundle::{Bundle, ComponentMap},
     indexed_array::{Allocator, Index, IndexedArray},
     prelude::Component,
 };
-use crate::{prelude::qp_core::AnyMap, QPResult};
+use crate::QPResult;
 
 type EntityMap<C> = IndexedArray<C>;
 
 #[derive(Debug)]
 pub struct EntityManager {
-    entity_allocator: Rc<RefCell<Allocator>>,
-    component_maps: AnyMap,
+    allocator: Rc<RefCell<Allocator>>,
+    components: ComponentMap,
 
     entities: Vec<Index>,
     to_delete: Vec<Index>,
@@ -20,8 +21,9 @@ pub struct EntityManager {
 impl EntityManager {
     pub fn new() -> QPResult<Self> {
         let entity_manager = Self {
-            entity_allocator: Rc::new(RefCell::new(Allocator::default())),
-            component_maps: AnyMap::new(),
+            allocator: Rc::new(RefCell::new(Allocator::default())),
+            components: ComponentMap::new(),
+
             entities: Vec::<Index>::new(),
             to_delete: Vec::<Index>::new(),
         };
@@ -29,17 +31,29 @@ impl EntityManager {
         Ok(entity_manager)
     }
 
-    pub fn register_component<C: Component + PartialEq + 'static>(&mut self) -> &mut Self {
-        self.component_maps
-            .insert::<EntityMap<C>>(EntityMap::<C>::new(Rc::clone(&self.entity_allocator)));
+    // pub fn register_component<C: Component + PartialEq + 'static>(&mut self) -> &mut Self {
+    //     self.component_maps
+    //         .insert::<EntityMap<C>>(EntityMap::<C>::new(Rc::clone(&self.entity_allocator)));
 
-        self
-    }
+    //     self
+    // }
 
-    pub fn create(&mut self) -> Index {
-        let entity = self.entity_allocator.borrow_mut().allocate();
+    // pub fn create(&mut self) -> Index {
+    //     let entity = self.entity_allocator.borrow_mut().allocate();
 
-        self.entities.push(entity);
+    //     self.entities.push(entity);
+
+    //     entity
+    // }
+
+    pub fn create<B: Bundle>(&mut self, bundle: B) -> Index {
+        let entity = self.allocator.borrow_mut().allocate();
+
+        bundle.add_components(
+            &mut self.components,
+            Rc::downgrade(&self.allocator),
+            &entity,
+        );
 
         entity
     }
@@ -50,7 +64,7 @@ impl EntityManager {
 
     pub fn flush(&mut self) {
         for entity in self.to_delete.iter_mut() {
-            self.entity_allocator.borrow_mut().deallocate(*entity);
+            self.allocator.borrow_mut().deallocate(*entity);
         }
 
         self.to_delete.clear();
@@ -61,7 +75,7 @@ impl EntityManager {
         entity: &Index,
         component: C,
     ) {
-        match self.component_maps.get_mut::<EntityMap<C>>() {
+        match self.components.get_mut::<EntityMap<C>>(C::id()) {
             None => {
                 #[cfg(debug_assertions)]
                 println!(
@@ -76,7 +90,7 @@ impl EntityManager {
     }
 
     pub fn remove<C: Component + std::fmt::Debug + PartialEq + 'static>(&mut self, entity: &Index) {
-        match self.component_maps.get_mut::<EntityMap<C>>() {
+        match self.components.get_mut::<EntityMap<C>>(C::id()) {
             None => {
                 #[cfg(debug_assertions)]
                 println!(
@@ -91,11 +105,11 @@ impl EntityManager {
     }
 
     pub fn get<C: Component + PartialEq + 'static>(&self, entity: &Index) -> Option<&C> {
-        if !self.entity_allocator.borrow().validate(entity) {
+        if !self.allocator.borrow().validate(entity) {
             return None;
         }
 
-        match self.component_maps.get::<EntityMap<C>>() {
+        match self.components.get::<EntityMap<C>>(C::id()) {
             None => {
                 #[cfg(debug_assertions)]
                 println!(
@@ -116,11 +130,11 @@ impl EntityManager {
         &mut self,
         entity: &Index,
     ) -> Option<&mut C> {
-        if !self.entity_allocator.borrow().validate(entity) {
+        if !self.allocator.borrow().validate(entity) {
             return None;
         }
 
-        match self.component_maps.get_mut::<EntityMap<C>>() {
+        match self.components.get_mut::<EntityMap<C>>(C::id()) {
             None => {
                 #[cfg(debug_assertions)]
                 println!(
@@ -140,7 +154,7 @@ impl EntityManager {
     pub fn get_all<C: Component + PartialEq + 'static>(&self) {}
 
     pub fn query_all<C: Component + PartialEq + 'static>(&self) -> Vec<Index> {
-        let Some(cmp_map) = self.component_maps.get::<EntityMap<C>>() else {
+        let Some(cmp_map) = self.components.get::<EntityMap<C>>(C::id()) else {
             return vec![];
         };
 
@@ -148,7 +162,7 @@ impl EntityManager {
     }
 
     pub fn query<C: Component + PartialEq + 'static>(&self, filter: C) -> Vec<Index> {
-        let Some(cmp_map) = self.component_maps.get::<EntityMap<C>>() else {
+        let Some(cmp_map) = self.components.get::<EntityMap<C>>(C::id()) else {
             return vec![];
         };
         let all_entities = cmp_map.get_entities();
@@ -168,7 +182,7 @@ impl EntityManager {
 
     pub fn reset(&mut self) -> QPResult<()> {
         for entity in self.entities.iter() {
-            self.entity_allocator.borrow_mut().deallocate(*entity);
+            self.allocator.borrow_mut().deallocate(*entity);
         }
 
         self.entities.clear();
@@ -177,54 +191,26 @@ impl EntityManager {
     }
 
     pub fn registered_components_len(&self) -> usize {
-        self.component_maps.len()
+        self.components.len()
     }
 
     pub fn allocator_size(&self) -> usize {
-        self.entity_allocator.borrow().length()
+        self.allocator.borrow().length()
     }
 
     pub fn count(&self) -> usize {
-        self.entity_allocator.borrow().valid_count()
+        self.allocator.borrow().valid_count()
     }
 
     pub fn get_valid_entities(&mut self) -> Vec<Index> {
         let mut result = Vec::<Index>::new();
 
         for entity in self.entities.iter() {
-            if self.entity_allocator.borrow().validate(entity) {
+            if self.allocator.borrow().validate(entity) {
                 result.push(*entity);
             }
         }
 
         result
-    }
-}
-
-pub struct EntityBuilder<'a> {
-    entity_manager: &'a mut EntityManager,
-    entity: Index,
-}
-
-impl<'a> EntityBuilder<'a> {
-    pub fn create(entity_manager: &'a mut EntityManager) -> Self {
-        let entity = entity_manager.entity_allocator.borrow_mut().allocate();
-
-        entity_manager.entities.push(entity);
-
-        Self {
-            entity_manager,
-            entity,
-        }
-    }
-
-    pub fn with<C: Component + std::fmt::Debug + PartialEq + 'static>(self, component: C) -> Self {
-        self.entity_manager.add(&self.entity, component);
-
-        self
-    }
-
-    pub fn build(self) -> Index {
-        self.entity
     }
 }

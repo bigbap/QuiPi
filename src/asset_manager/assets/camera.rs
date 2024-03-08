@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     prelude::qp_ecs::{
         components::{CTransform, CTransform2D},
-        Component,
+        Component, ComponentId,
     },
     QPResult,
 };

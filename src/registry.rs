@@ -49,7 +49,7 @@ impl GlobalRegistry {
 
 #[cfg(test)]
 mod tests {
-    use crate::prelude::qp_ecs::Component;
+    use crate::prelude::qp_ecs::*;
 
     use super::*;
 
@@ -66,34 +66,22 @@ mod tests {
     }
 
     fn create_registry() -> GlobalRegistry {
-        let mut registry = GlobalRegistry::init().unwrap();
-
-        registry
-            .entity_manager
-            .register_component::<DrawComponent>()
-            .register_component::<TransformComponent>();
-
-        registry
+        GlobalRegistry::init().unwrap()
     }
 
     #[test]
     fn registry_create_entities() {
         let mut registry = create_registry();
 
-        let player = registry.entity_manager.create();
-        registry.entity_manager.add(
-            &player,
+        let player = registry.entity_manager.create((
             DrawComponent {
                 shader_id: Some(1234),
             },
-        );
-        registry.entity_manager.add(
-            &player,
             TransformComponent {
                 translate: glm::vec3(1.0, 1.0, 1.0),
                 ..TransformComponent::default()
             },
-        );
+        ));
 
         assert_eq!(
             *registry

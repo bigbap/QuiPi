@@ -1,4 +1,4 @@
-use super::super::prelude::{Component, Index};
+use super::super::prelude::*;
 
 #[derive(Component, Debug, PartialEq)]
 pub struct CChildren {

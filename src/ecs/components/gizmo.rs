@@ -1,5 +1,5 @@
-use super::super::prelude::Component;
-use serde::{Serialize, Deserialize};
+use super::super::prelude::*;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Component, Serialize, Deserialize, PartialEq)]
 pub struct CGizmo {
@@ -7,7 +7,7 @@ pub struct CGizmo {
     pub up: glm::Vec3,
     pub right: glm::Vec3,
 
-    world_up: glm::Vec3
+    world_up: glm::Vec3,
 }
 
 impl Default for CGizmo {
@@ -16,7 +16,7 @@ impl Default for CGizmo {
             front: glm::vec3(0.0, 0.0, -1.0),
             up: glm::vec3(0.0, 0.0, 0.0),
             right: glm::vec3(0.0, 0.0, 0.0),
-            world_up: glm::vec3(0.0, 1.0, 0.0)
+            world_up: glm::vec3(0.0, 1.0, 0.0),
         };
 
         gizmo.update_vectors();

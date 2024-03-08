@@ -1,4 +1,4 @@
-use super::super::prelude::Component;
+use super::super::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::{prelude::qp_gfx::Vertex, schemas::sprite::TextureAtlas};

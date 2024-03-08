@@ -29,16 +29,16 @@ impl Ship {
             .get::<qp_assets::RTexture>(texture_id)
             .ok_or(QPError::SpriteTextureDoesntExist)?;
 
-        let index = EntityBuilder::create(&mut world.registry.entity_manager)
-            .with(CTag {
+        let index = world.registry.entity_manager.create((
+            CTag {
                 tag: "ship".to_string(),
-            })
-            .with(CVelocity2D { x: 0.0, y: 0.0 })
-            .with(CTransform2D {
+            },
+            CVelocity2D { x: 0.0, y: 0.0 },
+            CTransform2D {
                 translate: glm::vec2(0.0, 0.0),
                 ..CTransform2D::default()
-            })
-            .with(CSprite::new(
+            },
+            CSprite::new(
                 &CQuad {
                     width: 64.0,
                     height: 64.0,
@@ -51,8 +51,8 @@ impl Ship {
                     texture_dims: texture.texture_dims,
                     active_texture: glm::vec2(1.0, 3.0),
                 }),
-            ))
-            .build();
+            ),
+        ));
 
         let particle_system = ParticleSystem::new(0.02, false, move |world: &mut World| {
             let Some(ship) = world.registry.entity_manager.get::<CTransform2D>(&index) else {
@@ -196,17 +196,17 @@ impl ExhaustParticle {
 
         let offset = ship_transform.direction() * 28.0;
         let scale_factor = world.rand.random() + 1.0;
-        let index = EntityBuilder::create(&mut world.registry.entity_manager)
-            .with(CTag {
+        let index = world.registry.entity_manager.create((
+            CTag {
                 tag: "particle".to_string(),
-            })
-            .with(CTransform2D {
+            },
+            CTransform2D {
                 translate: ship_transform.translate - offset,
                 rotate: world.rand.random() * 2.0 * glm::pi::<f32>(),
                 scale: glm::vec2(scale_factor, scale_factor),
                 ..CTransform2D::default()
-            })
-            .with(CSprite::new(
+            },
+            CSprite::new(
                 &quad,
                 Some(glm::vec4(1.0, 0.7, 0.2, 1.0)),
                 Some(TextureAtlas {
@@ -214,8 +214,8 @@ impl ExhaustParticle {
                     texture_dims: texture.texture_dims,
                     active_texture: glm::vec2(4.0, 2.0),
                 }),
-            ))
-            .build();
+            ),
+        ));
 
         Ok(Self {
             index,

@@ -1,6 +1,6 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
-use super::super::prelude::Component;
+use super::super::prelude::*;
 
 #[derive(Debug, Component, Serialize, Deserialize, Clone, PartialEq)]
 pub struct CQuad {
@@ -11,12 +11,34 @@ pub struct CQuad {
 }
 
 impl CQuad {
-    pub fn indices() -> [i32; 6] { [0, 1, 3, 1, 2, 3] }
+    pub fn indices() -> [i32; 6] {
+        [0, 1, 3, 1, 2, 3]
+    }
     pub fn positions(&self) -> [glm::Vec4; 4] {
-        let pos1 = glm::vec4(self.center_x + (self.width / 2.0), self.center_y + (self.height / 2.0), 0.0, 1.0);
-        let pos2 = glm::vec4(self.center_x + (self.width / 2.0), self.center_y - (self.height / 2.0), 0.0, 1.0);
-        let pos3 = glm::vec4(self.center_x - (self.width / 2.0), self.center_y - (self.height / 2.0), 0.0, 1.0);
-        let pos4 = glm::vec4(self.center_x - (self.width / 2.0), self.center_y + (self.height / 2.0), 0.0, 1.0);
+        let pos1 = glm::vec4(
+            self.center_x + (self.width / 2.0),
+            self.center_y + (self.height / 2.0),
+            0.0,
+            1.0,
+        );
+        let pos2 = glm::vec4(
+            self.center_x + (self.width / 2.0),
+            self.center_y - (self.height / 2.0),
+            0.0,
+            1.0,
+        );
+        let pos3 = glm::vec4(
+            self.center_x - (self.width / 2.0),
+            self.center_y - (self.height / 2.0),
+            0.0,
+            1.0,
+        );
+        let pos4 = glm::vec4(
+            self.center_x - (self.width / 2.0),
+            self.center_y + (self.height / 2.0),
+            0.0,
+            1.0,
+        );
 
         [
             pos1, // top right

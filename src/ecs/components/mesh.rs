@@ -1,4 +1,4 @@
-use super::super::prelude::Component;
+use super::super::prelude::*;
 
 #[derive(Debug, Component, PartialEq, Default)]
 pub struct CMeshData {

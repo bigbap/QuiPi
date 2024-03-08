@@ -1,19 +1,12 @@
 use crate::core::prelude::to_abs_path;
 use crate::platform::opengl::textures::{ParameterName, ParameterValue};
-use crate::prelude::qp_ecs::Component;
 use crate::platform::opengl::{
     pixel_store,
-    textures::{
-        Texture,
-        Target,
-        Format,
-    }
+    textures::{Format, Target, Texture},
 };
+use crate::prelude::qp_ecs::*;
 use crate::QPResult;
-use ft::{
-    face::LoadFlag,
-    Face,
-};
+use ft::{face::LoadFlag, Face};
 
 use super::RTexture;
 
@@ -22,7 +15,7 @@ const CHARACTER_COUNT: usize = 128;
 #[derive(Debug, Component, PartialEq)]
 pub struct RFont {
     // pub texture: Texture,
-    pub characters: Vec<Character>
+    pub characters: Vec<Character>,
 }
 
 impl RFont {
@@ -41,8 +34,8 @@ impl RFont {
             if let Err(_e) = face.load_char(c, LoadFlag::RENDER) {
                 #[cfg(debug_assertions)]
                 println!("{}", _e);
-    
-                continue
+
+                continue;
             }
 
             let width = face.glyph().bitmap().width();
@@ -51,14 +44,10 @@ impl RFont {
             let top = face.glyph().bitmap_top();
 
             let texture = RTexture {
-                texture: texture_from_font(
-                    &face,
-                    width,
-                    rows
-                ),
-                texture_dims: glm::vec2(width as f32, rows as f32)
+                texture: texture_from_font(&face, width, rows),
+                texture_dims: glm::vec2(width as f32, rows as f32),
             };
-    
+
             let m_char = Character {
                 texture,
                 size: glm::vec2(width as f32, rows as f32),
@@ -66,15 +55,13 @@ impl RFont {
                 advance_x: face.glyph().advance().x,
                 advance_y: face.glyph().advance().y,
             };
-    
+
             if char::from_u32(c as u32).is_some() {
                 characters.push(m_char);
             }
         }
 
-        Ok(Self {
-            characters
-        })
+        Ok(Self { characters })
     }
 }
 
@@ -89,18 +76,11 @@ pub struct Character {
 
 // helpers
 
-fn texture_from_font(
-    face: &Face,
-    width: i32,
-    height: i32
-) -> Texture {
-    let texture = Texture::new(
-        width,
-        height,
-        Target::Texture2D
-    );
+fn texture_from_font(face: &Face, width: i32, height: i32) -> Texture {
+    let texture = Texture::new(width, height, Target::Texture2D);
 
-    texture.bind()
+    texture
+        .bind()
         .set_parameter(ParameterName::WrapS, ParameterValue::ClampToEdge)
         .set_parameter(ParameterName::WrapT, ParameterValue::ClampToEdge)
         .set_parameter(ParameterName::MinFilter, ParameterValue::Linear)
@@ -108,14 +88,7 @@ fn texture_from_font(
 
     texture
         .bind()
-        .add_image_data(
-            Format::Red,
-            Format::Red,
-            face
-                .glyph()
-                .bitmap()
-                .buffer(),
-        );
+        .add_image_data(Format::Red, Format::Red, face.glyph().bitmap().buffer());
 
     texture
 }

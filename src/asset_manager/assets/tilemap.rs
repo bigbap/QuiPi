@@ -1,4 +1,4 @@
-use crate::{prelude::qp_ecs::Component, QPResult};
+use crate::{prelude::qp_ecs::*, QPResult};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Component, PartialEq, Clone, Serialize, Deserialize)]

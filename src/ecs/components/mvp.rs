@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::super::prelude::Component;
-
+use super::super::prelude::*;
 
 #[derive(Debug, Component, Serialize, Deserialize, PartialEq)]
 pub struct CModelMatrix(pub glm::Mat4);

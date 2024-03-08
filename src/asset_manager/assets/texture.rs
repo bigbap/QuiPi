@@ -1,5 +1,5 @@
 use crate::platform::opengl::textures::Texture;
-use crate::prelude::qp_ecs::Component;
+use crate::prelude::qp_ecs::*;
 
 #[derive(Component, Debug, PartialEq)]
 pub struct RTexture {
