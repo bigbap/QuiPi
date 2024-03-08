@@ -1,6 +1,6 @@
-use quipi_core::{Component, GlobalRegistry, VersionedIndex};
+use quipi_core::{Component, GlobalRegistry, Index};
 
-use super::{CTransform, CGizmo};
+use super::{CGizmo, CTransform};
 
 #[derive(Debug, Component, PartialEq)]
 pub struct CModelMatrix(pub glm::Mat4);
@@ -12,11 +12,10 @@ impl Default for CModelMatrix {
 }
 
 impl CModelMatrix {
-    pub fn update_model_matrix(
-        entity: &VersionedIndex,
-        registry: &mut GlobalRegistry
-    ) {
-        let Some(transform) = registry.entity_manager.get::<CTransform>(entity) else { return; };
+    pub fn update_model_matrix(entity: &Index, registry: &mut GlobalRegistry) {
+        let Some(transform) = registry.entity_manager.get::<CTransform>(entity) else {
+            return;
+        };
         let matrix = transform.to_matrix();
 
         if let Some(model) = registry.entity_manager.get_mut::<CModelMatrix>(entity) {
@@ -35,10 +34,7 @@ impl Default for CViewMatrix {
 }
 
 impl CViewMatrix {
-    pub fn update_view_matrix(
-        camera: &VersionedIndex,
-        registry: &mut GlobalRegistry
-    ) {
+    pub fn update_view_matrix(camera: &Index, registry: &mut GlobalRegistry) {
         if let (Some(transform), Some(gizmo)) = (
             registry.entity_manager.get::<CTransform>(camera),
             registry.entity_manager.get::<CGizmo>(camera),
@@ -46,14 +42,10 @@ impl CViewMatrix {
             let position = glm::vec3(
                 transform.translate.x,
                 transform.translate.y,
-                transform.translate.z
+                transform.translate.z,
             );
 
-            let matrix = glm::look_at(
-                &position, 
-                &(position + gizmo.front),
-                &gizmo.up
-            );
+            let matrix = glm::look_at(&position, &(position + gizmo.front), &gizmo.up);
 
             if let Some(view) = registry.entity_manager.get_mut::<CViewMatrix>(camera) {
                 view.0 = matrix;

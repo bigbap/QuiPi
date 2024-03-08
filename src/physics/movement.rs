@@ -1,12 +1,9 @@
 use crate::{
     prelude::{
-        qp_ecs::components::{
-            CDistance, CEulerAngles, CGizmo, CTarget, CTransform
-        },
-        GlobalRegistry,
-        VersionedIndex
+        qp_ecs::components::{CDistance, CEulerAngles, CGizmo, CTarget, CTransform},
+        GlobalRegistry, Index,
     },
-    QPResult
+    QPResult,
 };
 
 /**
@@ -18,13 +15,13 @@ use crate::{
 */
 pub fn apply_velocity(
     registry: &mut GlobalRegistry,
-    entity: &VersionedIndex,
+    entity: &Index,
     delta: f32,
-    velocity: glm::Vec3
+    velocity: glm::Vec3,
 ) -> QPResult<()> {
     if let (Some(gizmo), Some(_)) = (
         registry.entity_manager.get::<CGizmo>(entity),
-        registry.entity_manager.get::<CTransform>(entity)
+        registry.entity_manager.get::<CTransform>(entity),
     ) {
         let mut change_vec = glm::vec3(0.0, 0.0, 0.0);
 
@@ -32,7 +29,10 @@ pub fn apply_velocity(
         change_vec += gizmo.up * velocity.y * delta;
         change_vec += gizmo.right * velocity.x * delta;
 
-        let transform = registry.entity_manager.get_mut::<CTransform>(entity).unwrap();
+        let transform = registry
+            .entity_manager
+            .get_mut::<CTransform>(entity)
+            .unwrap();
         transform.translate.x += change_vec.x;
         transform.translate.y += change_vec.y;
         transform.translate.z += change_vec.z;
@@ -41,10 +41,7 @@ pub fn apply_velocity(
     Ok(())
 }
 
-pub fn apply_follow_target(
-    registry: &mut GlobalRegistry,
-    entity: &VersionedIndex
-) -> QPResult<()> {
+pub fn apply_follow_target(registry: &mut GlobalRegistry, entity: &Index) -> QPResult<()> {
     if let (Some(_), Some(distance), Some(target), Some(angles)) = (
         registry.entity_manager.get::<CTransform>(entity),
         registry.entity_manager.get::<CDistance>(entity),
@@ -54,15 +51,17 @@ pub fn apply_follow_target(
         let pos = glm::vec3(
             target.x + distance.0 * angles.yaw.cos() * angles.pitch.sin(),
             target.y + distance.0 * angles.pitch.cos(),
-            target.z + distance.0 * angles.yaw.sin() * angles.pitch.sin()
+            target.z + distance.0 * angles.yaw.sin() * angles.pitch.sin(),
         );
 
-        let transform = registry.entity_manager.get_mut::<CTransform>(entity).unwrap();
+        let transform = registry
+            .entity_manager
+            .get_mut::<CTransform>(entity)
+            .unwrap();
         transform.translate.x = pos.x;
         transform.translate.y = pos.y;
         transform.translate.z = pos.z;
     }
 
     Ok(())
-
 }

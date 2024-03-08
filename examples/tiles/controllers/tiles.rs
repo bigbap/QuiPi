@@ -9,7 +9,7 @@ use crate::{
     qp_assets::RTileMap,
     qp_core::{now_secs, random::Random},
     qp_ecs::components::{CQuad, CSprite, CTransform2D},
-    GlobalRegistry, VersionedIndex,
+    GlobalRegistry, Index,
 };
 
 const TILE_SIZE: f32 = 64.0;
@@ -27,7 +27,7 @@ const TILE_MAP: [[u16; 10]; 10] = [
 ];
 
 pub struct TileControler {
-    _tiles: Vec<VersionedIndex>,
+    _tiles: Vec<Index>,
 
     pub tile_map: u64,
 }
@@ -73,7 +73,7 @@ impl Controller for TileControler {
     }
 }
 
-fn tile(x: u32, y: u32, tile_val: u16, registry: &mut GlobalRegistry) -> VersionedIndex {
+fn tile(x: u32, y: u32, tile_val: u16, registry: &mut GlobalRegistry) -> Index {
     let x_offset = (x + 0) as f32 * TILE_SIZE;
     let y_offset = (y + 0) as f32 * TILE_SIZE;
 

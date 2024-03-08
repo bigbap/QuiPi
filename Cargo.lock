@@ -224,14 +224,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "component-derive"
-version = "0.1.0"
-dependencies = [
- "quote",
- "syn 2.0.50",
-]
-
-[[package]]
 name = "core-foundation-sys"
 version = "0.8.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -703,6 +695,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "macros"
+version = "0.1.0"
+dependencies = [
+ "quote",
+ "syn 2.0.50",
+]
+
+[[package]]
 name = "matrixmultiply"
 version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1031,12 +1031,12 @@ dependencies = [
 name = "quipi"
 version = "0.1.0"
 dependencies = [
- "component-derive",
  "egui",
  "field-offset",
  "freetype-rs",
  "gl",
  "image",
+ "macros",
  "nalgebra-glm",
  "rand",
  "rand_chacha",

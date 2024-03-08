@@ -1,42 +1,27 @@
 use quipi::{
-    VersionedIndex,
-    GlobalRegistry,
-    resources::{
-        register_resources,
-        Shader,
-        shader::UniformVariable
-    },
     components::{
-        CEulerAngles,
-        register_components,
-        CQuadConfig,
-        CModelNode,
-        CTransform, CModelMatrix, CBoundingBox
+        register_components, CBoundingBox, CEulerAngles, CModelMatrix, CModelNode, CQuadConfig,
+        CTransform,
     },
-    wrappers::opengl::{
-        draw::DrawMode,
-        buffer::BufferUsage,
+    resources::{register_resources, shader::UniformVariable, Shader},
+    systems::{
+        mvp_matrices::s_set_model_matrix,
+        rendering::{
+            mesh::{ElementArrayMesh, ShaderLocation},
+            IRenderer, Renderer2D,
+        },
     },
     utils::to_abs_path,
-    systems::{
-        rendering::{
-            Renderer2D,
-            IRenderer,
-            mesh::{
-                ElementArrayMesh,
-                ShaderLocation
-            },
-        },
-        mvp_matrices::s_set_model_matrix
-    }
+    wrappers::opengl::{buffer::BufferUsage, draw::DrawMode},
+    GlobalRegistry, Index,
 };
 
-use crate::{WIDTH, HEIGHT};
+use crate::{HEIGHT, WIDTH};
 
 pub struct MyUI {
     registry: GlobalRegistry,
-    shader: VersionedIndex,
-    renderer: Renderer2D
+    shader: Index,
+    renderer: Renderer2D,
 }
 
 impl MyUI {
@@ -48,7 +33,7 @@ impl MyUI {
 
         let shader = registry.create_resource(Shader::new(
             &to_abs_path("assets/shaders/ui")?,
-            vec![UniformVariable::MVPMatrix("mvpMatrix".to_string())]
+            vec![UniformVariable::MVPMatrix("mvpMatrix".to_string())],
         )?)?;
 
         let renderer = Renderer2D::new(
@@ -60,19 +45,19 @@ impl MyUI {
                 ..CBoundingBox::default()
             },
             CTransform::default(),
-            CEulerAngles::default()
+            CEulerAngles::default(),
         )?;
 
         Ok(Self {
             registry,
             shader,
-            renderer
+            renderer,
         })
     }
 
     pub fn create_quad(
         &mut self,
-        color: (f32, f32, f32, f32)
+        color: (f32, f32, f32, f32),
     ) -> Result<(), Box<dyn std::error::Error>> {
         let camera = self.renderer.camera();
 
@@ -81,27 +66,29 @@ impl MyUI {
                 width: 300.0,
                 height: b_box.height(),
                 center_x: 0.0,
-                center_y: 0.0
+                center_y: 0.0,
             };
-            
+
             let obj_config = quad_config.to_obj_config(color);
 
-            let mut mesh = ElementArrayMesh::new(
-                obj_config.indices.len(),
-                BufferUsage::StaticDraw
-            )?;
-            mesh
-                .with_ebo(&obj_config.indices)?
+            let mut mesh =
+                ElementArrayMesh::new(obj_config.indices.len(), BufferUsage::StaticDraw)?;
+            mesh.with_ebo(&obj_config.indices)?
                 .with_vbo::<3, f32>(ShaderLocation::Zero, &obj_config.points)?
                 .with_vbo::<4, f32>(ShaderLocation::One, &obj_config.colors)?;
 
             let pos = (
                 b_box.width() - (quad_config.width / 2.0),
                 b_box.height() / 2.0,
-                0.0
+                0.0,
             );
-            let quad = self.registry.create_entity("quad")?
-                .with(CModelNode { mesh: Some(mesh), ..CModelNode::default() })?
+            let quad = self
+                .registry
+                .create_entity("quad")?
+                .with(CModelNode {
+                    mesh: Some(mesh),
+                    ..CModelNode::default()
+                })?
                 .with(CTransform {
                     translate: glm::vec3(pos.0, pos.1, pos.2),
                     ..CTransform::default()
@@ -121,12 +108,8 @@ impl MyUI {
     }
 
     pub fn draw(&self) -> Result<(), Box<dyn std::error::Error>> {
-        self.renderer.draw_by_tag(
-            "quad",
-            &self.registry,
-            &self.shader,
-            DrawMode::Triangles
-        )?;
+        self.renderer
+            .draw_by_tag("quad", &self.registry, &self.shader, DrawMode::Triangles)?;
 
         Ok(())
     }

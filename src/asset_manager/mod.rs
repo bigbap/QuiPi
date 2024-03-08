@@ -11,14 +11,14 @@ use crate::{
     prelude::{
         qp_core::StringInterner,
         qp_ecs::{Component, EntityManager},
-        QPError, VersionedIndex,
+        Index, QPError,
     },
     QPResult,
 };
 
 pub struct AssetManager {
     asset_store: EntityManager,
-    asset_map: HashMap<u64, VersionedIndex>,
+    asset_map: HashMap<u64, Index>,
 
     strings: Weak<RefCell<StringInterner>>,
 }
@@ -105,11 +105,11 @@ impl AssetManager {
         }
     }
 
-    pub fn add_index(&mut self, id: u64, index: VersionedIndex) {
+    pub fn add_index(&mut self, id: u64, index: Index) {
         self.asset_map.insert(id, index);
     }
 
-    pub fn get_index(&self, id: u64) -> Option<VersionedIndex> {
+    pub fn get_index(&self, id: u64) -> Option<Index> {
         self.asset_map.get(&id).cloned()
     }
 

@@ -1,6 +1,5 @@
 use crate::prelude::{
-    qp_core::to_abs_path, qp_schemas::SchemaScene2D, GlobalRegistry, QPError, Schema,
-    VersionedIndex,
+    qp_core::to_abs_path, qp_schemas::SchemaScene2D, GlobalRegistry, Index, QPError, Schema,
 };
 use crate::QPResult;
 use std::{
@@ -8,7 +7,7 @@ use std::{
     io::BufReader,
 };
 
-pub fn save_scene_2d(name: &str, scene: VersionedIndex, registry: &GlobalRegistry) -> QPResult<()> {
+pub fn save_scene_2d(name: &str, scene: Index, registry: &GlobalRegistry) -> QPResult<()> {
     if let Some(scene) = SchemaScene2D::from_entity(scene, registry) {
         let str = serde_yaml::to_string(&scene).map_err(|e| QPError::Generic(e.to_string()))?;
         let path = to_abs_path(&format!("assets/scenes/{}.yaml", name))?;

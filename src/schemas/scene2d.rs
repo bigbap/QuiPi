@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::prelude::{
     qp_ecs::{
         components::{CScene, CSprite, CTransform2D},
-        VersionedIndex,
+        Index,
     },
     GlobalRegistry, Schema,
 };
@@ -27,7 +27,7 @@ pub struct SchemaScene2D {
 }
 
 impl Schema for SchemaScene2D {
-    fn build_entity(&self, registry: &mut GlobalRegistry) -> QPResult<VersionedIndex> {
+    fn build_entity(&self, registry: &mut GlobalRegistry) -> QPResult<Index> {
         // 1. build cameras
         let mut cameras = vec![];
         for camera in self.cameras.iter() {
@@ -67,7 +67,7 @@ impl Schema for SchemaScene2D {
         Ok(entity)
     }
 
-    fn from_entity(entity: VersionedIndex, registry: &GlobalRegistry) -> Option<Self> {
+    fn from_entity(entity: Index, registry: &GlobalRegistry) -> Option<Self> {
         if let Some(scene) = registry.entity_manager.get::<CScene>(&entity) {
             // 1. new default scene schema
             let mut schema = Self {

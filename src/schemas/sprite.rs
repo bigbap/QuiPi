@@ -8,7 +8,7 @@ use crate::{
         qp_assets::RTexture,
         qp_ecs::{
             components::{CQuad, CSprite, CTag, CTransform2D, CVelocity2D},
-            VersionedIndex,
+            Index,
         },
         GlobalRegistry,
     },
@@ -28,7 +28,7 @@ pub struct SchemaSprite {
 }
 
 impl Schema for SchemaSprite {
-    fn build_entity(&self, registry: &mut GlobalRegistry) -> QPResult<VersionedIndex> {
+    fn build_entity(&self, registry: &mut GlobalRegistry) -> QPResult<Index> {
         let texture_atlas = match &self.texture {
             Some(id_as_str) => {
                 let Some(id) = registry.asset_manager.get_asset_id(&id_as_str) else {
@@ -66,7 +66,7 @@ impl Schema for SchemaSprite {
         Ok(entity)
     }
 
-    fn from_entity(entity: VersionedIndex, registry: &GlobalRegistry) -> Option<Self> {
+    fn from_entity(entity: Index, registry: &GlobalRegistry) -> Option<Self> {
         let Some(sprite) = registry.entity_manager.get::<CSprite>(&entity) else {
             return None;
         };

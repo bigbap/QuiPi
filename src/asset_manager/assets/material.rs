@@ -1,15 +1,13 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
-use quipi_core::{
-    VersionedIndex,
-    Component
-};
+use quipi_core::{Component, Index};
 
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq)]
 pub enum MaterialPart {
-    Texture(VersionedIndex),
+    Texture(Index),
     Value(f32, f32, f32),
-    #[default] None
+    #[default]
+    None,
 }
 
 #[derive(Component, Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -19,7 +17,7 @@ pub struct CMaterial {
     pub specular: MaterialPart,
     pub shininess: f32,
 
-    pub uniform_struct: String
+    pub uniform_struct: String,
 }
 
 impl Default for CMaterial {
@@ -30,7 +28,7 @@ impl Default for CMaterial {
             specular: MaterialPart::None,
             shininess: 0.0,
 
-            uniform_struct: "material".to_string()
+            uniform_struct: "material".to_string(),
         }
     }
 }

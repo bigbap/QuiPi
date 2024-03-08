@@ -1,6 +1,6 @@
 use crate::{
     qp_assets::RCamera2D, qp_ecs::components::CTransform2D, qp_schemas::SchemaCamera2D,
-    GlobalRegistry, VersionedIndex,
+    GlobalRegistry, Index,
 };
 use quipi::{
     app::{Controller, FrameResult},
@@ -14,11 +14,11 @@ pub const MAIN_CAMERA: &str = "main_camera";
 pub struct CameraController {
     camera: u64,
 
-    player: VersionedIndex, // camera will follow player
+    player: Index, // camera will follow player
 }
 
 impl CameraController {
-    pub fn new(player: VersionedIndex, registry: &mut GlobalRegistry) -> Result<Self, QPError> {
+    pub fn new(player: Index, registry: &mut GlobalRegistry) -> Result<Self, QPError> {
         let Some(camera) = registry.asset_manager.get_asset_id(MAIN_CAMERA) else {
             return Err(QPError::Generic(
                 "[camera controller] camera resource has not been loaded".into(),

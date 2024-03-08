@@ -4,13 +4,13 @@ use quipi::world::World;
 use crate::{
     qp_ecs::components::{CQuad, CTag, CTransform2D, CVelocity2D},
     qp_editor::IGuiController,
-    GlobalRegistry, VersionedIndex,
+    GlobalRegistry, Index,
 };
 
 pub struct EntityEditor {
-    pub active_entity: Option<VersionedIndex>,
+    pub active_entity: Option<Index>,
 
-    to_remove: Vec<Box<dyn FnMut(&mut GlobalRegistry, VersionedIndex)>>,
+    to_remove: Vec<Box<dyn FnMut(&mut GlobalRegistry, Index)>>,
 }
 
 impl EntityEditor {
@@ -21,7 +21,7 @@ impl EntityEditor {
         }
     }
 
-    fn add_component(&self, ui: &mut Ui, entity: VersionedIndex, registry: &mut GlobalRegistry) {
+    fn add_component(&self, ui: &mut Ui, entity: Index, registry: &mut GlobalRegistry) {
         ui.menu_button("Add component", |ui| {
             if registry
                 .entity_manager
@@ -97,10 +97,9 @@ impl IGuiController for EntityEditor {
                 {
                     ui.collapsing("Velocity", |ui| {
                         if ui.button("del").clicked() {
-                            self.to_remove
-                                .push(Box::new(|registry, entity: VersionedIndex| {
-                                    registry.entity_manager.remove::<CVelocity2D>(&entity);
-                                }))
+                            self.to_remove.push(Box::new(|registry, entity: Index| {
+                                registry.entity_manager.remove::<CVelocity2D>(&entity);
+                            }))
                         }
 
                         ui.horizontal(|ui| {
@@ -114,10 +113,9 @@ impl IGuiController for EntityEditor {
                 if let Some(rect) = world.registry.entity_manager.get_mut::<CQuad>(&entity) {
                     ui.collapsing("Quad", |ui| {
                         if ui.button("del").clicked() {
-                            self.to_remove
-                                .push(Box::new(|registry, entity: VersionedIndex| {
-                                    registry.entity_manager.remove::<CQuad>(&entity);
-                                }))
+                            self.to_remove.push(Box::new(|registry, entity: Index| {
+                                registry.entity_manager.remove::<CQuad>(&entity);
+                            }))
                         }
 
                         ui.horizontal(|ui| {

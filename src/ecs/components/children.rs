@@ -1,9 +1,6 @@
-use super::super::prelude::{
-    Component,
-    VersionedIndex
-};
+use super::super::prelude::{Component, Index};
 
 #[derive(Component, Debug, PartialEq)]
 pub struct CChildren {
-    pub list: Vec<VersionedIndex>
+    pub list: Vec<Index>,
 }

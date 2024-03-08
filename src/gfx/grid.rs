@@ -1,27 +1,11 @@
-use crate::prelude::ecs::{
-    CDrawable,
-    CTransform,
-    CMesh,
-    CModelMatrix
-};
+use crate::prelude::ecs::{CDrawable, CMesh, CModelMatrix, CTransform};
 use crate::{
-    QPResult,
-    components::{
-        CName,
-        CTag
-    },
-    resources::{
-        shader::UniformVariable,
-        RShader
-    },
-    systems::rendering::mesh::{
-        ElementArrayMesh,
-        ShaderLocation
-    },
+    components::{CName, CTag},
+    resources::{shader::UniformVariable, RShader},
+    systems::rendering::mesh::{ElementArrayMesh, ShaderLocation},
     utils::to_abs_path,
-    wrappers::opengl::{
-        buffer::BufferUsage, draw::DrawMode
-    }, GlobalRegistry, VersionedIndex
+    wrappers::opengl::{buffer::BufferUsage, draw::DrawMode},
+    GlobalRegistry, Index, QPResult,
 };
 
 use super::draw::draw_entity;
@@ -31,25 +15,15 @@ const GRID_TAG: &str = "quipi_grid_74872346";
 pub struct Grid {}
 
 impl Grid {
-    pub fn new(
-        registry: &mut GlobalRegistry,
-        camera: VersionedIndex
-    ) -> QPResult<Self>{
+    pub fn new(registry: &mut GlobalRegistry, camera: Index) -> QPResult<Self> {
         let indices = &[0, 1, 2, 2, 3, 0];
         let vertices = &[
-            -1.0, -1.0, 0.0,
-            1.0, -1.0, 0.0,
-            1.0, 1.0, 0.0,
-            -1.0, 1.0, 0.0,
+            -1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 1.0, 1.0, 0.0, -1.0, 1.0, 0.0,
         ];
 
         let mut mesh = ElementArrayMesh::new(6, BufferUsage::StaticDraw)?;
-        mesh
-            .with_ebo(indices)?
-            .with_vbo::<3, f32>(
-                ShaderLocation::Zero,
-                vertices
-            )?;
+        mesh.with_ebo(indices)?
+            .with_vbo::<3, f32>(ShaderLocation::Zero, vertices)?;
 
         let r_shader = RShader::new(
             &to_abs_path("assets/shaders/grid")?,
@@ -57,12 +31,17 @@ impl Grid {
                 UniformVariable::ProjectionMatrix("projection".to_string()),
                 UniformVariable::ViewMatrix("view".to_string()),
                 UniformVariable::NearPlane("near".to_string()),
-                UniformVariable::FarPlane("far".to_string())
-            ]
+                UniformVariable::FarPlane("far".to_string()),
+            ],
         )?;
 
         let shader = registry.resources.create()?;
-        registry.resources.add(&shader, CName { name: "grid_3d".to_string() });
+        registry.resources.add(
+            &shader,
+            CName {
+                name: "grid_3d".to_string(),
+            },
+        );
         registry.resources.add(&shader, r_shader);
 
         build_axis(
@@ -71,29 +50,21 @@ impl Grid {
             camera,
             mesh,
             glm::vec3(0.0, 0.0, 0.0),
-            glm::vec3(0.0, 0.0, 0.0)
+            glm::vec3(0.0, 0.0, 0.0),
         )?;
 
         Ok(Self {})
     }
 
-    pub fn draw(
-        &self,
-        registry: &mut GlobalRegistry,
-        camera: &VersionedIndex
-    ) -> QPResult<()> {
-        let grid = registry.entity_manager.query::<CTag>(CTag { tag: GRID_TAG.to_string() });
+    pub fn draw(&self, registry: &mut GlobalRegistry, camera: &Index) -> QPResult<()> {
+        let grid = registry.entity_manager.query::<CTag>(CTag {
+            tag: GRID_TAG.to_string(),
+        });
 
         for line in grid {
             if let Some(drawable) = registry.entity_manager.get::<CDrawable>(&line) {
                 let shader = drawable.shader;
-                draw_entity(
-                    &line,
-                    registry,
-                    camera,
-                    &shader,
-                    DrawMode::Triangles
-                );
+                draw_entity(&line, registry, camera, &shader, DrawMode::Triangles);
             }
         }
 
@@ -103,11 +74,11 @@ impl Grid {
 
 fn build_axis(
     registry: &mut GlobalRegistry,
-    shader: VersionedIndex,
-    camera: VersionedIndex,
+    shader: Index,
+    camera: Index,
     mesh: ElementArrayMesh,
     translate: glm::Vec3,
-    scale: glm::Vec3
+    scale: glm::Vec3,
 ) -> QPResult<()> {
     let transform = CTransform {
         translate,
@@ -121,9 +92,22 @@ fn build_axis(
     };
 
     let entity = registry.entity_manager.create()?;
-    registry.entity_manager.add(&entity, CTag { tag: GRID_TAG.to_string() });
+    registry.entity_manager.add(
+        &entity,
+        CTag {
+            tag: GRID_TAG.to_string(),
+        },
+    );
     registry.entity_manager.add(&entity, mesh);
-    registry.entity_manager.add(&entity, CDrawable { shader, camera, textures: vec![], active: true });
+    registry.entity_manager.add(
+        &entity,
+        CDrawable {
+            shader,
+            camera,
+            textures: vec![],
+            active: true,
+        },
+    );
     registry.entity_manager.add(&entity, transform);
     registry.entity_manager.add(&entity, model_matrix);
 

@@ -1,18 +1,15 @@
 use quipi::{
-    VersionedIndex,
-    GlobalRegistry,
+    components::CVelocity,
     systems::{
-        rotation::s_rotate_camera,
-        mvp_matrices::s_set_view_matrix,
-        movement::s_apply_velocity
+        movement::s_apply_velocity, mvp_matrices::s_set_view_matrix, rotation::s_rotate_camera,
     },
-    components::CVelocity
+    GlobalRegistry, Index,
 };
 
 pub fn s_update_camera(
-    camera: &VersionedIndex,
+    camera: &Index,
     registry: &mut GlobalRegistry,
-    delta: f32
+    delta: f32,
 ) -> Result<(), Box<dyn std::error::Error>> {
     if let Some(vel) = registry.get_component::<CVelocity>(camera) {
         s_apply_velocity(registry, camera, delta, glm::vec3(vel.x, vel.y, vel.z))?;

@@ -2,7 +2,7 @@ use crate::{
     qp_assets::{tilemap::ValidTile, RTileMap},
     qp_ecs::components::{CQuad, CTransform2D},
     qp_schemas::SchemaSprite,
-    GlobalRegistry, Schema, VersionedIndex,
+    GlobalRegistry, Index, Schema,
 };
 use quipi::{
     app::{Controller, FrameResult},
@@ -14,7 +14,7 @@ use sdl2::{event::Event, keyboard::Keycode};
 const PLAYER_SIZE: f32 = 54.0;
 
 pub struct PlayerController {
-    pub player: VersionedIndex,
+    pub player: Index,
     tile_map: u64,
     tile: glm::Vec2,
 }

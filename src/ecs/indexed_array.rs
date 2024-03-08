@@ -14,12 +14,12 @@ const DEFAULT_CAPACITY: usize = 4;
 /// - https://github.com/fitzgen/generational-arena
 
 #[derive(Debug, Default, PartialEq, Copy, Clone, Serialize, Deserialize)]
-pub struct VersionedIndex {
+pub struct Index {
     index: usize,
     version: u64,
 }
 
-impl fmt::Display for VersionedIndex {
+impl fmt::Display for Index {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}.{}", self.index, self.version)
     }
@@ -38,14 +38,14 @@ impl Default for AllocatorEntry {
 }
 
 #[derive(Debug)]
-pub struct VersionedIndexAllocator {
+pub struct Allocator {
     entries: Vec<AllocatorEntry>,
     next: Option<usize>,
     version: u64,
     length: usize,
 }
 
-impl Default for VersionedIndexAllocator {
+impl Default for Allocator {
     fn default() -> Self {
         Self {
             entries: Vec::<AllocatorEntry>::with_capacity(DEFAULT_CAPACITY),
@@ -56,13 +56,22 @@ impl Default for VersionedIndexAllocator {
     }
 }
 
-impl VersionedIndexAllocator {
-    pub fn allocate(&mut self) -> VersionedIndex {
+impl Allocator {
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
+            entries: Vec::<AllocatorEntry>::with_capacity(capacity),
+            next: None,
+            version: 0,
+            length: 0,
+        }
+    }
+
+    pub fn allocate(&mut self) -> Index {
         let index = match self.try_allocate() {
             None => {
                 let i = self.grow();
 
-                VersionedIndex {
+                Index {
                     index: i,
                     version: self.version,
                 }
@@ -79,7 +88,24 @@ impl VersionedIndexAllocator {
         index
     }
 
-    pub fn deallocate(&mut self, index: VersionedIndex) {
+    fn try_allocate(&mut self) -> Option<Index> {
+        match self.next {
+            Some(i) => match self.entries[i] {
+                AllocatorEntry::Occupied { .. } => panic!("corrupt indexed array"),
+                AllocatorEntry::Free { next } => {
+                    self.next = next;
+
+                    Some(Index {
+                        index: i,
+                        version: self.version,
+                    })
+                }
+            },
+            None => None,
+        }
+    }
+
+    pub fn deallocate(&mut self, index: Index) {
         if self.validate(&index) {
             self.entries[index.index] = AllocatorEntry::Free { next: self.next };
 
@@ -90,7 +116,7 @@ impl VersionedIndexAllocator {
         }
     }
 
-    pub fn is_allocated(&self, index: &VersionedIndex) -> bool {
+    pub fn is_allocated(&self, index: &Index) -> bool {
         match self.entries.get(index.index) {
             None => false,
             Some(entry) => match entry {
@@ -110,23 +136,6 @@ impl VersionedIndexAllocator {
             .count()
     }
 
-    fn try_allocate(&mut self) -> Option<VersionedIndex> {
-        match self.next {
-            Some(i) => match self.entries[i] {
-                AllocatorEntry::Occupied { .. } => panic!("corrupt indexed array"),
-                AllocatorEntry::Free { next } => {
-                    self.next = next;
-
-                    Some(VersionedIndex {
-                        index: i,
-                        version: self.version,
-                    })
-                }
-            },
-            None => None,
-        }
-    }
-
     fn grow(&mut self) -> usize {
         if self.entries.len() > self.entries.capacity() {
             self.entries.reserve(self.entries.capacity() * 2);
@@ -144,7 +153,7 @@ impl VersionedIndexAllocator {
     //     self.length = 0;
     // }
 
-    pub fn validate(&self, index: &VersionedIndex) -> bool {
+    pub fn validate(&self, index: &Index) -> bool {
         match self.entries.get(index.index) {
             Some(AllocatorEntry::Occupied { version }) => *version == index.version,
             _ => false,
@@ -160,19 +169,19 @@ pub struct Entry<T> {
 
 #[derive(Debug)]
 pub struct IndexedArray<T> {
-    allocator: Rc<RefCell<VersionedIndexAllocator>>,
+    allocator: Rc<RefCell<Allocator>>,
     list: Vec<Option<Entry<T>>>,
 }
 
 impl<T> IndexedArray<T> {
-    pub fn new(allocator: Rc<RefCell<VersionedIndexAllocator>>) -> Self {
+    pub fn new(allocator: Rc<RefCell<Allocator>>) -> Self {
         Self {
             allocator,
             list: Vec::<Option<Entry<T>>>::with_capacity(DEFAULT_CAPACITY),
         }
     }
 
-    pub fn set(&mut self, index: &VersionedIndex, value: T) {
+    pub fn set(&mut self, index: &Index, value: T) {
         let i = index.index;
 
         if i >= self.list.capacity() {
@@ -189,7 +198,7 @@ impl<T> IndexedArray<T> {
         });
     }
 
-    pub fn unset(&mut self, index: &VersionedIndex) {
+    pub fn unset(&mut self, index: &Index) {
         let i = index.index;
 
         if i >= self.list.len() {
@@ -199,7 +208,7 @@ impl<T> IndexedArray<T> {
         self.list[i] = None;
     }
 
-    pub fn get(&self, index: &VersionedIndex) -> Option<&T> {
+    pub fn get(&self, index: &Index) -> Option<&T> {
         match self.list.get(index.index) {
             Some(Some(entry)) => {
                 if entry.version == index.version {
@@ -212,7 +221,7 @@ impl<T> IndexedArray<T> {
         }
     }
 
-    pub fn get_mut(&mut self, index: &VersionedIndex) -> Option<&mut T> {
+    pub fn get_mut(&mut self, index: &Index) -> Option<&mut T> {
         match self.list.get_mut(index.index) {
             None => None,
             Some(None) => None,
@@ -227,13 +236,13 @@ impl<T> IndexedArray<T> {
     }
 
     /// TODO: write test
-    pub fn get_entities(&self) -> Vec<VersionedIndex> {
+    pub fn get_entities(&self) -> Vec<Index> {
         self.list
             .iter()
             .enumerate()
             .filter_map(|(i, wrapped)| match wrapped {
                 Some(entry) => {
-                    let index = VersionedIndex {
+                    let index = Index {
                         index: i,
                         version: entry.version,
                     };
@@ -251,7 +260,7 @@ impl<T> IndexedArray<T> {
     pub fn get_indexed_entry(&self, index: usize) -> Option<IndexedEntry<&T>> {
         match self.list.get(index) {
             Some(Some(entry)) => Some(IndexedEntry {
-                index: VersionedIndex {
+                index: Index {
                     index,
                     version: entry.version,
                 },
@@ -265,7 +274,7 @@ impl<T> IndexedArray<T> {
 
 #[derive(Debug, Clone)]
 pub struct IndexedEntry<T> {
-    pub index: VersionedIndex,
+    pub index: Index,
     pub entry: T,
 }
 
@@ -280,7 +289,7 @@ mod tests {
 
     #[test]
     fn indexed_array_getting_setting_removing() {
-        let allocator = Rc::new(RefCell::new(VersionedIndexAllocator::default()));
+        let allocator = Rc::new(RefCell::new(Allocator::default()));
         let mut entities = EntityMap::<Entity>::new(allocator.clone());
 
         let player_id = allocator.borrow_mut().allocate();
@@ -293,7 +302,7 @@ mod tests {
 
         assert_eq!(allocator.borrow().length(), 3);
 
-        let mut bullets = Vec::<VersionedIndex>::new();
+        let mut bullets = Vec::<Index>::new();
         for _ in 0..3 {
             let bullet = allocator.borrow_mut().allocate();
 
@@ -329,7 +338,7 @@ mod tests {
 
     #[test]
     fn indexed_array_versioning() {
-        let allocator = Rc::new(RefCell::new(VersionedIndexAllocator::default()));
+        let allocator = Rc::new(RefCell::new(Allocator::default()));
         let mut entities = EntityMap::<Entity>::new(allocator.clone());
 
         let player_id = allocator.borrow_mut().allocate();
@@ -341,7 +350,7 @@ mod tests {
         entities.set(&enemy_id, Entity("enemy".to_string()));
 
         assert_eq!(
-            entities.get(&VersionedIndex {
+            entities.get(&Index {
                 index: 1,
                 version: 0
             }),
@@ -351,7 +360,7 @@ mod tests {
         allocator.borrow_mut().deallocate(npc_id);
 
         // used to hold npc
-        assert!(!allocator.borrow().is_allocated(&VersionedIndex {
+        assert!(!allocator.borrow().is_allocated(&Index {
             index: 1,
             version: 0
         }));
@@ -360,7 +369,7 @@ mod tests {
         entities.set(&npc_id, Entity("npc".to_string()));
 
         assert_eq!(
-            entities.get(&VersionedIndex {
+            entities.get(&Index {
                 index: 1,
                 version: 1
             }),
@@ -368,7 +377,7 @@ mod tests {
         );
 
         assert_eq!(
-            entities.get(&VersionedIndex {
+            entities.get(&Index {
                 index: 1,
                 version: 0
             }),
@@ -376,11 +385,11 @@ mod tests {
         );
 
         // version 1 is allocated while version 0 is not
-        assert!(!allocator.borrow().is_allocated(&VersionedIndex {
+        assert!(!allocator.borrow().is_allocated(&Index {
             index: 1,
             version: 0
         }));
-        assert!(allocator.borrow().is_allocated(&VersionedIndex {
+        assert!(allocator.borrow().is_allocated(&Index {
             index: 1,
             version: 1
         }));

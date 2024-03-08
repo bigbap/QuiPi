@@ -320,12 +320,12 @@ impl Controller for GameController {
 }
 
 pub struct Camera {
-    ship: VersionedIndex,
+    ship: Index,
     id: u64,
 }
 
 impl Camera {
-    pub fn new(world: &mut World, ship: VersionedIndex) -> Result<Self, QPError> {
+    pub fn new(world: &mut World, ship: Index) -> Result<Self, QPError> {
         let mut camera = RCamera2D::new(
             OrthographicCameraParams {
                 right: WIDTH as f32,
@@ -390,7 +390,7 @@ impl Controller for Camera {
 }
 
 pub struct Bullet {
-    index: VersionedIndex,
+    index: Index,
     countdown: Countdown,
     alive: bool,
 }
@@ -499,7 +499,7 @@ impl Bullet {
 }
 
 struct Asteroid {
-    index: VersionedIndex,
+    index: Index,
     rotation_step: f32,
     scale: f32,
     alive: bool,
@@ -639,7 +639,7 @@ impl Controller for Asteroid {
 }
 
 struct Star {
-    index: VersionedIndex,
+    index: Index,
     alive: bool,
     countdown: Countdown,
 }

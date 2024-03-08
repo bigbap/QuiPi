@@ -3,12 +3,12 @@ use crate::{
     qp_core::{now_secs, random::Random},
     qp_ecs::components::{CQuad, CTag, CTransform2D, CVelocity2D},
     qp_schemas::SchemaSprite,
-    Controller, FrameResult, QPError, Schema, VersionedIndex, World,
+    Controller, FrameResult, Index, QPError, Schema, World,
 };
 use sdl2::{event::Event, keyboard::Keycode};
 
 pub struct BubbleController {
-    bubbles: Vec<VersionedIndex>,
+    bubbles: Vec<Index>,
     camera: u64,
     rand: Random,
 }
@@ -69,7 +69,7 @@ impl Controller for BubbleController {
     }
 }
 
-fn spawn(rand: &mut Random, world: &mut World) -> Result<VersionedIndex, QPError> {
+fn spawn(rand: &mut Random, world: &mut World) -> Result<Index, QPError> {
     let mut this_schema = SchemaSprite::default();
 
     let (_x, _y, width, height) = world.viewport.get_dimensions();
@@ -105,7 +105,7 @@ fn spawn(rand: &mut Random, world: &mut World) -> Result<VersionedIndex, QPError
     Ok(id)
 }
 
-pub fn update(bubbles: &[VersionedIndex], world: &mut World, camera: u64) {
+pub fn update(bubbles: &[Index], world: &mut World, camera: u64) {
     let Some(camera) = world.registry.asset_manager.get::<RCamera2D>(camera) else {
         println!("couldn't find camera");
 

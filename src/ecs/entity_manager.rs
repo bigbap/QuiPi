@@ -1,7 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
 use super::{
-    indexed_array::{IndexedArray, VersionedIndex, VersionedIndexAllocator},
+    indexed_array::{Allocator, Index, IndexedArray},
     prelude::Component,
 };
 use crate::{prelude::qp_core::AnyMap, QPResult};
@@ -10,20 +10,20 @@ type EntityMap<C> = IndexedArray<C>;
 
 #[derive(Debug)]
 pub struct EntityManager {
-    entity_allocator: Rc<RefCell<VersionedIndexAllocator>>,
+    entity_allocator: Rc<RefCell<Allocator>>,
     component_maps: AnyMap,
 
-    entities: Vec<VersionedIndex>,
-    to_delete: Vec<VersionedIndex>,
+    entities: Vec<Index>,
+    to_delete: Vec<Index>,
 }
 
 impl EntityManager {
     pub fn new() -> QPResult<Self> {
         let entity_manager = Self {
-            entity_allocator: Rc::new(RefCell::new(VersionedIndexAllocator::default())),
+            entity_allocator: Rc::new(RefCell::new(Allocator::default())),
             component_maps: AnyMap::new(),
-            entities: Vec::<VersionedIndex>::new(),
-            to_delete: Vec::<VersionedIndex>::new(),
+            entities: Vec::<Index>::new(),
+            to_delete: Vec::<Index>::new(),
         };
 
         Ok(entity_manager)
@@ -36,7 +36,7 @@ impl EntityManager {
         self
     }
 
-    pub fn create(&mut self) -> VersionedIndex {
+    pub fn create(&mut self) -> Index {
         let entity = self.entity_allocator.borrow_mut().allocate();
 
         self.entities.push(entity);
@@ -44,7 +44,7 @@ impl EntityManager {
         entity
     }
 
-    pub fn set_to_delete(&mut self, entity: VersionedIndex) {
+    pub fn set_to_delete(&mut self, entity: Index) {
         self.to_delete.push(entity);
     }
 
@@ -58,7 +58,7 @@ impl EntityManager {
 
     pub fn add<C: Component + std::fmt::Debug + PartialEq + 'static>(
         &mut self,
-        entity: &VersionedIndex,
+        entity: &Index,
         component: C,
     ) {
         match self.component_maps.get_mut::<EntityMap<C>>() {
@@ -75,10 +75,7 @@ impl EntityManager {
         }
     }
 
-    pub fn remove<C: Component + std::fmt::Debug + PartialEq + 'static>(
-        &mut self,
-        entity: &VersionedIndex,
-    ) {
+    pub fn remove<C: Component + std::fmt::Debug + PartialEq + 'static>(&mut self, entity: &Index) {
         match self.component_maps.get_mut::<EntityMap<C>>() {
             None => {
                 #[cfg(debug_assertions)]
@@ -93,7 +90,7 @@ impl EntityManager {
         }
     }
 
-    pub fn get<C: Component + PartialEq + 'static>(&self, entity: &VersionedIndex) -> Option<&C> {
+    pub fn get<C: Component + PartialEq + 'static>(&self, entity: &Index) -> Option<&C> {
         if !self.entity_allocator.borrow().validate(entity) {
             return None;
         }
@@ -117,7 +114,7 @@ impl EntityManager {
 
     pub fn get_mut<C: Component + PartialEq + 'static>(
         &mut self,
-        entity: &VersionedIndex,
+        entity: &Index,
     ) -> Option<&mut C> {
         if !self.entity_allocator.borrow().validate(entity) {
             return None;
@@ -142,7 +139,7 @@ impl EntityManager {
 
     pub fn get_all<C: Component + PartialEq + 'static>(&self) {}
 
-    pub fn query_all<C: Component + PartialEq + 'static>(&self) -> Vec<VersionedIndex> {
+    pub fn query_all<C: Component + PartialEq + 'static>(&self) -> Vec<Index> {
         let Some(cmp_map) = self.component_maps.get::<EntityMap<C>>() else {
             return vec![];
         };
@@ -150,13 +147,13 @@ impl EntityManager {
         cmp_map.get_entities()
     }
 
-    pub fn query<C: Component + PartialEq + 'static>(&self, filter: C) -> Vec<VersionedIndex> {
+    pub fn query<C: Component + PartialEq + 'static>(&self, filter: C) -> Vec<Index> {
         let Some(cmp_map) = self.component_maps.get::<EntityMap<C>>() else {
             return vec![];
         };
         let all_entities = cmp_map.get_entities();
 
-        let mut result = Vec::<VersionedIndex>::new();
+        let mut result = Vec::<Index>::new();
 
         for entity in all_entities {
             if let Some(cmp) = cmp_map.get(&entity) {
@@ -191,8 +188,8 @@ impl EntityManager {
         self.entity_allocator.borrow().valid_count()
     }
 
-    pub fn get_valid_entities(&mut self) -> Vec<VersionedIndex> {
-        let mut result = Vec::<VersionedIndex>::new();
+    pub fn get_valid_entities(&mut self) -> Vec<Index> {
+        let mut result = Vec::<Index>::new();
 
         for entity in self.entities.iter() {
             if self.entity_allocator.borrow().validate(entity) {
@@ -206,7 +203,7 @@ impl EntityManager {
 
 pub struct EntityBuilder<'a> {
     entity_manager: &'a mut EntityManager,
-    entity: VersionedIndex,
+    entity: Index,
 }
 
 impl<'a> EntityBuilder<'a> {
@@ -227,7 +224,7 @@ impl<'a> EntityBuilder<'a> {
         self
     }
 
-    pub fn build(self) -> VersionedIndex {
+    pub fn build(self) -> Index {
         self.entity
     }
 }

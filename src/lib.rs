@@ -43,7 +43,7 @@ pub mod prelude {
     pub use self::app::Renderer;
     pub use self::errors::QPError;
     pub use self::qp_ecs::EntityBuilder;
-    pub use self::qp_ecs::VersionedIndex;
+    pub use self::qp_ecs::Index;
     pub use self::registry::GlobalRegistry;
     pub use self::schemas::prelude::Schema;
     pub use self::world::World;

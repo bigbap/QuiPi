@@ -6,7 +6,7 @@ use sdl2::keyboard::Keycode;
 use crate::particle_system::{Particle, ParticleSystem};
 
 pub struct Ship {
-    pub index: VersionedIndex,
+    pub index: Index,
     particle_system: ParticleSystem<ExhaustParticle>,
 
     mouse_pos: glm::Vec2,
@@ -168,7 +168,7 @@ impl Controller for Ship {
 }
 
 struct ExhaustParticle {
-    index: VersionedIndex,
+    index: Index,
     alive: bool,
     countdown: Countdown,
 }

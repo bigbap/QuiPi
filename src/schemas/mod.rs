@@ -6,7 +6,7 @@ pub mod sprite;
 pub mod texture;
 
 pub mod prelude {
-    use crate::{prelude::VersionedIndex, registry::GlobalRegistry, QPResult};
+    use crate::{prelude::Index, registry::GlobalRegistry, QPResult};
 
     use super::*;
 
@@ -19,11 +19,11 @@ pub mod prelude {
     pub use scene::*;
 
     pub trait Schema: Clone {
-        fn build_entity(&self, _registry: &mut GlobalRegistry) -> QPResult<VersionedIndex> {
+        fn build_entity(&self, _registry: &mut GlobalRegistry) -> QPResult<Index> {
             unimplemented!()
         }
 
-        fn from_entity(_entity: VersionedIndex, _registry: &GlobalRegistry) -> Option<Self> {
+        fn from_entity(_entity: Index, _registry: &GlobalRegistry) -> Option<Self> {
             unimplemented!()
         }
 
