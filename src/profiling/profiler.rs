@@ -1,13 +1,13 @@
 use crate::prelude::qp_core::Timer;
 
 pub struct QPProfiler {
-    timer: Timer
+    timer: Timer,
 }
 
 impl QPProfiler {
     pub fn new() -> Self {
         Self {
-            timer: Timer::new()
+            timer: Timer::new(),
         }
     }
 
@@ -16,6 +16,6 @@ impl QPProfiler {
     }
 
     pub fn end(&mut self) -> f32 {
-        self.timer.delta() * 1000.0
+        self.timer.delta() as f32
     }
 }

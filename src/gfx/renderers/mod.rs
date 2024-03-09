@@ -1,5 +1,11 @@
 mod sprite;
-mod text;
+// mod text;
 
 pub use sprite::SpriteRenderer;
-pub use text::*;
+
+use crate::registry::GlobalRegistry;
+// pub use text::*;
+
+pub trait Renderer {
+    fn draw(&mut self, registry: &mut GlobalRegistry) -> Option<u32>;
+}

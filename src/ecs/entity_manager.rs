@@ -19,7 +19,7 @@ pub struct EntityManager {
 }
 
 impl EntityManager {
-    pub fn new() -> QPResult<Self> {
+    pub fn new() -> Self {
         let entity_manager = Self {
             allocator: Rc::new(RefCell::new(Allocator::default())),
             components: ComponentMap::new(),
@@ -28,7 +28,7 @@ impl EntityManager {
             to_delete: Vec::<Index>::new(),
         };
 
-        Ok(entity_manager)
+        entity_manager
     }
 
     // pub fn register_component<C: Component + PartialEq + 'static>(&mut self) -> &mut Self {

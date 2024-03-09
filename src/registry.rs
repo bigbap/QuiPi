@@ -6,7 +6,7 @@ use std::{
 use crate::{
     asset_manager::AssetManager,
     prelude::{qp_core::StringInterner, qp_ecs::EntityManager},
-    QPResult,
+    resource_manager::ResourceManager,
 };
 
 /**
@@ -16,21 +16,27 @@ use crate::{
 pub struct GlobalRegistry {
     strings: Rc<RefCell<StringInterner>>,
 
-    pub entity_manager: EntityManager,
-    pub asset_manager: AssetManager,
+    pub entities: EntityManager,
+    pub assets: AssetManager,
+    pub resources: ResourceManager,
+
+    pub quit: bool,
 }
 
 impl GlobalRegistry {
-    pub fn init() -> QPResult<Self> {
+    pub fn init() -> Self {
         let strings = Rc::from(RefCell::from(StringInterner::new()));
-        let entity_manager = EntityManager::new()?;
-        let asset_manager = AssetManager::init(Rc::downgrade(&strings))?;
+        let entities = EntityManager::new();
+        let assets = AssetManager::new(Rc::downgrade(&strings));
+        let resources = ResourceManager::new(Rc::downgrade(&strings));
 
-        Ok(Self {
-            entity_manager,
-            asset_manager,
+        Self {
+            entities,
+            assets,
             strings,
-        })
+            resources,
+            quit: false,
+        }
     }
 
     pub fn strings(&self) -> Ref<StringInterner> {
@@ -42,8 +48,8 @@ impl GlobalRegistry {
     }
 
     pub fn flush(&mut self) {
-        self.entity_manager.flush();
-        self.asset_manager.flush();
+        self.entities.flush();
+        self.assets.flush();
     }
 }
 
@@ -66,14 +72,14 @@ mod tests {
     }
 
     fn create_registry() -> GlobalRegistry {
-        GlobalRegistry::init().unwrap()
+        GlobalRegistry::init()
     }
 
     #[test]
     fn registry_create_entities() {
         let mut registry = create_registry();
 
-        let player = registry.entity_manager.create((
+        let player = registry.entities.create((
             DrawComponent {
                 shader_id: Some(1234),
             },
@@ -84,17 +90,14 @@ mod tests {
         ));
 
         assert_eq!(
-            *registry
-                .entity_manager
-                .get::<DrawComponent>(&player)
-                .unwrap(),
+            *registry.entities.get::<DrawComponent>(&player).unwrap(),
             DrawComponent {
                 shader_id: Some(1234)
             }
         );
         assert_eq!(
             *registry
-                .entity_manager
+                .entities
                 .get::<TransformComponent>(&player)
                 .unwrap(),
             TransformComponent {

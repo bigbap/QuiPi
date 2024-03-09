@@ -25,33 +25,31 @@ impl Timer {
         self.timer.elapsed().as_millis()
     }
 
-    pub fn delta(&mut self) -> f32 {
+    pub fn delta(&mut self) -> u128 {
         let ticks = self.ticks();
         let delta = ticks - self.last_tick;
 
         self.last_tick = ticks;
 
-        delta as f32 / 1000.0
+        delta
     }
 
-    pub fn elapsed(&self) -> f32 {
-        let tick = self.ticks();
-
-        (tick - self.first_tick) as f32 / 1000.0
+    pub fn elapsed(&self) -> u128 {
+        self.ticks() - self.first_tick
     }
 }
 
 pub struct Interval {
     timer: Timer,
-    interval: f32,
-    last_tick: f32,
+    interval: u128,
+    last_tick: u128,
 }
 
 impl Interval {
     /*
      * interval is in seconds
      */
-    pub fn new(interval: f32) -> Self {
+    pub fn new(interval: u128) -> Self {
         let timer = Timer::new();
         let last_tick = timer.elapsed();
 
@@ -77,12 +75,12 @@ impl Interval {
 
 pub struct Countdown {
     timer: Timer,
-    pub countdown: f32,
-    start: f32,
+    pub countdown: u128,
+    start: u128,
 }
 
 impl Countdown {
-    pub fn new(countdown: f32) -> Self {
+    pub fn new(countdown: u128) -> Self {
         let timer = Timer::new();
         let start = timer.elapsed();
 
@@ -93,10 +91,10 @@ impl Countdown {
         }
     }
 
-    pub fn check(&mut self) -> f32 {
+    pub fn check(&mut self) -> u128 {
         let delta = self.timer.elapsed() - self.start;
 
-        (self.countdown - delta).max(0.0)
+        (self.countdown - delta).max(0)
     }
 }
 

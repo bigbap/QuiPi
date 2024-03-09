@@ -53,7 +53,7 @@ impl Schema for SchemaScene2D {
 
         let id = registry.strings_mut().intern(self.name.clone());
 
-        let entity = registry.entity_manager.create(CScene {
+        let entity = registry.entities.create(CScene {
             id,
             cameras,
             shaders,
@@ -64,7 +64,7 @@ impl Schema for SchemaScene2D {
     }
 
     fn from_entity(entity: Index, registry: &GlobalRegistry) -> Option<Self> {
-        if let Some(scene) = registry.entity_manager.get::<CScene>(&entity) {
+        if let Some(scene) = registry.entities.get::<CScene>(&entity) {
             // 1. new default scene schema
             let mut schema = Self {
                 name: registry.strings().get_string(scene.id)?,
@@ -96,7 +96,7 @@ impl Schema for SchemaScene2D {
             }
 
             // 4. parse the entities
-            let entities = registry.entity_manager.query_all::<CSprite>();
+            let entities = registry.entities.query_all::<CSprite>();
             for entity in entities {
                 schema
                     .sprites

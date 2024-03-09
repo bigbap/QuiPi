@@ -24,14 +24,12 @@ pub struct AssetManager {
 }
 
 impl AssetManager {
-    pub fn init(strings: Weak<RefCell<StringInterner>>) -> QPResult<Self> {
-        let mut manager = Self {
-            asset_store: EntityManager::new()?,
+    pub fn new(strings: Weak<RefCell<StringInterner>>) -> Self {
+        Self {
+            asset_store: EntityManager::new(),
             asset_map: HashMap::new(),
             strings,
-        };
-
-        Ok(manager)
+        }
     }
 
     pub fn load_asset<A: Component + std::fmt::Debug + PartialEq + 'static>(

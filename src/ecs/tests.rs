@@ -10,7 +10,7 @@ mod ecs_tests {
 
     #[test]
     fn ecs_register_component() {
-        let mut registry = EntityManager::new().unwrap();
+        let mut registry = EntityManager::new();
         assert_eq!(registry.registered_components_len(), 0);
 
         // registry.register_component::<DrawComponent>();

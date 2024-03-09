@@ -36,14 +36,14 @@ impl Default for SchemaCamera2D {
 
 impl Schema for SchemaCamera2D {
     fn load_resource(&self, registry: &mut GlobalRegistry) -> QPResult<u64> {
-        Ok(registry.asset_manager.load_asset(
+        Ok(registry.assets.load_asset(
             &self.name,
             RCamera2D::new(self.params(), 1.0, self.transform),
         )?)
     }
 
     fn from_resource(id: u64, registry: &GlobalRegistry) -> Option<Self> {
-        if let Some(camera) = registry.asset_manager.get::<RCamera2D>(id) {
+        if let Some(camera) = registry.assets.get::<RCamera2D>(id) {
             let schema = Self {
                 name: registry.strings().get_string(id)?,
                 transform: camera.transform,

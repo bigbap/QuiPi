@@ -31,11 +31,11 @@ impl Schema for SchemaSprite {
     fn build_entity(&self, registry: &mut GlobalRegistry) -> QPResult<Index> {
         let texture_atlas = match &self.texture {
             Some(id_as_str) => {
-                let Some(id) = registry.asset_manager.get_asset_id(&id_as_str) else {
+                let Some(id) = registry.assets.get_asset_id(&id_as_str) else {
                     return Err(QPError::SpriteTextureDoesntExist);
                 };
 
-                let texture = registry.asset_manager.get::<RTexture>(id).unwrap();
+                let texture = registry.assets.get::<RTexture>(id).unwrap();
 
                 Some(TextureAtlas {
                     texture: id,
@@ -46,7 +46,7 @@ impl Schema for SchemaSprite {
             None => None,
         };
 
-        let entity = registry.entity_manager.create((
+        let entity = registry.entities.create((
             CTag {
                 tag: self.tag.clone(),
             },
@@ -56,21 +56,21 @@ impl Schema for SchemaSprite {
         ));
 
         if let Some(velocity) = self.velocity {
-            registry.entity_manager.add(&entity, velocity);
+            registry.entities.add(&entity, velocity);
         }
 
         Ok(entity)
     }
 
     fn from_entity(entity: Index, registry: &GlobalRegistry) -> Option<Self> {
-        let Some(sprite) = registry.entity_manager.get::<CSprite>(&entity) else {
+        let Some(sprite) = registry.entities.get::<CSprite>(&entity) else {
             return None;
         };
 
         if let (Some(tag), Some(transform), Some(quad)) = (
-            registry.entity_manager.get::<CTag>(&entity),
-            registry.entity_manager.get::<CTransform2D>(&entity),
-            registry.entity_manager.get::<CQuad>(&entity),
+            registry.entities.get::<CTag>(&entity),
+            registry.entities.get::<CTransform2D>(&entity),
+            registry.entities.get::<CQuad>(&entity),
         ) {
             let schema = Self {
                 tag: tag.tag.clone(),
@@ -81,7 +81,7 @@ impl Schema for SchemaSprite {
                     None => None,
                 },
                 color: sprite.color,
-                velocity: registry.entity_manager.get::<CVelocity2D>(&entity).cloned(),
+                velocity: registry.entities.get::<CVelocity2D>(&entity).cloned(),
             };
 
             return Some(schema);

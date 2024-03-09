@@ -28,7 +28,7 @@ impl Default for SchemaShader {
 impl Schema for SchemaShader {
     fn load_resource(&self, registry: &mut GlobalRegistry) -> QPResult<u64> {
         let shader = get_shader(&self.name);
-        let id = registry.asset_manager.load_asset(
+        let id = registry.assets.load_asset(
             &self.name,
             RShader::from_str(shader.vert, shader.frag, self.uniforms.to_vec())?,
         )?;
@@ -38,7 +38,7 @@ impl Schema for SchemaShader {
 
     fn from_resource(id: u64, registry: &GlobalRegistry) -> Option<Self> {
         if let (Some(shader), Some(name)) = (
-            registry.asset_manager.get::<RShader>(id),
+            registry.assets.get::<RShader>(id),
             registry.strings().get_string(id),
         ) {
             let schema = SchemaShader {

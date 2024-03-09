@@ -25,7 +25,7 @@ impl Schema for SchemaTexture {
             .set_parameter(ParameterName::MinFilter, ParameterValue::Linear)
             .set_parameter(ParameterName::MagFilter, ParameterValue::Nearest);
 
-        let id = registry.asset_manager.load_asset(
+        let id = registry.assets.load_asset(
             &self.name,
             RTexture {
                 texture,
@@ -38,7 +38,7 @@ impl Schema for SchemaTexture {
 
     fn from_resource(id: u64, registry: &GlobalRegistry) -> Option<Self> {
         if let (Some(texture), Some(name)) = (
-            registry.asset_manager.get::<RTexture>(id),
+            registry.assets.get::<RTexture>(id),
             registry.strings().get_string(id),
         ) {
             let schema = SchemaTexture {

@@ -14,12 +14,15 @@ pub mod errors;
 pub mod gfx;
 pub mod physics;
 pub mod platform;
+pub mod plugin;
+pub mod plugins;
 pub mod registry;
+pub mod resource_manager;
 pub mod schemas;
 pub mod world;
 
-#[cfg(feature = "qp_editor")]
-mod editor;
+// #[cfg(feature = "qp_editor")]
+// mod editor;
 
 #[cfg(feature = "qp_profiling")]
 mod profiling;
@@ -40,15 +43,15 @@ pub mod prelude {
     pub use self::app::App;
     pub use self::app::Controller;
     pub use self::app::FrameResult;
-    pub use self::app::Renderer;
     pub use self::errors::QPError;
     pub use self::qp_ecs::Index;
+    pub use self::qp_gfx::Renderer;
     pub use self::registry::GlobalRegistry;
     pub use self::schemas::prelude::Schema;
     pub use self::world::World;
 
-    #[cfg(feature = "qp_editor")]
-    pub use self::editor::prelude as qp_editor;
+    // #[cfg(feature = "qp_editor")]
+    // pub use self::editor::prelude as qp_editor;
 
     #[cfg(feature = "qp_profiling")]
     pub use self::profiling::QPProfiler;
