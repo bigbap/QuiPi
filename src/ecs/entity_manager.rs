@@ -195,7 +195,7 @@ impl EntityManager {
     }
 
     pub fn allocator_size(&self) -> usize {
-        self.allocator.borrow().length()
+        self.allocator.borrow().len()
     }
 
     pub fn count(&self) -> usize {
