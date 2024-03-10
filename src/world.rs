@@ -1,107 +1,84 @@
-use crate::{core::prelude::Timer, platform::sdl2::QPWindow, registry::GlobalRegistry, QPResult};
+use std::collections::HashMap;
+
+pub use macros::Schedule;
+
+use crate::{registry::GlobalRegistry, QPResult};
 
 pub struct World {
     pub registry: GlobalRegistry,
 
-    startup_systems: Vec<Box<dyn FnMut(&mut GlobalRegistry)>>,
-    systems: Vec<Box<dyn FnMut(&mut GlobalRegistry)>>,
-
-    pub(crate) state: WorldState, // pub debug_info: DebugInfo,
-                                  // pub debug_mode: bool,
-                                  // pub events: Vec<Event>,
-                                  // pub text_buffer: Vec<QPText>,
-
-                                  // pub viewport: Viewport,
-                                  // pub delta: f32,
-                                  // timer: Timer,
-                                  // pub rand: Random,
+    schedules: HashMap<&'static str, Box<dyn Schedule>>,
 }
 
 impl World {
     pub fn new() -> Self {
         let registry = GlobalRegistry::init();
-        let mut timer = Timer::new();
-        let delta = timer.delta();
 
         Self {
             registry,
-            startup_systems: vec![],
-            systems: vec![],
-            state: WorldState::Building, // timer,
-                                         // delta,
-                                         // rand: Random::from_seed(seed),
-
-                                         // debug_info: DebugInfo::default(),
-                                         // debug_mode: false,
-                                         // events: vec![],
-                                         // text_buffer: vec![],
-
-                                         // viewport,
+            schedules: HashMap::<&'static str, Box<dyn Schedule>>::new(),
         }
     }
 
-    pub fn add_startup_system(
-        &mut self,
-        system: impl FnMut(&mut GlobalRegistry) + 'static,
-    ) -> &mut Self {
-        if self.state != WorldState::Building {
-            panic!("system can only be added while in Build state")
-        }
+    pub fn add_schedule<S: Schedule + Default + 'static>(&mut self) {
+        self.schedules
+            .insert(std::any::type_name::<S>(), Box::new(S::default()));
+    }
 
-        self.startup_systems.push(Box::new(system));
+    pub fn add_system<S: Schedule>(&mut self, system: impl System) -> &mut Self {
+        let name = std::any::type_name::<S>();
+
+        if let Some(schedule) = self.schedules.get_mut(&name) {
+            schedule.add_system(Box::new(system));
+        } else {
+            #[cfg(debug_assertions)]
+            println!(
+                "trying to add system to a schedule that doesn't exist: {:?}",
+                name
+            );
+        }
 
         self
     }
 
-    pub fn add_system(&mut self, system: impl FnMut(&mut GlobalRegistry) + 'static) -> &mut Self {
-        if self.state != WorldState::Building {
-            panic!("system can only be added while in Build state")
+    pub fn execute_schedule<S: Schedule>(&mut self) -> QPResult<()> {
+        let name = std::any::type_name::<S>();
+
+        if let Some(schedule) = self.schedules.get_mut(&name) {
+            schedule.update(&mut self.registry)?;
+        } else {
+            #[cfg(debug_assertions)]
+            println!("trying to update a schedule that doesn't exist: {:?}", name);
         }
 
-        self.systems.push(Box::new(system));
-
-        self
+        Ok(())
     }
-
-    pub fn startup(&mut self) {
-        for system in self.startup_systems.iter_mut() {
-            system(&mut self.registry)
-        }
-
-        self.state = WorldState::Ready;
-    }
-
-    pub fn update(&mut self) -> bool {
-        self.registry.flush();
-
-        for system in self.systems.iter_mut() {
-            system(&mut self.registry)
-        }
-
-        self.registry.quit
-    }
-
-    // pub fn new_frame(&mut self, winapi: &mut QPWindow) -> QPResult<()> {
-    //     // self.events = winapi.get_event_queue()?;
-    //     // self.delta = self.timer.delta();
-
-    //     // self.debug_info.fps = (1.0 / self.delta) as u32;
-    //     // self.debug_info.frame_ms = (self.delta * 1000.0) as u32;
-
-    //     Ok(())
-    // }
-
-    // pub fn flush(&mut self) {
-    //     self.registry.flush();
-
-    //     // self.text_buffer.clear();
-    // }
 }
 
-#[derive(Debug, PartialEq)]
-pub(crate) enum WorldState {
-    Building,
-    Ready,
+pub trait System: FnMut(&mut GlobalRegistry) -> QPResult<()> + 'static {}
+impl<F> System for F where F: FnMut(&mut GlobalRegistry) -> QPResult<()> + 'static {}
+
+pub type BoxedSystem = Box<dyn System>;
+
+pub trait Schedule {
+    fn add_system(&mut self, system: BoxedSystem);
+
+    fn update(&mut self, registry: &mut GlobalRegistry) -> QPResult<()>;
+}
+
+#[derive(Default, Schedule)]
+pub struct StartupSchedule {
+    systems: Vec<BoxedSystem>,
+}
+
+#[derive(Default, Schedule)]
+pub struct UpdateSchedule {
+    systems: Vec<BoxedSystem>,
+}
+
+#[derive(Default, Schedule)]
+pub struct RenderSchedule {
+    systems: Vec<BoxedSystem>,
 }
 
 #[derive(Debug, Default)]

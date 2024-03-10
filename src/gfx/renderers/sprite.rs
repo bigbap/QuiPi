@@ -2,7 +2,7 @@ use crate::{
     platform::opengl::capabilities::{gl_blending_func, gl_enable, GLBlendingFactor, GLCapability},
     prelude::{
         qp_assets::{RCamera2D, RShader},
-        qp_ecs::components::{CSprite, CTransform2D},
+        qp_common::components::{CSprite, CTransform2D},
         GlobalRegistry, QPError,
     },
     QPResult,

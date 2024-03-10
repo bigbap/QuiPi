@@ -1,52 +1,29 @@
 pub mod assets;
 mod loaders;
 
-use std::{
-    cell::RefCell,
-    collections::HashMap,
-    rc::{Rc, Weak},
-};
+use std::collections::HashMap;
 
-use crate::{
-    prelude::{
-        qp_core::StringInterner,
-        qp_ecs::{Component, EntityManager},
-        Index, QPError,
-    },
-    QPResult,
-};
+use crate::{resources::Resource, QPResult};
 
-pub struct AssetManager {
-    asset_store: EntityManager,
-    asset_map: HashMap<u64, Index>,
-
-    strings: Weak<RefCell<StringInterner>>,
+#[derive(Debug)]
+pub struct AssetStore<A: Asset + 'static> {
+    store: HashMap<AssetId, A>,
 }
 
-impl AssetManager {
-    pub fn new(strings: Weak<RefCell<StringInterner>>) -> Self {
+impl<A: Asset> AssetStore<A> {
+    pub fn new() -> Self {
         Self {
-            asset_store: EntityManager::new(),
-            asset_map: HashMap::new(),
-            strings,
+            store: HashMap::new(),
         }
     }
 
-    pub fn load_asset<A: Component + std::fmt::Debug + PartialEq + 'static>(
-        &mut self,
-        name: &str,
-        asset: A,
-    ) -> QPResult<u64> {
-        let Some(interner) = self.string_interner() else {
-            return Err(QPError::SharedReferenceDropped);
-        };
+    pub fn load_asset(&mut self, mut asset: A) -> QPResult<AssetId> {
+        let id = asset.identifier();
 
-        let id = interner.borrow_mut().intern(name.to_string());
-
-        if self.asset_map.get(&id).is_none() {
-            let index = self.asset_store.create(asset);
-
-            self.asset_map.insert(id, index);
+        if self.store.get(&id).is_none() {
+            asset.load(|state| {
+                self.store.insert(id, asset);
+            });
         } else {
             #[cfg(debug_assertions)]
             println!("tried to load an already loaded asset");
@@ -55,64 +32,88 @@ impl AssetManager {
         Ok(id)
     }
 
-    pub fn unload_asset<A: Component + std::fmt::Debug + PartialEq + 'static>(&mut self, id: u64) {
-        if let Some(index) = self.asset_map.get(&id) {
-            self.asset_store.remove::<A>(index);
-
-            self.asset_map.remove(&id);
+    pub fn unload_asset(&mut self, id: AssetId) {
+        if let Some(asset) = self.store.get_mut(&id) {
+            asset.unload(|state| {
+                self.store.remove(&id);
+            })
         }
     }
 
-    pub fn get<A: Component + std::fmt::Debug + PartialEq + 'static>(&self, id: u64) -> Option<&A> {
-        match self.asset_map.get(&id) {
-            Some(index) => self.asset_store.get::<A>(index),
-            None => None,
-        }
+    pub fn get(&self, id: AssetId) -> Option<&A> {
+        self.store.get(&id)
     }
 
-    pub fn get_mut<A: Component + std::fmt::Debug + PartialEq + 'static>(
-        &mut self,
-        id: u64,
-    ) -> Option<&mut A> {
-        match self.asset_map.get(&id) {
-            Some(index) => self.asset_store.get_mut::<A>(index),
-            None => None,
-        }
+    pub fn get_mut(&mut self, id: AssetId) -> Option<&mut A> {
+        self.store.get_mut(&id)
     }
 
-    pub fn get_asset_id(&mut self, name: &str) -> Option<u64> {
-        let Some(interner) = self.string_interner() else {
-            return None;
-        };
+    // pub fn get_asset_id(&mut self, name: &str) -> Option<u64> {
+    //     let Some(interner) = self.string_interner() else {
+    //         return None;
+    //     };
 
-        let id = interner.borrow_mut().intern(name.to_string());
+    //     let id = interner.borrow_mut().intern(name.to_string());
 
-        match self.asset_map.contains_key(&id) {
-            true => Some(id),
-            _ => None,
-        }
+    //     match self.asset_map.contains_key(&id) {
+    //         true => Some(id),
+    //         _ => None,
+    //     }
+    // }
+
+    // pub fn add_index(&mut self, id: u64, index: Index) {
+    //     self.asset_map.insert(id, index);
+    // }
+
+    // pub fn get_index(&self, id: u64) -> Option<Index> {
+    //     self.asset_map.get(&id).cloned()
+    // }
+
+    // pub fn flush(&mut self) {
+    //     self.asset_store.flush();
+    // }
+
+    // fn string_interner(&mut self) -> Option<Rc<RefCell<StringInterner>>> {
+    //     let Some(string_interner) = self.strings.upgrade() else {
+    //         #[cfg(debug_assertions)]
+    //         println!("[asset manager] weak reference to string_interner returned None");
+
+    //         return None;
+    //     };
+
+    //     Some(string_interner)
+    // }
+}
+
+pub trait Asset {
+    fn identifier(&self) -> AssetId;
+
+    fn load(&mut self, handler: impl AssetHandler) {
+        handler(AssetState::Loaded(self.identifier()))
     }
 
-    pub fn add_index(&mut self, id: u64, index: Index) {
-        self.asset_map.insert(id, index);
+    fn unload(&mut self, handler: impl AssetHandler) {
+        handler(AssetState::Unloaded)
+    }
+}
+
+pub enum AssetState {
+    Loaded(AssetId),
+    Unloaded,
+}
+
+pub trait AssetHandler: FnOnce(AssetState) + 'static {}
+impl<F> AssetHandler for F where F: FnOnce(AssetState) + 'static {}
+
+#[derive(Debug, Hash, PartialEq, Eq, Clone, Copy)]
+pub struct AssetId(pub &'static str);
+
+impl<A: Asset> Resource for AssetStore<A> {
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
     }
 
-    pub fn get_index(&self, id: u64) -> Option<Index> {
-        self.asset_map.get(&id).cloned()
-    }
-
-    pub fn flush(&mut self) {
-        self.asset_store.flush();
-    }
-
-    fn string_interner(&mut self) -> Option<Rc<RefCell<StringInterner>>> {
-        let Some(string_interner) = self.strings.upgrade() else {
-            #[cfg(debug_assertions)]
-            println!("[asset manager] weak reference to string_interner returned None");
-
-            return None;
-        };
-
-        Some(string_interner)
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
     }
 }

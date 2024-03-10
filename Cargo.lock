@@ -1038,6 +1038,7 @@ dependencies = [
  "image",
  "macros",
  "nalgebra-glm",
+ "once_cell",
  "rand",
  "rand_chacha",
  "rodio",

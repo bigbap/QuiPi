@@ -1,6 +1,9 @@
-use crate::prelude::{
-    qp_ecs::components::{CEulerAngles, CGizmo},
-    GlobalRegistry, Index,
+use crate::{
+    common::prelude::components::{gizmo_right, gizmo_up},
+    prelude::{
+        qp_common::components::{CEulerAngles, CGizmo},
+        GlobalRegistry, Index,
+    },
 };
 
 pub fn s_rotate_camera(registry: &mut GlobalRegistry, camera: &Index) {
@@ -18,7 +21,8 @@ pub fn s_rotate_camera(registry: &mut GlobalRegistry, camera: &Index) {
         return;
     };
     gizmo.front = front;
-    gizmo.update_vectors();
+    gizmo.right = gizmo_right(&gizmo.front, &gizmo.world_up);
+    gizmo.up = gizmo_up(&gizmo.front, &gizmo.right);
 }
 
 pub fn s_update_angles(

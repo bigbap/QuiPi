@@ -11,7 +11,7 @@ use crate::{
         draw::{DrawBuffer, DrawMode},
         textures::{max_texture_slots, use_texture},
     },
-    prelude::qp_assets::{RShader, RTexture},
+    prelude::qp_common::assets::{ShaderAsset, TextureAsset},
 };
 
 pub struct BatchRenderer<const MESH_COUNT: usize, const VERTEX_COUNT: usize> {
@@ -96,18 +96,18 @@ impl<const MESH_COUNT: usize, const VERTEX_COUNT: usize> BatchRenderer<MESH_COUN
         self.vertices.clear();
     }
 
-    pub fn flush_batch(&mut self, shader: &RShader) {
+    pub fn flush_batch(&mut self, shader: &ShaderAsset) {
         if self.vertices.is_empty() {
             return;
         }
 
-        shader.program.use_program();
+        let program = &shader.program;
+
+        program.use_program();
 
         for i in 0..self.textures.len() {
             use_texture(self.textures[i], i as i32);
-            shader
-                .program
-                .set_int(&format!("u_textures[{}]", i), i as i32);
+            program.set_int(&format!("u_textures[{}]", i), i as i32);
         }
 
         self.vao.bind();
@@ -135,12 +135,12 @@ impl<const MESH_COUNT: usize, const VERTEX_COUNT: usize> BatchRenderer<MESH_COUN
     pub fn draw(
         &mut self,
         vertices: [Vertex; VERTEX_COUNT],
-        shader: &RShader,
-        texture: Option<&RTexture>,
+        shader: &ShaderAsset,
+        texture: Option<&TextureAsset>,
     ) {
         let mut texture_slot = self.max_textures as usize;
         if let Some(texture) = texture {
-            let id = texture.texture.id;
+            let id = texture.texture_id();
 
             if let Some((i, _)) = self
                 .textures
@@ -172,7 +172,7 @@ impl<const MESH_COUNT: usize, const VERTEX_COUNT: usize> BatchRenderer<MESH_COUN
         }
     }
 
-    fn batch_reset(&mut self, shader: &RShader) {
+    fn batch_reset(&mut self, shader: &ShaderAsset) {
         self.end_batch();
         self.flush_batch(shader);
         self.begin_batch();

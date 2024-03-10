@@ -31,21 +31,6 @@ impl EntityManager {
         entity_manager
     }
 
-    // pub fn register_component<C: Component + PartialEq + 'static>(&mut self) -> &mut Self {
-    //     self.component_maps
-    //         .insert::<EntityMap<C>>(EntityMap::<C>::new(Rc::clone(&self.entity_allocator)));
-
-    //     self
-    // }
-
-    // pub fn create(&mut self) -> Index {
-    //     let entity = self.entity_allocator.borrow_mut().allocate();
-
-    //     self.entities.push(entity);
-
-    //     entity
-    // }
-
     pub fn create<B: Bundle>(&mut self, bundle: B) -> Index {
         let entity = self.allocator.borrow_mut().allocate();
 
@@ -76,13 +61,7 @@ impl EntityManager {
         component: C,
     ) {
         match self.components.get_mut::<EntityMap<C>>(C::id()) {
-            None => {
-                #[cfg(debug_assertions)]
-                println!(
-                    "component {:?} has not been registered",
-                    std::any::type_name::<C>()
-                );
-            }
+            None => (),
             Some(cmp_map) => {
                 cmp_map.set(&entity, component);
             }
@@ -91,13 +70,7 @@ impl EntityManager {
 
     pub fn remove<C: Component + std::fmt::Debug + PartialEq + 'static>(&mut self, entity: &Index) {
         match self.components.get_mut::<EntityMap<C>>(C::id()) {
-            None => {
-                #[cfg(debug_assertions)]
-                println!(
-                    "component {:?} has not been registered",
-                    std::any::type_name::<C>()
-                );
-            }
+            None => (),
             Some(cmp_map) => {
                 cmp_map.unset(&entity);
             }
@@ -110,15 +83,7 @@ impl EntityManager {
         }
 
         match self.components.get::<EntityMap<C>>(C::id()) {
-            None => {
-                #[cfg(debug_assertions)]
-                println!(
-                    "component {:?} has not been registered",
-                    std::any::type_name::<C>()
-                );
-
-                return None;
-            }
+            None => None,
             Some(cmp_map) => match cmp_map.get(entity) {
                 None => None,
                 Some(cmp) => Some(cmp),
@@ -135,15 +100,7 @@ impl EntityManager {
         }
 
         match self.components.get_mut::<EntityMap<C>>(C::id()) {
-            None => {
-                #[cfg(debug_assertions)]
-                println!(
-                    "component {:?} has not been registered",
-                    std::any::type_name::<C>()
-                );
-
-                return None;
-            }
+            None => None,
             Some(cmp_map) => match cmp_map.get_mut(entity) {
                 None => None,
                 Some(cmp) => Some(cmp),
@@ -153,32 +110,31 @@ impl EntityManager {
 
     pub fn get_all<C: Component + PartialEq + 'static>(&self) {}
 
-    pub fn query_all<C: Component + PartialEq + 'static>(&self) -> Vec<Index> {
-        let Some(cmp_map) = self.components.get::<EntityMap<C>>(C::id()) else {
-            return vec![];
-        };
-
-        cmp_map.get_entities()
+    pub fn query<C: Component + PartialEq + 'static>(&self) -> Option<&EntityMap<C>> {
+        self.components.get::<EntityMap<C>>(C::id())
+    }
+    pub fn query_mut<C: Component + PartialEq + 'static>(&mut self) -> Option<&mut EntityMap<C>> {
+        self.components.get_mut::<EntityMap<C>>(C::id())
     }
 
-    pub fn query<C: Component + PartialEq + 'static>(&self, filter: C) -> Vec<Index> {
-        let Some(cmp_map) = self.components.get::<EntityMap<C>>(C::id()) else {
-            return vec![];
-        };
-        let all_entities = cmp_map.get_entities();
+    // pub fn query<C: Component + PartialEq + 'static>(&self, filter: C) -> Vec<Index> {
+    //     let Some(cmp_map) = self.components.get::<EntityMap<C>>(C::id()) else {
+    //         return vec![];
+    //     };
+    //     let all_entities = cmp_map.get_entities();
 
-        let mut result = Vec::<Index>::new();
+    //     let mut result = Vec::<Index>::new();
 
-        for entity in all_entities {
-            if let Some(cmp) = cmp_map.get(&entity) {
-                if *cmp == filter {
-                    result.push(entity);
-                }
-            };
-        }
+    //     for entity in all_entities {
+    //         if let Some(cmp) = cmp_map.get(&entity) {
+    //             if *cmp == filter {
+    //                 result.push(entity);
+    //             }
+    //         };
+    //     }
 
-        result
-    }
+    //     result
+    // }
 
     pub fn reset(&mut self) -> QPResult<()> {
         for entity in self.entities.iter() {

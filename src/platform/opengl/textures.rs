@@ -7,10 +7,10 @@
 pub enum Target {
     Texture1D,
     Texture2D,
-    Texture3D
+    Texture3D,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Format {
     Rgb,
     Rgba,
@@ -24,7 +24,7 @@ pub enum ParameterName {
     MagFilter,
     WrapT,
     WrapR,
-    WrapS
+    WrapS,
 }
 
 #[allow(dead_code)]
@@ -42,8 +42,8 @@ pub enum ParameterValue {
     MirroredRepeat,
     Repeat,
     MirrorClampToEdge,
-    
-    U32(u32)
+
+    U32(u32),
 }
 
 #[derive(Debug, PartialEq)]
@@ -56,11 +56,7 @@ pub struct Texture {
 }
 
 impl Texture {
-    pub fn new(
-        width: i32,
-        height: i32,
-        target: Target
-    ) -> Self {
+    pub fn new(width: i32, height: i32, target: Target) -> Self {
         let mut id: gl::types::GLuint = 0;
         unsafe { gl::GenTextures(1, &mut id) }
 
@@ -68,16 +64,11 @@ impl Texture {
             id,
             width,
             height,
-            target: target.unwrap()
+            target: target.unwrap(),
         }
     }
 
-    pub fn add_image_data(
-        &self,
-        internal_format: Format,
-        format: Format,
-        buffer: &[u8],
-    ) -> &Self {
+    pub fn add_image_data(&self, internal_format: Format, format: Format, buffer: &[u8]) -> &Self {
         let internal_format = internal_format.unwrap();
         let format = format.unwrap();
 
@@ -91,7 +82,7 @@ impl Texture {
                 0,
                 format,
                 gl::UNSIGNED_BYTE,
-                buffer.as_ptr() as *const gl::types::GLvoid
+                buffer.as_ptr() as *const gl::types::GLvoid,
             );
 
             gl::GenerateMipmap(self.target);
@@ -122,7 +113,7 @@ impl Texture {
                 height,
                 format,
                 gl::UNSIGNED_BYTE,
-                buffer.as_ptr() as *const gl::types::GLvoid
+                buffer.as_ptr() as *const gl::types::GLvoid,
             );
 
             gl::GenerateMipmap(self.target);
@@ -138,17 +129,9 @@ impl Texture {
         self
     }
 
-    pub fn set_parameter(
-        &self,
-        pname: ParameterName,
-        value: ParameterValue
-    ) -> &Self {
+    pub fn set_parameter(&self, pname: ParameterName, value: ParameterValue) -> &Self {
         unsafe {
-            gl::TexParameteri(
-                self.target,
-                pname.unwrap(),
-                value.unwrap() as i32
-            );
+            gl::TexParameteri(self.target, pname.unwrap(), value.unwrap() as i32);
         }
 
         self
@@ -208,7 +191,7 @@ impl Target {
         match self {
             Target::Texture1D => gl::TEXTURE_1D,
             Target::Texture2D => gl::TEXTURE_2D,
-            Target::Texture3D => gl::TEXTURE_3D
+            Target::Texture3D => gl::TEXTURE_3D,
         }
     }
 }
@@ -218,7 +201,7 @@ impl Format {
         match self {
             Format::Rgb => gl::RGB,
             Format::Rgba => gl::RGBA,
-            Format::Red => gl::RED
+            Format::Red => gl::RED,
         }
     }
 }
@@ -251,7 +234,7 @@ impl ParameterValue {
             ParameterValue::Repeat => gl::REPEAT,
             ParameterValue::MirrorClampToEdge => gl::MIRROR_CLAMP_TO_EDGE,
 
-            ParameterValue::U32(val) => *val
+            ParameterValue::U32(val) => *val,
         }
     }
 }

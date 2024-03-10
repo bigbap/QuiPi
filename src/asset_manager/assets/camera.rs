@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    prelude::qp_ecs::{
-        components::{CTransform, CTransform2D},
-        Component, ComponentId,
+    prelude::{
+        qp_common::components::{CTransform, CTransform2D},
+        qp_ecs::{Component, ComponentId},
     },
     QPResult,
 };

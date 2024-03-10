@@ -1,6 +1,6 @@
 use crate::{
     prelude::{
-        qp_ecs::components::{CDistance, CEulerAngles, CGizmo, CTarget, CTransform},
+        qp_common::components::{CDistance, CEulerAngles, CGizmo, CTarget, CTransform},
         GlobalRegistry, Index,
     },
     QPResult,

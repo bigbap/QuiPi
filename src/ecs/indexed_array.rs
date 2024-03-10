@@ -201,14 +201,14 @@ pub struct Entry<T> {
 }
 
 impl<T> IndexedArray<T> {
-    pub fn new(allocator: Rc<RefCell<Allocator>>) -> Self {
+    pub(super) fn new(allocator: Rc<RefCell<Allocator>>) -> Self {
         Self {
             allocator,
             list: Vec::<Option<Entry<T>>>::with_capacity(DEFAULT_CAPACITY),
         }
     }
 
-    pub fn set(&mut self, index: &Index, value: T) {
+    pub(super) fn set(&mut self, index: &Index, value: T) {
         let i = index.index;
 
         if i >= self.list.capacity() {
@@ -235,7 +235,7 @@ impl<T> IndexedArray<T> {
         self.list[i] = None;
     }
 
-    pub fn get(&self, index: &Index) -> Option<&T> {
+    pub(super) fn get(&self, index: &Index) -> Option<&T> {
         match self.list.get(index.index) {
             Some(Some(entry)) => {
                 if entry.version == index.version {
@@ -248,7 +248,7 @@ impl<T> IndexedArray<T> {
         }
     }
 
-    pub fn get_mut(&mut self, index: &Index) -> Option<&mut T> {
+    pub(super) fn get_mut(&mut self, index: &Index) -> Option<&mut T> {
         match self.list.get_mut(index.index) {
             None => None,
             Some(None) => None,
@@ -262,7 +262,7 @@ impl<T> IndexedArray<T> {
         }
     }
 
-    pub fn get_entities(&self) -> Vec<Index> {
+    pub(super) fn get_entities(&self) -> Vec<Index> {
         self.list
             .iter()
             .enumerate()

@@ -1,6 +1,6 @@
 // mod grid;
 mod batch_renderer;
-mod renderers;
+// mod renderers;
 mod shaders;
 mod texture;
 mod viewport;
@@ -15,7 +15,7 @@ pub mod prelude {
 
     // pub use grid::*;
     pub use batch_renderer::*;
-    pub use renderers::*;
+    // pub use renderers::*;
     pub use shaders::*;
     pub use texture::texture;
     pub use viewport::Viewport;

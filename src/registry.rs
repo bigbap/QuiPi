@@ -1,55 +1,27 @@
-use std::{
-    cell::{Ref, RefCell, RefMut},
-    rc::Rc,
-};
-
-use crate::{
-    asset_manager::AssetManager,
-    prelude::{qp_core::StringInterner, qp_ecs::EntityManager},
-    resource_manager::ResourceManager,
-};
+use crate::{prelude::qp_ecs::EntityManager, resources::ResourceManager};
 
 /**
  * Anything that must be global to the aplication is can be accessed
  * from here. This should be the only thing that is passed around.
  */
 pub struct GlobalRegistry {
-    strings: Rc<RefCell<StringInterner>>,
-
     pub entities: EntityManager,
-    pub assets: AssetManager,
     pub resources: ResourceManager,
-
-    pub quit: bool,
 }
 
 impl GlobalRegistry {
     pub fn init() -> Self {
-        let strings = Rc::from(RefCell::from(StringInterner::new()));
         let entities = EntityManager::new();
-        let assets = AssetManager::new(Rc::downgrade(&strings));
-        let resources = ResourceManager::new(Rc::downgrade(&strings));
+        let resources = ResourceManager::new();
 
         Self {
             entities,
-            assets,
-            strings,
             resources,
-            quit: false,
         }
-    }
-
-    pub fn strings(&self) -> Ref<StringInterner> {
-        self.strings.borrow()
-    }
-
-    pub fn strings_mut(&self) -> RefMut<StringInterner> {
-        self.strings.borrow_mut()
     }
 
     pub fn flush(&mut self) {
         self.entities.flush();
-        self.assets.flush();
     }
 }
 

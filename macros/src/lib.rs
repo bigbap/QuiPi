@@ -27,16 +27,37 @@ pub fn resource_derive_macro(item: TokenStream) -> TokenStream {
     // generate
     (quote::quote! {
         impl Resource for #ident {
-            fn name(&self) -> &str {
-                std::any::type_name::<Self>()
-            }
-
             fn as_any(&self) -> &dyn std::any::Any {
                 self
             }
 
             fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
                 self
+            }
+        }
+    })
+    .into()
+}
+
+#[proc_macro_derive(Schedule)]
+pub fn schedule_derive_macro(item: TokenStream) -> TokenStream {
+    // parse
+    let ast: DeriveInput = syn::parse(item).unwrap();
+    let ident = ast.ident;
+
+    // generate
+    (quote::quote! {
+        impl Schedule for #ident {
+            fn add_system(&mut self, system: BoxedSystem) {
+                self.systems.push(system);
+            }
+
+            fn update(&mut self, registry: &mut GlobalRegistry) -> QPResult<()> {
+                for system in self.systems.iter_mut() {
+                    system(registry)?;
+                }
+
+                Ok(())
             }
         }
     })

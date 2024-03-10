@@ -4,7 +4,7 @@ pub trait Plugin: Plugins {
     /// runs first
     fn build(&self, app: &mut App) -> QPResult<()>;
 
-    /// runs after all plugins finish running Puild()
+    /// runs after all plugins finish running build()
     fn done(&self, _app: &mut App) -> QPResult<()> {
         Ok(())
     }
