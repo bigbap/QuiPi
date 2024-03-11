@@ -60,7 +60,7 @@ pub mod prelude {
     // 3rd party - TODO: abstract this
     pub use sdl2::event::Event;
 
-    pub use qp_common::plugins::plugins_2d;
+    pub use qp_common::plugins::render_plugins;
     pub use qp_common::plugins::window_plugins;
     pub use qp_common::resources::*;
 

@@ -44,12 +44,28 @@ pub trait Camera {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
 }
 
-#[derive(Default, Clone)]
+#[derive(Clone)]
 pub struct Camera2D {
     pub orthographic: COrthographic,
     pub transform: CTransform2D,
     pub view: CViewMatrix,
     pub projection: CProjectionMatrix,
+}
+
+impl Default for Camera2D {
+    fn default() -> Self {
+        let mut camera = Self {
+            orthographic: COrthographic::default(),
+            transform: CTransform2D::default(),
+            view: CViewMatrix::default(),
+            projection: CProjectionMatrix::default(),
+        };
+
+        camera.view.0 = camera.view_matrix();
+        camera.projection.0 = camera.projection_matrix();
+
+        camera
+    }
 }
 
 impl Camera for Camera2D {

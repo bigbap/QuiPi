@@ -1,5 +1,5 @@
 use crate::{
-    common::resources::{Asset, AssetId, AssetLoader, Source},
+    common::resources::{Asset, AssetLoader, Source},
     platform::opengl::textures::Texture,
     prelude::{qp_gfx::texture, QPError},
     QPResult,

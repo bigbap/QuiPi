@@ -1,8 +1,10 @@
 use quipi::{
     common::{
-        assets::{TextureAsset, TextureLoader},
+        assets::{ShaderAsset, TextureAsset, TextureLoader},
         bundles::sprite_bundle,
         components::components::{CColor, CQuad},
+        plugins::quad_shader::QUAD_SHADER_NAME,
+        systems::render_quads,
     },
     prelude::*,
 };
@@ -10,7 +12,8 @@ use sdl2::keyboard::Keycode;
 
 fn main() {
     if let Err(e) = App::new()
-        .add_plugins(plugins_2d("Sandbox", 1600, 900))
+        .add_plugins(window_plugins("Sandbox", 1600, 900))
+        .add_plugins(render_plugins())
         .add_plugins(MyPlugin {})
         .run()
     {
@@ -40,7 +43,7 @@ impl Plugin for MyPlugin {
             CQuad::default(),
             texture_id,
             (1, 1),
-            CColor(0.7, 0.1, 0.2, 1.0),
+            CColor(1.0, 0.1, 0.2, 1.0),
         ));
 
         app.add_system::<UpdateSchedule>(move |registry: &mut GlobalRegistry| {
@@ -60,6 +63,19 @@ impl Plugin for MyPlugin {
 
             Ok(())
         });
+
+        let shader_id = app
+            .world
+            .registry
+            .resources
+            .get_asset_id::<ShaderAsset>(QUAD_SHADER_NAME)?;
+        let camera_id = app
+            .world
+            .registry
+            .resources
+            .add_camera("my_camera", Camera2D::default())?;
+
+        app.add_system::<RenderSchedule>(render_quads(shader_id, camera_id));
 
         Ok(())
     }

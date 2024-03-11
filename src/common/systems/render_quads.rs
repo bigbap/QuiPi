@@ -1,63 +1,21 @@
 use crate::{
     common::{
-        assets::{ShaderAsset, ShaderLoader, TextureAsset, TextureCoords},
+        assets::{ShaderAsset, TextureAsset, TextureCoords},
         bundles::CSprite,
         prelude::components::{CQuad, CSkip, CTextureAtlas, CTransform2D},
-        resources::{Camera2D, CameraId, Source},
+        resources::{AssetId, Camera2D, CameraId},
     },
     platform::opengl::capabilities::{gl_blending_func, gl_enable, GLBlendingFactor, GLCapability},
     prelude::{
-        qp_common::resources::AssetId,
         qp_gfx::{BatchRenderer, Vertex},
         QPError, System,
     },
     registry::GlobalRegistry,
-    world::RenderSchedule,
 };
 
-use super::Plugin;
-
 const BATCH_SIZE: usize = 10000;
-const SHADER_NAME: &str = "quad_shader";
-const CAMERA_NAME: &str = "default_quad_camera";
 
-pub struct Render2DPlugin {
-    camera: Camera2D,
-    camera_name: &'static str,
-}
-
-impl Default for Render2DPlugin {
-    fn default() -> Self {
-        Self {
-            camera: Camera2D::default(),
-            camera_name: CAMERA_NAME,
-        }
-    }
-}
-
-impl Plugin for Render2DPlugin {
-    fn build(&self, app: &mut crate::prelude::App) -> crate::QPResult<()> {
-        let shader_id = app.world.registry.resources.load_asset(
-            SHADER_NAME,
-            ShaderLoader {
-                source: Source::Strings((VERT, FRAG)),
-                uniforms: vec![],
-            },
-        )?;
-
-        let camera_id = app
-            .world
-            .registry
-            .resources
-            .add_camera(self.camera_name, self.camera.clone())?;
-
-        app.add_system::<RenderSchedule>(quad_render_system(shader_id, camera_id));
-
-        Ok(())
-    }
-}
-
-pub fn quad_render_system(shader_id: AssetId, camera_id: CameraId) -> impl System {
+pub fn render_quads(shader_id: AssetId, camera_id: CameraId) -> impl System {
     debug_assert!(shader_id.validate::<ShaderAsset>());
 
     let mut renderer = BatchRenderer::<BATCH_SIZE, 4>::new(vec![0, 1, 3, 1, 2, 3]);
@@ -70,7 +28,7 @@ pub fn quad_render_system(shader_id: AssetId, camera_id: CameraId) -> impl Syste
         let shader = registry
             .resources
             .get_asset(&shader_id)
-            .ok_or(QPError::AssetNotFound(SHADER_NAME.into()))?;
+            .ok_or(QPError::AssetNotFound("shader".into()))?;
 
         let camera = registry
             .resources
@@ -166,46 +124,3 @@ pub fn vertices(
         },
     ]
 }
-
-const VERT: &str = r#"
-#version 450 core
-
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec4 aColor;
-layout (location = 2) in vec2 aTexCoords;
-layout (location = 3) in float aTexIndex;
-
-out vec4 color;
-out vec2 texCoords;
-out float texIndex;
-
-void main(){
-    gl_Position = vec4(aPos, 1.0);
-
-    color = aColor;
-    texCoords = aTexCoords;
-    texIndex = aTexIndex;
-}
-"#;
-
-const FRAG: &str = r#"
-#version 450 core
-
-in vec4 color;
-in vec2 texCoords;
-in float texIndex;
-
-uniform sampler2D u_textures[32];
-
-out vec4 fragColor;
-
-void main() {
-    int texId = int(texIndex);
-
-    if (texId >= 32) {
-        fragColor = color;
-    } else {
-        fragColor = color * texture(u_textures[texId], texCoords);
-    }
-}
-"#;
