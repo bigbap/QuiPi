@@ -1,4 +1,4 @@
-use crate::{core::prelude::Timer, resources::Resource};
+use crate::{core::prelude::Timer, resources::*};
 
 #[derive(Resource)]
 pub struct Clock {

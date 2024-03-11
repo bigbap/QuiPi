@@ -1,7 +1,7 @@
 // mod grid;
-mod batch_renderer;
+mod batch;
 // mod renderers;
-mod shaders;
+// mod shaders_delete;
 mod texture;
 mod viewport;
 
@@ -14,9 +14,9 @@ pub mod prelude {
     use super::*;
 
     // pub use grid::*;
-    pub use batch_renderer::*;
+    pub use batch::*;
     // pub use renderers::*;
-    pub use shaders::*;
+    // pub use shaders_delete::*;
     pub use texture::texture;
     pub use viewport::Viewport;
 

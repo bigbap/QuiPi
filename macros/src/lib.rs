@@ -26,7 +26,9 @@ pub fn resource_derive_macro(item: TokenStream) -> TokenStream {
 
     // generate
     (quote::quote! {
-        impl Resource for #ident {
+        impl Resource for #ident {}
+
+        impl AsAny for #ident {
             fn as_any(&self) -> &dyn std::any::Any {
                 self
             }
@@ -58,6 +60,27 @@ pub fn schedule_derive_macro(item: TokenStream) -> TokenStream {
                 }
 
                 Ok(())
+            }
+        }
+    })
+    .into()
+}
+
+#[proc_macro_derive(AsAny)]
+pub fn asany_derive_macro(item: TokenStream) -> TokenStream {
+    // parse
+    let ast: DeriveInput = syn::parse(item).unwrap();
+    let ident = ast.ident;
+
+    // generate
+    (quote::quote! {
+        impl AsAny for #ident {
+            fn as_any(&self) -> &dyn std::any::Any {
+                self
+            }
+
+            fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+                self
             }
         }
     })

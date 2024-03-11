@@ -1,5 +1,35 @@
-use crate::platform::opengl::functions::gl_set_viewport_dimensions;
+use std::{any::TypeId, collections::HashMap};
 
+use crate::{
+    common::resources::Camera, platform::opengl::functions::gl_set_viewport_dimensions,
+    resources::*,
+};
+
+// #[derive(Resource)]
+// pub struct ViewportManager {
+//     viewports: HashMap<TypeId, Box<dyn ViewportTrait>>,
+// }
+
+// pub struct Dimensions {
+//     pub x: i32,
+//     pub y: i32,
+//     pub width: i32,
+//     pub height: i32,
+// }
+
+// pub trait ViewportTrait {
+//     fn set_dimensions(&mut self, dims: Dimensions);
+
+//     fn get_dimensions(&mut self) -> Dimensions;
+
+//     fn insert_camera(&mut self, camera: Box<dyn Camera>);
+
+//     fn get_camera(&self) -> Box<&dyn Camera>;
+
+//     fn get_camera_mut(&mut self) -> Box<&mut dyn Camera>;
+// }
+
+#[derive(Resource)]
 pub struct Viewport {
     x: i32,
     y: i32,

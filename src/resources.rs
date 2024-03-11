@@ -1,6 +1,6 @@
 pub use macros::Resource;
 
-use std::{any::Any, collections::HashMap};
+use std::collections::HashMap;
 
 use crate::{
     common::resources::{
@@ -139,14 +139,10 @@ impl ResourceManager {
     }
 }
 
-pub trait Resource {
+pub trait Resource: AsAny {
     fn name(&self) -> &str {
         std::any::type_name::<Self>()
     }
-
-    fn as_any(&self) -> &dyn Any;
-
-    fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, Copy)]
@@ -157,3 +153,5 @@ impl ResourceId {
         ResourceId(std::any::TypeId::of::<R>())
     }
 }
+
+pub use crate::core::prelude::AsAny;

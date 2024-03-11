@@ -1,3 +1,4 @@
+use crate::core::prelude::AsAny;
 use crate::prelude::qp_common::components::*;
 use crate::resources::Resource;
 use std::collections::HashMap;
@@ -34,17 +35,13 @@ impl CameraList {
 #[derive(Debug, Hash, Eq, PartialEq, Clone, Copy)]
 pub struct CameraId(pub u64);
 
-pub trait Camera {
+pub trait Camera: AsAny {
     fn view_matrix(&self) -> glm::Mat4;
 
     fn projection_matrix(&self) -> glm::Mat4;
-
-    fn as_any(&self) -> &dyn std::any::Any;
-
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
 }
 
-#[derive(Clone)]
+#[derive(Clone, AsAny)]
 pub struct Camera2D {
     pub orthographic: COrthographic,
     pub transform: CTransform2D,
@@ -89,17 +86,9 @@ impl Camera for Camera2D {
             self.orthographic.far,
         )
     }
-
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
-    }
-
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
-        self
-    }
 }
 
-#[derive(Default)]
+#[derive(Default, AsAny)]
 pub struct Camera3D {
     pub perspective: CPerspective,
     pub transform: CTransform,
@@ -126,13 +115,5 @@ impl Camera for Camera3D {
             self.perspective.near,
             self.perspective.far,
         )
-    }
-
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
-    }
-
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
-        self
     }
 }

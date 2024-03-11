@@ -42,15 +42,21 @@ impl Plugin for MyPlugin {
             .resources
             .get_asset_id::<TextureAsset>("bubble_texture")?;
 
-        app.world.registry.entities.create(sprite_bundle(SpriteMetadata {
-            texture: Some(CTexture { id: texture_id, atlas_location: None }),
-            transform: CTransform2D {
-                translate: glm::vec2(200.0, 100.0),
-                ..CTransform2D::default()
-            },
-            color: Some(CColor(1.0, 0.1, 0.2, 1.0)),
-            ..SpriteMetadata::default()
-        }));
+        app.world
+            .registry
+            .entities
+            .create(sprite_bundle(SpriteMetadata {
+                texture: Some(CTexture {
+                    id: texture_id,
+                    atlas_location: None,
+                }),
+                transform: CTransform2D {
+                    translate: glm::vec2(200.0, 100.0),
+                    ..CTransform2D::default()
+                },
+                color: Some(CColor(1.0, 0.1, 0.2, 1.0)),
+                ..SpriteMetadata::default()
+            }));
 
         app.add_system::<UpdateSchedule>(move |registry: &mut GlobalRegistry| {
             let clock = registry

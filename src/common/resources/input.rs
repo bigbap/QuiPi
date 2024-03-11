@@ -5,7 +5,7 @@ use sdl2::{
     keyboard::{Keycode, Mod},
 };
 
-use crate::resources::Resource;
+use crate::resources::*;
 
 #[derive(Resource)]
 pub struct Input {

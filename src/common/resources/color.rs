@@ -1,4 +1,4 @@
-use crate::resources::Resource;
+use crate::resources::*;
 
 #[derive(Resource)]
 pub struct ClearColor(pub f32, pub f32, pub f32, pub f32);

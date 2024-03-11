@@ -1,4 +1,6 @@
-use crate::{platform::opengl::textures::Format, resources::Resource, QPResult};
+use crate::{
+    core::prelude::AsAny, platform::opengl::textures::Format, resources::Resource, QPResult,
+};
 use std::{any::TypeId, collections::HashMap};
 
 pub mod prelude {
@@ -81,7 +83,8 @@ impl AssetId {
     }
 }
 
-impl<A: Asset> Resource for AssetStore<A> {
+impl<A: Asset> Resource for AssetStore<A> {}
+impl<A: Asset> AsAny for AssetStore<A> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }

@@ -1,4 +1,4 @@
-use crate::resources::Resource;
+use crate::resources::*;
 use std::collections::HashMap;
 
 #[derive(Debug, Resource)]

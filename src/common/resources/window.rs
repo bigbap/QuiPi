@@ -4,7 +4,7 @@ use crate::{
         qp_gfx::{self, Viewport},
         QPError,
     },
-    resources::Resource,
+    resources::*,
     QPResult,
 };
 
