@@ -10,7 +10,6 @@ use crate::{
         qp_gfx::{BatchRenderer, Vertex},
         QPError, System,
     },
-    registry::GlobalRegistry,
 };
 
 const BATCH_SIZE: usize = 10000;
@@ -20,19 +19,18 @@ pub fn render_quads(shader_id: AssetId, camera_id: CameraId) -> impl System {
 
     let mut renderer = BatchRenderer::<BATCH_SIZE, 4>::new(vec![0, 1, 3, 1, 2, 3]);
 
-    move |registry: &mut GlobalRegistry| {
-        let Some(entities) = registry.entities.query::<CSprite>() else {
+    move |world: &mut crate::prelude::World| {
+        let query = world.query();
+        let Some(entities) = query.entities::<CSprite>() else {
             return Ok(());
         };
 
-        let shader = registry
-            .resources
-            .get_asset(&shader_id)
+        let shader = query
+            .asset(&shader_id)
             .ok_or(QPError::AssetNotFound("shader".into()))?;
 
-        let camera = registry
-            .resources
-            .get_camera::<Camera2D>(&camera_id)
+        let camera = query
+            .camera::<Camera2D>(&camera_id)
             .ok_or(QPError::CameraNotFound)?;
 
         gl_enable(GLCapability::AlphaBlending);
@@ -45,34 +43,31 @@ pub fn render_quads(shader_id: AssetId, camera_id: CameraId) -> impl System {
         renderer.begin_batch();
         for (entity, sprite) in entities.iter() {
             if sprite.is_none()
-                || registry.entities.get::<CSkip>(&entity).is_some()
-                || registry.entities.get::<CTransform2D>(&entity).is_none()
-                || registry.entities.get::<CQuad>(&entity).is_none()
+                || query.entity::<CSkip>(&entity).is_some()
+                || query.entity::<CTransform2D>(&entity).is_none()
+                || query.entity::<CQuad>(&entity).is_none()
             {
                 continue;
             }
 
-            let quad = registry.entities.get::<CQuad>(&entity).unwrap();
-            let transform = registry.entities.get::<CTransform2D>(&entity).unwrap();
+            let quad = query.entity::<CQuad>(&entity).unwrap();
+            let transform = query.entity::<CTransform2D>(&entity).unwrap();
             let model = transform.to_matrix();
 
             let mvp = camera.projection.0 * camera.view.0 * model;
 
-            let texture = match registry.entities.get::<CTexture>(&entity) {
-                Some(atlas) => registry.resources.get_asset(&atlas.id),
+            let texture = match query.entity::<CTexture>(&entity) {
+                Some(atlas) => query.asset(&atlas.id),
                 _ => None,
             };
 
-            let color = registry.entities.get::<CColor>(&entity).unwrap_or(&CColor(1.0, 1.0, 1.0, 1.0));
+            let color = query
+                .entity::<CColor>(&entity)
+                .unwrap_or(&CColor(1.0, 1.0, 1.0, 1.0));
             let color = glm::vec4(color.0, color.1, color.2, color.3);
 
             renderer.draw(
-                vertices(
-                    &mvp,
-                    &texture,
-                    color,
-                    quad.positions(),
-                ),
+                vertices(&mvp, &texture, color, quad.positions()),
                 shader,
                 texture,
             );

@@ -1,5 +1,5 @@
 use crate::prelude::qp_common::components::*;
-use crate::prelude::qp_ecs::*;
+use crate::prelude::qp_storage::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Default, Component, Serialize, Deserialize, PartialEq, Clone)]

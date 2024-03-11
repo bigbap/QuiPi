@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::prelude::{
-    qp_ecs::{
+    qp_storage::{
         components::{CScene, CSprite, CTransform2D},
         Index,
     },

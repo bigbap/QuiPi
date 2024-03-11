@@ -1,5 +1,5 @@
 use crate::core::prelude::trig::rotate2d;
-use crate::prelude::qp_ecs::*;
+use crate::prelude::qp_storage::*;
 use serde::{Deserialize, Serialize};
 
 /**

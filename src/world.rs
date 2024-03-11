@@ -2,21 +2,18 @@ use std::collections::HashMap;
 
 pub use macros::Schedule;
 
-use crate::{registry::GlobalRegistry, QPResult};
+use crate::{commands::Commands, prelude::Query, resources::ResourceManager, QPResult};
 
 pub struct World {
-    pub registry: GlobalRegistry,
-
-    schedules: HashMap<&'static str, Box<dyn Schedule>>,
+    pub(crate) schedules: HashMap<&'static str, Box<dyn Schedule>>,
+    pub(crate) resources: ResourceManager,
 }
 
 impl World {
     pub fn new() -> Self {
-        let registry = GlobalRegistry::init();
-
         Self {
-            registry,
             schedules: HashMap::<&'static str, Box<dyn Schedule>>::new(),
+            resources: ResourceManager::new(),
         }
     }
 
@@ -45,7 +42,7 @@ impl World {
         let name = std::any::type_name::<S>();
 
         if let Some(schedule) = self.schedules.get_mut(&name) {
-            schedule.update(&mut self.registry)?;
+            schedule.update(self)?;
         } else {
             #[cfg(debug_assertions)]
             println!("trying to update a schedule that doesn't exist: {:?}", name);
@@ -53,17 +50,25 @@ impl World {
 
         Ok(())
     }
+
+    // pub fn commands(&mut self) -> Commands {
+    //     Commands::new(&mut self.resources)
+    // }
+
+    // pub fn query(&mut self) -> Query {
+    //     Query::new(&mut self.resources)
+    // }
 }
 
-pub trait System: FnMut(&mut GlobalRegistry) -> QPResult<()> + 'static {}
-impl<F> System for F where F: FnMut(&mut GlobalRegistry) -> QPResult<()> + 'static {}
+pub trait System: FnMut(&mut World) -> QPResult<()> + 'static {}
+impl<F> System for F where F: FnMut(&mut World) -> QPResult<()> + 'static {}
 
 pub type BoxedSystem = Box<dyn System>;
 
 pub trait Schedule {
     fn add_system(&mut self, system: BoxedSystem);
 
-    fn update(&mut self, registry: &mut GlobalRegistry) -> QPResult<()>;
+    fn update(&mut self, resources: &mut World) -> QPResult<()>;
 }
 
 #[derive(Default, Schedule)]

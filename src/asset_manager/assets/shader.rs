@@ -1,6 +1,6 @@
 use crate::platform::opengl::shader::ShaderProgram;
-use crate::prelude::qp_ecs::*;
 use crate::prelude::qp_gfx::ShaderUniforms;
+use crate::prelude::qp_storage::*;
 use crate::QPResult;
 
 #[derive(Debug, Component, PartialEq)]

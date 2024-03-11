@@ -1,4 +1,4 @@
-use crate::prelude::qp_ecs::*;
+use crate::prelude::qp_storage::*;
 
 #[derive(Debug, Component, PartialEq, Clone)]
 pub struct CTarget {

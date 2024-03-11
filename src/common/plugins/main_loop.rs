@@ -19,20 +19,22 @@ impl Plugin for MainLoopPlugin {
                 _ => (),
             }
 
-            if let Some(clr) = app.world.registry.resources.get::<ClearColor>() {
-                clear_buffers(clr.as_tuple());
-            } else {
-                clear_buffers((0.3, 0.3, 0.3, 1.0));
-            }
+            let clr = app
+                .world
+                .resources
+                .get::<ClearColor>()
+                .unwrap_or(&ClearColor(0.3, 0.3, 0.3, 1.0));
+
+            clear_buffers(clr.as_tuple());
 
             app.world.execute_schedule::<RenderSchedule>()?;
 
             let window = app
                 .world
-                .registry
                 .resources
                 .get::<Window>()
                 .ok_or(QPError::ResourceNotFound("Window".into()))?;
+
             if let Some(window) = &window.winapi.window {
                 window.gl_swap_window();
             } else {

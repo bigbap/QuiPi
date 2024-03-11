@@ -8,7 +8,7 @@ use quipi::{
 use crate::{
     qp_assets::RTileMap,
     qp_core::{now_secs, random::Random},
-    qp_ecs::components::{CQuad, CSprite, CTransform2D},
+    qp_storage::components::{CQuad, CSprite, CTransform2D},
     GlobalRegistry, Index,
 };
 

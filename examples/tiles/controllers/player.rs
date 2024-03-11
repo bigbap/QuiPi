@@ -1,7 +1,7 @@
 use crate::{
     qp_assets::{tilemap::ValidTile, RTileMap},
-    qp_ecs::components::{CQuad, CTransform2D},
     qp_schemas::SchemaSprite,
+    qp_storage::components::{CQuad, CTransform2D},
     GlobalRegistry, Index, Schema,
 };
 use quipi::{

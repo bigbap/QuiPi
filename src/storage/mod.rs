@@ -1,6 +1,6 @@
 mod bundle;
-mod entity_manager;
 mod indexed_array;
+mod manager;
 
 pub mod prelude {
     use super::*;
@@ -12,5 +12,5 @@ pub mod prelude {
     pub use indexed_array::Index;
     pub use indexed_array::IndexedArray;
 
-    pub use entity_manager::EntityManager;
+    pub use manager::*;
 }

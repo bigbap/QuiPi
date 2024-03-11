@@ -1,4 +1,4 @@
-use crate::{common::resources::AssetId, prelude::qp_ecs::*};
+use crate::{common::resources::AssetId, prelude::qp_storage::*};
 use serde::{Deserialize, Serialize};
 
 use crate::prelude::qp_gfx::Vertex;

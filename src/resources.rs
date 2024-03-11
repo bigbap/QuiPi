@@ -21,12 +21,6 @@ impl ResourceManager {
         }
     }
 
-    /// ///////////
-    ///
-    /// Resources
-    ///
-    /// ///////////
-
     pub fn add_resource<R: Resource + 'static>(&mut self, resource: R) -> QPResult<ResourceId> {
         let id = ResourceId::new::<R>();
         if self.resources.get(&id).is_some() {
@@ -52,91 +46,91 @@ impl ResourceManager {
         }
     }
 
-    /// ///////////
-    ///
-    /// Assets
-    ///
-    /// ///////////
+    // /// ///////////
+    // ///
+    // /// Assets
+    // ///
+    // /// ///////////
 
-    pub fn load_asset<A: Asset + 'static>(
-        &mut self,
-        identifier: &str,
-        loader: impl AssetLoader<A>,
-    ) -> QPResult<AssetId> {
-        let interner = self
-            .get_mut::<StringInterner>()
-            .ok_or(QPError::ResourceNotFound("StringInterner".into()))?;
+    // pub fn load_asset<A: Asset + 'static>(
+    //     &mut self,
+    //     identifier: &str,
+    //     loader: impl AssetLoader<A>,
+    // ) -> QPResult<AssetId> {
+    //     let interner = self
+    //         .get_mut::<StringInterner>()
+    //         .ok_or(QPError::ResourceNotFound("StringInterner".into()))?;
 
-        let id = interner.intern(identifier.into());
+    //     let id = interner.intern(identifier.into());
 
-        let store = self
-            .get_mut::<AssetStore<A>>()
-            .ok_or(QPError::ResourceNotFound(format!("AssetStore<{:?}>", id)))?;
+    //     let store = self
+    //         .get_mut::<AssetStore<A>>()
+    //         .ok_or(QPError::ResourceNotFound(format!("AssetStore<{:?}>", id)))?;
 
-        store.load_asset(loader, id)
-    }
+    //     store.load_asset(loader, id)
+    // }
 
-    pub fn unload_asset<A: Asset + 'static>(&mut self, id: AssetId) -> QPResult<()> {
-        let store = self
-            .get_mut::<AssetStore<A>>()
-            .ok_or(QPError::ResourceNotFound(format!("AssetStore<{:?}>", id)))?;
+    // pub fn unload_asset<A: Asset + 'static>(&mut self, id: AssetId) -> QPResult<()> {
+    //     let store = self
+    //         .get_mut::<AssetStore<A>>()
+    //         .ok_or(QPError::ResourceNotFound(format!("AssetStore<{:?}>", id)))?;
 
-        store.unload_asset(id)
-    }
+    //     store.unload_asset(id)
+    // }
 
-    pub fn get_asset<A: Asset + 'static>(&self, id: &AssetId) -> Option<&A> {
-        self.get::<AssetStore<A>>()?.get(id)
-    }
+    // pub fn get_asset<A: Asset + 'static>(&self, id: &AssetId) -> Option<&A> {
+    //     self.get::<AssetStore<A>>()?.get(id)
+    // }
 
-    pub fn get_asset_mut<A: Asset + 'static>(&mut self, id: &AssetId) -> Option<&mut A> {
-        self.get_mut::<AssetStore<A>>()?.get_mut(id)
-    }
+    // pub fn get_asset_mut<A: Asset + 'static>(&mut self, id: &AssetId) -> Option<&mut A> {
+    //     self.get_mut::<AssetStore<A>>()?.get_mut(id)
+    // }
 
-    pub fn get_asset_id<A: Asset + 'static>(&mut self, identifier: &str) -> QPResult<AssetId> {
-        let interner = self
-            .get_mut::<StringInterner>()
-            .ok_or(QPError::ResourceNotFound("StringInterner".into()))?;
+    // pub fn get_asset_id<A: Asset + 'static>(&mut self, identifier: &str) -> QPResult<AssetId> {
+    //     let interner = self
+    //         .get_mut::<StringInterner>()
+    //         .ok_or(QPError::ResourceNotFound("StringInterner".into()))?;
 
-        let id = interner.intern(identifier.into());
+    //     let id = interner.intern(identifier.into());
 
-        let store = self
-            .get::<AssetStore<A>>()
-            .ok_or(QPError::ResourceNotFound(format!("AssetStore<{:?}>", id)))?;
+    //     let store = self
+    //         .get::<AssetStore<A>>()
+    //         .ok_or(QPError::ResourceNotFound(format!("AssetStore<{:?}>", id)))?;
 
-        Ok(store.asset_id(id))
-    }
+    //     Ok(store.asset_id(id))
+    // }
 
-    /// ///////////
-    ///
-    /// Cameras
-    ///
-    /// ///////////
+    // /// ///////////
+    // ///
+    // /// Cameras
+    // ///
+    // /// ///////////
 
-    pub fn add_camera<C: Camera + 'static>(
-        &mut self,
-        identifier: &str,
-        camera: C,
-    ) -> QPResult<CameraId> {
-        let interner = self
-            .get_mut::<StringInterner>()
-            .ok_or(QPError::ResourceNotFound("StringInterner".into()))?;
+    // pub fn add_camera<C: Camera + 'static>(
+    //     &mut self,
+    //     identifier: &str,
+    //     camera: C,
+    // ) -> QPResult<CameraId> {
+    //     let interner = self
+    //         .get_mut::<StringInterner>()
+    //         .ok_or(QPError::ResourceNotFound("StringInterner".into()))?;
 
-        let id = interner.intern(identifier.into());
+    //     let id = interner.intern(identifier.into());
 
-        let store = self
-            .get_mut::<CameraList>()
-            .ok_or(QPError::ResourceNotFound("CameraList".into()))?;
+    //     let store = self
+    //         .get_mut::<CameraList>()
+    //         .ok_or(QPError::ResourceNotFound("CameraList".into()))?;
 
-        Ok(store.add_camera(id, camera))
-    }
+    //     Ok(store.add_camera(id, camera))
+    // }
 
-    pub fn get_camera<C: Camera + 'static>(&self, id: &CameraId) -> Option<&C> {
-        self.get::<CameraList>()?.get(id)
-    }
+    // pub fn get_camera<C: Camera + 'static>(&self, id: &CameraId) -> Option<&C> {
+    //     self.get::<CameraList>()?.get(id)
+    // }
 
-    pub fn get_camera_mut<C: Camera + 'static>(&mut self, id: &CameraId) -> Option<&mut C> {
-        self.get_mut::<CameraList>()?.get_mut(id)
-    }
+    // pub fn get_camera_mut<C: Camera + 'static>(&mut self, id: &CameraId) -> Option<&mut C> {
+    //     self.get_mut::<CameraList>()?.get_mut(id)
+    // }
 }
 
 pub trait Resource: AsAny {

@@ -1,5 +1,5 @@
 use crate::{
-    qp_assets::RCamera2D, qp_ecs::components::CTransform2D, qp_schemas::SchemaCamera2D,
+    qp_assets::RCamera2D, qp_schemas::SchemaCamera2D, qp_storage::components::CTransform2D,
     GlobalRegistry, Index,
 };
 use quipi::{

@@ -1,4 +1,4 @@
-use crate::prelude::qp_ecs::*;
+use crate::prelude::qp_storage::*;
 
 #[derive(Component, Debug, PartialEq, Clone)]
 pub struct CChildren {

@@ -1,5 +1,5 @@
 use qp_core::{trig::pi, Countdown};
-use qp_ecs::components::*;
+use qp_storage::components::*;
 use quipi::{prelude::*, schemas::sprite::TextureAtlas};
 use sdl2::keyboard::Keycode;
 

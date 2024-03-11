@@ -6,7 +6,7 @@ use crate::{
     errors::QPError,
     prelude::{
         qp_assets::RTexture,
-        qp_ecs::{
+        qp_storage::{
             components::{CQuad, CSprite, CTag, CTransform2D, CVelocity2D},
             Index,
         },

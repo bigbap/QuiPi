@@ -1,16 +1,20 @@
-use egui::TextBuffer;
-
-use crate::common::plugins::mandatory_plugins;
+use crate::commands::Commands;
 use crate::common::resources::Asset;
 use crate::common::resources::AssetLoader;
+use crate::common::resources::Clock;
+use crate::common::resources::StringInterner;
 use crate::plugin::Plugin;
 use crate::plugin::Plugins;
+use crate::prelude::UpdateSchedule;
 use crate::prelude::World;
 use crate::resources::Resource;
+use crate::storage::prelude::StorageId;
+use crate::storage::prelude::StorageManager;
 use crate::world::Schedule;
 use crate::world::StartupSchedule;
 use crate::world::System;
 use crate::QPResult;
+use egui::TextBuffer;
 use std::collections::HashSet;
 
 pub struct App {
@@ -39,8 +43,7 @@ impl App {
 
     pub fn new() -> Self {
         let mut app = Self::empty();
-
-        app.add_plugins(mandatory_plugins());
+        app.add_plugins(Manadatory {});
 
         app
     }
@@ -76,7 +79,7 @@ impl App {
     }
 
     pub fn add_resource(&mut self, resource: impl Resource + 'static) -> &mut Self {
-        if let Err(e) = self.world.registry.resources.add_resource(resource) {
+        if let Err(e) = self.world.resources.add_resource(resource) {
             panic!("there was a problem adding a resource: {}", e);
         }
 
@@ -88,7 +91,8 @@ impl App {
         identifier: &str,
         loader: impl AssetLoader<A>,
     ) -> &mut Self {
-        if let Err(e) = self.world.registry.resources.load_asset(identifier, loader) {
+        let mut commands = self.world.commands();
+        if let Err(e) = commands.load_asset(identifier, loader) {
             panic!("there was a problem loading an asset: {}", e);
         }
 
@@ -100,7 +104,6 @@ impl App {
     }
 
     pub fn run(&mut self) -> QPResult<()> {
-        self.plugins_done()?;
         self.plugins_cleanup()?;
 
         let mut app = std::mem::replace(self, App::empty());
@@ -113,18 +116,6 @@ impl App {
 
         let runner = std::mem::replace(&mut app.runner, Box::new(run_once));
         runner(app)
-    }
-
-    fn plugins_done(&mut self) -> QPResult<()> {
-        let plugins = std::mem::take(&mut self.plugins);
-
-        for plugin in &plugins {
-            plugin.done(self)?;
-        }
-
-        self.plugins = plugins;
-
-        Ok(())
     }
 
     fn plugins_cleanup(&mut self) -> QPResult<()> {
@@ -168,4 +159,21 @@ pub struct AppConfig {
 
 fn run_once(mut app: App) -> QPResult<()> {
     app.world.execute_schedule::<StartupSchedule>()
+}
+
+struct Manadatory {}
+impl Plugin for Manadatory {
+    fn build(&self, app: &mut App) -> QPResult<()> {
+        let mut manager = StorageManager::new();
+        manager.insert_storage_unit(StorageId::Entities);
+
+        app.add_resource(Clock::new());
+        app.add_resource(StringInterner::new());
+        app.add_resource(manager);
+
+        app.world.add_schedule::<StartupSchedule>();
+        app.world.add_schedule::<UpdateSchedule>();
+
+        Ok(())
+    }
 }

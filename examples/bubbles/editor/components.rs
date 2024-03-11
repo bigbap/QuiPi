@@ -2,8 +2,8 @@ use egui::{Context, Ui};
 use quipi::world::World;
 
 use crate::{
-    qp_ecs::components::{CQuad, CTag, CTransform2D, CVelocity2D},
     qp_editor::IGuiController,
+    qp_storage::components::{CQuad, CTag, CTransform2D, CVelocity2D},
     GlobalRegistry, Index,
 };
 

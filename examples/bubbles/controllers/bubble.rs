@@ -1,8 +1,8 @@
 use crate::{
     qp_assets::RCamera2D,
     qp_core::{now_secs, random::Random},
-    qp_ecs::components::{CQuad, CTag, CTransform2D, CVelocity2D},
     qp_schemas::SchemaSprite,
+    qp_storage::components::{CQuad, CTag, CTransform2D, CVelocity2D},
     Controller, FrameResult, Index, QPError, Schema, World,
 };
 use sdl2::{event::Event, keyboard::Keycode};

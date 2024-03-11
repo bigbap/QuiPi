@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::prelude::qp_assets::camera::OrthographicCameraParams;
 use crate::prelude::Schema;
-use crate::prelude::{qp_assets::RCamera2D, qp_ecs::components::CTransform2D, GlobalRegistry};
+use crate::prelude::{qp_assets::RCamera2D, qp_storage::components::CTransform2D, GlobalRegistry};
 use crate::QPResult;
 
 pub const DEFAULT_CAMERA: &str = "default_camera";

@@ -1,9 +1,6 @@
 use crate::{
     platform::sdl2::QPWindow,
-    prelude::{
-        qp_gfx::{self, Viewport},
-        QPError,
-    },
+    prelude::{qp_gfx, QPError},
     resources::*,
     QPResult,
 };
@@ -11,7 +8,6 @@ use crate::{
 #[derive(Resource)]
 pub struct Window {
     pub winapi: QPWindow,
-    pub viewport: Viewport,
 }
 
 impl Window {
@@ -21,8 +17,6 @@ impl Window {
 
         qp_gfx::init(&winapi).map_err(|e| QPError::Generic(e.to_string()))?;
 
-        let viewport = Viewport::new(0, 0, width as i32, height as i32);
-
-        Ok(Self { winapi, viewport })
+        Ok(Self { winapi })
     }
 }

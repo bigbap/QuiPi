@@ -8,13 +8,13 @@ pub struct QuadShaderPlugin {}
 
 impl Plugin for QuadShaderPlugin {
     fn build(&self, app: &mut crate::prelude::App) -> crate::QPResult<()> {
-        app.world.registry.resources.load_asset(
+        app.load_asset(
             QUAD_SHADER_NAME,
             ShaderLoader {
                 source: Source::Strings((VERT, FRAG)),
                 uniforms: vec![],
             },
-        )?;
+        );
 
         Ok(())
     }

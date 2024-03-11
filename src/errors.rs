@@ -35,6 +35,9 @@ pub enum QPError {
     #[error("counldn't find resource {0}")]
     ResourceNotFound(String),
 
+    #[error("trying to load an existing storage unit")]
+    DuplicateStorage,
+
     #[error("trying to load as existing asset")]
     DuplicateAsset,
 

@@ -54,9 +54,9 @@ pub fn schedule_derive_macro(item: TokenStream) -> TokenStream {
                 self.systems.push(system);
             }
 
-            fn update(&mut self, registry: &mut GlobalRegistry) -> QPResult<()> {
+            fn update(&mut self, world: &mut World) -> QPResult<()> {
                 for system in self.systems.iter_mut() {
-                    system(registry)?;
+                    system(world)?;
                 }
 
                 Ok(())

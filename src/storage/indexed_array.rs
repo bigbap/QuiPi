@@ -156,7 +156,7 @@ impl Allocator {
         self.entries.len() - 1
     }
 
-    pub fn reset(&mut self) {
+    pub fn clear(&mut self) {
         self.entries.clear();
         self.next = None;
         self.version = 0;
@@ -225,7 +225,7 @@ impl<T> IndexedArray<T> {
         });
     }
 
-    pub fn unset(&mut self, index: &Index) {
+    pub(super) fn unset(&mut self, index: &Index) {
         let i = index.index;
 
         if i >= self.list.len() {

@@ -2,8 +2,8 @@ use egui::{Context, Vec2};
 use quipi::{prelude::qp_editor::IGuiController, world::World};
 
 use crate::{
-    qp_ecs::components::{CScene, CSprite, CTag},
     qp_schemas::{save_scene_2d, SchemaSprite},
+    qp_storage::components::{CScene, CSprite, CTag},
     Schema,
 };
 

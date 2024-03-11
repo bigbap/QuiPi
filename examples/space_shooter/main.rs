@@ -12,12 +12,12 @@ use quipi::{
         trig::{magnitude2d_squared, rotate2d},
         Countdown, Interval,
     },
-    ecs::prelude::components::CTransform2D,
     gfx::prelude::{ShaderUniforms, SpriteRenderer, SPRITE_FRAG, SPRITE_VERT},
     schemas::sprite::TextureAtlas,
+    storage::prelude::components::CTransform2D,
 };
 
-use qp_ecs::components::*;
+use qp_storage::components::*;
 use sdl2::{event::WindowEvent, keyboard::Keycode};
 
 pub static WIDTH: u32 = 1600;

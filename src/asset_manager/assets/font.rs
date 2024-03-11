@@ -4,7 +4,7 @@ use crate::platform::opengl::{
     pixel_store,
     textures::{Format, Target, Texture},
 };
-use crate::prelude::qp_ecs::*;
+use crate::prelude::qp_storage::*;
 use crate::QPResult;
 use ft::{face::LoadFlag, Face};
 
