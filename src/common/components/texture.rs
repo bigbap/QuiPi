@@ -3,11 +3,6 @@ use crate::prelude::qp_ecs::*;
 
 #[derive(Debug, Component, Clone, PartialEq)]
 pub struct CTexture {
-    pub texture: AssetId,
-}
-
-#[derive(Debug, Component, Clone, PartialEq)]
-pub struct CTextureAtlas {
-    pub texture: AssetId,
-    pub location: (u32, u32),
+    pub id: AssetId,
+    pub atlas_location: Option<(u32, u32)>
 }

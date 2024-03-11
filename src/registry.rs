@@ -31,12 +31,12 @@ mod tests {
 
     use super::*;
 
-    #[derive(Component, Debug, PartialEq)]
+    #[derive(Component, Debug, PartialEq, Clone)]
     struct DrawComponent {
         shader_id: Option<u32>,
     }
 
-    #[derive(Debug, Component, PartialEq, Default)]
+    #[derive(Debug, Component, PartialEq, Default, Clone)]
     struct TransformComponent {
         translate: glm::Vec3,
         scale: glm::Vec3,

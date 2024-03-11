@@ -2,7 +2,7 @@ use crate::{
     common::{
         assets::{ShaderAsset, TextureAsset, TextureCoords},
         bundles::CSprite,
-        prelude::components::{CQuad, CSkip, CTextureAtlas, CTransform2D},
+        prelude::components::{CColor, CQuad, CSkip, CTexture, CTransform2D},
         resources::{AssetId, Camera2D, CameraId},
     },
     platform::opengl::capabilities::{gl_blending_func, gl_enable, GLBlendingFactor, GLCapability},
@@ -58,16 +58,19 @@ pub fn render_quads(shader_id: AssetId, camera_id: CameraId) -> impl System {
 
             let mvp = camera.projection.0 * camera.view.0 * model;
 
-            let texture = match registry.entities.get::<CTextureAtlas>(&entity) {
-                Some(atlas) => registry.resources.get_asset(&atlas.texture),
+            let texture = match registry.entities.get::<CTexture>(&entity) {
+                Some(atlas) => registry.resources.get_asset(&atlas.id),
                 _ => None,
             };
+
+            let color = registry.entities.get::<CColor>(&entity).unwrap_or(&CColor(1.0, 1.0, 1.0, 1.0));
+            let color = glm::vec4(color.0, color.1, color.2, color.3);
 
             renderer.draw(
                 vertices(
                     &mvp,
                     &texture,
-                    glm::vec4(1.0, 1.0, 1.0, 1.0),
+                    color,
                     quad.positions(),
                 ),
                 shader,

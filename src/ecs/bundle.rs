@@ -11,6 +11,36 @@ pub trait Bundle {
     );
 }
 
+#[derive(Default)]
+pub struct BundleBuilder {
+    bundle_loaders: Vec<Box<dyn FnMut(&mut ComponentMap, Weak<RefCell<Allocator>>, &Index)>>,
+}
+
+impl BundleBuilder {
+    pub fn add_bundle(&mut self, bundle: impl Bundle + Clone + 'static) -> &mut Self {
+        self.bundle_loaders.push(Box::new(move |
+            component_map: &mut ComponentMap,
+            allocator: Weak<RefCell<Allocator>>,
+            entity: &Index,
+        | bundle.clone().add_components(component_map, allocator, entity)));
+    
+        self
+    }
+}
+
+impl Bundle for BundleBuilder {
+    fn add_components(
+        mut self,
+        component_map: &mut ComponentMap,
+        allocator: Weak<RefCell<Allocator>>,
+        entity: &Index,
+    ) {
+        for bundle_loader in self.bundle_loaders.iter_mut() {
+            bundle_loader(component_map, allocator.clone(), entity);
+        }
+    }
+}
+
 macro_rules! tuple_impl {
     ($($name: ident),*) => {
         #[allow(non_snake_case)]
@@ -43,7 +73,7 @@ tuple_impl!(B0, B1, B2, B3, B4, B5, B6, B7, B8);
 tuple_impl!(B0, B1, B2, B3, B4, B5, B6, B7, B8, B9);
 tuple_impl!(B0, B1, B2, B3, B4, B5, B6, B7, B8, B9, B10);
 
-pub trait Component: Bundle {
+pub trait Component: Bundle + Clone {
     fn id() -> ComponentId
     where
         Self: Sized;

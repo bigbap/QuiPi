@@ -1,8 +1,11 @@
+extern crate nalgebra_glm as glm;
+extern crate quipi;
+
 use quipi::{
     common::{
         assets::{ShaderAsset, TextureAsset, TextureLoader},
-        bundles::sprite_bundle,
-        components::components::{CColor, CQuad},
+        bundles::{sprite_bundle, SpriteMetadata},
+        components::components::{CColor, CTexture, CTransform2D},
         plugins::quad_shader::QUAD_SHADER_NAME,
         systems::render_quads,
     },
@@ -39,12 +42,15 @@ impl Plugin for MyPlugin {
             .resources
             .get_asset_id::<TextureAsset>("bubble_texture")?;
 
-        app.world.registry.entities.create(sprite_bundle(
-            CQuad::default(),
-            texture_id,
-            (1, 1),
-            CColor(1.0, 0.1, 0.2, 1.0),
-        ));
+        app.world.registry.entities.create(sprite_bundle(SpriteMetadata {
+            texture: Some(CTexture { id: texture_id, atlas_location: None }),
+            transform: CTransform2D {
+                translate: glm::vec2(200.0, 100.0),
+                ..CTransform2D::default()
+            },
+            color: Some(CColor(1.0, 0.1, 0.2, 1.0)),
+            ..SpriteMetadata::default()
+        }));
 
         app.add_system::<UpdateSchedule>(move |registry: &mut GlobalRegistry| {
             let clock = registry
