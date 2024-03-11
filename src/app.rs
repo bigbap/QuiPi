@@ -1,4 +1,3 @@
-use crate::commands::Commands;
 use crate::common::resources::Asset;
 use crate::common::resources::AssetLoader;
 use crate::common::resources::Clock;
@@ -89,10 +88,14 @@ impl App {
     pub fn load_asset<A: Asset + 'static>(
         &mut self,
         identifier: &str,
-        loader: impl AssetLoader<A>,
+        loader: impl AssetLoader<A> + 'static,
     ) -> &mut Self {
-        let mut commands = self.world.commands();
-        if let Err(e) = commands.load_asset(identifier, loader) {
+        if let Err(e) = self
+            .world
+            .commands()
+            .load_asset(identifier.into(), loader)
+            .flush(&mut self.world.resources)
+        {
             panic!("there was a problem loading an asset: {}", e);
         }
 

@@ -25,8 +25,9 @@ impl Plugin for RenderBasePlugin {
 
         app.world.add_schedule::<RenderSchedule>();
 
-        let mut resources = app.world.resources;
-        let storage_manager = resources
+        let storage_manager = app
+            .world
+            .resources
             .get_mut::<StorageManager>()
             .expect("storage manager resource not loaded");
         storage_manager.insert_storage_unit(Cameras);

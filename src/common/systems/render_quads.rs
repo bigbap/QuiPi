@@ -10,6 +10,7 @@ use crate::{
         qp_gfx::{BatchRenderer, Vertex},
         QPError, System,
     },
+    resources::ResourceManager,
 };
 
 const BATCH_SIZE: usize = 10000;
@@ -19,17 +20,16 @@ pub fn render_quads(shader_id: AssetId, camera_id: CameraId) -> impl System {
 
     let mut renderer = BatchRenderer::<BATCH_SIZE, 4>::new(vec![0, 1, 3, 1, 2, 3]);
 
-    move |world: &mut crate::prelude::World| {
-        let query = world.query();
-        let Some(entities) = query.entities::<CSprite>() else {
+    move |resources: &mut ResourceManager| {
+        let Some(entities) = resources.entities::<CSprite>() else {
             return Ok(());
         };
 
-        let shader = query
+        let shader = resources
             .asset(&shader_id)
             .ok_or(QPError::AssetNotFound("shader".into()))?;
 
-        let camera = query
+        let camera = resources
             .camera::<Camera2D>(&camera_id)
             .ok_or(QPError::CameraNotFound)?;
 
@@ -43,25 +43,25 @@ pub fn render_quads(shader_id: AssetId, camera_id: CameraId) -> impl System {
         renderer.begin_batch();
         for (entity, sprite) in entities.iter() {
             if sprite.is_none()
-                || query.entity::<CSkip>(&entity).is_some()
-                || query.entity::<CTransform2D>(&entity).is_none()
-                || query.entity::<CQuad>(&entity).is_none()
+                || resources.entity::<CSkip>(&entity).is_some()
+                || resources.entity::<CTransform2D>(&entity).is_none()
+                || resources.entity::<CQuad>(&entity).is_none()
             {
                 continue;
             }
 
-            let quad = query.entity::<CQuad>(&entity).unwrap();
-            let transform = query.entity::<CTransform2D>(&entity).unwrap();
+            let quad = resources.entity::<CQuad>(&entity).unwrap();
+            let transform = resources.entity::<CTransform2D>(&entity).unwrap();
             let model = transform.to_matrix();
 
             let mvp = camera.projection.0 * camera.view.0 * model;
 
-            let texture = match query.entity::<CTexture>(&entity) {
-                Some(atlas) => query.asset(&atlas.id),
+            let texture = match resources.entity::<CTexture>(&entity) {
+                Some(atlas) => resources.asset(&atlas.id),
                 _ => None,
             };
 
-            let color = query
+            let color = resources
                 .entity::<CColor>(&entity)
                 .unwrap_or(&CColor(1.0, 1.0, 1.0, 1.0));
             let color = glm::vec4(color.0, color.1, color.2, color.3);
