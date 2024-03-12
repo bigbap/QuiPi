@@ -9,13 +9,13 @@ use quipi::{
         plugins::quad_shader::QUAD_SHADER_NAME,
         systems::render_quads,
     },
-    prelude::*,
+    prelude::*, resources::ResourceManager,
 };
 use sdl2::keyboard::Keycode;
 
 fn main() {
     if let Err(e) = App::new()
-        .add_plugins(window_plugins("Sandbox", 1600, 900))
+        .add_plugins(default_plugins("Sandbox", 1600, 900))
         .add_plugins(render_plugins())
         .add_plugins(MyPlugin {})
         .run()
@@ -28,6 +28,9 @@ struct MyPlugin {}
 
 impl Plugin for MyPlugin {
     fn build(&self, app: &mut App) -> Result<(), QPError> {
+        app.add_system(|resources: ResourceManager| {
+
+        })
         app.load_asset(
             "bubble_texture",
             TextureLoader {
@@ -38,13 +41,12 @@ impl Plugin for MyPlugin {
 
         let texture_id = app
             .world
-            .registry
             .resources
-            .get_asset_id::<TextureAsset>("bubble_texture")?;
+            .asset_id::<TextureAsset>("bubble_texture")?;
 
         app.world
-            .registry
-            .entities
+            .resources
+            .ok_or(QPError::ResourceNotFound("Entities".into()))?
             .create(sprite_bundle(SpriteMetadata {
                 texture: Some(CTexture {
                     id: texture_id,

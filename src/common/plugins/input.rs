@@ -2,9 +2,9 @@ use sdl2::event::Event;
 
 use crate::{
     common::resources::{input::Input, window::Window},
-    prelude::{QPError, World},
+    prelude::QPError,
     resources::ResourceManager,
-    world::UpdateSchedule,
+    schedule::UpdateSchedule,
     QPResult,
 };
 

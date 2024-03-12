@@ -23,7 +23,7 @@ impl Plugin for RenderBasePlugin {
             .resources
             .add_resource(AssetStore::<ShaderAsset>::new())?;
 
-        app.world.add_schedule::<RenderSchedule>();
+        app.schedules.add_schedule::<RenderSchedule>();
 
         let storage_manager = app
             .world

@@ -1,41 +1,27 @@
 use crate::{
     common::resources::{
-        Asset, AssetId, AssetLoader, AssetStore, Camera, CameraList, StringInterner,
+        Asset, AssetId, AssetLoader, AssetStore, Camera, CameraId, CameraList, StringInterner,
     },
-    prelude::QPError,
-    resources::{Resource, ResourceManager},
+    prelude::{QPError, World},
+    resources::{Resource, ResourceId},
+    storage::prelude::{Bundle, Index, StorageId, StorageManager},
     QPResult,
 };
 
-pub struct Commands {
-    commands: Vec<Box<dyn Command>>,
+pub struct Commands<'w> {
+    world: &'w mut World,
 }
 
-impl Commands {
-    pub(crate) fn new() -> Self {
-        Self { commands: vec![] }
+impl<'w> Commands<'w> {
+    pub(crate) fn new(world: &'w mut World) -> Self {
+        Self { world }
     }
 
-    fn insert(&mut self, command: impl Command) {
-        self.commands.push(Box::new(command))
-    }
-
-    pub(crate) fn flush(&mut self, resources: &mut ResourceManager) -> QPResult<()> {
-        while let Some(mut command) = self.commands.pop() {
-            command(resources)?;
-        }
-
-        Ok(())
-    }
-
-    pub fn add_resource<R: Resource + Copy + 'static>(&mut self, resource: R) -> &mut Self {
-        self.insert(move |resources: &mut ResourceManager| {
-            resources.add_resource::<R>(resource);
-
-            Ok(())
-        });
-
-        self
+    pub fn add_resource<R: Resource + Copy + 'static>(
+        &mut self,
+        resource: R,
+    ) -> QPResult<ResourceId> {
+        self.world.resources.add_resource::<R>(resource)
     }
 
     /// ///////////
@@ -48,37 +34,32 @@ impl Commands {
         &mut self,
         identifier: String,
         loader: impl AssetLoader<A> + 'static,
-    ) -> &mut Self {
-        self.insert(move |resources: &mut ResourceManager| {
-            let interner = resources
-                .get_mut::<StringInterner>()
-                .ok_or(QPError::ResourceNotFound("StringInterner".into()))?;
+    ) -> QPResult<AssetId> {
+        let interner = self
+            .world
+            .resources
+            .get_mut::<StringInterner>()
+            .ok_or(QPError::ResourceNotFound("StringInterner".into()))?;
 
-            let id = interner.intern(identifier.clone());
+        let id = interner.intern(identifier.clone());
 
-            let store = resources
-                .get_mut::<AssetStore<A>>()
-                .ok_or(QPError::ResourceNotFound(format!("AssetStore<{:?}>", id)))?;
+        let store = self
+            .world
+            .resources
+            .get_mut::<AssetStore<A>>()
+            .ok_or(QPError::ResourceNotFound(format!("AssetStore<{:?}>", id)))?;
 
-            store.load_asset(loader, id);
-
-            Ok(())
-        });
-
-        self
+        store.load_asset(loader, id)
     }
 
-    pub fn unload_asset<A: Asset + 'static>(&mut self, id: AssetId) -> &mut Self {
-        self.insert(move |resources: &mut ResourceManager| {
-            let store = resources
-                .get_mut::<AssetStore<A>>()
-                .ok_or(QPError::ResourceNotFound(format!("AssetStore<{:?}>", id)))?;
+    pub fn unload_asset<A: Asset + 'static>(&mut self, id: AssetId) -> QPResult<()> {
+        let store = self
+            .world
+            .resources
+            .get_mut::<AssetStore<A>>()
+            .ok_or(QPError::ResourceNotFound(format!("AssetStore<{:?}>", id)))?;
 
-            store.unload_asset(id);
-            Ok(())
-        });
-
-        self
+        store.unload_asset(id)
     }
 
     /// ///////////
@@ -87,23 +68,26 @@ impl Commands {
     ///
     /// ///////////
 
-    pub fn add_camera<C: Camera + 'static>(&mut self, identifier: String, camera: C) -> &mut Self {
-        self.insert(move |resources: &mut ResourceManager| {
-            let interner = resources
-                .get_mut::<StringInterner>()
-                .ok_or(QPError::ResourceNotFound("StringInterner".into()))?;
+    pub fn add_camera<C: Camera + 'static>(
+        &mut self,
+        identifier: String,
+        camera: C,
+    ) -> QPResult<CameraId> {
+        let interner = self
+            .world
+            .resources
+            .get_mut::<StringInterner>()
+            .ok_or(QPError::ResourceNotFound("StringInterner".into()))?;
 
-            let id = interner.intern(identifier.clone());
+        let id = interner.intern(identifier.clone());
 
-            let store = resources
-                .get_mut::<CameraList>()
-                .ok_or(QPError::ResourceNotFound("CameraList".into()))?;
+        let store = self
+            .world
+            .resources
+            .get_mut::<CameraList>()
+            .ok_or(QPError::ResourceNotFound("CameraList".into()))?;
 
-            store.add_camera(id, camera);
-            Ok(())
-        });
-
-        self
+        Ok(store.add_camera(id, camera))
     }
 
     /// ///////////
@@ -112,10 +96,15 @@ impl Commands {
     ///
     /// ///////////
 
-    pub fn spawn(&mut self) -> &mut Self {
-        self
+    pub fn spawn(&mut self, bundle: impl Bundle) -> QPResult<Index> {
+        let storage = self
+            .world
+            .resources
+            .get_mut::<StorageManager>()
+            .ok_or(QPError::ResourceNotFound("Storage Manager".into()))?
+            .get_storage_mut(StorageId::Entities)
+            .ok_or(QPError::Generic("Storage unit not found".into()))?;
+
+        Ok(storage.create(bundle))
     }
 }
-
-pub trait Command: FnMut(&mut ResourceManager) -> QPResult<()> + 'static {}
-impl<F> Command for F where F: FnMut(&mut ResourceManager) -> QPResult<()> + 'static {}

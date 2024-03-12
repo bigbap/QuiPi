@@ -20,6 +20,7 @@ pub mod query;
 pub mod resources;
 pub mod storage;
 // pub mod schemas;
+pub mod schedule;
 pub mod world;
 
 // #[cfg(feature = "qp_editor")]
@@ -51,6 +52,7 @@ pub mod prelude {
     // pub use self::schemas::prelude::Schema;
     pub use self::commands::*;
     pub use self::query::*;
+    pub use self::schedule::*;
     pub use self::world::World;
 
     // #[cfg(feature = "qp_editor")]

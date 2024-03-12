@@ -1,17 +1,19 @@
+use crate::commands::Commands;
 use crate::common::resources::Asset;
 use crate::common::resources::AssetLoader;
 use crate::common::resources::Clock;
 use crate::common::resources::StringInterner;
 use crate::plugin::Plugin;
 use crate::plugin::Plugins;
+use crate::prelude::Schedule;
+use crate::prelude::StartupSchedule;
+use crate::prelude::System;
 use crate::prelude::UpdateSchedule;
 use crate::prelude::World;
 use crate::resources::Resource;
+use crate::schedule::ScheduleManager;
 use crate::storage::prelude::StorageId;
 use crate::storage::prelude::StorageManager;
-use crate::world::Schedule;
-use crate::world::StartupSchedule;
-use crate::world::System;
 use crate::QPResult;
 use egui::TextBuffer;
 use std::collections::HashSet;
@@ -25,6 +27,7 @@ pub struct App {
     plugin_names: HashSet<String>,
     plugins_building_count: usize,
 
+    pub(crate) schedules: ScheduleManager,
     pub(crate) state: AppState,
 }
 
@@ -37,6 +40,7 @@ impl App {
             plugin_names: HashSet::default(),
             plugins_building_count: 0,
             state: AppState::Created,
+            schedules: ScheduleManager::new(),
         }
     }
 
@@ -72,7 +76,7 @@ impl App {
     }
 
     pub fn add_system<S: Schedule>(&mut self, system: impl System) -> &mut Self {
-        self.world.add_system::<S>(system);
+        self.schedules.add_system::<S>(system);
 
         self
     }
@@ -90,12 +94,9 @@ impl App {
         identifier: &str,
         loader: impl AssetLoader<A> + 'static,
     ) -> &mut Self {
-        if let Err(e) = self
-            .world
-            .commands()
-            .load_asset(identifier.into(), loader)
-            .flush(&mut self.world.resources)
-        {
+        let mut commands = Commands::new(&mut self.world);
+
+        if let Err(e) = commands.load_asset(identifier.into(), loader) {
             panic!("there was a problem loading an asset: {}", e);
         }
 
@@ -161,21 +162,22 @@ pub struct AppConfig {
 }
 
 fn run_once(mut app: App) -> QPResult<()> {
-    app.world.execute_schedule::<StartupSchedule>()
+    app.schedules
+        .execute_schedule::<StartupSchedule>(&mut app.world)
 }
 
 struct Manadatory {}
 impl Plugin for Manadatory {
     fn build(&self, app: &mut App) -> QPResult<()> {
         let mut manager = StorageManager::new();
-        manager.insert_storage_unit(StorageId::Entities);
+        manager.insert_storage_unit(StorageId::Entities)?;
 
         app.add_resource(Clock::new());
         app.add_resource(StringInterner::new());
         app.add_resource(manager);
 
-        app.world.add_schedule::<StartupSchedule>();
-        app.world.add_schedule::<UpdateSchedule>();
+        app.schedules.add_schedule::<StartupSchedule>();
+        app.schedules.add_schedule::<UpdateSchedule>();
 
         Ok(())
     }

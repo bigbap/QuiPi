@@ -57,6 +57,14 @@ impl StorageManager {
         self.storage_units.get_mut(&storage)?.query_mut::<C>()
     }
 
+    pub fn get_storage(&self, id: StorageId) -> Option<&Storage> {
+        self.storage_units.get(&id)
+    }
+
+    pub fn get_storage_mut(&mut self, id: StorageId) -> Option<&mut Storage> {
+        self.storage_units.get_mut(&id)
+    }
+
     // pub fn query<C: Component + PartialEq + 'static>(&self, filter: C) -> Vec<Index> {
     //     let Some(cmp_map) = self.components.get::<EntityMap<C>>(C::id()) else {
     //         return vec![];
