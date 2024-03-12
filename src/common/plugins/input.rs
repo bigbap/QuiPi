@@ -2,7 +2,7 @@ use sdl2::event::Event;
 
 use crate::{
     common::resources::{input::Input, window::Window},
-    prelude::QPError,
+    prelude::{QPError, World},
     resources::ResourceManager,
     schedule::UpdateSchedule,
     QPResult,
@@ -16,8 +16,8 @@ impl Plugin for InputPlugin {
     fn build(&self, app: &mut crate::prelude::App) -> QPResult<()> {
         app.add_resource(Input::new());
 
-        app.add_system::<UpdateSchedule>(move |resources: &mut ResourceManager| {
-            let Some(window) = resources.get::<Window>() else {
+        app.add_system::<UpdateSchedule>(move |world: &mut World| {
+            let Some(window) = world.resources.get::<Window>() else {
                 #[cfg(debug_assertions)]
                 println!("[input system] couldn't get window resource");
 
@@ -26,7 +26,7 @@ impl Plugin for InputPlugin {
 
             let events = window.winapi.get_event_queue().unwrap();
 
-            let Some(input) = resources.get_mut::<Input>() else {
+            let Some(input) = world.resources.get_mut::<Input>() else {
                 #[cfg(debug_assertions)]
                 println!("[input system] couldn't get input resource");
 

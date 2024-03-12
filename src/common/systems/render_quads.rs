@@ -8,9 +8,8 @@ use crate::{
     platform::opengl::capabilities::{gl_blending_func, gl_enable, GLBlendingFactor, GLCapability},
     prelude::{
         qp_gfx::{BatchRenderer, Vertex},
-        QPError, System,
+        QPError, System, World,
     },
-    resources::ResourceManager,
 };
 
 const BATCH_SIZE: usize = 10000;
@@ -20,16 +19,16 @@ pub fn render_quads(shader_id: AssetId, camera_id: CameraId) -> impl System {
 
     let mut renderer = BatchRenderer::<BATCH_SIZE, 4>::new(vec![0, 1, 3, 1, 2, 3]);
 
-    move |resources: &mut ResourceManager| {
-        let Some(entities) = resources.entities::<CSprite>() else {
+    move |world: &mut World| {
+        let Some(entities) = world.resources.entities::<CSprite>() else {
             return Ok(());
         };
 
-        let shader = resources
+        let shader = world.resources
             .asset(&shader_id)
             .ok_or(QPError::AssetNotFound("shader".into()))?;
 
-        let camera = resources
+        let camera = world.resources
             .camera::<Camera2D>(&camera_id)
             .ok_or(QPError::CameraNotFound)?;
 
@@ -43,25 +42,25 @@ pub fn render_quads(shader_id: AssetId, camera_id: CameraId) -> impl System {
         renderer.begin_batch();
         for (entity, sprite) in entities.iter() {
             if sprite.is_none()
-                || resources.entity::<CSkip>(&entity).is_some()
-                || resources.entity::<CTransform2D>(&entity).is_none()
-                || resources.entity::<CQuad>(&entity).is_none()
+                || world.resources.entity::<CSkip>(&entity).is_some()
+                || world.resources.entity::<CTransform2D>(&entity).is_none()
+                || world.resources.entity::<CQuad>(&entity).is_none()
             {
                 continue;
             }
 
-            let quad = resources.entity::<CQuad>(&entity).unwrap();
-            let transform = resources.entity::<CTransform2D>(&entity).unwrap();
+            let quad = world.resources.entity::<CQuad>(&entity).unwrap();
+            let transform = world.resources.entity::<CTransform2D>(&entity).unwrap();
             let model = transform.to_matrix();
 
             let mvp = camera.projection.0 * camera.view.0 * model;
 
-            let texture = match resources.entity::<CTexture>(&entity) {
-                Some(atlas) => resources.asset(&atlas.id),
+            let texture = match world.resources.entity::<CTexture>(&entity) {
+                Some(atlas) => world.resources.asset(&atlas.id),
                 _ => None,
             };
 
-            let color = resources
+            let color = world.resources
                 .entity::<CColor>(&entity)
                 .unwrap_or(&CColor(1.0, 1.0, 1.0, 1.0));
             let color = glm::vec4(color.0, color.1, color.2, color.3);

@@ -41,7 +41,7 @@ impl ScheduleManager {
         let name = std::any::type_name::<S>();
 
         if let Some(schedule) = self.schedules.get_mut(&name) {
-            schedule.update(&mut world.resources)?;
+            schedule.update(world)?;
         } else {
             #[cfg(debug_assertions)]
             println!("trying to update a schedule that doesn't exist: {:?}", name);
@@ -51,15 +51,15 @@ impl ScheduleManager {
     }
 }
 
-pub trait System: FnMut(&mut ResourceManager) -> QPResult<()> + 'static {}
-impl<F> System for F where F: FnMut(&mut ResourceManager) -> QPResult<()> + 'static {}
+pub trait System: FnMut(&mut World) -> QPResult<()> + 'static {}
+impl<F> System for F where F: FnMut(&mut World) -> QPResult<()> + 'static {}
 
 pub type BoxedSystem = Box<dyn System>;
 
 pub trait Schedule {
     fn add_system(&mut self, system: BoxedSystem);
 
-    fn update(&mut self, resources: &mut ResourceManager) -> QPResult<()>;
+    fn update(&mut self, world: &mut World) -> QPResult<()>;
 }
 
 #[derive(Default, Schedule)]

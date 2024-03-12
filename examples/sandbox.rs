@@ -9,7 +9,7 @@ use quipi::{
         plugins::quad_shader::QUAD_SHADER_NAME,
         systems::render_quads,
     },
-    prelude::*, resources::ResourceManager,
+    prelude::*,
 };
 use sdl2::keyboard::Keycode;
 
@@ -28,26 +28,18 @@ struct MyPlugin {}
 
 impl Plugin for MyPlugin {
     fn build(&self, app: &mut App) -> Result<(), QPError> {
-        app.add_system(|resources: ResourceManager| {
+        app.add_system::<StartupSchedule>(|world: &mut World| {
+            world.load_asset(
+                "bubble_texture".into(),
+                TextureLoader {
+                    source: Source::Path("assets/textures/Bubble.png"),
+                    dims: None,
+                },
+            )?;
 
-        })
-        app.load_asset(
-            "bubble_texture",
-            TextureLoader {
-                source: Source::Path("assets/textures/Bubble.png"),
-                dims: None,
-            },
-        );
+            let texture_id = world.resources.asset_id::<TextureAsset>("bubble_texture")?;
 
-        let texture_id = app
-            .world
-            .resources
-            .asset_id::<TextureAsset>("bubble_texture")?;
-
-        app.world
-            .resources
-            .ok_or(QPError::ResourceNotFound("Entities".into()))?
-            .create(sprite_bundle(SpriteMetadata {
+            world.spawn(sprite_bundle(SpriteMetadata {
                 texture: Some(CTexture {
                     id: texture_id,
                     atlas_location: None,
@@ -58,16 +50,19 @@ impl Plugin for MyPlugin {
                 },
                 color: Some(CColor(1.0, 0.1, 0.2, 1.0)),
                 ..SpriteMetadata::default()
-            }));
+            }))?;
 
-        app.add_system::<UpdateSchedule>(move |registry: &mut GlobalRegistry| {
-            let clock = registry
+            Ok(())
+        });
+
+        app.add_system::<UpdateSchedule>(move |world: &mut World| {
+            let clock = world
                 .resources
                 .get_mut::<Clock>()
                 .ok_or(QPError::ResourceNotFound("Clock".to_string()))?;
             let elapsed = clock.elapsed();
 
-            let input = registry
+            let input = world
                 .resources
                 .get::<Input>()
                 .ok_or(QPError::ResourceNotFound("Input".to_string()))?;
@@ -80,14 +75,11 @@ impl Plugin for MyPlugin {
 
         let shader_id = app
             .world
-            .registry
             .resources
-            .get_asset_id::<ShaderAsset>(QUAD_SHADER_NAME)?;
+            .asset_id::<ShaderAsset>(QUAD_SHADER_NAME)?;
         let camera_id = app
             .world
-            .registry
-            .resources
-            .add_camera("my_camera", Camera2D::default())?;
+            .add_camera("my_camera".into(), Camera2D::default())?;
 
         app.add_system::<RenderSchedule>(render_quads(shader_id, camera_id));
 
