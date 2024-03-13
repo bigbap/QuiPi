@@ -1,14 +1,15 @@
 mod bundle;
-mod filter;
 mod indexed_array;
 mod manager;
+mod query;
+mod tuple_impl;
 
 pub mod prelude {
     use super::*;
 
     pub use bundle::*;
-    pub use filter::*;
     pub use macros::Component;
+    pub use query::*;
 
     pub use indexed_array::Allocator;
     pub use indexed_array::Index;

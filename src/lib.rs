@@ -15,7 +15,6 @@ pub mod gfx;
 pub mod physics;
 pub mod platform;
 pub mod plugin;
-pub mod query;
 pub mod resources;
 pub mod storage;
 // pub mod schemas;
@@ -50,7 +49,6 @@ pub mod prelude {
     pub use self::qp_storage::Index;
     // pub use self::qp_gfx::Renderer;
     // pub use self::schemas::prelude::Schema;
-    pub use self::query::*;
     pub use self::schedule::*;
     pub use self::world::World;
 

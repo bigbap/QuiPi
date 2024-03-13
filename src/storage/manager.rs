@@ -3,7 +3,8 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use super::{
     bundle::{Bundle, ComponentMap},
     indexed_array::{Allocator, Index, IndexedArray},
-    prelude::{Component, Filtered},
+    prelude::Component,
+    query::{Group, GroupIter},
 };
 use crate::{prelude::QPError, resources::*, QPResult};
 
@@ -56,6 +57,11 @@ impl StorageManager {
 
     pub fn get_storage_mut(&mut self, id: StorageId) -> Option<&mut Storage> {
         self.storage_units.get_mut(&id)
+    }
+
+    pub fn query_v2<G: Group + 'static>(&self, storage: StorageId) -> Box<dyn GroupIter<G>> {
+        let storage = self.get_storage(storage).unwrap();
+        G::into_iter(&storage)
     }
 
     // pub fn filter<C: Component + 'static>(&self, id: StorageId, filter: C) -> Filtered<C> {}
@@ -161,8 +167,6 @@ impl Storage {
             },
         }
     }
-
-    pub fn get_all<C: Component + PartialEq + 'static>(&self) {}
 
     pub fn query<C: Component + PartialEq + 'static>(&self) -> Option<&IndexedArray<C>> {
         self.components.get::<IndexedArray<C>>(C::id())

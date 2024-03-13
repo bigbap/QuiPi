@@ -45,38 +45,6 @@ impl Bundle for BundleBuilder {
     }
 }
 
-macro_rules! tuple_impl {
-    ($($name: ident),*) => {
-        #[allow(non_snake_case)]
-        impl<$($name: Bundle),*> Bundle for ($($name,)*) {
-            #[inline(always)]
-            fn add_components(
-                self,
-                _component_map: &mut ComponentMap,
-                _allocator: Weak<RefCell<Allocator>>,
-                _entity: &Index
-            ) {
-                let ($($name,)*) = self;
-
-                $($name.add_components(_component_map, _allocator.clone(), _entity);)*
-            }
-        }
-    }
-}
-
-tuple_impl!();
-tuple_impl!(B0);
-tuple_impl!(B0, B1);
-tuple_impl!(B0, B1, B2);
-tuple_impl!(B0, B1, B2, B3);
-tuple_impl!(B0, B1, B2, B3, B4);
-tuple_impl!(B0, B1, B2, B3, B4, B5);
-tuple_impl!(B0, B1, B2, B3, B4, B5, B6);
-tuple_impl!(B0, B1, B2, B3, B4, B5, B6, B7);
-tuple_impl!(B0, B1, B2, B3, B4, B5, B6, B7, B8);
-tuple_impl!(B0, B1, B2, B3, B4, B5, B6, B7, B8, B9);
-tuple_impl!(B0, B1, B2, B3, B4, B5, B6, B7, B8, B9, B10);
-
 pub trait Component: Bundle + Clone + PartialEq {
     fn id() -> ComponentId
     where

@@ -3,6 +3,8 @@ use std::{cell::RefCell, iter, rc::Rc, slice};
 
 use serde::{Deserialize, Serialize};
 
+use super::prelude::Component;
+
 const DEFAULT_CAPACITY: usize = 4;
 
 /// https://github.com/fitzgen/generational-arena/blob/master/src/lib.rs
@@ -189,18 +191,18 @@ impl Allocator {
 ///
 /// ///////////////////////////////
 #[derive(Debug)]
-pub struct IndexedArray<T> {
+pub struct IndexedArray<T: Component> {
     allocator: Rc<RefCell<Allocator>>,
     list: Vec<Option<Entry<T>>>,
 }
 
 #[derive(Debug, Default)]
-pub struct Entry<T> {
+pub struct Entry<T: Component> {
     value: T,
     version: u64,
 }
 
-impl<T> IndexedArray<T> {
+impl<T: Component> IndexedArray<T> {
     pub(super) fn new(allocator: Rc<RefCell<Allocator>>) -> Self {
         Self {
             allocator,
@@ -297,13 +299,13 @@ impl<T> IndexedArray<T> {
 /// Iterator for indexed array
 ///
 /// /////////////////////////////////
-pub struct Iter<'a, T: 'a> {
+pub struct Iter<'a, T: Component + 'a> {
     remaining: usize,
     allocator: Rc<RefCell<Allocator>>,
     inner: iter::Enumerate<slice::Iter<'a, Option<Entry<T>>>>,
 }
 
-impl<'a, T> Iter<'a, T> {
+impl<'a, T: Component> Iter<'a, T> {
     pub fn new(
         allocator: Rc<RefCell<Allocator>>,
         inner: iter::Enumerate<slice::Iter<'a, Option<Entry<T>>>>,
@@ -316,7 +318,7 @@ impl<'a, T> Iter<'a, T> {
     }
 }
 
-impl<'a, T> Iterator for Iter<'a, T> {
+impl<'a, T: Component> Iterator for Iter<'a, T> {
     type Item = Option<(Index, Option<&'a T>)>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -347,13 +349,13 @@ impl<'a, T> Iterator for Iter<'a, T> {
 /// mutable Iterator for indexed array
 ///
 /// /////////////////////////////////
-pub struct IterMut<'a, T: 'a> {
+pub struct IterMut<'a, T: Component + 'a> {
     remaining: usize,
     allocator: Rc<RefCell<Allocator>>,
     inner: iter::Enumerate<slice::IterMut<'a, Option<Entry<T>>>>,
 }
 
-impl<'a, T> IterMut<'a, T> {
+impl<'a, T: Component> IterMut<'a, T> {
     pub fn new(
         allocator: Rc<RefCell<Allocator>>,
         inner: iter::Enumerate<slice::IterMut<'a, Option<Entry<T>>>>,
@@ -366,7 +368,7 @@ impl<'a, T> IterMut<'a, T> {
     }
 }
 
-impl<'a, T> Iterator for IterMut<'a, T> {
+impl<'a, T: Component> Iterator for IterMut<'a, T> {
     type Item = Option<(Index, Option<&'a mut T>)>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -399,9 +401,10 @@ impl<'a, T> Iterator for IterMut<'a, T> {
 /// ///////////////////////////////
 #[cfg(test)]
 mod tests {
+    use super::super::prelude::ComponentId;
     use super::*;
 
-    #[derive(Debug, PartialEq, Eq)]
+    #[derive(Component, Debug, PartialEq, Eq, Clone)]
     struct Entity(String);
 
     type EntityMap<T> = IndexedArray<T>;
@@ -516,7 +519,7 @@ mod tests {
 
     #[test]
     fn iterate_over_array() {
-        #[derive(Debug, PartialEq)]
+        #[derive(Component, Debug, PartialEq, Eq, Clone)]
         struct Container(pub u32);
 
         let allocator = Rc::new(RefCell::new(Allocator::with_capacity(4)));
@@ -550,5 +553,33 @@ mod tests {
 
         assert_eq!(iterator.next(), Some(Some((i2, Some(&Container(457))))));
         assert_eq!(iterator.next(), None);
+    }
+
+    #[test]
+    fn zipped() {
+        #[derive(Component, Debug, PartialEq, Eq, Clone)]
+        struct Container1(pub u32);
+
+        #[derive(Component, Debug, PartialEq, Eq, Clone)]
+        struct Container2(pub u32);
+
+        let allocator = Rc::new(RefCell::new(Allocator::with_capacity(4)));
+        let i = allocator.borrow_mut().allocate();
+
+        let mut array1 = IndexedArray::<Container1>::new(allocator.clone());
+        array1.set(&i, Container1(123));
+
+        let mut array2 = IndexedArray::<Container2>::new(allocator.clone());
+        array2.set(&i, Container2(456));
+
+        let mut iter = array1.iter().zip(array2.iter());
+
+        assert_eq!(
+            iter.next(),
+            Some((
+                Some((i, Some(&Container1(123)))),
+                Some((i, Some(&Container2(456))))
+            ))
+        );
     }
 }
