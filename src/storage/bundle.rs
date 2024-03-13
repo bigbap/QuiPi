@@ -18,12 +18,16 @@ pub struct BundleBuilder {
 
 impl BundleBuilder {
     pub fn add_bundle(&mut self, bundle: impl Bundle + Clone + 'static) -> &mut Self {
-        self.bundle_loaders.push(Box::new(move |
-            component_map: &mut ComponentMap,
-            allocator: Weak<RefCell<Allocator>>,
-            entity: &Index,
-        | bundle.clone().add_components(component_map, allocator, entity)));
-    
+        self.bundle_loaders.push(Box::new(
+            move |component_map: &mut ComponentMap,
+                  allocator: Weak<RefCell<Allocator>>,
+                  entity: &Index| {
+                bundle
+                    .clone()
+                    .add_components(component_map, allocator, entity)
+            },
+        ));
+
         self
     }
 }
@@ -73,7 +77,7 @@ tuple_impl!(B0, B1, B2, B3, B4, B5, B6, B7, B8);
 tuple_impl!(B0, B1, B2, B3, B4, B5, B6, B7, B8, B9);
 tuple_impl!(B0, B1, B2, B3, B4, B5, B6, B7, B8, B9, B10);
 
-pub trait Component: Bundle + Clone {
+pub trait Component: Bundle + Clone + PartialEq {
     fn id() -> ComponentId
     where
         Self: Sized;

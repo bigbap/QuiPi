@@ -24,6 +24,7 @@ impl Default for COrthographic {
     }
 }
 
+#[derive(Debug, Component, Serialize, Deserialize, PartialEq, Clone)]
 pub struct CPerspective {
     pub fov: f32,
     pub aspect: f32,

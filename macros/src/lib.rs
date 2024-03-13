@@ -86,3 +86,16 @@ pub fn asany_derive_macro(item: TokenStream) -> TokenStream {
     })
     .into()
 }
+
+#[proc_macro_derive(Asset)]
+pub fn asset_derive_macro(item: TokenStream) -> TokenStream {
+    // parse
+    let ast: DeriveInput = syn::parse(item).unwrap();
+    let ident = ast.ident;
+
+    // generate
+    (quote::quote! {
+        impl Asset for #ident {}
+    })
+    .into()
+}

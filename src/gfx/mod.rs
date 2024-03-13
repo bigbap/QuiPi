@@ -1,9 +1,8 @@
 // mod grid;
-mod batch;
-// mod renderers;
-// mod shaders_delete;
-mod texture;
-mod viewport;
+mod shaders;
+mod sprite;
+
+pub mod render;
 
 pub mod prelude {
     use crate::{
@@ -14,11 +13,13 @@ pub mod prelude {
     use super::*;
 
     // pub use grid::*;
-    pub use batch::*;
-    // pub use renderers::*;
-    // pub use shaders_delete::*;
-    pub use texture::texture;
-    pub use viewport::Viewport;
+
+    pub use render::batch::*;
+    pub use render::cameras::*;
+    pub use render::texture::texture;
+    pub use render::viewport::Viewport;
+    pub use shaders::*;
+    pub use sprite::*;
 
     pub fn init(window_api: &QPWindow) -> QPResult<()> {
         let _opengl = MyOpenGL::init(window_api)?;

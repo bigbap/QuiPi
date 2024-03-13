@@ -8,7 +8,6 @@ extern crate serde;
 pub mod app;
 // pub mod asset_manager;
 pub mod audio;
-pub mod commands;
 pub mod common;
 pub mod core;
 pub mod errors;
@@ -20,6 +19,7 @@ pub mod query;
 pub mod resources;
 pub mod storage;
 // pub mod schemas;
+pub mod assets;
 pub mod schedule;
 pub mod world;
 
@@ -50,7 +50,6 @@ pub mod prelude {
     pub use self::qp_storage::Index;
     // pub use self::qp_gfx::Renderer;
     // pub use self::schemas::prelude::Schema;
-    pub use self::commands::*;
     pub use self::query::*;
     pub use self::schedule::*;
     pub use self::world::World;
@@ -65,7 +64,6 @@ pub mod prelude {
     pub use sdl2::event::Event;
 
     pub use qp_common::plugins::default_plugins;
-    pub use qp_common::plugins::render_plugins;
     pub use qp_common::resources::*;
 
     pub use plugin::*;

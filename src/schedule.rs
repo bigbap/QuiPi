@@ -1,7 +1,7 @@
 pub use macros::Schedule;
 use std::collections::HashMap;
 
-use crate::{prelude::World, resources::ResourceManager, QPResult};
+use crate::{prelude::World, QPResult};
 
 pub struct ScheduleManager {
     schedules: HashMap<&'static str, Box<dyn Schedule>>,

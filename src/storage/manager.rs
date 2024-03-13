@@ -3,7 +3,7 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use super::{
     bundle::{Bundle, ComponentMap},
     indexed_array::{Allocator, Index, IndexedArray},
-    prelude::Component,
+    prelude::{Component, Filtered},
 };
 use crate::{prelude::QPError, resources::*, QPResult};
 
@@ -27,15 +27,11 @@ impl StorageManager {
         Ok(self.storage_units.insert(id, Storage::new()))
     }
 
-    pub fn get<C: Component + PartialEq + 'static>(
-        &self,
-        storage: StorageId,
-        index: &Index,
-    ) -> Option<&C> {
+    pub fn get<C: Component + 'static>(&self, storage: StorageId, index: &Index) -> Option<&C> {
         self.storage_units.get(&storage)?.get::<C>(&index)
     }
 
-    pub fn get_mut<C: Component + PartialEq + 'static>(
+    pub fn get_mut<C: Component + 'static>(
         &mut self,
         storage: StorageId,
         index: &Index,
@@ -43,14 +39,11 @@ impl StorageManager {
         self.storage_units.get_mut(&storage)?.get_mut::<C>(&index)
     }
 
-    pub fn query<C: Component + PartialEq + 'static>(
-        &self,
-        storage: StorageId,
-    ) -> Option<&IndexedArray<C>> {
+    pub fn query<C: Component + 'static>(&self, storage: StorageId) -> Option<&IndexedArray<C>> {
         self.storage_units.get(&storage)?.query::<C>()
     }
 
-    pub fn query_mut<C: Component + PartialEq + 'static>(
+    pub fn query_mut<C: Component + 'static>(
         &mut self,
         storage: StorageId,
     ) -> Option<&mut IndexedArray<C>> {
@@ -65,24 +58,7 @@ impl StorageManager {
         self.storage_units.get_mut(&id)
     }
 
-    // pub fn query<C: Component + PartialEq + 'static>(&self, filter: C) -> Vec<Index> {
-    //     let Some(cmp_map) = self.components.get::<EntityMap<C>>(C::id()) else {
-    //         return vec![];
-    //     };
-    //     let all_entities = cmp_map.get_entities();
-
-    //     let mut result = Vec::<Index>::new();
-
-    //     for entity in all_entities {
-    //         if let Some(cmp) = cmp_map.get(&entity) {
-    //             if *cmp == filter {
-    //                 result.push(entity);
-    //             }
-    //         };
-    //     }
-
-    //     result
-    // }
+    // pub fn filter<C: Component + 'static>(&self, id: StorageId, filter: C) -> Filtered<C> {}
 }
 
 #[derive(Debug, Hash, Clone, Copy, Eq, PartialEq)]

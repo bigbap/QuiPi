@@ -1,20 +1,28 @@
-use super::Plugin;
-use crate::common::{assets::ShaderLoader, resources::Source};
+use crate::{
+    assets::{AssetServer, Source},
+    gfx::render::assets::ShaderLoader,
+    plugin::Plugin,
+    prelude::World,
+    schedule::StartupSchedule,
+};
 
-pub const QUAD_SHADER_NAME: &str = "internal_quad_shader";
+pub const QUAD_SHADER_NAME: &str = "default_quad_shader";
 
 #[derive(Default)]
-pub struct QuadShaderPlugin {}
+pub struct DefaultQuadShader {}
 
-impl Plugin for QuadShaderPlugin {
+impl Plugin for DefaultQuadShader {
     fn build(&self, app: &mut crate::prelude::App) -> crate::QPResult<()> {
-        app.load_asset(
-            QUAD_SHADER_NAME,
-            ShaderLoader {
-                source: Source::Strings((VERT, FRAG)),
-                uniforms: vec![],
-            },
-        );
+        app.add_system::<StartupSchedule>(|world: &mut World| {
+            if let Some(server) = world.resource_mut::<AssetServer>() {
+                server.load(ShaderLoader {
+                    source: Source::Strings((VERT, FRAG)),
+                    uniforms: vec![],
+                });
+            }
+
+            Ok(())
+        });
 
         Ok(())
     }

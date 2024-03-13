@@ -1,6 +1,6 @@
 use crate::{
-    common::resources::{Asset, AssetLoader, Source},
-    platform::opengl::textures::Texture,
+    assets::{Asset, AssetLoader, Source},
+    platform::opengl::textures::GlTexture,
     prelude::{qp_gfx::texture, QPError},
     QPResult,
 };
@@ -23,13 +23,13 @@ impl Default for TextureCoords {
     }
 }
 
-#[derive(Debug)]
-pub struct TextureAsset {
-    pub texture: Texture,
+#[derive(Asset, Debug, Clone, PartialEq)]
+pub struct Texture {
+    pub texture: GlTexture,
     pub dims: Option<(u32, u32)>,
 }
 
-impl TextureAsset {
+impl Texture {
     pub fn get_coords_at_loc(&self, loc: (u32, u32)) -> TextureCoords {
         let Some(dims) = self.dims else {
             return TextureCoords::default();
@@ -63,15 +63,15 @@ impl TextureAsset {
     }
 }
 
-impl Asset for TextureAsset {}
-
 pub struct TextureLoader {
     pub source: Source,
     pub dims: Option<(u32, u32)>,
 }
 
-impl AssetLoader<TextureAsset> for TextureLoader {
-    fn load(&mut self) -> QPResult<TextureAsset> {
+impl AssetLoader for TextureLoader {
+    type AssetType = Texture;
+
+    fn load(&mut self) -> QPResult<Texture> {
         let texture = match &self.source {
             Source::Buffer(metadata) => texture::from_buffer(
                 metadata.format,
@@ -83,7 +83,7 @@ impl AssetLoader<TextureAsset> for TextureLoader {
             _ => return Err(QPError::Generic("invalid source for texture".into())),
         };
 
-        Ok(TextureAsset {
+        Ok(Texture {
             texture,
             dims: self.dims,
         })

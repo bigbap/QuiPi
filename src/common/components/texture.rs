@@ -1,8 +1,11 @@
-use crate::common::resources::AssetId;
-use crate::prelude::qp_storage::*;
+use crate::{
+    assets::{AssetHandle, AssetId},
+    gfx::render::assets::Texture,
+    prelude::qp_storage::*,
+};
 
 #[derive(Debug, Component, Clone, PartialEq)]
 pub struct CTexture {
-    pub id: AssetId,
+    pub id: AssetHandle<Texture>,
     pub atlas_location: Option<(u32, u32)>,
 }

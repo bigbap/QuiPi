@@ -1,4 +1,5 @@
 mod bundle;
+mod filter;
 mod indexed_array;
 mod manager;
 
@@ -6,6 +7,7 @@ pub mod prelude {
     use super::*;
 
     pub use bundle::*;
+    pub use filter::*;
     pub use macros::Component;
 
     pub use indexed_array::Allocator;

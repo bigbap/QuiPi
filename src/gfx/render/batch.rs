@@ -2,19 +2,15 @@ use std::usize;
 
 use field_offset::offset_of;
 
-use crate::{
-    platform::opengl::{
-        self,
-        buffer::{
-            create_ebo, vertex_attribute_pointer, Buffer, BufferUsage, VertexArray, EBO, VBO,
-        },
-        draw::{DrawBuffer, DrawMode},
-        textures::{max_texture_slots, use_texture},
-    },
-    prelude::qp_common::assets::{ShaderAsset, TextureAsset},
+use super::assets::*;
+use crate::platform::opengl::{
+    self,
+    buffer::{create_ebo, vertex_attribute_pointer, Buffer, BufferUsage, VertexArray, EBO, VBO},
+    draw::{DrawBuffer, DrawMode},
+    textures::{max_texture_slots, use_texture},
 };
 
-pub struct BatchRenderer<const MESH_COUNT: usize, const VERTEX_COUNT: usize> {
+pub(crate) struct BatchRenderer<const MESH_COUNT: usize, const VERTEX_COUNT: usize> {
     vao: VertexArray,
     _ebo: Buffer<EBO>,
     vbo: Buffer<VBO>,
@@ -96,7 +92,7 @@ impl<const MESH_COUNT: usize, const VERTEX_COUNT: usize> BatchRenderer<MESH_COUN
         self.vertices.clear();
     }
 
-    pub fn flush_batch(&mut self, shader: &ShaderAsset) {
+    pub fn flush_batch(&mut self, shader: &Shader) {
         if self.vertices.is_empty() {
             return;
         }
@@ -135,8 +131,8 @@ impl<const MESH_COUNT: usize, const VERTEX_COUNT: usize> BatchRenderer<MESH_COUN
     pub fn draw(
         &mut self,
         vertices: [Vertex; VERTEX_COUNT],
-        shader: &ShaderAsset,
-        texture: Option<&TextureAsset>,
+        shader: &Shader,
+        texture: Option<&Texture>,
     ) {
         let mut texture_slot = self.max_textures as usize;
         if let Some(texture) = texture {
@@ -172,7 +168,7 @@ impl<const MESH_COUNT: usize, const VERTEX_COUNT: usize> BatchRenderer<MESH_COUN
         }
     }
 
-    fn batch_reset(&mut self, shader: &ShaderAsset) {
+    fn batch_reset(&mut self, shader: &Shader) {
         self.end_batch();
         self.flush_batch(shader);
         self.begin_batch();

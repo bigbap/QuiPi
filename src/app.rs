@@ -1,5 +1,6 @@
-use crate::common::resources::Asset;
-use crate::common::resources::AssetLoader;
+use crate::assets::Asset;
+use crate::assets::AssetLoader;
+use crate::assets::Assets;
 use crate::common::resources::Clock;
 use crate::common::resources::StringInterner;
 use crate::plugin::Plugin;
@@ -88,13 +89,9 @@ impl App {
         self
     }
 
-    pub fn load_asset<A: Asset + 'static>(
-        &mut self,
-        identifier: &str,
-        loader: impl AssetLoader<A> + 'static,
-    ) -> &mut Self {
-        if let Err(e) = self.world.load_asset(identifier.into(), loader) {
-            panic!("there was a problem loading an asset: {}", e);
+    pub fn init_asset_store<A: Asset + 'static>(&mut self) -> &mut Self {
+        if let Err(e) = self.world.resources.add_resource(Assets::<A>::default()) {
+            panic!("there was a problem initializing asset store: {}", e)
         }
 
         self
@@ -112,6 +109,9 @@ impl App {
         if app.plugins_building_count > 0 {
             panic!("App::run() was called before all plugins were built");
         }
+
+        app.schedules
+            .execute_schedule::<StartupSchedule>(&mut app.world)?;
 
         self.state = AppState::Running;
 

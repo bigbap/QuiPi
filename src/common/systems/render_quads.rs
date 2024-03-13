@@ -1,13 +1,12 @@
 use crate::{
     common::{
-        assets::{ShaderAsset, TextureAsset, TextureCoords},
-        bundles::CSprite,
         prelude::components::{CColor, CQuad, CSkip, CTexture, CTransform2D},
-        resources::{AssetId, Camera2D, CameraId},
+        resources::AssetId,
     },
+    gfx::render::assets::{Shader, Texture, TextureCoords},
     platform::opengl::capabilities::{gl_blending_func, gl_enable, GLBlendingFactor, GLCapability},
     prelude::{
-        qp_gfx::{BatchRenderer, Vertex},
+        qp_gfx::{BatchRenderer, CSprite, Vertex},
         QPError, System, World,
     },
 };
@@ -15,7 +14,7 @@ use crate::{
 const BATCH_SIZE: usize = 10000;
 
 pub fn render_quads(shader_id: AssetId, camera_id: CameraId) -> impl System {
-    debug_assert!(shader_id.validate::<ShaderAsset>());
+    debug_assert!(shader_id.validate::<Shader>());
 
     let mut renderer = BatchRenderer::<BATCH_SIZE, 4>::new(vec![0, 1, 3, 1, 2, 3]);
 
@@ -24,11 +23,13 @@ pub fn render_quads(shader_id: AssetId, camera_id: CameraId) -> impl System {
             return Ok(());
         };
 
-        let shader = world.resources
+        let shader = world
+            .resources
             .asset(&shader_id)
             .ok_or(QPError::AssetNotFound("shader".into()))?;
 
-        let camera = world.resources
+        let camera = world
+            .resources
             .camera::<Camera2D>(&camera_id)
             .ok_or(QPError::CameraNotFound)?;
 
@@ -60,7 +61,8 @@ pub fn render_quads(shader_id: AssetId, camera_id: CameraId) -> impl System {
                 _ => None,
             };
 
-            let color = world.resources
+            let color = world
+                .resources
                 .entity::<CColor>(&entity)
                 .unwrap_or(&CColor(1.0, 1.0, 1.0, 1.0));
             let color = glm::vec4(color.0, color.1, color.2, color.3);
@@ -80,7 +82,7 @@ pub fn render_quads(shader_id: AssetId, camera_id: CameraId) -> impl System {
 
 pub fn vertices(
     mvp: &glm::Mat4,
-    texture: &Option<&TextureAsset>,
+    texture: &Option<&Texture>,
     color: glm::Vec4,
     positions: [glm::Vec4; 4],
 ) -> [Vertex; 4] {

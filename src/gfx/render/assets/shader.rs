@@ -1,15 +1,15 @@
-use crate::common::resources::{Asset, AssetLoader, Source};
+use crate::assets::{Asset, AssetHandle, AssetLoader, Source};
 use crate::platform::opengl::shader::ShaderProgram;
 use crate::prelude::QPError;
 use crate::QPResult;
 
-#[derive(Debug)]
-pub struct ShaderAsset {
+#[derive(Debug, PartialEq)]
+pub struct Shader {
     pub program: ShaderProgram,
     pub uniforms: Vec<Uniform>,
 }
 
-impl Asset for ShaderAsset {}
+impl Asset for Shader {}
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Uniform {
@@ -34,15 +34,17 @@ pub struct ShaderLoader {
     pub source: Source,
 }
 
-impl AssetLoader<ShaderAsset> for ShaderLoader {
-    fn load(&mut self) -> QPResult<ShaderAsset> {
+impl AssetLoader for ShaderLoader {
+    type AssetType = Shader;
+
+    fn load(&mut self) -> QPResult<Shader> {
         let program = match self.source {
             Source::Path(name) => ShaderProgram::from_file(name)?,
             Source::Strings((vert, frag)) => ShaderProgram::from_str(vert, frag)?,
             _ => return Err(QPError::Generic("invalid source for shader".into())),
         };
 
-        Ok(ShaderAsset {
+        Ok(Shader {
             program,
             uniforms: self.uniforms.clone(),
         })

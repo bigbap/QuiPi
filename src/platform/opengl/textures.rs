@@ -46,8 +46,8 @@ pub enum ParameterValue {
     U32(u32),
 }
 
-#[derive(Debug, PartialEq)]
-pub struct Texture {
+#[derive(Debug, PartialEq, Clone)]
+pub struct GlTexture {
     pub id: u32,
     target: gl::types::GLenum,
 
@@ -55,7 +55,7 @@ pub struct Texture {
     pub height: i32,
 }
 
-impl Texture {
+impl GlTexture {
     pub fn new(width: i32, height: i32, target: Target) -> Self {
         let mut id: gl::types::GLuint = 0;
         unsafe { gl::GenTextures(1, &mut id) }
@@ -153,7 +153,7 @@ impl Texture {
     }
 }
 
-impl Drop for Texture {
+impl Drop for GlTexture {
     fn drop(&mut self) {
         unsafe {
             gl::BindTexture(self.target, 0);

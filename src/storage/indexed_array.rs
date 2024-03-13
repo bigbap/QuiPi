@@ -369,7 +369,7 @@ impl<'a, T> IterMut<'a, T> {
 }
 
 impl<'a, T> Iterator for IterMut<'a, T> {
-    type Item = (Index, Option<&'a mut T>);
+    type Item = (Index, &'a mut T);
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
@@ -388,8 +388,8 @@ impl<'a, T> Iterator for IterMut<'a, T> {
             return Some((
                 index,
                 match entry {
-                    Some(entry) => Some(&mut entry.value),
-                    _ => None,
+                    Some(entry) => &mut entry.value,
+                    _ => continue,
                 },
             ));
         }
@@ -544,10 +544,8 @@ mod tests {
         assert_eq!(iterator.next(), Some((i2, Some(&Container(456)))));
         assert_eq!(iterator.next(), None);
 
-        for (_, cont) in array.iter_mut() {
-            if let Some(val) = cont {
-                val.0 = 457
-            }
+        for (_, val) in array.iter_mut() {
+            val.0 = 457
         }
 
         let mut iterator = array.iter();
