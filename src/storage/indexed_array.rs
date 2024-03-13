@@ -317,30 +317,28 @@ impl<'a, T> Iter<'a, T> {
 }
 
 impl<'a, T> Iterator for Iter<'a, T> {
-    type Item = (Index, Option<&'a T>);
+    type Item = Option<(Index, Option<&'a T>)>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        loop {
-            let Some((i, entry)) = self.inner.next() else {
-                debug_assert_eq!(self.remaining, 0);
+        let Some((i, entry)) = self.inner.next() else {
+            debug_assert_eq!(self.remaining, 0);
 
-                return None;
-            };
+            return None;
+        };
 
-            self.remaining -= 1;
+        self.remaining -= 1;
 
-            let Some(index) = self.allocator.borrow().index_at(i) else {
-                continue;
-            };
+        let Some(index) = self.allocator.borrow().index_at(i) else {
+            return Some(None);
+        };
 
-            return Some((
-                index,
-                match entry {
-                    Some(entry) => Some(&entry.value),
-                    _ => None,
-                },
-            ));
-        }
+        Some(Some((
+            index,
+            match entry {
+                Some(entry) => Some(&entry.value),
+                _ => None,
+            },
+        )))
     }
 }
 
@@ -369,30 +367,28 @@ impl<'a, T> IterMut<'a, T> {
 }
 
 impl<'a, T> Iterator for IterMut<'a, T> {
-    type Item = (Index, &'a mut T);
+    type Item = Option<(Index, Option<&'a mut T>)>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        loop {
-            let Some((i, entry)) = self.inner.next() else {
-                debug_assert_eq!(self.remaining, 0);
+        let Some((i, entry)) = self.inner.next() else {
+            debug_assert_eq!(self.remaining, 0);
 
-                return None;
-            };
+            return None;
+        };
 
-            self.remaining -= 1;
+        self.remaining -= 1;
 
-            let Some(index) = self.allocator.borrow().index_at(i) else {
-                continue;
-            };
+        let Some(index) = self.allocator.borrow().index_at(i) else {
+            return Some(None);
+        };
 
-            return Some((
-                index,
-                match entry {
-                    Some(entry) => &mut entry.value,
-                    _ => continue,
-                },
-            ));
-        }
+        Some(Some((
+            index,
+            match entry {
+                Some(entry) => Some(&mut entry.value),
+                _ => None,
+            },
+        )))
     }
 }
 
@@ -534,23 +530,25 @@ mod tests {
 
         let mut iterator = array.iter();
 
-        assert_eq!(iterator.next(), Some((i1, Some(&Container(123)))));
-        assert_eq!(iterator.next(), Some((i2, Some(&Container(456)))));
+        assert_eq!(iterator.next(), Some(Some((i1, Some(&Container(123))))));
+        assert_eq!(iterator.next(), Some(Some((i2, Some(&Container(456))))));
 
         allocator.borrow_mut().deallocate(i1);
 
         let mut iterator = array.iter();
 
-        assert_eq!(iterator.next(), Some((i2, Some(&Container(456)))));
+        assert_eq!(iterator.next(), Some(Some((i2, Some(&Container(456))))));
         assert_eq!(iterator.next(), None);
 
-        for (_, val) in array.iter_mut() {
-            val.0 = 457
+        for cont in array.iter_mut() {
+            if let Some((_, val)) = cont {
+                val.unwrap().0 = 457
+            }
         }
 
         let mut iterator = array.iter();
 
-        assert_eq!(iterator.next(), Some((i2, Some(&Container(457)))));
+        assert_eq!(iterator.next(), Some(Some((i2, Some(&Container(457))))));
         assert_eq!(iterator.next(), None);
     }
 }
