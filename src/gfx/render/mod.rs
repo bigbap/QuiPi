@@ -37,7 +37,7 @@ impl Plugin for RenderBasePlugin {
             .expect("storage manager resource not loaded");
         storage_manager.insert(Cameras)?;
 
-        app.add_system::<RenderSchedule>(pipeline::start_render_pipeline);
+        // app.add_system::<RenderSchedule>(pipeline::start_render_pipeline);
 
         Ok(())
     }

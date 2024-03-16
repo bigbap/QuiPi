@@ -8,6 +8,8 @@ use crate::{
     QPResult,
 };
 
+pub use super::commands::Commands;
+
 pub struct World {
     pub resources: ResourceManager,
 }
@@ -19,7 +21,7 @@ impl World {
         }
     }
 
-    pub(crate) fn execute<S: Schedule>(&mut self) -> QPResult<()> {
+    pub(crate) fn execute<S: Schedule + 'static>(&mut self) -> QPResult<()> {
         let mut schedules = self.resources.remove_or_err::<ScheduleManager>()?;
 
         schedules
@@ -112,6 +114,6 @@ pub struct DebugInfo {
 
 //     #[inline]
 //     pub(crate) fn new_mutable(world: &'static mut World) -> Self {
-//         Self(ptr::from_mut(world))
+//         Self(std::ptr::from_mut(world))
 //     }
 // }

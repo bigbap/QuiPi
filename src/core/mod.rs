@@ -1,5 +1,4 @@
 mod any;
-mod collections;
 mod image;
 mod math;
 mod path;
@@ -9,7 +8,6 @@ pub mod prelude {
     use super::*;
 
     pub use any::*;
-    pub use collections::*;
     pub use math::*;
     pub use path::*;
     pub use time::*;

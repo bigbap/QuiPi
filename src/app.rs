@@ -9,8 +9,8 @@ use crate::prelude::Schedule;
 use crate::prelude::StartupSchedule;
 use crate::prelude::StorageId;
 use crate::prelude::StorageManager;
-use crate::prelude::System;
-use crate::prelude::UpdateSchedule;
+use crate::prelude::SystemParams;
+// use crate::prelude::UpdateSchedule;
 use crate::prelude::World;
 use crate::resources::Resource;
 use crate::schedule::ScheduleManager;
@@ -75,7 +75,10 @@ impl App {
         self.plugins.push(plugin);
     }
 
-    pub fn add_system<S: Schedule>(&mut self, system: impl System) -> &mut Self {
+    pub fn add_system<S: Schedule + 'static, Out, Args>(
+        &mut self,
+        system: impl SystemParams<Out = Out, Args = Args>,
+    ) -> &mut Self {
         if let Some(schedules) = self.world.resource_mut::<ScheduleManager>() {
             schedules.add_system::<S>(system);
         } else {
@@ -179,7 +182,7 @@ impl Plugin for Manadatory {
         let mut schedules = ScheduleManager::new();
 
         schedules.add_schedule::<StartupSchedule>();
-        schedules.add_schedule::<UpdateSchedule>();
+        // schedules.add_schedule::<UpdateSchedule>();
 
         app.add_resource(schedules);
 
