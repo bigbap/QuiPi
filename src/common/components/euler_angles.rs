@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::prelude::qp_storage::*;
+use crate::prelude::*;
 
 /**
 * https://en.wikipedia.org/wiki/Euler_angles

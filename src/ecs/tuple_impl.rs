@@ -1,40 +1,40 @@
-use crate::storage::indexed_array::*;
-use crate::storage::prelude::*;
+use crate::ecs::indexed_array::*;
+use crate::ecs::prelude::*;
 use std::{cell::RefCell, rc::Weak};
 
 macro_rules! tuple_impl {
     ($Id: ident, $(($G: ident, $Res: ident)),*) => {
-        #[allow(non_snake_case, unused_assignments)]
-        impl<$($G: Component + 'static),*> GroupIter<($(&'static $G),*)> for ($(Iter<'static, $G>,)*) {
-            #[inline(always)]
-            fn step(&mut self) -> Option<(Index, ($(&'static $G),*))> {
-                let ($($G,)*) = self;
-                loop {
-                    let mut $Id;
-                    $(
-                        let $Res = match $G.next() {
-                            None => return None,
-                            Some(Some((index, Some(entry)))) => {
-                                $Id = index;
-                                entry
-                            },
-                            _ => continue
-                        };
-                    )*
+        // #[allow(non_snake_case, unused_assignments)]
+        // impl<$($G: Component + 'static),*> GroupIter<($($G),*)> for ($(Iter<'static, $G>,)*) {
+        //     #[inline(always)]
+        //     fn step(&mut self) -> Option<(Index, (&$($G),*))> {
+        //         let ($($G,)*) = self;
+        //         loop {
+        //             let mut $Id;
+        //             $(
+        //                 let $Res = match $G.next() {
+        //                     None => return None,
+        //                     Some(Some((index, Some(entry)))) => {
+        //                         $Id = index;
+        //                         entry
+        //                     },
+        //                     _ => continue
+        //                 };
+        //             )*
 
-                    return Some(($Id, ($($Res,)*)))
-                }
-            }
-        }
+        //             return Some(($Id, ($($Res,)*)))
+        //         }
+        //     }
+        // }
 
-        #[allow(non_snake_case)]
-        impl<$($G: Component + 'static),*> Group for ($(&'static $G,)*) {
-            fn into_iter(storage: &'static Storage) -> Box<dyn GroupIter<Self>> {
-                Box::new(($(
-                    storage.query::<$G>().unwrap().iter(),
-                )*))
-            }
-        }
+        // #[allow(non_snake_case)]
+        // impl<$($G: Component + 'static),*> Group for ($($G,)*) {
+        //     fn into_iter(storage: &'static Storage) -> Box<dyn GroupIter<Self>> {
+        //         Box::new(($(
+        //             storage.iter::<$G>().unwrap(),
+        //         )*))
+        //     }
+        // }
 
         #[allow(non_snake_case)]
         impl<$($G: Bundle),*> Bundle for ($($G,)*) {

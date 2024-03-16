@@ -10,17 +10,16 @@ pub mod app;
 pub mod audio;
 pub mod common;
 pub mod core;
+pub mod ecs;
 pub mod errors;
 pub mod gfx;
 pub mod physics;
 pub mod platform;
 pub mod plugin;
 pub mod resources;
-pub mod storage;
 // pub mod schemas;
 pub mod assets;
 pub mod schedule;
-pub mod world;
 
 // #[cfg(feature = "qp_editor")]
 // mod editor;
@@ -37,20 +36,18 @@ pub mod prelude {
     pub use self::audio::QPAudio as qp_audio;
     pub use self::common::prelude as qp_common;
     pub use self::core::prelude as qp_core;
+    pub use self::ecs::prelude as qp_ecs;
     pub use self::gfx::prelude as qp_gfx;
-    pub use self::storage::prelude as qp_storage;
     // pub use self::physics::prelude as qp_physics;
     // pub use self::schemas::prelude as qp_schemas;
 
     pub use self::app::App;
-    pub use self::app::Controller;
     pub use self::app::FrameResult;
     pub use self::errors::QPError;
-    pub use self::qp_storage::Index;
+    pub use self::qp_ecs::*;
     // pub use self::qp_gfx::Renderer;
     // pub use self::schemas::prelude::Schema;
     pub use self::schedule::*;
-    pub use self::world::World;
 
     // #[cfg(feature = "qp_editor")]
     // pub use self::editor::prelude as qp_editor;
@@ -65,5 +62,4 @@ pub mod prelude {
     pub use qp_common::resources::*;
 
     pub use plugin::*;
-    pub use world::*;
 }

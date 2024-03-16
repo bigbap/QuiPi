@@ -10,8 +10,8 @@ use assets::*;
 use crate::{
     assets::AssetServer,
     plugin::Plugin,
-    prelude::RenderSchedule,
-    storage::prelude::{StorageId::*, StorageManager},
+    prelude::{QPError, RenderSchedule, StorageId::*, StorageManager},
+    schedule::ScheduleManager,
     QPResult,
 };
 
@@ -20,7 +20,12 @@ pub struct RenderBasePlugin {}
 
 impl Plugin for RenderBasePlugin {
     fn build(&self, app: &mut crate::prelude::App) -> QPResult<()> {
-        app.schedules.add_schedule::<RenderSchedule>();
+        let schedules = app
+            .world
+            .resource_mut::<ScheduleManager>()
+            .ok_or(QPError::ResourceNotFound("ScheduleManager".into()))?;
+        schedules.add_schedule::<RenderSchedule>();
+
         app.add_resource(AssetServer::new())
             .init_asset_store::<Texture>()
             .init_asset_store::<Shader>();

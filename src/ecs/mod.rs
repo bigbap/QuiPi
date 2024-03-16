@@ -3,6 +3,7 @@ mod indexed_array;
 mod manager;
 mod query;
 mod tuple_impl;
+mod world;
 
 pub mod prelude {
     use super::*;
@@ -16,4 +17,5 @@ pub mod prelude {
     pub use indexed_array::IndexedArray;
 
     pub use manager::*;
+    pub use world::*;
 }

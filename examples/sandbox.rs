@@ -4,6 +4,7 @@ extern crate quipi;
 use quipi::{
     assets::{AssetServer, Assets, Source},
     common::components::components::{CColor, CTexture, CTransform2D},
+    ecs::prelude::StorageId::*,
     gfx::{
         prelude::{camera_bundle, sprite_bundle, CameraMetadata, SpriteMetadata},
         render::{
@@ -12,7 +13,6 @@ use quipi::{
         },
     },
     prelude::*,
-    storage::prelude::StorageId::*,
 };
 use sdl2::keyboard::Keycode;
 

@@ -1,7 +1,7 @@
 use crate::resources::*;
 use std::collections::HashMap;
 
-#[derive(Debug, Resource)]
+#[derive(Debug, Resource, AsAny)]
 pub struct StringInterner {
     pub strings: HashMap<u64, String>,
 }

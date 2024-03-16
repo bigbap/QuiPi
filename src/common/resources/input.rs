@@ -7,7 +7,7 @@ use sdl2::{
 
 use crate::resources::*;
 
-#[derive(Resource)]
+#[derive(Resource, AsAny)]
 pub struct Input {
     key_state: HashMap<Keycode, Option<KeyState>>,
 }

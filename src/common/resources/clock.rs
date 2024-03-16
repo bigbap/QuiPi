@@ -1,6 +1,6 @@
 use crate::{core::prelude::Timer, resources::*};
 
-#[derive(Resource)]
+#[derive(Resource, AsAny)]
 pub struct Clock {
     timer: Timer,
 }

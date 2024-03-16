@@ -9,11 +9,7 @@ pub fn component_derive_macro(item: TokenStream) -> TokenStream {
 
     // generate
     (quote::quote! {
-        impl Component for #ident {
-            fn id() -> ComponentId {
-                ComponentId::new::<Self>()
-            }
-        }
+        impl Component for #ident {}
     })
     .into()
 }
@@ -27,16 +23,6 @@ pub fn resource_derive_macro(item: TokenStream) -> TokenStream {
     // generate
     (quote::quote! {
         impl Resource for #ident {}
-
-        impl AsAny for #ident {
-            fn as_any(&self) -> &dyn std::any::Any {
-                self
-            }
-
-            fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
-                self
-            }
-        }
     })
     .into()
 }

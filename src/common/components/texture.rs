@@ -1,7 +1,7 @@
 use crate::{
     assets::{AssetHandle, AssetId},
     gfx::render::assets::Texture,
-    prelude::qp_storage::*,
+    prelude::*,
 };
 
 #[derive(Debug, Component, Clone, PartialEq)]

@@ -1,6 +1,6 @@
 use crate::resources::*;
 
-#[derive(Resource)]
+#[derive(Resource, AsAny)]
 pub struct ClearColor(pub f32, pub f32, pub f32, pub f32);
 
 impl ClearColor {

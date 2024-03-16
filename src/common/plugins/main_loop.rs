@@ -13,14 +13,7 @@ pub struct MainLoopPlugin {}
 impl Plugin for MainLoopPlugin {
     fn build(&self, app: &mut crate::prelude::App) -> QPResult<()> {
         Ok(app.set_runner(move |mut app: App| loop {
-            match app
-                .schedules
-                .execute_schedule::<UpdateSchedule>(&mut app.world)
-            {
-                Err(QPError::Quit) => return Ok(()),
-                Err(e) => return Err(e),
-                _ => (),
-            }
+            app.world.execute::<UpdateSchedule>()?;
 
             let clr = app
                 .world
@@ -30,20 +23,20 @@ impl Plugin for MainLoopPlugin {
 
             clear_buffers(clr.as_tuple());
 
-            app.schedules
-                .execute_schedule::<RenderSchedule>(&mut app.world)?;
+            app.world.execute::<RenderSchedule>()?;
 
-            let window = app
+            let Some(window) = &app
                 .world
                 .resources
                 .get::<Window>()
-                .ok_or(QPError::ResourceNotFound("Window".into()))?;
-
-            if let Some(window) = &window.winapi.window {
-                window.gl_swap_window();
-            } else {
+                .ok_or(QPError::ResourceNotFound("Window".into()))?
+                .winapi
+                .window
+            else {
                 return Err(QPError::ProblemSwappingFrameBuffers);
-            }
+            };
+
+            window.gl_swap_window()
         }))
     }
 }

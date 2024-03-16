@@ -1,4 +1,4 @@
-use crate::prelude::qp_storage::*;
+use crate::prelude::*;
 
 #[derive(Debug, Component, PartialEq, Default, Clone)]
 pub struct CMeshData {

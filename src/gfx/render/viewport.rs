@@ -1,6 +1,6 @@
 use crate::{platform::opengl::functions::gl_set_viewport_dimensions, resources::*};
 
-#[derive(Resource)]
+#[derive(Resource, AsAny)]
 pub struct Viewport {
     dims: ViewportDimensions,
 }

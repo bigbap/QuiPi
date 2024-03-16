@@ -1,5 +1,5 @@
 use crate::prelude::qp_common::components::*;
-use crate::prelude::qp_storage::*;
+use crate::prelude::*;
 use serde::{Deserialize, Serialize};
 
 const PERSPECTIVE_NEAR: f32 = 0.1;

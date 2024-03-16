@@ -5,7 +5,7 @@ use crate::{
     QPResult,
 };
 
-#[derive(Resource)]
+#[derive(Resource, AsAny)]
 pub struct Window {
     pub winapi: QPWindow,
 }

@@ -1,4 +1,4 @@
-use crate::prelude::qp_storage::*;
+use crate::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Component, Serialize, Deserialize, Clone, PartialEq)]

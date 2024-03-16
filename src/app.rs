@@ -1,19 +1,19 @@
 use crate::assets::Asset;
-use crate::assets::AssetLoader;
 use crate::assets::Assets;
 use crate::common::resources::Clock;
 use crate::common::resources::StringInterner;
 use crate::plugin::Plugin;
 use crate::plugin::Plugins;
+use crate::prelude::QPError;
 use crate::prelude::Schedule;
 use crate::prelude::StartupSchedule;
+use crate::prelude::StorageId;
+use crate::prelude::StorageManager;
 use crate::prelude::System;
 use crate::prelude::UpdateSchedule;
 use crate::prelude::World;
 use crate::resources::Resource;
 use crate::schedule::ScheduleManager;
-use crate::storage::prelude::StorageId;
-use crate::storage::prelude::StorageManager;
 use crate::QPResult;
 use egui::TextBuffer;
 use std::collections::HashSet;
@@ -27,7 +27,7 @@ pub struct App {
     plugin_names: HashSet<String>,
     plugins_building_count: usize,
 
-    pub(crate) schedules: ScheduleManager,
+    // pub(crate) schedules: ScheduleManager,
     pub(crate) state: AppState,
 }
 
@@ -40,7 +40,7 @@ impl App {
             plugin_names: HashSet::default(),
             plugins_building_count: 0,
             state: AppState::Created,
-            schedules: ScheduleManager::new(),
+            // schedules: ScheduleManager::new(),
         }
     }
 
@@ -76,13 +76,17 @@ impl App {
     }
 
     pub fn add_system<S: Schedule>(&mut self, system: impl System) -> &mut Self {
-        self.schedules.add_system::<S>(system);
+        if let Some(schedules) = self.world.resource_mut::<ScheduleManager>() {
+            schedules.add_system::<S>(system);
+        } else {
+            panic!("Schedule Manager not found in resources");
+        }
 
         self
     }
 
     pub fn add_resource(&mut self, resource: impl Resource + 'static) -> &mut Self {
-        if let Err(e) = self.world.resources.add_resource(resource) {
+        if let Err(e) = self.world.resources.insert(resource) {
             panic!("there was a problem adding a resource: {}", e);
         }
 
@@ -90,7 +94,7 @@ impl App {
     }
 
     pub fn init_asset_store<A: Asset + 'static>(&mut self) -> &mut Self {
-        if let Err(e) = self.world.resources.add_resource(Assets::<A>::default()) {
+        if let Err(e) = self.world.resources.insert(Assets::<A>::default()) {
             panic!("there was a problem initializing asset store: {}", e)
         }
 
@@ -110,13 +114,17 @@ impl App {
             panic!("App::run() was called before all plugins were built");
         }
 
-        app.schedules
-            .execute_schedule::<StartupSchedule>(&mut app.world)?;
+        app.world.execute::<StartupSchedule>()?;
 
         self.state = AppState::Running;
 
         let runner = std::mem::replace(&mut app.runner, Box::new(run_once));
-        runner(app)
+
+        match runner(app) {
+            Err(QPError::Quit) => Ok(()),
+            Err(e) => Err(e),
+            _ => Ok(()),
+        }
     }
 
     fn plugins_cleanup(&mut self) -> QPResult<()> {
@@ -138,10 +146,6 @@ pub enum FrameResult {
     None,
 }
 
-pub trait Controller {
-    fn update(&mut self, world: &mut World) -> FrameResult;
-}
-
 #[derive(Debug, PartialEq)]
 pub enum AppState {
     Created,
@@ -159,8 +163,7 @@ pub struct AppConfig {
 }
 
 fn run_once(mut app: App) -> QPResult<()> {
-    app.schedules
-        .execute_schedule::<StartupSchedule>(&mut app.world)
+    app.world.execute::<StartupSchedule>()
 }
 
 struct Manadatory {}
@@ -173,8 +176,12 @@ impl Plugin for Manadatory {
         app.add_resource(StringInterner::new());
         app.add_resource(manager);
 
-        app.schedules.add_schedule::<StartupSchedule>();
-        app.schedules.add_schedule::<UpdateSchedule>();
+        let mut schedules = ScheduleManager::new();
+
+        schedules.add_schedule::<StartupSchedule>();
+        schedules.add_schedule::<UpdateSchedule>();
+
+        app.add_resource(schedules);
 
         Ok(())
     }

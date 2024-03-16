@@ -45,13 +45,9 @@ impl Bundle for BundleBuilder {
     }
 }
 
-pub trait Component: Bundle + Clone + PartialEq {
-    fn id() -> ComponentId
-    where
-        Self: Sized;
-}
+pub trait Component: Bundle + Clone + PartialEq + 'static {}
 
-impl<C: Component + 'static> Bundle for C {
+impl<C: Component> Bundle for C {
     fn add_components(
         self,
         component_map: &mut ComponentMap,
@@ -64,12 +60,11 @@ impl<C: Component + 'static> Bundle for C {
             return;
         };
 
-        let id = Self::id();
-        if !component_map.has_key(id) {
-            component_map.insert(id, IndexedArray::<C>::new(allocator))
+        if !component_map.has_key::<C>() {
+            component_map.insert(IndexedArray::<C>::new(allocator))
         }
 
-        match component_map.get_mut::<IndexedArray<C>>(id) {
+        match component_map.get_mut::<C>() {
             None => {
                 #[cfg(debug_assertions)]
                 println!(
@@ -84,47 +79,47 @@ impl<C: Component + 'static> Bundle for C {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-pub struct ComponentId(TypeId);
-impl ComponentId {
-    pub fn new<C: Component + 'static>() -> Self {
-        let type_id = TypeId::of::<C>();
+// #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+// pub struct ComponentId(TypeId);
+// impl ComponentId {
+//     pub fn new<C: Component + 'static>() -> Self {
+//         let type_id = TypeId::of::<C>();
 
-        Self(type_id)
-    }
-}
+//         Self(type_id)
+//     }
+// }
 
 #[derive(Debug)]
-pub struct ComponentMap(HashMap<ComponentId, Box<dyn std::any::Any>>);
+pub struct ComponentMap(HashMap<TypeId, Box<dyn std::any::Any>>);
 
 impl ComponentMap {
-    pub fn new() -> Self {
-        Self(HashMap::<ComponentId, Box<dyn std::any::Any>>::new())
+    pub(super) fn new() -> Self {
+        Self(HashMap::<TypeId, Box<dyn std::any::Any>>::new())
     }
 
-    pub fn insert<C: 'static>(&mut self, id: ComponentId, item: C) {
-        self.0.insert(id, Box::new(item));
+    pub(super) fn insert<C: Component>(&mut self, item: IndexedArray<C>) {
+        self.0.insert(TypeId::of::<C>(), Box::new(item));
     }
 
-    pub fn get<C: 'static>(&self, id: ComponentId) -> Option<&C> {
+    pub(super) fn get<C: Component>(&self) -> Option<&IndexedArray<C>> {
         self.0
-            .get(&id)
-            .map(|any| any.downcast_ref::<C>())
+            .get(&TypeId::of::<C>())
+            .map(|any| any.downcast_ref::<IndexedArray<C>>())
             .unwrap_or(None)
     }
 
-    pub fn get_mut<C: 'static>(&mut self, id: ComponentId) -> Option<&mut C> {
+    pub(super) fn get_mut<C: Component>(&mut self) -> Option<&mut IndexedArray<C>> {
         self.0
-            .get_mut(&id)
-            .map(|any| any.downcast_mut::<C>())
+            .get_mut(&TypeId::of::<C>())
+            .map(|any| any.downcast_mut::<IndexedArray<C>>())
             .unwrap_or(None)
     }
 
-    pub fn has_key(&self, id: ComponentId) -> bool {
-        self.0.contains_key(&id)
+    pub(super) fn has_key<C: Component>(&self) -> bool {
+        self.0.contains_key(&TypeId::of::<C>())
     }
 
-    pub fn len(&self) -> usize {
+    pub(super) fn len(&self) -> usize {
         self.0.len()
     }
 }

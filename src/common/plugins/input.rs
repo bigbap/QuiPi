@@ -3,7 +3,6 @@ use sdl2::event::Event;
 use crate::{
     common::resources::{input::Input, window::Window},
     prelude::{QPError, World},
-    resources::ResourceManager,
     schedule::UpdateSchedule,
     QPResult,
 };

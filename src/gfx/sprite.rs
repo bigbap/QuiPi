@@ -1,5 +1,5 @@
 use crate::prelude::qp_common::components::*;
-use crate::prelude::qp_storage::*;
+use crate::prelude::qp_ecs::*;
 use serde::{Deserialize, Serialize};
 
 use super::prelude::CRenderLayer;

@@ -1,31 +1,47 @@
 use crate::{
     common::resources::StringInterner,
-    prelude::QPError,
+    ecs::prelude::{Bundle, Index, StorageId, StorageManager},
+    prelude::{QPError, ScheduleManager},
     resources::{Resource, ResourceManager},
-    storage::prelude::{Bundle, Index, StorageId, StorageManager},
+    schedule::Schedule,
     QPResult,
 };
 
 pub struct World {
     pub resources: ResourceManager,
+    // pub(crate) schedules: ScheduleManager,
 }
 
 impl World {
     pub fn new() -> Self {
         Self {
             resources: ResourceManager::new(),
+            // schedules: ScheduleManager::new(),
         }
     }
 
+    pub(crate) fn execute<S: Schedule>(&mut self) -> QPResult<()> {
+        let mut schedules = self.resources.remove_or_err::<ScheduleManager>()?;
+
+        schedules
+            .borrow_mut::<ScheduleManager>()
+            .ok_or(QPError::Generic(
+                "couldn't borrow ScheduleManager from ResourceOwner".into(),
+            ))?
+            .execute_schedule::<S>(self)?;
+
+        self.resources.insert_owner(schedules)?;
+
+        Ok(())
+    }
+
     pub fn spawn(&mut self, storage: StorageId, bundle: impl Bundle) -> QPResult<Index> {
-        let storage = self
+        Ok(self
             .resources
             .get_mut::<StorageManager>()
             .ok_or(QPError::ResourceNotFound("Storage Manager".into()))?
-            .get_storage_mut(storage)
-            .ok_or(QPError::Generic("Storage unit not found".into()))?;
-
-        Ok(storage.create(bundle))
+            .create(storage, bundle)
+            .ok_or(QPError::Generic("Storage unit not found".into()))?)
     }
 
     pub fn resource<R: Resource + 'static>(&self) -> Option<&R> {
