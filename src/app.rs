@@ -4,12 +4,13 @@ use crate::common::resources::Clock;
 use crate::common::resources::StringInterner;
 use crate::plugin::Plugin;
 use crate::plugin::Plugins;
+use crate::prelude::IntoSystem;
 use crate::prelude::QPError;
 use crate::prelude::Schedule;
 use crate::prelude::StartupSchedule;
 use crate::prelude::StorageId;
 use crate::prelude::StorageManager;
-use crate::prelude::SystemParams;
+use crate::prelude::SystemParam;
 // use crate::prelude::UpdateSchedule;
 use crate::prelude::World;
 use crate::resources::Resource;
@@ -75,12 +76,14 @@ impl App {
         self.plugins.push(plugin);
     }
 
-    pub fn add_system<S: Schedule + 'static, Out, Args>(
-        &mut self,
-        system: impl SystemParams<Out = Out, Args = Args>,
-    ) -> &mut Self {
+    pub fn add_system<S, System, Params>(&mut self, system: System) -> &mut Self
+    where
+        S: Schedule + 'static,
+        System: IntoSystem<Params>,
+        Params: SystemParam + 'static,
+    {
         if let Some(schedules) = self.world.resource_mut::<ScheduleManager>() {
-            schedules.add_system::<S>(system);
+            schedules.add_system::<S, System, Params>(system);
         } else {
             panic!("Schedule Manager not found in resources");
         }

@@ -36,13 +36,18 @@ pub fn schedule_derive_macro(item: TokenStream) -> TokenStream {
     // generate
     (quote::quote! {
         impl Schedule for #ident {
-            fn add_system(&mut self, system: impl SystemParams<A>) {
-                self.systems.push(SystemExecuter::new(system));
+            fn add_system<S, System, Params>(&mut self, system: System)
+            where
+                S: Schedule + 'static,
+                System: IntoSystem<Params>,
+                Params: SystemParam + 'static,
+            {
+                self.systems.push(Box::new(system.into_system()))
             }
 
             fn update(&mut self, world: &mut World) -> QPResult<()> {
                 for system in self.systems.iter_mut() {
-                    system.execute(world)?;
+                    system.run(world)?;
                 }
 
                 Ok(())
