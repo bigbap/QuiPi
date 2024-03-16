@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 #[derive(Debug, Resource, AsAny)]
 pub struct StringInterner {
-    pub strings: HashMap<u64, String>,
+    pub strings: HashMap<u64, &'static str>,
 }
 
 impl StringInterner {
@@ -13,7 +13,7 @@ impl StringInterner {
         }
     }
 
-    pub fn intern(&mut self, string: String) -> u64 {
+    pub fn intern(&mut self, string: &'static str) -> u64 {
         let hash = xx_hash(string.as_bytes(), 0xD2ABA3FA440449FB);
 
         if self.strings.get(&hash).is_none() {
@@ -23,7 +23,7 @@ impl StringInterner {
         hash
     }
 
-    pub fn get_string(&self, hash: u64) -> Option<String> {
+    pub fn get_string(&self, hash: u64) -> Option<&str> {
         self.strings.get(&hash).cloned()
     }
 }

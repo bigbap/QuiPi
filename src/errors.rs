@@ -50,6 +50,9 @@ pub enum QPError {
     #[error("shader not found")]
     ShaderNotFound,
 
+    #[error("storage manager not found")]
+    StorageManagerNotFound,
+
     #[error("camera not found")]
     CameraNotFound,
 

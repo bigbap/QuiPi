@@ -1,6 +1,7 @@
 use crate::{
+    assets::AssetServer,
     common::resources::StringInterner,
-    ecs::prelude::{Bundle, Index, StorageId, StorageManager},
+    ecs::prelude::StorageManager,
     prelude::{QPError, ScheduleManager},
     resources::{Resource, ResourceManager},
     schedule::Schedule,
@@ -9,14 +10,12 @@ use crate::{
 
 pub struct World {
     pub resources: ResourceManager,
-    // pub(crate) schedules: ScheduleManager,
 }
 
 impl World {
     pub fn new() -> Self {
         Self {
             resources: ResourceManager::new(),
-            // schedules: ScheduleManager::new(),
         }
     }
 
@@ -35,15 +34,6 @@ impl World {
         Ok(())
     }
 
-    pub fn spawn(&mut self, storage: StorageId, bundle: impl Bundle) -> QPResult<Index> {
-        Ok(self
-            .resources
-            .get_mut::<StorageManager>()
-            .ok_or(QPError::ResourceNotFound("Storage Manager".into()))?
-            .create(storage, bundle)
-            .ok_or(QPError::Generic("Storage unit not found".into()))?)
-    }
-
     pub fn resource<R: Resource + 'static>(&self) -> Option<&R> {
         self.resources.get::<R>()
     }
@@ -52,15 +42,51 @@ impl World {
         self.resources.get_mut::<R>()
     }
 
-    pub fn intern(&mut self, string: &str) -> QPResult<u64> {
-        Ok(self
-            .resource_mut::<StringInterner>()
-            .ok_or(QPError::ResourceNotFound("String Interner".into()))?
-            .intern(string.into()))
+    // MANDATORY RESOURCES
+    //
+    // if you try to call these methods before the resources
+    // have been loaded, they will panic
+
+    pub fn storage(&self) -> &StorageManager {
+        match self.resource::<StorageManager>() {
+            Some(storage) => storage,
+            _ => panic!("Storage manager not found"),
+        }
     }
 
-    pub fn get_string(&self, key: u64) -> Option<String> {
-        self.resource::<StringInterner>()?.get_string(key)
+    pub fn storage_mut(&mut self) -> &mut StorageManager {
+        match self.resource_mut::<StorageManager>() {
+            Some(storage) => storage,
+            _ => panic!("Storage manager not found"),
+        }
+    }
+
+    pub fn assets(&self) -> &AssetServer {
+        match self.resource::<AssetServer>() {
+            Some(assets) => assets,
+            _ => panic!("Asset server not found"),
+        }
+    }
+
+    pub fn assets_mut(&mut self) -> &mut AssetServer {
+        match self.resource_mut::<AssetServer>() {
+            Some(assets) => assets,
+            _ => panic!("Asset server not found"),
+        }
+    }
+
+    pub fn interner(&self) -> &StringInterner {
+        match self.resource::<StringInterner>() {
+            Some(interner) => interner,
+            _ => panic!("String interner not found"),
+        }
+    }
+
+    pub fn interner_mut(&mut self) -> &mut StringInterner {
+        match self.resource_mut::<StringInterner>() {
+            Some(interner) => interner,
+            _ => panic!("String interner not found"),
+        }
     }
 }
 

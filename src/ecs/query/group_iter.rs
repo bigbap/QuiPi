@@ -27,7 +27,7 @@ impl<C0: Component> GroupIter<C0> for Iter<'static, C0> {
 }
 
 // impl<C0: Component, C1: Component> GroupIter<(C0, C1)> for (Iter<'static, C0>, Iter<'static, C1>) {
-//     fn step(&mut self) -> Option<(Index, Box<dyn GroupResult>)> {
+//     fn nexer(&mut self) -> Option<(Index, Box<dyn GroupResult>)> {
 //         let (i1, i2) = self;
 
 //         loop {

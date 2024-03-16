@@ -41,15 +41,17 @@ impl Plugin for MyPlugin {
                     dims: None,
                 })?;
 
-            let id = world.intern(path)?;
+            let id = world.interner_mut().intern(path);
             let texture_handle = world
                 .resource_mut::<Assets<Texture>>()
                 .unwrap()
                 .add(id, texture);
 
-            world.spawn(
-                Entities,
-                sprite_bundle(SpriteMetadata {
+            world
+                .storage_mut()
+                .get_mut(Entities)
+                .ok_or(QPError::Generic("entities not found".into()))?
+                .spawn(sprite_bundle(SpriteMetadata {
                     texture: Some(CTexture {
                         id: texture_handle,
                         atlas_location: None,
@@ -60,10 +62,13 @@ impl Plugin for MyPlugin {
                     },
                     color: Some(CColor(1.0, 0.1, 0.2, 1.0)),
                     ..SpriteMetadata::default()
-                }),
-            )?;
+                }));
 
-            world.spawn(Cameras, camera_bundle(CameraMetadata::default()))?;
+            world
+                .storage_mut()
+                .get_mut(Entities)
+                .ok_or(QPError::Generic("entities not found".into()))?
+                .spawn(camera_bundle(CameraMetadata::default()));
 
             Ok(())
         });

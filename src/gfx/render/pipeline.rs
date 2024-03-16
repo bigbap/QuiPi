@@ -9,11 +9,13 @@ use std::collections::HashMap;
 pub fn start_render_pipeline(world: &mut World) -> QPResult<()> {
     let data = HashMap::<CRenderLayer, Vec<(Index, CMeshId)>>::new();
 
-    let storage = world
-        .resources
-        .get::<StorageManager>()
-        .ok_or(QPError::ResourceNotFound("Storage Manager".into()))?;
-    let render_layers = storage.query::<CRenderLayer>(StorageId::Cameras);
+    let Some(storage) = world.storage().get(StorageId::Cameras) else {
+        println!("Couldn't get camera storage");
+
+        return Ok(());
+    };
+
+    let render_layers = storage.query::<CRenderLayer>();
 
     Ok(())
 }

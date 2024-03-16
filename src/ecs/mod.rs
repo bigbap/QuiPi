@@ -1,7 +1,7 @@
 mod bundle;
 mod indexed_array;
-mod manager;
 mod query;
+mod storage;
 mod tuple_impl;
 mod world;
 
@@ -16,6 +16,6 @@ pub mod prelude {
     pub use indexed_array::Index;
     pub use indexed_array::IndexedArray;
 
-    pub use manager::*;
+    pub use storage::*;
     pub use world::*;
 }

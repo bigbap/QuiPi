@@ -170,7 +170,7 @@ struct Manadatory {}
 impl Plugin for Manadatory {
     fn build(&self, app: &mut App) -> QPResult<()> {
         let mut manager = StorageManager::new();
-        manager.insert_storage_unit(StorageId::Entities)?;
+        manager.insert(StorageId::Entities)?;
 
         app.add_resource(Clock::new());
         app.add_resource(StringInterner::new());

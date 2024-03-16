@@ -294,10 +294,6 @@ impl<T> IndexedArray<T> {
     pub fn iter_mut(&mut self) -> IterMut<'_, T> {
         IterMut::<T>::new(self.allocator.clone(), self.list.iter_mut().enumerate())
     }
-
-    pub(super) fn inner(&self) -> iter::Enumerate<slice::Iter<'_, Option<Entry<T>>>> {
-        self.list.iter().enumerate()
-    }
 }
 
 /// /////////////////////////////////
@@ -401,191 +397,191 @@ impl<'a, T: Component> Iterator for IterMut<'a, T> {
     }
 }
 
-// /// ///////////////////////////////
-// ///
-// /// Tests
-// ///
-// /// ///////////////////////////////
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
+/// ///////////////////////////////
+///
+/// Tests
+///
+/// ///////////////////////////////
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-//     #[derive(Component, Debug, PartialEq, Eq, Clone)]
-//     struct Entity(String);
+    #[derive(Component, Debug, PartialEq, Eq, Clone)]
+    struct Entity(String);
 
-//     type EntityMap<T> = IndexedArray<T>;
+    type EntityMap<T> = IndexedArray<T>;
 
-//     #[test]
-//     fn indexed_array_getting_setting_removing() {
-//         let allocator = Rc::new(RefCell::new(Allocator::default()));
-//         let mut entities = EntityMap::<Entity>::new(allocator.clone());
+    #[test]
+    fn indexed_array_getting_setting_removing() {
+        let allocator = Rc::new(RefCell::new(Allocator::default()));
+        let mut entities = EntityMap::<Entity>::new(allocator.clone());
 
-//         let player_id = allocator.borrow_mut().allocate();
-//         let npc_id = allocator.borrow_mut().allocate();
-//         let enemy_id = allocator.borrow_mut().allocate();
+        let player_id = allocator.borrow_mut().allocate();
+        let npc_id = allocator.borrow_mut().allocate();
+        let enemy_id = allocator.borrow_mut().allocate();
 
-//         entities.set(&player_id, Entity("player".to_string()));
-//         entities.set(&npc_id, Entity("npc".to_string()));
-//         entities.set(&enemy_id, Entity("enemy".to_string()));
+        entities.set(&player_id, Entity("player".to_string()));
+        entities.set(&npc_id, Entity("npc".to_string()));
+        entities.set(&enemy_id, Entity("enemy".to_string()));
 
-//         assert_eq!(allocator.borrow().len(), 3);
+        assert_eq!(allocator.borrow().len(), 3);
 
-//         let mut bullets = Vec::<Index>::new();
-//         for _ in 0..3 {
-//             let bullet = allocator.borrow_mut().allocate();
+        let mut bullets = Vec::<Index>::new();
+        for _ in 0..3 {
+            let bullet = allocator.borrow_mut().allocate();
 
-//             entities.set(&bullet, Entity("bullet".to_string()));
+            entities.set(&bullet, Entity("bullet".to_string()));
 
-//             bullets.push(bullet);
-//         }
+            bullets.push(bullet);
+        }
 
-//         assert_eq!(allocator.borrow().len(), 6);
-//         assert_eq!(
-//             entities.get(&player_id),
-//             Some(&Entity("player".to_string()))
-//         );
-//         assert_eq!(entities.get(&enemy_id), Some(&Entity("enemy".to_string())));
-//         assert_eq!(entities.get(&npc_id), Some(&Entity("npc".to_string())));
+        assert_eq!(allocator.borrow().len(), 6);
+        assert_eq!(
+            entities.get(&player_id),
+            Some(&Entity("player".to_string()))
+        );
+        assert_eq!(entities.get(&enemy_id), Some(&Entity("enemy".to_string())));
+        assert_eq!(entities.get(&npc_id), Some(&Entity("npc".to_string())));
 
-//         // npc_id is no longer valid after this call because the remove function destroys it
-//         allocator.borrow_mut().deallocate(npc_id);
+        // npc_id is no longer valid after this call because the remove function destroys it
+        allocator.borrow_mut().deallocate(npc_id);
 
-//         assert_eq!(allocator.borrow().valid_count(), 5);
+        assert_eq!(allocator.borrow().valid_count(), 5);
 
-//         for bullet in bullets {
-//             allocator.borrow_mut().deallocate(bullet);
-//         }
+        for bullet in bullets {
+            allocator.borrow_mut().deallocate(bullet);
+        }
 
-//         assert_eq!(allocator.borrow().valid_count(), 2);
-//         assert_eq!(
-//             entities.get(&player_id),
-//             Some(&Entity("player".to_string()))
-//         );
-//         assert_eq!(entities.get(&enemy_id), Some(&Entity("enemy".to_string())));
-//     }
+        assert_eq!(allocator.borrow().valid_count(), 2);
+        assert_eq!(
+            entities.get(&player_id),
+            Some(&Entity("player".to_string()))
+        );
+        assert_eq!(entities.get(&enemy_id), Some(&Entity("enemy".to_string())));
+    }
 
-//     #[test]
-//     fn indexed_array_versioning() {
-//         let allocator = Rc::new(RefCell::new(Allocator::default()));
-//         let mut entities = EntityMap::<Entity>::new(allocator.clone());
+    #[test]
+    fn indexed_array_versioning() {
+        let allocator = Rc::new(RefCell::new(Allocator::default()));
+        let mut entities = EntityMap::<Entity>::new(allocator.clone());
 
-//         let player_id = allocator.borrow_mut().allocate();
-//         let npc_id = allocator.borrow_mut().allocate();
-//         let enemy_id = allocator.borrow_mut().allocate();
+        let player_id = allocator.borrow_mut().allocate();
+        let npc_id = allocator.borrow_mut().allocate();
+        let enemy_id = allocator.borrow_mut().allocate();
 
-//         entities.set(&player_id, Entity("player".to_string()));
-//         entities.set(&npc_id, Entity("npc".to_string()));
-//         entities.set(&enemy_id, Entity("enemy".to_string()));
+        entities.set(&player_id, Entity("player".to_string()));
+        entities.set(&npc_id, Entity("npc".to_string()));
+        entities.set(&enemy_id, Entity("enemy".to_string()));
 
-//         assert_eq!(
-//             entities.get(&Index {
-//                 index: 1,
-//                 version: 0
-//             }),
-//             Some(&Entity("npc".to_string()))
-//         );
+        assert_eq!(
+            entities.get(&Index {
+                index: 1,
+                version: 0
+            }),
+            Some(&Entity("npc".to_string()))
+        );
 
-//         allocator.borrow_mut().deallocate(npc_id);
+        allocator.borrow_mut().deallocate(npc_id);
 
-//         // used to hold npc
-//         assert!(!allocator.borrow().is_allocated(&Index {
-//             index: 1,
-//             version: 0
-//         }));
+        // used to hold npc
+        assert!(!allocator.borrow().is_allocated(&Index {
+            index: 1,
+            version: 0
+        }));
 
-//         let npc_id = allocator.borrow_mut().allocate();
-//         entities.set(&npc_id, Entity("npc".to_string()));
+        let npc_id = allocator.borrow_mut().allocate();
+        entities.set(&npc_id, Entity("npc".to_string()));
 
-//         assert_eq!(
-//             entities.get(&Index {
-//                 index: 1,
-//                 version: 1
-//             }),
-//             Some(&Entity("npc".to_string()))
-//         );
+        assert_eq!(
+            entities.get(&Index {
+                index: 1,
+                version: 1
+            }),
+            Some(&Entity("npc".to_string()))
+        );
 
-//         assert_eq!(
-//             entities.get(&Index {
-//                 index: 1,
-//                 version: 0
-//             }),
-//             None
-//         );
+        assert_eq!(
+            entities.get(&Index {
+                index: 1,
+                version: 0
+            }),
+            None
+        );
 
-//         // version 1 is allocated while version 0 is not
-//         assert!(!allocator.borrow().is_allocated(&Index {
-//             index: 1,
-//             version: 0
-//         }));
-//         assert!(allocator.borrow().is_allocated(&Index {
-//             index: 1,
-//             version: 1
-//         }));
-//     }
+        // version 1 is allocated while version 0 is not
+        assert!(!allocator.borrow().is_allocated(&Index {
+            index: 1,
+            version: 0
+        }));
+        assert!(allocator.borrow().is_allocated(&Index {
+            index: 1,
+            version: 1
+        }));
+    }
 
-//     #[test]
-//     fn iterate_over_array() {
-//         #[derive(Component, Debug, PartialEq, Eq, Clone)]
-//         struct Container(pub u32);
+    #[test]
+    fn iterate_over_array() {
+        #[derive(Component, Debug, PartialEq, Eq, Clone)]
+        struct Container(pub u32);
 
-//         let allocator = Rc::new(RefCell::new(Allocator::with_capacity(4)));
-//         let mut array = IndexedArray::<Container>::new(allocator.clone());
+        let allocator = Rc::new(RefCell::new(Allocator::with_capacity(4)));
+        let mut array = IndexedArray::<Container>::new(allocator.clone());
 
-//         let i1 = allocator.borrow_mut().allocate();
-//         let i2 = allocator.borrow_mut().allocate();
+        let i1 = allocator.borrow_mut().allocate();
+        let i2 = allocator.borrow_mut().allocate();
 
-//         array.set(&i1, Container(123));
-//         array.set(&i2, Container(456));
+        array.set(&i1, Container(123));
+        array.set(&i2, Container(456));
 
-//         let mut iterator = array.iter();
+        let mut iterator = array.iter();
 
-//         assert_eq!(iterator.next(), Some(Some((i1, Some(&Container(123))))));
-//         assert_eq!(iterator.next(), Some(Some((i2, Some(&Container(456))))));
+        assert_eq!(iterator.next(), Some(Some((i1, Some(&Container(123))))));
+        assert_eq!(iterator.next(), Some(Some((i2, Some(&Container(456))))));
 
-//         allocator.borrow_mut().deallocate(i1);
+        allocator.borrow_mut().deallocate(i1);
 
-//         let mut iterator = array.iter();
+        let mut iterator = array.iter();
 
-//         assert_eq!(iterator.next(), Some(Some((i2, Some(&Container(456))))));
-//         assert_eq!(iterator.next(), None);
+        assert_eq!(iterator.next(), Some(Some((i2, Some(&Container(456))))));
+        assert_eq!(iterator.next(), None);
 
-//         for cont in array.iter_mut() {
-//             if let Some((_, val)) = cont {
-//                 val.unwrap().0 = 457
-//             }
-//         }
+        for cont in array.iter_mut() {
+            if let Some((_, val)) = cont {
+                val.unwrap().0 = 457
+            }
+        }
 
-//         let mut iterator = array.iter();
+        let mut iterator = array.iter();
 
-//         assert_eq!(iterator.next(), Some(Some((i2, Some(&Container(457))))));
-//         assert_eq!(iterator.next(), None);
-//     }
+        assert_eq!(iterator.next(), Some(Some((i2, Some(&Container(457))))));
+        assert_eq!(iterator.next(), None);
+    }
 
-//     #[test]
-//     fn zipped() {
-//         #[derive(Component, Debug, PartialEq, Eq, Clone)]
-//         struct Container1(pub u32);
+    #[test]
+    fn zipped() {
+        #[derive(Component, Debug, PartialEq, Eq, Clone)]
+        struct Container1(pub u32);
 
-//         #[derive(Component, Debug, PartialEq, Eq, Clone)]
-//         struct Container2(pub u32);
+        #[derive(Component, Debug, PartialEq, Eq, Clone)]
+        struct Container2(pub u32);
 
-//         let allocator = Rc::new(RefCell::new(Allocator::with_capacity(4)));
-//         let i = allocator.borrow_mut().allocate();
+        let allocator = Rc::new(RefCell::new(Allocator::with_capacity(4)));
+        let i = allocator.borrow_mut().allocate();
 
-//         let mut array1 = IndexedArray::<Container1>::new(allocator.clone());
-//         array1.set(&i, Container1(123));
+        let mut array1 = IndexedArray::<Container1>::new(allocator.clone());
+        array1.set(&i, Container1(123));
 
-//         let mut array2 = IndexedArray::<Container2>::new(allocator.clone());
-//         array2.set(&i, Container2(456));
+        let mut array2 = IndexedArray::<Container2>::new(allocator.clone());
+        array2.set(&i, Container2(456));
 
-//         let mut iter = array1.iter().zip(array2.iter());
+        let mut iter = array1.iter().zip(array2.iter());
 
-//         assert_eq!(
-//             iter.next(),
-//             Some((
-//                 Some((i, Some(&Container1(123)))),
-//                 Some((i, Some(&Container2(456))))
-//             ))
-//         );
-//     }
-// }
+        assert_eq!(
+            iter.next(),
+            Some((
+                Some((i, Some(&Container1(123)))),
+                Some((i, Some(&Container2(456))))
+            ))
+        );
+    }
+}

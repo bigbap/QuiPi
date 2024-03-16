@@ -35,7 +35,7 @@ impl Plugin for RenderBasePlugin {
             .resources
             .get_mut::<StorageManager>()
             .expect("storage manager resource not loaded");
-        storage_manager.insert_storage_unit(Cameras)?;
+        storage_manager.insert(Cameras)?;
 
         app.add_system::<RenderSchedule>(pipeline::start_render_pipeline);
 
