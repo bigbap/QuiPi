@@ -79,7 +79,7 @@ impl App {
     pub fn add_system<S, System, Params>(&mut self, system: System) -> &mut Self
     where
         S: Schedule + 'static,
-        System: IntoSystem<Params>,
+        System: IntoSystem<QPResult<()>, Params>,
         Params: SystemParam + 'static,
     {
         if let Some(schedules) = self.world.resource_mut::<ScheduleManager>() {

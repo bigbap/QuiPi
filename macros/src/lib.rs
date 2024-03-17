@@ -39,10 +39,10 @@ pub fn schedule_derive_macro(item: TokenStream) -> TokenStream {
             fn add_system<S, System, Params>(&mut self, system: System)
             where
                 S: Schedule + 'static,
-                System: IntoSystem<Params>,
+                System: IntoSystem<QPResult<()>, Params>,
                 Params: SystemParam + 'static,
             {
-                self.systems.push(Box::new(system.into_system()))
+                self.systems.push(Box::new(System::into_system(system)))
             }
 
             fn update(&mut self, world: &mut World) -> QPResult<()> {

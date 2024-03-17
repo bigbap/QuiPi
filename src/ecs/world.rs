@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use crate::{
     assets::AssetServer,
     common::resources::StringInterner,
@@ -90,6 +92,19 @@ impl World {
             _ => panic!("String interner not found"),
         }
     }
+
+    // UNSAFE
+    // get unsafe cells for world
+
+    #[inline]
+    pub(crate) fn as_unsafe_cell(&self) -> UnsafeWorldCell<'_> {
+        UnsafeWorldCell::new(self)
+    }
+
+    #[inline]
+    pub(crate) fn as_unsafe_cell_mut(&mut self) -> UnsafeWorldCell<'_> {
+        UnsafeWorldCell::new_mut(self)
+    }
 }
 
 #[derive(Debug, Default)]
@@ -103,17 +118,27 @@ pub struct DebugInfo {
     pub draw_calls: u32,
 }
 
-// #[derive(Clone, Copy)]
-// pub struct UnsafeWorldCell(pub *mut World);
+#[derive(Clone, Copy)]
+pub struct UnsafeWorldCell<'w>(*mut World, PhantomData<&'w World>);
 
-// impl UnsafeWorldCell {
-//     #[inline]
-//     pub(crate) fn new_readonly(world: &'static World) -> Self {
-//         Self(std::ptr::from_ref(world).cast_mut())
-//     }
+impl<'w> UnsafeWorldCell<'w> {
+    #[inline]
+    pub(crate) fn new(world: &'w World) -> Self {
+        Self(std::ptr::from_ref(world).cast_mut(), PhantomData)
+    }
 
-//     #[inline]
-//     pub(crate) fn new_mutable(world: &'static mut World) -> Self {
-//         Self(std::ptr::from_mut(world))
-//     }
-// }
+    #[inline]
+    pub(crate) fn new_mut(world: &'w mut World) -> Self {
+        Self(std::ptr::from_mut(world), PhantomData)
+    }
+
+    #[inline]
+    pub unsafe fn world(self) -> &'w World {
+        unsafe { &*self.0 }
+    }
+
+    #[inline]
+    pub unsafe fn world_mut(self) -> &'w mut World {
+        unsafe { &mut *self.0 }
+    }
+}

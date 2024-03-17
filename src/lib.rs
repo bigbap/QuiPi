@@ -27,7 +27,7 @@ pub mod schedule;
 #[cfg(feature = "qp_profiling")]
 mod profiling;
 
-type QPResult<T> = Result<T, errors::QPError>;
+pub type QPResult<T> = Result<T, errors::QPError>;
 
 pub mod prelude {
     use super::*;

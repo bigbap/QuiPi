@@ -31,7 +31,7 @@ impl ScheduleManager {
     pub fn add_system<S, System, Params>(&mut self, system: System) -> &mut Self
     where
         S: Schedule + 'static,
-        System: IntoSystem<Params>,
+        System: IntoSystem<QPResult<()>, Params>,
         Params: SystemParam + 'static,
     {
         if let Some(schedule) = self.schedules.get_mut::<S>(&ScheduleId::new::<S>()) {
@@ -63,7 +63,7 @@ pub trait Schedule {
     fn add_system<S, System, Params>(&mut self, system: System)
     where
         S: Schedule + 'static,
-        System: IntoSystem<Params>,
+        System: IntoSystem<QPResult<()>, Params>,
         Params: SystemParam + 'static;
 
     fn update(&mut self, world: &mut World) -> QPResult<()>;
@@ -81,10 +81,10 @@ impl Schedule for StartupSchedule {
     fn add_system<S, System, Params>(&mut self, system: System)
     where
         S: Schedule + 'static,
-        System: IntoSystem<Params>,
+        System: IntoSystem<QPResult<()>, Params>,
         Params: SystemParam + 'static,
     {
-        self.systems.push(Box::new(system.into_system()))
+        self.systems.push(Box::new(System::into_system(system)))
     }
 
     fn update(&mut self, world: &mut World) -> QPResult<()> {

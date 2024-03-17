@@ -1,53 +1,89 @@
-use crate::{prelude::World, QPResult};
+use crate::prelude::UnsafeWorldCell;
 
-use super::{IntoSystem, System, SystemParam};
+use super::{IntoSystem, System, SystemParam, SystemParamItem};
 use std::marker::PhantomData;
 
-pub struct FunctionSystem<F, Params: SystemParam> {
-    system: F,
-    _marker: PhantomData<Params>,
+pub struct FunctionSystem<F, Marker>
+where
+    F: SystemParamFunction<Marker>,
+{
+    func: F,
+
+    _marker: PhantomData<fn() -> Marker>,
 }
 
-impl<F, Params: SystemParam> System for FunctionSystem<F, Params>
+impl<F, Marker> System for FunctionSystem<F, Marker>
 where
-    F: SystemParamFunction<Params>,
+    F: SystemParamFunction<Marker>,
+    Marker: 'static,
 {
-    fn run(&mut self, world: &mut World) -> QPResult<()> {
-        SystemParamFunction::run(&mut self.system)
+    type Out = F::Out;
+
+    fn run_unsafe(&mut self, world: UnsafeWorldCell) -> Self::Out {
+        let params = unsafe { F::Param::get_param(world) };
+
+        self.func.run(params)
     }
 }
 
-impl<F, Params: SystemParam + 'static> IntoSystem<Params> for F
-where
-    F: SystemParamFunction<Params> + 'static,
-{
-    type System = FunctionSystem<F, Params>;
+// marker to distiguish this from other systems
+pub struct IsFunctionSystem;
 
-    fn into_system(self) -> Self::System {
+impl<F, Marker> IntoSystem<F::Out, (IsFunctionSystem, Marker)> for F
+where
+    Marker: 'static,
+    F: SystemParamFunction<Marker> + 'static,
+{
+    type System = FunctionSystem<F, Marker>;
+
+    fn into_system(func: Self) -> Self::System {
         FunctionSystem {
-            system: self,
+            func,
             _marker: PhantomData,
         }
     }
 }
 
-pub trait SystemParamFunction<Params: SystemParam> {
-    fn run(&mut self) -> QPResult<()>;
+pub trait SystemParamFunction<Marker>: 'static {
+    type Out;
+
+    type Param: SystemParam;
+
+    fn run(&mut self, param_value: SystemParamItem<Self::Param>) -> Self::Out;
 }
-impl<F> SystemParamFunction<()> for F
+
+impl<Out, Func: 'static> SystemParamFunction<fn() -> Out> for Func
 where
-    F: Fn() -> QPResult<()>,
+    for<'a> &'a mut Func: FnMut() -> Out + FnMut(SystemParamItem<()>) -> Out,
+    Out: 'static,
 {
-    fn run(&mut self) -> QPResult<()> {
-        self()
+    type Out = Out;
+    type Param = ();
+
+    fn run(&mut self, _param_value: SystemParamItem<Self::Param>) -> Self::Out {
+        fn call_inner<Out>(mut f: impl FnMut() -> Out, _: ()) -> Out {
+            f()
+        }
+
+        call_inner(self, ())
     }
 }
-impl<F, P0: SystemParam> SystemParamFunction<(P0,)> for F
+
+impl<Out, Func: 'static, P0: SystemParam> SystemParamFunction<fn(P0) -> Out> for Func
 where
-    F: Fn(P0) -> QPResult<()>,
+    for<'a> &'a mut Func: FnMut(P0) -> Out + FnMut(SystemParamItem<P0>) -> Out,
+    Out: 'static,
 {
-    fn run(&mut self) -> QPResult<()> {
-        self(P0::dummy())
+    type Out = Out;
+    type Param = P0;
+
+    fn run(&mut self, param_value: SystemParamItem<P0>) -> Self::Out {
+        fn call_inner<Out, P0>(mut f: impl FnMut(P0) -> Out, p0: P0) -> Out {
+            f(p0)
+        }
+
+        let p0 = param_value;
+        call_inner(self, p0)
     }
 }
 

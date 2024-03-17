@@ -1,6 +1,8 @@
 extern crate nalgebra_glm as glm;
 extern crate quipi;
 
+use std::marker::PhantomData;
+
 use quipi::{
     assets::{AssetServer, Assets, Source},
     common::components::components::{CColor, CTexture, CTransform2D},
@@ -13,6 +15,7 @@ use quipi::{
         },
     },
     prelude::*,
+    QPResult,
 };
 use sdl2::keyboard::Keycode;
 
@@ -31,7 +34,8 @@ struct MyPlugin {}
 
 impl Plugin for MyPlugin {
     fn build(&self, app: &mut App) -> Result<(), QPError> {
-        app.add_system::<StartupSchedule, _, _>(|| Ok(()));
+        app.add_system::<StartupSchedule, _>(|| Ok(()));
+
         // app.add_system::<StartupSchedule>(|world: &mut World| {
         //     let path = "assets/textures/Bubble.png";
         //     let texture = world
