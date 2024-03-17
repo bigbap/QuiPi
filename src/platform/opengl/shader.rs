@@ -1,23 +1,16 @@
-use std::{
-    fs,
-    io::Read,
-    ffi
-};
+use std::{ffi, fs, io::Read};
 
 use super::c_str::*;
 use crate::{
+    prelude::{qp_core::to_abs_path, QPError},
     QPResult,
-    prelude::{
-        QPError,
-        qp_core::to_abs_path
-    }
 };
 
 #[derive(Debug, PartialEq)]
 pub struct ShaderProgram {
     pub id: gl::types::GLuint,
 
-    _shaders: Vec<gl::types::GLuint>
+    _shaders: Vec<gl::types::GLuint>,
 }
 
 impl Drop for ShaderProgram {
@@ -33,21 +26,26 @@ impl ShaderProgram {
         Self::from_file(name)
     }
 
-    pub fn from_str(
-        vert: &str,
-        frag: &str,
-    ) -> QPResult<Self> {
+    pub fn from_str(vert: &str, frag: &str) -> QPResult<Self> {
         let c_vert = str_to_cstring(vert)?;
         let c_frag = str_to_cstring(frag)?;
 
         let shaders = vec![
-            compile_shader(c_vert, gl::VERTEX_SHADER, QPError::CompileError(vert.to_string()))?,
-            compile_shader(c_frag, gl::FRAGMENT_SHADER, QPError::CompileError(frag.to_string()))?
+            compile_shader(
+                c_vert,
+                gl::VERTEX_SHADER,
+                QPError::CompileError(vert.to_string()),
+            )?,
+            compile_shader(
+                c_frag,
+                gl::FRAGMENT_SHADER,
+                QPError::CompileError(frag.to_string()),
+            )?,
         ];
 
         Ok(ShaderProgram {
             id: link_program(&shaders)?,
-            _shaders: shaders
+            _shaders: shaders,
         })
     }
 
@@ -57,13 +55,21 @@ impl ShaderProgram {
         let frag = shader_to_cstring(&format!("{name}.frag"))?;
 
         let shaders = vec![
-            compile_shader(vert, gl::VERTEX_SHADER, QPError::CompileError(name.to_string()))?,
-            compile_shader(frag, gl::FRAGMENT_SHADER, QPError::CompileError(name.to_string()))?
+            compile_shader(
+                vert,
+                gl::VERTEX_SHADER,
+                QPError::CompileError(name.to_string()),
+            )?,
+            compile_shader(
+                frag,
+                gl::FRAGMENT_SHADER,
+                QPError::CompileError(name.to_string()),
+            )?,
         ];
 
         Ok(ShaderProgram {
             id: link_program(&shaders)?,
-            _shaders: shaders
+            _shaders: shaders,
         })
     }
 
@@ -117,25 +123,23 @@ impl ShaderProgram {
         self.use_program();
 
         unsafe {
-            gl::UniformMatrix4fv(self.get_location(key), 1, gl::FALSE, glm::value_ptr(val).as_ptr());
+            gl::UniformMatrix4fv(
+                self.get_location(key),
+                1,
+                gl::FALSE,
+                glm::value_ptr(val).as_ptr(),
+            );
         }
     }
 
     fn get_location(&self, key: &str) -> gl::types::GLint {
-        unsafe {
-            gl::GetUniformLocation(
-                self.id,
-                c_str!(key).as_ptr()
-            )
-        }
+        unsafe { gl::GetUniformLocation(self.id, c_str!(key).as_ptr()) }
     }
 }
 
 // helper functions
 
-fn link_program(
-    shaders: &[gl::types::GLuint]
-) -> QPResult<gl::types::GLuint> {
+fn link_program(shaders: &[gl::types::GLuint]) -> QPResult<gl::types::GLuint> {
     let id: gl::types::GLuint = unsafe { gl::CreateProgram() };
 
     for shader in shaders {
@@ -159,7 +163,7 @@ fn link_program(
                 id,
                 len,
                 std::ptr::null_mut(),
-                error.as_ptr() as *mut gl::types::GLchar
+                error.as_ptr() as *mut gl::types::GLchar,
             );
 
             if cfg!(debug_assertions) {
@@ -183,17 +187,12 @@ fn link_program(
 fn compile_shader(
     source: ffi::CString,
     kind: gl::types::GLenum,
-    err: QPError
+    err: QPError,
 ) -> QPResult<gl::types::GLuint> {
     let id = unsafe { gl::CreateShader(kind) };
 
     unsafe {
-        gl::ShaderSource(
-            id,
-            1,
-            &source.as_ptr(),
-            std::ptr::null()
-        );
+        gl::ShaderSource(id, 1, &source.as_ptr(), std::ptr::null());
         gl::CompileShader(id);
 
         let mut success: gl::types::GLint = 0;
@@ -208,7 +207,7 @@ fn compile_shader(
                 id,
                 len,
                 std::ptr::null_mut(),
-                error.as_ptr() as *mut gl::types::GLchar
+                error.as_ptr() as *mut gl::types::GLchar,
             );
 
             if cfg!(debug_assertions) {
@@ -237,9 +236,7 @@ fn shader_to_cstring(shader_path: &str) -> QPResult<ffi::CString> {
     let mut file = fs::File::open(shader_path)?;
 
     // allocate buffer of the same size as file
-    let mut buffer: Vec<u8> = Vec::with_capacity(
-        file.metadata()?.len() as usize + 1
-    );
+    let mut buffer: Vec<u8> = Vec::with_capacity(file.metadata()?.len() as usize + 1);
     file.read_to_end(&mut buffer)?;
 
     // check for null byte

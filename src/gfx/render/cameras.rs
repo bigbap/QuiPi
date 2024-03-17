@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 
 const PERSPECTIVE_NEAR: f32 = 0.1;
 const PERSPECTIVE_FAR: f32 = 100.0;
-const ORTHOGRAPHIC_NEAR: f32 = 0.1;
-const ORTHOGRAPHIC_FAR: f32 = 2.0;
+const ORTHOGRAPHIC_NEAR: f32 = 0.0;
+const ORTHOGRAPHIC_FAR: f32 = 0.2;
 
 #[derive(Debug, Default, Component, Serialize, Deserialize, PartialEq, Clone)]
 pub enum CCameraKind {
@@ -31,18 +31,15 @@ pub struct CameraMetadata {
 }
 
 #[derive(Debug, Component, Serialize, Deserialize, Clone, PartialEq, Default)]
-pub struct CCamera {}
-
-#[derive(Debug, Component, Serialize, Deserialize, Clone, PartialEq, Default)]
 pub struct CMatrix4(pub glm::Mat4);
 
-pub fn camera_bundle(metadata: CameraMetadata) -> impl Bundle {
+pub fn camera_bundle(camera: impl Component, metadata: CameraMetadata) -> impl Bundle {
     let mut camera_bundle = BundleBuilder::default();
     let transform = CTransform::default();
     let position = glm::vec3(transform.translate.x, transform.translate.y, 0.0);
 
     camera_bundle.add_bundle((
-        CCamera::default(),
+        camera,
         metadata.kind.clone(),
         CTransform::default(),
         metadata.render_layer,

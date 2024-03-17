@@ -14,12 +14,15 @@ impl Plugin for MainLoopPlugin {
     fn build(&self, app: &mut crate::prelude::App) -> QPResult<()> {
         Ok(app.set_runner(move |mut app: App| loop {
             app.world.execute(Update)?;
+            if app.world.quitting {
+                return Ok(());
+            }
 
             let clr = app
                 .world
                 .resources
                 .get::<ClearColor>()
-                .unwrap_or(&ClearColor(0.3, 0.3, 0.3, 1.0));
+                .unwrap_or(&ClearColor(0.5, 0.3, 0.3, 1.0));
 
             clear_buffers(clr.as_tuple());
 

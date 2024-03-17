@@ -1,27 +1,40 @@
 use crate::{
-    assets::{AssetServer, Source},
-    gfx::render::assets::ShaderLoader,
+    assets::{AssetServer, Assets, Source},
+    common::resources::StringInterner,
+    gfx::render::assets::{Shader, ShaderLoader},
     plugin::Plugin,
-    prelude::World,
+    prelude::ResMut,
+    schedule::Startup,
 };
 
 pub const QUAD_SHADER_NAME: &str = "default_quad_shader";
 
 #[derive(Default)]
-pub struct DefaultQuadShader {}
+pub struct DefaultQuadShader;
 
 impl Plugin for DefaultQuadShader {
     fn build(&self, app: &mut crate::prelude::App) -> crate::QPResult<()> {
-        // app.add_system::<StartupSchedule>(|world: &mut World| {
-        //     if let Some(server) = world.resource_mut::<AssetServer>() {
-        //         server.load(ShaderLoader {
-        //             source: Source::Strings((VERT, FRAG)),
-        //             uniforms: vec![],
-        //         });
-        //     }
-
-        //     Ok(())
-        // });
+        app.add_system(
+            Startup,
+            |(asset_server, store, interner): (
+                ResMut<AssetServer>,
+                ResMut<Assets<Shader>>,
+                ResMut<StringInterner>,
+            )| {
+                if let (Some(server), Some(store), Some(interner)) = (asset_server, store, interner)
+                {
+                    store.add(
+                        interner.intern(QUAD_SHADER_NAME),
+                        server
+                            .load(ShaderLoader {
+                                source: Source::Strings((VERT, FRAG)),
+                                uniforms: vec![],
+                            })
+                            .unwrap(),
+                    );
+                }
+            },
+        );
 
         Ok(())
     }

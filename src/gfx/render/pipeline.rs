@@ -6,14 +6,14 @@ use crate::{
 };
 use std::collections::HashMap;
 
-pub fn start_render_pipeline(world: &mut World) -> QPResult<()> {
+pub fn start_render_pipeline(world: &mut World) {
     let mut data_acc = HashMap::<CRenderLayer, Vec<(Index, CMeshId)>>::new();
 
     // get camera render layers
     let Some(render_layers) = world.entity_iter::<CRenderLayer>(StorageId::Cameras) else {
         println!("Couldn't get render layers");
 
-        return Ok(());
+        return;
     };
 
     // get entity render layers
@@ -22,7 +22,7 @@ pub fn start_render_pipeline(world: &mut World) -> QPResult<()> {
     else {
         println!("Couldn't get render layers");
 
-        return Ok(());
+        return;
     };
     for item in render_layers_entities {
         if let Some((index, layer)) = item {
@@ -40,8 +40,6 @@ pub fn start_render_pipeline(world: &mut World) -> QPResult<()> {
             .get_mut(&layer)
             .get_or_insert(&mut Vec::<(Index, CMeshId)>::new());
     }
-
-    Ok(())
 }
 
 #[derive(Component, PartialEq, Clone)]

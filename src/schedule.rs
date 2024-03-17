@@ -4,7 +4,6 @@ use std::collections::HashMap;
 use crate::{
     prelude::{BoxedSystem, IntoSystem, World},
     resources::{AsAny, Resource},
-    QPResult,
 };
 
 #[derive(Resource, AsAny)]
@@ -25,7 +24,7 @@ impl ScheduleManager {
         self
     }
 
-    pub fn add_system<M, S: IntoSystem<QPResult<()>, M>>(
+    pub fn add_system<M, S: IntoSystem<(), M>>(
         &mut self,
         schedule: impl ScheduleLabel,
         system: S,
@@ -40,19 +39,13 @@ impl ScheduleManager {
         self
     }
 
-    pub(crate) fn execute_schedule(
-        &mut self,
-        schedule: impl ScheduleLabel,
-        world: &mut World,
-    ) -> QPResult<()> {
+    pub(crate) fn execute_schedule(&mut self, schedule: impl ScheduleLabel, world: &mut World) {
         if let Some(schedule) = self.schedules.get_mut(&schedule.id()) {
-            schedule.update(world)?;
+            schedule.update(world);
         } else {
             #[cfg(debug_assertions)]
             println!("trying to update a schedule that doesn't exist");
         }
-
-        Ok(())
     }
 }
 
@@ -65,16 +58,14 @@ impl Schedule {
         Self { systems: vec![] }
     }
 
-    fn add_system<M, S: IntoSystem<QPResult<()>, M>>(&mut self, system: S) {
+    fn add_system<M, S: IntoSystem<(), M>>(&mut self, system: S) {
         self.systems.push(Box::new(IntoSystem::into_system(system)))
     }
 
-    fn update(&mut self, world: &mut World) -> QPResult<()> {
+    fn update(&mut self, world: &mut World) {
         for system in self.systems.iter_mut() {
-            system.run(world)?;
+            system.run(world);
         }
-
-        Ok(())
     }
 }
 

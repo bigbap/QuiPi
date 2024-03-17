@@ -26,6 +26,9 @@ impl<A: Asset + 'static> Assets<A> {
     }
 
     pub fn add(&mut self, id: u64, asset: A) -> AssetHandle<A> {
+        #[cfg(debug_assertions)]
+        println!("adding asset: {:?}", std::any::type_name::<A>());
+
         let id = AssetId::Id(id);
         self.store.insert(id, asset);
 

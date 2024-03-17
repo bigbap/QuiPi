@@ -1,4 +1,4 @@
-use crate::assets::{Asset, AssetHandle, AssetLoader, Source};
+use crate::assets::{Asset, AssetLoader, Source};
 use crate::platform::opengl::shader::ShaderProgram;
 use crate::prelude::QPError;
 use crate::QPResult;

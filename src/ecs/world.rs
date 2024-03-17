@@ -14,12 +14,14 @@ pub use super::commands::Commands;
 
 pub struct World {
     pub resources: ResourceManager,
+    pub(crate) quitting: bool,
 }
 
 impl World {
     pub fn new() -> Self {
         Self {
             resources: ResourceManager::new(),
+            quitting: false,
         }
     }
 
@@ -41,7 +43,7 @@ impl World {
             .ok_or(QPError::Generic(
                 "couldn't borrow ScheduleManager from ResourceOwner".into(),
             ))?
-            .execute_schedule(schedule, self)?;
+            .execute_schedule(schedule, self);
 
         self.resources.insert_owner(schedules)?;
 
@@ -54,6 +56,10 @@ impl World {
 
     pub fn resource_mut<R: Resource + 'static>(&mut self) -> Option<&mut R> {
         self.resources.get_mut::<R>()
+    }
+
+    pub fn quit(&mut self) {
+        self.quitting = true
     }
 
     // MANDATORY RESOURCES

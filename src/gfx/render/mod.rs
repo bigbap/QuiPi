@@ -2,6 +2,7 @@ pub mod assets;
 pub mod batch;
 pub mod cameras;
 pub mod pipeline;
+pub mod renderers;
 pub mod texture;
 pub mod viewport;
 
@@ -14,8 +15,7 @@ use crate::{
     QPResult,
 };
 
-#[derive(Default)]
-pub struct RenderBasePlugin {}
+pub struct RenderBasePlugin;
 
 impl Plugin for RenderBasePlugin {
     fn build(&self, app: &mut crate::prelude::App) -> QPResult<()> {

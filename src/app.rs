@@ -1,17 +1,12 @@
 use crate::assets::Asset;
 use crate::assets::Assets;
-use crate::common::resources::Clock;
-use crate::common::resources::StringInterner;
 use crate::plugin::Plugin;
 use crate::plugin::Plugins;
 use crate::prelude::IntoSystem;
-use crate::prelude::QPError;
 use crate::prelude::StorageId;
-use crate::prelude::StorageManager;
 use crate::prelude::World;
 use crate::resources::Resource;
 use crate::schedule::ScheduleLabel;
-use crate::schedule::ScheduleManager;
 use crate::schedule::Startup;
 use crate::schedule::Update;
 use crate::QPResult;
@@ -27,7 +22,6 @@ pub struct App {
     plugin_names: HashSet<String>,
     plugins_building_count: usize,
 
-    // pub(crate) schedules: ScheduleManager,
     pub(crate) state: AppState,
 }
 
@@ -79,7 +73,7 @@ impl App {
         self.plugins.push(plugin);
     }
 
-    pub fn add_system<M, S: IntoSystem<QPResult<()>, M>>(
+    pub fn add_system<M, S: IntoSystem<(), M>>(
         &mut self,
         schedule: impl ScheduleLabel,
         system: S,
@@ -126,11 +120,7 @@ impl App {
 
         let runner = std::mem::replace(&mut app.runner, Box::new(run_once));
 
-        match runner(app) {
-            Err(QPError::Quit) => Ok(()),
-            Err(e) => Err(e),
-            _ => Ok(()),
-        }
+        runner(app)
     }
 
     fn plugins_cleanup(&mut self) -> QPResult<()> {
@@ -175,21 +165,12 @@ fn run_once(mut app: App) -> QPResult<()> {
 struct Manadatory {}
 impl Plugin for Manadatory {
     fn build(&self, app: &mut App) -> QPResult<()> {
-        // let mut manager = StorageManager::new();
         app.world
             .storage_manager_mut()
             .insert(StorageId::Entities)?;
 
-        // app.add_resource(Clock::new());
-        // app.add_resource(StringInterner::new());
-        // app.add_resource(manager);
-
-        // let mut schedules = ScheduleManager::new();
-
         app.world.schedule_manager_mut().insert_schedule(Startup);
         app.world.schedule_manager_mut().insert_schedule(Update);
-
-        // app.add_resource(schedules);
 
         Ok(())
     }

@@ -6,6 +6,6 @@ use crate::{
 
 #[derive(Debug, Component, Clone, PartialEq)]
 pub struct CTexture {
-    pub id: AssetHandle<Texture>,
+    pub handle: AssetHandle<Texture>,
     pub atlas_location: Option<(u32, u32)>,
 }
