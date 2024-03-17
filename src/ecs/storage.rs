@@ -6,7 +6,7 @@ use super::{
     prelude::Component,
 };
 use crate::{
-    prelude::{Group, QPError, Query},
+    prelude::{Group, QPError, Query, World},
     resources::*,
     QPResult,
 };
@@ -153,6 +153,7 @@ impl Storage {
         }
     }
 
+    // get a single component for a given entity
     pub(crate) fn get<C: Component + PartialEq>(&self, entity: &Index) -> Option<&C> {
         if !self.allocator.borrow().validate(entity) {
             return None;
@@ -167,6 +168,7 @@ impl Storage {
         }
     }
 
+    // get a single mutable component for a given entity
     pub(crate) fn get_mut<C: Component + PartialEq + 'static>(
         &mut self,
         entity: &Index,
@@ -184,37 +186,58 @@ impl Storage {
         }
     }
 
-    pub fn query<C: Component + PartialEq + 'static>(&self) -> Option<&IndexedArray<C>> {
+    // get a single component list
+    pub(crate) fn get_component_list<C: Component + PartialEq + 'static>(
+        &self,
+    ) -> Option<&IndexedArray<C>> {
         self.components.get::<C>()
     }
 
-    pub fn query_mut<C: Component + PartialEq + 'static>(
+    // get a single mutable component list
+    pub(crate) fn get_component_list_mut<C: Component + PartialEq + 'static>(
         &mut self,
     ) -> Option<&mut IndexedArray<C>> {
         self.components.get_mut::<C>()
     }
 
-    pub(crate) fn clear(&mut self) -> QPResult<()> {
-        Ok(self.allocator.borrow_mut().clear())
+    // iterator over all components of a given type
+    pub fn iter<C: Component + 'static>(&self) -> Option<Iter<'_, C>> {
+        Some(self.get_component_list::<C>()?.iter())
     }
 
-    pub(crate) fn registered_components_len(&self) -> usize {
-        self.components.len()
-    }
-
-    pub(crate) fn allocator_size(&self) -> usize {
-        self.allocator.borrow().len()
-    }
-
-    pub(crate) fn count(&self) -> usize {
-        self.allocator.borrow().valid_count()
-    }
-
-    pub fn iter<C: Component + 'static>(&'static self) -> Option<Iter<'_, C>> {
-        Some(self.query::<C>()?.iter())
-    }
-
+    // mutable iterator over all components of a given type
     pub fn iter_mut<C: Component + 'static>(&mut self) -> Option<IterMut<'_, C>> {
-        Some(self.query_mut::<C>()?.iter_mut())
+        Some(self.get_component_list_mut::<C>()?.iter_mut())
+    }
+}
+
+impl World {
+    pub fn get_entity_component<C: Component>(
+        &self,
+        storage: StorageId,
+        entity: &Index,
+    ) -> Option<&C> {
+        self.storage_manager().get(storage)?.get::<C>(entity)
+    }
+
+    pub fn get_entity_component_mut<C: Component>(
+        &mut self,
+        storage: StorageId,
+        entity: &Index,
+    ) -> Option<&mut C> {
+        self.storage_manager_mut()
+            .get_mut(storage)?
+            .get_mut::<C>(entity)
+    }
+
+    pub fn entity_iter<C: Component + 'static>(&self, storage: StorageId) -> Option<Iter<'_, C>> {
+        self.storage_manager().get(storage)?.iter()
+    }
+
+    pub fn entity_iter_mut<C: Component + 'static>(
+        &mut self,
+        storage: StorageId,
+    ) -> Option<IterMut<'_, C>> {
+        self.storage_manager_mut().get_mut(storage)?.iter_mut()
     }
 }

@@ -6,15 +6,14 @@ use crate::plugin::Plugin;
 use crate::plugin::Plugins;
 use crate::prelude::IntoSystem;
 use crate::prelude::QPError;
-use crate::prelude::Schedule;
-use crate::prelude::StartupSchedule;
 use crate::prelude::StorageId;
 use crate::prelude::StorageManager;
-use crate::prelude::SystemParam;
-// use crate::prelude::UpdateSchedule;
 use crate::prelude::World;
 use crate::resources::Resource;
+use crate::schedule::ScheduleLabel;
 use crate::schedule::ScheduleManager;
+use crate::schedule::Startup;
+use crate::schedule::Update;
 use crate::QPResult;
 use egui::TextBuffer;
 use std::collections::HashSet;
@@ -41,12 +40,16 @@ impl App {
             plugin_names: HashSet::default(),
             plugins_building_count: 0,
             state: AppState::Created,
-            // schedules: ScheduleManager::new(),
         }
     }
 
     pub fn new() -> Self {
         let mut app = Self::empty();
+        // world must be build before adding the mandatory plugins
+        if let Err(e) = app.world.build() {
+            panic!("Failed to create the world: {}", e);
+        };
+
         app.add_plugins(Manadatory {});
 
         app
@@ -76,17 +79,14 @@ impl App {
         self.plugins.push(plugin);
     }
 
-    pub fn add_system<S, System, Params>(&mut self, system: System) -> &mut Self
-    where
-        S: Schedule + 'static,
-        System: IntoSystem<QPResult<()>, Params>,
-        Params: SystemParam + 'static,
-    {
-        if let Some(schedules) = self.world.resource_mut::<ScheduleManager>() {
-            schedules.add_system::<S, System, Params>(system);
-        } else {
-            panic!("Schedule Manager not found in resources");
-        }
+    pub fn add_system<M, S: IntoSystem<QPResult<()>, M>>(
+        &mut self,
+        schedule: impl ScheduleLabel,
+        system: S,
+    ) -> &mut Self {
+        self.world
+            .schedule_manager_mut()
+            .add_system::<M, S>(schedule, system);
 
         self
     }
@@ -120,7 +120,7 @@ impl App {
             panic!("App::run() was called before all plugins were built");
         }
 
-        app.world.execute::<StartupSchedule>()?;
+        app.world.execute(Startup)?;
 
         self.state = AppState::Running;
 
@@ -169,25 +169,27 @@ pub struct AppConfig {
 }
 
 fn run_once(mut app: App) -> QPResult<()> {
-    app.world.execute::<StartupSchedule>()
+    app.world.execute(Startup)
 }
 
 struct Manadatory {}
 impl Plugin for Manadatory {
     fn build(&self, app: &mut App) -> QPResult<()> {
-        let mut manager = StorageManager::new();
-        manager.insert(StorageId::Entities)?;
+        // let mut manager = StorageManager::new();
+        app.world
+            .storage_manager_mut()
+            .insert(StorageId::Entities)?;
 
-        app.add_resource(Clock::new());
-        app.add_resource(StringInterner::new());
-        app.add_resource(manager);
+        // app.add_resource(Clock::new());
+        // app.add_resource(StringInterner::new());
+        // app.add_resource(manager);
 
-        let mut schedules = ScheduleManager::new();
+        // let mut schedules = ScheduleManager::new();
 
-        schedules.add_schedule::<StartupSchedule>();
-        // schedules.add_schedule::<UpdateSchedule>();
+        app.world.schedule_manager_mut().insert_schedule(Startup);
+        app.world.schedule_manager_mut().insert_schedule(Update);
 
-        app.add_resource(schedules);
+        // app.add_resource(schedules);
 
         Ok(())
     }

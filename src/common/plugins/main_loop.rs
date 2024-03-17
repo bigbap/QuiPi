@@ -2,7 +2,7 @@ use crate::{
     common::resources::{ClearColor, Window},
     platform::opengl::buffer::clear_buffers,
     prelude::{App, QPError},
-    schedule::{RenderSchedule, UpdateSchedule},
+    schedule::{Render, Update},
     QPResult,
 };
 
@@ -13,7 +13,7 @@ pub struct MainLoopPlugin {}
 impl Plugin for MainLoopPlugin {
     fn build(&self, app: &mut crate::prelude::App) -> QPResult<()> {
         Ok(app.set_runner(move |mut app: App| loop {
-            app.world.execute::<UpdateSchedule>()?;
+            app.world.execute(Update)?;
 
             let clr = app
                 .world
@@ -23,7 +23,7 @@ impl Plugin for MainLoopPlugin {
 
             clear_buffers(clr.as_tuple());
 
-            app.world.execute::<RenderSchedule>()?;
+            app.world.execute(Render)?;
 
             let Some(window) = &app
                 .world

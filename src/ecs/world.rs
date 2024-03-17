@@ -2,11 +2,11 @@ use std::marker::PhantomData;
 
 use crate::{
     assets::AssetServer,
-    common::resources::StringInterner,
+    common::resources::{Clock, StringInterner},
     ecs::prelude::StorageManager,
     prelude::{QPError, ScheduleManager},
     resources::{Resource, ResourceManager},
-    schedule::Schedule,
+    schedule::ScheduleLabel,
     QPResult,
 };
 
@@ -23,7 +23,17 @@ impl World {
         }
     }
 
-    pub(crate) fn execute<S: Schedule + 'static>(&mut self) -> QPResult<()> {
+    pub fn build(&mut self) -> QPResult<()> {
+        self.resources.insert(Clock::new())?;
+        self.resources.insert(StringInterner::new())?;
+        self.resources.insert(ScheduleManager::new())?;
+        self.resources.insert(StorageManager::new())?;
+        self.resources.insert(AssetServer::new())?;
+
+        Ok(())
+    }
+
+    pub(crate) fn execute(&mut self, schedule: impl ScheduleLabel) -> QPResult<()> {
         let mut schedules = self.resources.remove_or_err::<ScheduleManager>()?;
 
         schedules
@@ -31,7 +41,7 @@ impl World {
             .ok_or(QPError::Generic(
                 "couldn't borrow ScheduleManager from ResourceOwner".into(),
             ))?
-            .execute_schedule::<S>(self)?;
+            .execute_schedule(schedule, self)?;
 
         self.resources.insert_owner(schedules)?;
 
@@ -51,33 +61,32 @@ impl World {
     // if you try to call these methods before the resources
     // have been loaded, they will panic
 
-    pub fn storage(&self) -> &StorageManager {
+    // StorageManager
+
+    pub fn storage_manager(&self) -> &StorageManager {
         match self.resource::<StorageManager>() {
             Some(storage) => storage,
             _ => panic!("Storage manager not found"),
         }
     }
 
-    pub fn storage_mut(&mut self) -> &mut StorageManager {
+    pub fn storage_manager_mut(&mut self) -> &mut StorageManager {
         match self.resource_mut::<StorageManager>() {
             Some(storage) => storage,
             _ => panic!("Storage manager not found"),
         }
     }
 
-    pub fn assets(&self) -> &AssetServer {
-        match self.resource::<AssetServer>() {
-            Some(assets) => assets,
-            _ => panic!("Asset server not found"),
-        }
-    }
+    // AssetServer
 
-    pub fn assets_mut(&mut self) -> &mut AssetServer {
+    pub fn asset_server(&mut self) -> &mut AssetServer {
         match self.resource_mut::<AssetServer>() {
             Some(assets) => assets,
             _ => panic!("Asset server not found"),
         }
     }
+
+    // StringInterner
 
     pub fn interner(&self) -> &StringInterner {
         match self.resource::<StringInterner>() {
@@ -93,9 +102,26 @@ impl World {
         }
     }
 
+    // Schedules
+
+    pub fn schedule_manager(&self) -> &ScheduleManager {
+        match self.resource::<ScheduleManager>() {
+            Some(schedule) => schedule,
+            _ => panic!("ScheduleManager not found"),
+        }
+    }
+
+    pub fn schedule_manager_mut(&mut self) -> &mut ScheduleManager {
+        match self.resource_mut::<ScheduleManager>() {
+            Some(schedule) => schedule,
+            _ => panic!("ScheduleManager not found"),
+        }
+    }
+
     // UNSAFE
     // get unsafe cells for world
 
+    #[allow(unused)]
     #[inline]
     pub(crate) fn as_unsafe_cell(&self) -> UnsafeWorldCell<'_> {
         UnsafeWorldCell::new(self)
@@ -122,6 +148,7 @@ pub struct DebugInfo {
 pub struct UnsafeWorldCell<'w>(*mut World, PhantomData<&'w World>);
 
 impl<'w> UnsafeWorldCell<'w> {
+    #[allow(unused)]
     #[inline]
     pub(crate) fn new(world: &'w World) -> Self {
         Self(std::ptr::from_ref(world).cast_mut(), PhantomData)

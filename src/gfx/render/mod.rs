@@ -8,10 +8,9 @@ pub mod viewport;
 use assets::*;
 
 use crate::{
-    assets::AssetServer,
     plugin::Plugin,
-    prelude::{QPError, RenderSchedule, StorageId::*, StorageManager},
-    schedule::ScheduleManager,
+    prelude::{QPError, StorageId::*, StorageManager},
+    schedule::{Render, ScheduleManager},
     QPResult,
 };
 
@@ -24,10 +23,9 @@ impl Plugin for RenderBasePlugin {
             .world
             .resource_mut::<ScheduleManager>()
             .ok_or(QPError::ResourceNotFound("ScheduleManager".into()))?;
-        schedules.add_schedule::<RenderSchedule>();
+        schedules.insert_schedule(Render);
 
-        app.add_resource(AssetServer::new())
-            .init_asset_store::<Texture>()
+        app.init_asset_store::<Texture>()
             .init_asset_store::<Shader>();
 
         let storage_manager = app
@@ -37,7 +35,7 @@ impl Plugin for RenderBasePlugin {
             .expect("storage manager resource not loaded");
         storage_manager.insert(Cameras)?;
 
-        // app.add_system::<RenderSchedule>(pipeline::start_render_pipeline);
+        app.add_system(Render, pipeline::start_render_pipeline);
 
         Ok(())
     }

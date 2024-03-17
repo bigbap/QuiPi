@@ -19,7 +19,7 @@ impl<C0: Component> GroupIter<C0> for Iter<'static, C0> {
             }
 
             match v {
-                Some(Some((index, Some(entry)))) => return Some((index, Box::<&C0>::new(entry))),
+                Some(Some((index, entry))) => return Some((index, Box::<&C0>::new(entry))),
                 _ => continue,
             }
         })

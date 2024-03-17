@@ -1,41 +1,37 @@
 pub use macros::Schedule;
-use std::any::TypeId;
+use std::collections::HashMap;
 
 use crate::{
-    core::prelude::AnyMap,
-    prelude::{BoxedSystem, IntoSystem, SystemParam, World},
+    prelude::{BoxedSystem, IntoSystem, World},
     resources::{AsAny, Resource},
     QPResult,
 };
 
 #[derive(Resource, AsAny)]
 pub struct ScheduleManager {
-    // schedules: HashMap<&'static str, Box<dyn Schedule>>,
-    schedules: ScheduleMap,
+    schedules: HashMap<u64, Schedule>,
 }
 
 impl ScheduleManager {
     pub fn new() -> Self {
         Self {
-            schedules: ScheduleMap::new(),
+            schedules: HashMap::new(),
         }
     }
 
-    pub fn add_schedule<S: Schedule + Default + 'static>(&mut self) -> &mut Self {
-        self.schedules
-            .insert::<S>(ScheduleId::new::<S>(), S::default());
+    pub fn insert_schedule(&mut self, schedule: impl ScheduleLabel) -> &mut Self {
+        self.schedules.insert(schedule.id(), Schedule::new());
 
         self
     }
 
-    pub fn add_system<S, System, Params>(&mut self, system: System) -> &mut Self
-    where
-        S: Schedule + 'static,
-        System: IntoSystem<QPResult<()>, Params>,
-        Params: SystemParam + 'static,
-    {
-        if let Some(schedule) = self.schedules.get_mut::<S>(&ScheduleId::new::<S>()) {
-            schedule.add_system::<S, System, Params>(system);
+    pub fn add_system<M, S: IntoSystem<QPResult<()>, M>>(
+        &mut self,
+        schedule: impl ScheduleLabel,
+        system: S,
+    ) -> &mut Self {
+        if let Some(schedule) = self.schedules.get_mut(&schedule.id()) {
+            schedule.add_system::<M, S>(system);
         } else {
             #[cfg(debug_assertions)]
             println!("trying to add system to a schedule that doesn't exist");
@@ -44,11 +40,12 @@ impl ScheduleManager {
         self
     }
 
-    pub(crate) fn execute_schedule<S: Schedule + 'static>(
+    pub(crate) fn execute_schedule(
         &mut self,
+        schedule: impl ScheduleLabel,
         world: &mut World,
     ) -> QPResult<()> {
-        if let Some(schedule) = self.schedules.get_mut::<S>(&ScheduleId::new::<S>()) {
+        if let Some(schedule) = self.schedules.get_mut(&schedule.id()) {
             schedule.update(world)?;
         } else {
             #[cfg(debug_assertions)]
@@ -59,32 +56,17 @@ impl ScheduleManager {
     }
 }
 
-pub trait Schedule {
-    fn add_system<S, System, Params>(&mut self, system: System)
-    where
-        S: Schedule + 'static,
-        System: IntoSystem<QPResult<()>, Params>,
-        Params: SystemParam + 'static;
-
-    fn update(&mut self, world: &mut World) -> QPResult<()>;
-}
-
-pub struct StartupSchedule {
+pub struct Schedule {
     systems: Vec<BoxedSystem>,
 }
-impl Default for StartupSchedule {
-    fn default() -> Self {
+
+impl Schedule {
+    pub fn new() -> Self {
         Self { systems: vec![] }
     }
-}
-impl Schedule for StartupSchedule {
-    fn add_system<S, System, Params>(&mut self, system: System)
-    where
-        S: Schedule + 'static,
-        System: IntoSystem<QPResult<()>, Params>,
-        Params: SystemParam + 'static,
-    {
-        self.systems.push(Box::new(System::into_system(system)))
+
+    fn add_system<M, S: IntoSystem<QPResult<()>, M>>(&mut self, system: S) {
+        self.systems.push(Box::new(IntoSystem::into_system(system)))
     }
 
     fn update(&mut self, world: &mut World) -> QPResult<()> {
@@ -96,32 +78,35 @@ impl Schedule for StartupSchedule {
     }
 }
 
-#[derive(Schedule)]
-pub struct UpdateSchedule {
-    systems: Vec<BoxedSystem>,
+pub trait ScheduleLabel {
+    const ID: u64;
+
+    fn id(&self) -> u64;
 }
-impl Default for UpdateSchedule {
-    fn default() -> Self {
-        Self { systems: vec![] }
+
+pub struct Startup;
+impl ScheduleLabel for Startup {
+    const ID: u64 = 0x457DE0A607086830;
+
+    fn id(&self) -> u64 {
+        Self::ID
     }
 }
 
-#[derive(Schedule)]
-pub struct RenderSchedule {
-    systems: Vec<BoxedSystem>,
-}
-impl Default for RenderSchedule {
-    fn default() -> Self {
-        Self { systems: vec![] }
+pub struct Update;
+impl ScheduleLabel for Update {
+    const ID: u64 = 0x7F81D58E83F97AC8;
+
+    fn id(&self) -> u64 {
+        Self::ID
     }
 }
 
-type ScheduleMap = AnyMap<ScheduleId>;
+pub struct Render;
+impl ScheduleLabel for Render {
+    const ID: u64 = 0x5CEA66B00E5350D4;
 
-#[derive(Eq, PartialEq, Clone, Hash)]
-struct ScheduleId(pub TypeId);
-impl ScheduleId {
-    pub fn new<S: Schedule + 'static>() -> Self {
-        Self(std::any::TypeId::of::<S>())
+    fn id(&self) -> u64 {
+        Self::ID
     }
 }

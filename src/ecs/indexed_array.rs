@@ -218,7 +218,7 @@ impl<T> IndexedArray<T> {
         }
 
         if i >= self.list.len() {
-            self.list.resize_with(i + 4, || None);
+            self.list.resize_with(i + 1, || None);
         }
 
         self.list[i] = Some(Entry {
@@ -322,7 +322,7 @@ impl<'a, T> Iter<'a, T> {
 }
 
 impl<'a, T> Iterator for Iter<'a, T> {
-    type Item = Option<(Index, Option<&'a T>)>;
+    type Item = Option<(Index, &'a T)>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let Some((i, entry)) = self.inner.next() else {
@@ -337,13 +337,10 @@ impl<'a, T> Iterator for Iter<'a, T> {
             return Some(None);
         };
 
-        Some(Some((
-            index,
-            match entry {
-                Some(entry) => Some(&entry.value),
-                _ => None,
-            },
-        )))
+        Some(match entry {
+            Some(entry) => Some((index, &entry.value)),
+            _ => None,
+        })
     }
 }
 
@@ -372,7 +369,7 @@ impl<'a, T> IterMut<'a, T> {
 }
 
 impl<'a, T: Component> Iterator for IterMut<'a, T> {
-    type Item = Option<(Index, Option<&'a mut T>)>;
+    type Item = Option<(Index, &'a mut T)>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let Some((i, entry)) = self.inner.next() else {
@@ -387,13 +384,10 @@ impl<'a, T: Component> Iterator for IterMut<'a, T> {
             return Some(None);
         };
 
-        Some(Some((
-            index,
-            match entry {
-                Some(entry) => Some(&mut entry.value),
-                _ => None,
-            },
-        )))
+        Some(match entry {
+            Some(entry) => Some((index, &mut entry.value)),
+            _ => None,
+        })
     }
 }
 
@@ -535,25 +529,25 @@ mod tests {
 
         let mut iterator = array.iter();
 
-        assert_eq!(iterator.next(), Some(Some((i1, Some(&Container(123))))));
-        assert_eq!(iterator.next(), Some(Some((i2, Some(&Container(456))))));
+        assert_eq!(iterator.next(), Some(Some((i1, &Container(123)))));
+        assert_eq!(iterator.next(), Some(Some((i2, &Container(456)))));
 
         allocator.borrow_mut().deallocate(i1);
 
         let mut iterator = array.iter();
 
-        assert_eq!(iterator.next(), Some(Some((i2, Some(&Container(456))))));
+        assert_eq!(iterator.next(), Some(Some((i2, &Container(456)))));
         assert_eq!(iterator.next(), None);
 
         for cont in array.iter_mut() {
             if let Some((_, val)) = cont {
-                val.unwrap().0 = 457
+                val.0 = 457
             }
         }
 
         let mut iterator = array.iter();
 
-        assert_eq!(iterator.next(), Some(Some((i2, Some(&Container(457))))));
+        assert_eq!(iterator.next(), Some(Some((i2, &Container(457)))));
         assert_eq!(iterator.next(), None);
     }
 
@@ -578,10 +572,7 @@ mod tests {
 
         assert_eq!(
             iter.next(),
-            Some((
-                Some((i, Some(&Container1(123)))),
-                Some((i, Some(&Container2(456))))
-            ))
+            Some((Some((i, &Container1(123))), Some((i, &Container2(456)))))
         );
     }
 }

@@ -14,7 +14,7 @@ pub enum CCameraKind {
     Perspective(f32),
 }
 
-#[derive(Debug, Component, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Component, Serialize, Deserialize, PartialEq, Clone, Eq, Hash)]
 pub struct CRenderLayer(Vec<u32>);
 impl Default for CRenderLayer {
     fn default() -> Self {
@@ -105,3 +105,9 @@ pub fn matrix_perspective(
     glm::perspective(aspect, fov, PERSPECTIVE_NEAR, PERSPECTIVE_FAR)
         * glm::look_at(position, &(position + front), up)
 }
+
+// impl World {
+//     pub fn default_camera(&self) -> Option<&Index> {
+//         self.storage().get(StorageId::Cameras)?.query(entity)
+//     }
+// }

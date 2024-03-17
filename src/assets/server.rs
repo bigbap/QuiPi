@@ -1,8 +1,9 @@
 use crate::{
-    core::prelude::AsAny, platform::opengl::textures::Format, resources::Resource, QPResult,
+    core::prelude::AsAny, platform::opengl::textures::Format, prelude::World, resources::Resource,
+    QPResult,
 };
 
-use super::{AssetHandle, AssetLoader};
+use super::{Asset, AssetLoader, Assets};
 
 pub mod prelude {
     pub use super::*;
@@ -22,14 +23,6 @@ impl AssetServer {
         loader.load()
     }
 }
-
-// #[derive(Debug, Hash, PartialEq, Eq, Clone, Copy)]
-// pub struct AssetId(pub u64, TypeId);
-// impl AssetId {
-//     pub fn validate<A: Asset + 'static>(&self) -> bool {
-//         self.1 == std::any::TypeId::of::<A>()
-//     }
-// }
 
 impl Resource for AssetServer {}
 impl AsAny for AssetServer {
@@ -55,4 +48,14 @@ pub struct BufferMetadata {
     pub width: i32,
     pub height: i32,
     pub buffer: Vec<u8>,
+}
+
+impl World {
+    pub fn assets<A: Asset + 'static>(&self) -> Option<&Assets<A>> {
+        self.resource::<Assets<A>>()
+    }
+
+    pub fn assets_mut<A: Asset + 'static>(&mut self) -> Option<&mut Assets<A>> {
+        self.resource_mut::<Assets<A>>()
+    }
 }

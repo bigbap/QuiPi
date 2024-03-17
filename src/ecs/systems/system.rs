@@ -9,7 +9,7 @@ pub trait SystemId: Hash + Eq + PartialEq {
     fn id(&self) -> TypeId;
 }
 
-pub type BoxedSystem = Box<dyn System<Out = QPResult<()>>>;
+pub type BoxedSystem<Out = QPResult<()>> = Box<dyn System<Out = Out>>;
 
 pub trait System: 'static {
     type Out;
@@ -17,7 +17,7 @@ pub trait System: 'static {
     fn run_unsafe(&mut self, world: UnsafeWorldCell) -> Self::Out;
 
     fn run(&mut self, world: &mut World) -> Self::Out {
-        let world = world.as_unsafe_cell();
+        let world = world.as_unsafe_cell_mut();
 
         self.run_unsafe(world)
     }
@@ -69,11 +69,13 @@ tuple_impl!(P0, P1, P2, P3, P4);
 tuple_impl!(P0, P1, P2, P3, P4, P5);
 tuple_impl!(P0, P1, P2, P3, P4, P5, P6);
 
-unsafe impl<'a> SystemParam for &'a World {
-    type Item<'w> = &'w World;
+// implementing SystemParams for different types
+
+unsafe impl<'a> SystemParam for &'a mut World {
+    type Item<'w> = &'w mut World;
 
     #[inline]
     unsafe fn get_param<'w>(world: UnsafeWorldCell<'w>) -> Self::Item<'w> {
-        world.world()
+        world.world_mut()
     }
 }

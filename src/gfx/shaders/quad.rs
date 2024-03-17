@@ -3,7 +3,6 @@ use crate::{
     gfx::render::assets::ShaderLoader,
     plugin::Plugin,
     prelude::World,
-    schedule::StartupSchedule,
 };
 
 pub const QUAD_SHADER_NAME: &str = "default_quad_shader";
