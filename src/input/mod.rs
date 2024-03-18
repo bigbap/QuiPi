@@ -1,67 +1,72 @@
-pub struct QPInput {
-    
-}
+use sdl2::event::{Event, WindowEvent};
 
-#[derive(Debug, Hash, PartialEq, Eq, Clone, Copy)]
-pub enum KeyCode {
-    Esc(bool),
-    A(bool),
-    B(bool),
-    C(bool),
-    D(bool),
-    E(bool),
-    F(bool),
-    G(bool),
-    H(bool),
-    I(bool),
-    J(bool),
-    K(bool),
-    L(bool),
-    M(bool),
-    N(bool),
-    O(bool),
-    P(bool),
-    Q(bool),
-    R(bool),
-    S(bool),
-    T(bool),
-    U(bool),
-    V(bool),
-    W(bool),
-    X(bool),
-    Y(bool),
-    Z(bool),
-    N1(bool),
-    N2(bool),
-    N3(bool),
-    N4(bool),
-    N5(bool),
-    N6(bool),
-    N7(bool),
-    N8(bool),
-    N9(bool),
-    N0(bool),
-    Left(bool),
-    Right(bool),
-    Up(bool),
-    Down(bool),
-    Space(bool),
-    LShift(bool),
-    RShift(bool),
-    LCtrl(bool),
-    RCtrl(bool),
-    LAlt(bool),
-    RAlt(bool),
-    Tab(bool),
-    Caps(bool),
-    Enter(bool),
-}
+use crate::{
+    gfx::render::viewport::ViewportDimensions,
+    plugin::Plugin,
+    prelude::{
+        qp_gfx::{Viewport, Window},
+        Res, ResMut, World,
+    },
+    schedule::Update,
+    QPResult,
+};
 
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub enum MouseState {
-    RBtn(bool),
-    LBtn(bool),
-    MBtn(bool),
-    Pos((f32, f32, f32, f32)), // (x, y, relx, rely)
-    Wheel(bool)
+pub mod state;
+pub use state::*;
+
+pub struct InputPlugin;
+
+impl Plugin for InputPlugin {
+    fn build(&self, app: &mut crate::prelude::App) -> QPResult<()> {
+        app.add_resource(Input::new());
+
+        app.add_system(
+            Update,
+            move |world: &mut World,
+                  window: Res<Window>,
+                  input: ResMut<Input>,
+                  mut viewport: ResMut<Viewport>| {
+                let Some(window) = window else {
+                    #[cfg(debug_assertions)]
+                    println!("[input system] couldn't get window resource");
+
+                    return;
+                };
+
+                let events = window.winapi.get_event_queue().unwrap();
+                let Some(input) = input else {
+                    #[cfg(debug_assertions)]
+                    println!("[input system] couldn't get input resource");
+
+                    return;
+                };
+
+                let mut quit = false;
+                for event in events.iter() {
+                    match event {
+                        Event::Quit { .. } => quit = true,
+                        Event::Window {
+                            win_event: WindowEvent::Resized(w, h),
+                            ..
+                        } => match &mut viewport {
+                            Some(v) => v.set_dimensions(ViewportDimensions {
+                                x: 0,
+                                y: 0,
+                                width: *w,
+                                height: *h,
+                            }),
+                            _ => (),
+                        },
+                        event => input.update_state(&event),
+                    }
+                }
+
+                if quit {
+                    world.quit();
+                }
+            },
+        );
+
+        Ok(())
+    }
 }

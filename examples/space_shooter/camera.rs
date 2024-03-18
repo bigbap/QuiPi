@@ -1,6 +1,6 @@
 use quipi::{
     assets::AssetId,
-    common::components::components::{COrthographic, CTransform2D},
+    common::components::components::{COrthographic, CTransform, CTransform2D},
     gfx::{
         prelude::quad::QUAD_SHADER_NAME,
         render::{
@@ -38,7 +38,7 @@ impl Plugin for Camera {
             ));
         let camera_state = CameraState {
             this: camera_id,
-            player: None,
+            follow: None,
         };
         app.add_plugins(RenderQuads::new(shader_id, camera_id));
         app.add_system(Update, resize);
@@ -53,8 +53,8 @@ impl Plugin for Camera {
 struct MainCamera;
 
 #[derive(Debug, Resource, AsAny, PartialEq, Clone, Copy)]
-struct CameraState {
-    player: Option<Index>,
+pub struct CameraState {
+    pub follow: Option<Index>,
     this: Index,
 }
 
@@ -70,9 +70,30 @@ fn resize(storage: ResMut<StorageManager>, viewport: Res<Viewport>, state: Res<C
     else {
         return;
     };
+
     let dims = viewport.get_dimensions();
     params.right = dims.width as f32;
     params.top = dims.height as f32;
+
+    let Some(transform) = storage
+        .get(StorageId::Cameras)
+        .unwrap()
+        .get::<CTransform>(&state.this)
+    else {
+        return;
+    };
+
+    let position = glm::vec3(transform.translate.x, transform.translate.y, 0.0);
+
+    let Some(matrix) = storage
+        .get_mut(StorageId::Cameras)
+        .unwrap()
+        .get_mut::<CMatrix4>(&state.this)
+    else {
+        return;
+    };
+
+    matrix.0 = matrix_ortho(dims.width as u32, dims.height as u32, &position);
 }
 
 fn follow(storage: ResMut<StorageManager>, state: Res<CameraState>) {
@@ -80,7 +101,7 @@ fn follow(storage: ResMut<StorageManager>, state: Res<CameraState>) {
         return;
     };
 
-    let Some(player) = state.player else { return };
+    let Some(player) = state.follow else { return };
 
     let (Some(params), Some(target)) = (
         storage
@@ -108,10 +129,11 @@ fn follow(storage: ResMut<StorageManager>, state: Res<CameraState>) {
     let Some(transform) = storage
         .get_mut(StorageId::Cameras)
         .unwrap()
-        .get_mut::<CTransform2D>(&this)
+        .get_mut::<CTransform>(&this)
     else {
         return;
     };
+    let target = glm::vec3(target.x, target.y, 0.0);
     transform.translate = glm::lerp(&transform.translate, &target, lerp_factor);
 
     let position = glm::vec3(transform.translate.x, transform.translate.y, 0.0);

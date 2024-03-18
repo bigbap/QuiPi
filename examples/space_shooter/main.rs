@@ -2,22 +2,21 @@ extern crate nalgebra_glm as glm;
 extern crate quipi;
 
 // mod particle_system;
-// mod ship;
 mod camera;
+mod ship;
 mod stars;
 
 use camera::Camera;
 pub use quipi::prelude::*;
 use quipi::{
     assets::{AssetHandle, AssetId, AssetServer, Assets, Source},
-    common::plugins::main_loop::MainLoopPlugin,
     core::prelude::{
         random::Random,
         trig::{magnitude2d_squared, rotate2d},
         Countdown, Interval,
     },
     gfx::{
-        prelude::quad::QUAD_SHADER_NAME,
+        prelude::quad::{DefaultQuadShader, QUAD_SHADER_NAME},
         render::{
             assets::{Texture, TextureLoader},
             cameras::{camera_bundle, CameraMetadata},
@@ -33,6 +32,7 @@ use quipi::{
 
 use qp_common::components::*;
 use sdl2::{event::WindowEvent, keyboard::Keycode};
+use ship::Ship;
 use stars::Stars;
 
 pub static WIDTH: u32 = 1600;
@@ -79,9 +79,12 @@ pub fn run() -> Result<(), QPError> {
         .add_resource(ClearColor::new((0.1, 0.1, 0.1, 1.0)))
         .add_plugins(default_plugins("Space Shooter", WIDTH, HEIGHT))
         .add_plugins(RenderBasePlugin)
+        .add_plugins(DefaultQuadShader)
+        .add_plugins(ParticleSystem)
         .add_plugins(SetupSpaceShooter)
-        .add_plugins(Stars)
         .add_plugins(Camera)
+        .add_plugins(Ship)
+        .add_plugins(Stars)
         .run()
 }
 
@@ -132,7 +135,7 @@ fn setup(
     let texture = asset_server
         .load(TextureLoader {
             source: Source::Path(path),
-            dims: None,
+            dims: Some((8, 6)),
         })
         .unwrap();
 

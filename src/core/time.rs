@@ -1,7 +1,7 @@
 use crate::QPResult;
 use std::time::{Instant, SystemTime};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Timer {
     timer: Instant,
     last_tick: u128,
@@ -73,6 +73,7 @@ impl Interval {
     }
 }
 
+#[derive(Debug, PartialEq, Clone)]
 pub struct Countdown {
     timer: Timer,
     pub countdown: u128,
@@ -94,7 +95,7 @@ impl Countdown {
     pub fn check(&mut self) -> u128 {
         let delta = self.timer.elapsed() - self.start;
 
-        (self.countdown - delta).max(0)
+        self.countdown - delta.min(self.countdown)
     }
 }
 

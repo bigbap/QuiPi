@@ -11,7 +11,8 @@ pub fn start_render_pipeline(world: &mut World) {
 
     // get camera render layers
     let Some(render_layers) = world.entity_iter::<CRenderLayer>(StorageId::Cameras) else {
-        println!("Couldn't get render layers");
+        #[cfg(debug_assertions)]
+        println!("Couldn't get camera render layers");
 
         return;
     };
@@ -20,7 +21,8 @@ pub fn start_render_pipeline(world: &mut World) {
     let mut entity_layers = Vec::<(Index, &CRenderLayer)>::new();
     let Some(render_layers_entities) = world.entity_iter::<CRenderLayer>(StorageId::Entities)
     else {
-        println!("Couldn't get render layers");
+        #[cfg(debug_assertions)]
+        println!("Couldn't get entity render layers");
 
         return;
     };

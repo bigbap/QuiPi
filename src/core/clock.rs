@@ -15,4 +15,8 @@ impl Clock {
     pub fn elapsed(&mut self) -> u128 {
         self.timer.elapsed()
     }
+
+    pub fn delta(&mut self) -> u128 {
+        self.timer.delta()
+    }
 }

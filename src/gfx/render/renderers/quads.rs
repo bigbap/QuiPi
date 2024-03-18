@@ -86,7 +86,11 @@ impl Plugin for RenderQuads {
                     let model = transform.to_matrix();
                     let mvp = camera.0 * model;
 
-                    let texture = match entity_storage.get::<CTexture>(&entity) {
+                    let c_texture = match entity_storage.get::<CTexture>(&entity) {
+                        Some(atlas) => Some(atlas),
+                        _ => None,
+                    };
+                    let texture = match c_texture {
                         Some(atlas) => textures.get(&atlas.handle.id),
                         _ => None,
                     };
@@ -97,13 +101,15 @@ impl Plugin for RenderQuads {
                     let color = glm::vec4(color.0, color.1, color.2, color.3);
 
                     renderer.draw(
-                        vertices(&mvp, &texture, color, quad.positions()),
+                        vertices(&mvp, texture, c_texture, color, quad.positions()),
                         shader,
                         texture,
                     );
                 }
                 renderer.end_batch();
                 renderer.flush_batch(shader);
+
+                // println!("draw calls: {}", renderer.draw_calls);
             },
         );
 
@@ -113,7 +119,8 @@ impl Plugin for RenderQuads {
 
 pub fn vertices(
     mvp: &glm::Mat4,
-    texture: &Option<&Texture>,
+    texture: Option<&Texture>,
+    c_texture: Option<&CTexture>,
     color: glm::Vec4,
     positions: [glm::Vec4; 4],
 ) -> [Vertex; 4] {
@@ -122,8 +129,14 @@ pub fn vertices(
     let pos3 = mvp * positions[2];
     let pos4 = mvp * positions[3];
 
-    let coords = match texture {
-        Some(tex) => tex.get_coords_at_loc((1, 1)),
+    let coords = match (texture, c_texture) {
+        (
+            Some(tex),
+            Some(CTexture {
+                atlas_location: Some(loc),
+                ..
+            }),
+        ) => tex.get_coords_at_loc(*loc),
         _ => TextureCoords::default(),
     };
 

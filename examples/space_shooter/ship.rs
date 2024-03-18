@@ -1,251 +1,227 @@
 use qp_common::components::*;
 use qp_core::{trig::pi, Countdown};
-use quipi::{prelude::*, schemas::sprite::TextureAtlas};
+use quipi::{
+    core::math::random::Random,
+    gfx::{
+        prelude::{sprite_bundle, SpriteMetadata},
+        render::viewport::Viewport,
+    },
+    prelude::*,
+    resources::{AsAny, Resource},
+    QPResult,
+};
 use sdl2::keyboard::Keycode;
 
-use crate::particle_system::{Particle, ParticleSystem};
+use crate::{camera::CameraState, GameState};
 
-pub struct Ship {
-    pub index: Index,
-    particle_system: ParticleSystem<ExhaustParticle>,
+const ACCELERATION: f32 = 100.0;
+const MAX_VELOCITY: f32 = 500.0;
+const EXHAUST_INTERVAL: u128 = 5;
+const PARTICLE_LIFETIME: u128 = 250;
 
-    mouse_pos: glm::Vec2,
-    acceleration: f32,
-    max_velocity: f32,
-    thrust: bool,
+pub struct Ship;
+impl Plugin for Ship {
+    fn build(&self, app: &mut App) -> QPResult<()> {
+        app.add_system(Startup, setup)
+            .add_system(Update, handle_input)
+            .add_system(Update, fly)
+            .add_plugins(ExhaustSystem);
+
+        Ok(())
+    }
 }
 
-impl Ship {
-    pub fn new(world: &mut World) -> Result<Self, QPError> {
-        let texture_id = world
-            .registry
-            .asset_manager
-            .get_asset_id("space_tilesheet")
-            .ok_or(QPError::SpriteTextureDoesntExist)?;
+#[derive(Resource, AsAny)]
+pub struct PlayerState {
+    pub id: Index,
+    pub thrust: bool,
+    pub delta: f32,
+    pub timer: Timer,
+}
 
-        let texture = world
-            .registry
-            .asset_manager
-            .get::<qp_assets::RTexture>(texture_id)
-            .ok_or(QPError::SpriteTextureDoesntExist)?;
+fn setup(
+    world: &mut World,
+    storage_manager: ResMut<StorageManager>,
+    game_state: Res<GameState>,
+    camera_state: ResMut<CameraState>,
+) {
+    let storage_manager = storage_manager.unwrap();
+    let game_state = game_state.unwrap();
+    let camera_state = camera_state.unwrap();
+    let texture_handle = game_state
+        .texture_handle
+        .as_ref()
+        .expect("texture hasn't been loaded")
+        .clone();
 
-        let index = world.registry.entity_manager.create((
-            CTag {
-                tag: "ship".to_string(),
-            },
+    let ship = storage_manager
+        .get_mut(StorageId::Entities)
+        .unwrap()
+        .spawn((
             CVelocity2D { x: 0.0, y: 0.0 },
-            CTransform2D {
-                translate: glm::vec2(0.0, 0.0),
-                ..CTransform2D::default()
-            },
-            CSprite::new(
-                &CQuad {
+            sprite_bundle(SpriteMetadata {
+                texture: Some(CTexture {
+                    handle: texture_handle,
+                    atlas_location: Some((1, 3)),
+                }),
+                transform: CTransform2D {
+                    translate: glm::vec2(200.0, 100.0),
+                    ..CTransform2D::default()
+                },
+                color: Some(CColor(1.0, 0.1, 0.2, 1.0)),
+                quad: CQuad {
                     width: 64.0,
                     height: 64.0,
                     center_x: 0.0,
                     center_y: 0.0,
                 },
-                Some(glm::vec4(0.8, 0.2, 0.0, 1.0)),
-                Some(TextureAtlas {
-                    texture: texture_id,
-                    texture_dims: texture.texture_dims,
-                    active_texture: glm::vec2(1.0, 3.0),
-                }),
-            ),
+                ..SpriteMetadata::default()
+            }),
         ));
 
-        let particle_system = ParticleSystem::new(0.02, false, move |world: &mut World| {
-            let Some(ship) = world.registry.entity_manager.get::<CTransform2D>(&index) else {
-                return None;
-            };
+    camera_state.follow = Some(ship);
 
-            Some(ExhaustParticle::new(world, &ship.clone()).unwrap())
-        });
-
-        Ok(Self {
-            index,
-            acceleration: 100.0,
-            max_velocity: 500.0,
+    world
+        .resources
+        .insert(PlayerState {
+            id: ship,
             thrust: false,
-            mouse_pos: glm::vec2(0.0, 0.0),
-            particle_system,
+            delta: 0.0,
+            timer: Timer::new(),
         })
-    }
-
-    fn rotate_ship(&mut self, world: &mut World) {
-        let (_x, _y, width, height) = world.viewport.get_dimensions();
-        let x = self.mouse_pos.x - width as f32 / 2.0;
-        let y = (self.mouse_pos.y - height as f32 / 2.0) * -1.0;
-
-        let angle =
-            qp_core::trig::angle(&glm::vec3(0.0, 1.0, 0.0), &glm::vec3(x, y, 0.0)) - (pi() / 2.0);
-
-        if let Some(transform) = world
-            .registry
-            .entity_manager
-            .get_mut::<CTransform2D>(&self.index)
-        {
-            transform.rotate = angle;
-        }
-    }
+        .expect("failed to add ship resource");
 }
 
-impl Controller for Ship {
-    fn update(&mut self, world: &mut World) -> FrameResult {
-        for event in world.events.iter() {
-            match event {
-                Event::MouseMotion { x, y, .. } => {
-                    self.mouse_pos = glm::vec2(*x as f32, *y as f32);
-                }
-                Event::KeyDown {
-                    keycode: Some(Keycode::W),
-                    repeat: false,
-                    ..
-                } => {
-                    self.thrust = true;
-                    self.particle_system.active = true;
-                }
-                Event::KeyUp {
-                    keycode: Some(Keycode::W),
-                    repeat: false,
-                    ..
-                } => {
-                    self.thrust = false;
-                    self.particle_system.active = false;
-                }
-                _ => (),
-            };
-        }
+fn handle_input(
+    state: ResMut<PlayerState>,
+    input: Res<Input>,
+    viewport: Res<Viewport>,
+    storage: ResMut<StorageManager>,
+) {
+    let (Some(state), Some(viewport), Some(input), Some(storage)) =
+        (state, viewport, input, storage)
+    else {
+        return;
+    };
 
-        self.rotate_ship(world);
-        self.particle_system.update(world).unwrap();
+    // ONLY UPDATE THE DELTA HERE
+    state.delta = state.timer.delta() as f32 / 1000.0;
 
-        // calculate velocity based on direction and acceleration
-        let Some(velocity) = world
-            .registry
-            .entity_manager
-            .get_mut::<CVelocity2D>(&self.index)
-        else {
-            return FrameResult::None;
-        };
+    if input.mouse_moved() {
+        rotate(state, input, viewport, storage);
+    }
 
-        if !self.thrust && velocity.x <= 0.0 && velocity.y <= 0.0 {
-            return FrameResult::None;
-        }
+    state.thrust = input.peek(Keycode::W).is_some();
+}
 
-        let acceleration = world.delta
-            * match self.thrust {
-                true => self.acceleration,
-                false => -self.acceleration,
-            };
+fn rotate(state: &PlayerState, input: &Input, viewport: &Viewport, storage: &mut StorageManager) {
+    let mouse_pos = input.mouse_position();
+    let dims = viewport.get_dimensions();
+    let x = mouse_pos.x as f32 - dims.width as f32 / 2.0;
+    let y = (mouse_pos.y as f32 - dims.height as f32 / 2.0) * -1.0;
 
-        velocity.x = (velocity.x + acceleration).clamp(0.0, self.max_velocity);
-        velocity.y = (velocity.y + acceleration).clamp(0.0, self.max_velocity);
+    let angle =
+        qp_core::trig::angle(&glm::vec3(0.0, 1.0, 0.0), &glm::vec3(x, y, 0.0)) - (pi() / 2.0);
 
-        // apply velocity to translation
-        let Some(velocity) = world
-            .registry
-            .entity_manager
-            .get::<CVelocity2D>(&self.index)
-        else {
-            return FrameResult::None;
-        };
-
-        let velocity = velocity.clone();
-
-        if let Some(transform) = world
-            .registry
-            .entity_manager
-            .get_mut::<CTransform2D>(&self.index)
-        {
-            let direction = transform.direction();
-            transform.translate.x += velocity.x * world.delta * direction.x;
-            transform.translate.y += velocity.y * world.delta * direction.y;
-        }
-
-        FrameResult::None
+    if let Some(transform) = storage
+        .get_mut(StorageId::Entities)
+        .unwrap()
+        .get_mut::<CTransform2D>(&state.id)
+    {
+        transform.rotate = angle;
     }
 }
 
-struct ExhaustParticle {
-    index: Index,
-    alive: bool,
-    countdown: Countdown,
-}
+fn fly(state: ResMut<PlayerState>, storage: ResMut<StorageManager>) {
+    let (Some(state), Some(storage)) = (state, storage) else {
+        return;
+    };
 
-impl ExhaustParticle {
-    pub fn new(world: &mut World, ship_transform: &CTransform2D) -> Result<Self, QPError> {
-        let texture_id = world
-            .registry
-            .asset_manager
-            .get_asset_id("space_tilesheet")
-            .ok_or(QPError::SpriteTextureDoesntExist)?;
+    let Some(velocity) = storage
+        .get_mut(StorageId::Entities)
+        .unwrap()
+        .get_mut::<CVelocity2D>(&state.id)
+    else {
+        return;
+    };
 
-        let texture = world
-            .registry
-            .asset_manager
-            .get::<qp_assets::RTexture>(texture_id)
-            .ok_or(QPError::SpriteTextureDoesntExist)?;
+    if !state.thrust && velocity.x <= 0.0 && velocity.y <= 0.0 {
+        return;
+    }
 
-        let quad = CQuad {
-            width: 64.0,
-            height: 64.0,
-            center_x: 0.0,
-            center_y: 0.0,
+    let acceleration = state.delta
+        * match state.thrust {
+            true => ACCELERATION,
+            false => -ACCELERATION,
         };
 
-        let offset = ship_transform.direction() * 28.0;
-        let scale_factor = world.rand.random() + 1.0;
-        let index = world.registry.entity_manager.create((
-            CTag {
-                tag: "particle".to_string(),
+    velocity.x = (velocity.x + acceleration).clamp(0.0, MAX_VELOCITY);
+    velocity.y = (velocity.y + acceleration).clamp(0.0, MAX_VELOCITY);
+
+    // apply velocity to translation
+    let velocity = velocity.clone();
+    if let Some(transform) = storage
+        .get_mut(StorageId::Entities)
+        .unwrap()
+        .get_mut::<CTransform2D>(&state.id)
+    {
+        let direction = transform.direction();
+        transform.translate.x += velocity.x * state.delta * direction.x;
+        transform.translate.y += velocity.y * state.delta * direction.y;
+    }
+}
+
+struct ExhaustSystem;
+impl Plugin for ExhaustSystem {
+    fn build(&self, app: &mut App) -> QPResult<()> {
+        let mut interval = Interval::new(EXHAUST_INTERVAL);
+
+        app.add_system(
+            Update,
+            move |player_state: Res<PlayerState>,
+                  storage: ResMut<StorageManager>,
+                  rand: ResMut<Random>| {
+                let (Some(state), Some(storage), Some(rand)) = (player_state, storage, rand) else {
+                    return;
+                };
+
+                if state.thrust && interval.check() {
+                    let Some(transform) = storage
+                        .get(StorageId::Entities)
+                        .unwrap()
+                        .get::<CTransform2D>(&state.id)
+                    else {
+                        return;
+                    };
+
+                    let offset = transform.direction() * 28.0;
+                    let scale_factor = rand.random() * 0.8;
+                    let translate = transform.translate - offset;
+                    storage.get_mut(StorageId::Entities).unwrap().spawn((
+                        CParticle {
+                            countdown: Countdown::new(PARTICLE_LIFETIME),
+                        },
+                        sprite_bundle(SpriteMetadata {
+                            transform: CTransform2D {
+                                translate,
+                                rotate: rand.random() * 2.0 * glm::pi::<f32>(),
+                                scale: glm::vec2(scale_factor, scale_factor),
+                                ..CTransform2D::default()
+                            },
+                            color: Some(CColor(1.0, 0.7, 0.2, 1.0)),
+                            quad: CQuad {
+                                width: 32.0,
+                                height: 32.0,
+                                center_x: 0.0,
+                                center_y: 0.0,
+                            },
+                            ..SpriteMetadata::default()
+                        }),
+                    ));
+                }
             },
-            CTransform2D {
-                translate: ship_transform.translate - offset,
-                rotate: world.rand.random() * 2.0 * glm::pi::<f32>(),
-                scale: glm::vec2(scale_factor, scale_factor),
-                ..CTransform2D::default()
-            },
-            CSprite::new(
-                &quad,
-                Some(glm::vec4(1.0, 0.7, 0.2, 1.0)),
-                Some(TextureAtlas {
-                    texture: texture_id,
-                    texture_dims: texture.texture_dims,
-                    active_texture: glm::vec2(4.0, 2.0),
-                }),
-            ),
-        ));
+        );
 
-        Ok(Self {
-            index,
-            alive: true,
-            countdown: Countdown::new(0.4),
-        })
-    }
-}
-
-impl Particle for ExhaustParticle {
-    fn update(&mut self, world: &mut World) {
-        if !self.alive {
-            return;
-        }
-
-        let time_left = self.countdown.check();
-
-        if time_left == 0.0 {
-            self.alive = false;
-            world.registry.entity_manager.set_to_delete(self.index);
-
-            return;
-        }
-
-        let sprite = world
-            .registry
-            .entity_manager
-            .get_mut::<CSprite>(&self.index)
-            .unwrap();
-
-        sprite.color.w = time_left;
+        Ok(())
     }
 }

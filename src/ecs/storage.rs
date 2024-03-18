@@ -41,6 +41,12 @@ impl StorageManager {
         self.storage_units.get_mut(&storage)
     }
 
+    pub(crate) fn flush(&mut self) {
+        for storage in self.storage_units.values_mut() {
+            storage.flush()
+        }
+    }
+
     // pub fn query<C: Component + 'static>(&self, storage: StorageId) -> Option<&IndexedArray<C>> {
     //     self.storage_units.get(&storage)?.query::<C>()
     // }
@@ -208,6 +214,10 @@ impl Storage {
     // mutable iterator over all components of a given type
     pub fn iter_mut<C: Component + 'static>(&mut self) -> Option<IterMut<'_, C>> {
         Some(self.get_component_list_mut::<C>()?.iter_mut())
+    }
+
+    pub fn len(&self) -> usize {
+        self.allocator.borrow().valid_count()
     }
 }
 

@@ -1,19 +1,21 @@
 use crate::{
-    common::resources::{ClearColor, Window},
     platform::opengl::buffer::clear_buffers,
-    prelude::{App, QPError},
-    schedule::{Render, Update},
+    plugin::Plugin,
+    prelude::{qp_gfx::Window, App, QPError},
+    schedule::{Cleanup, Render, Update},
     QPResult,
 };
 
-use super::Plugin;
+use super::clear_color::ClearColor;
 
 pub struct MainLoopPlugin;
 
 impl Plugin for MainLoopPlugin {
     fn build(&self, app: &mut crate::prelude::App) -> QPResult<()> {
         Ok(app.set_runner(move |mut app: App| loop {
+            app.world.execute(Cleanup)?;
             app.world.execute(Update)?;
+
             if app.world.quitting {
                 return Ok(());
             }

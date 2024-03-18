@@ -16,7 +16,7 @@ pub enum AssetId {
     Id(u64),
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct AssetHandle<A: Asset> {
     pub id: AssetId,
 

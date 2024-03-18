@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::{
     assets::AssetServer,
-    common::resources::{Clock, StringInterner},
+    core::prelude::StringInterner,
     ecs::prelude::StorageManager,
     prelude::{QPError, ScheduleManager},
     resources::{Resource, ResourceManager},
@@ -23,16 +23,6 @@ impl World {
             resources: ResourceManager::new(),
             quitting: false,
         }
-    }
-
-    pub fn build(&mut self) -> QPResult<()> {
-        self.resources.insert(Clock::new())?;
-        self.resources.insert(StringInterner::new())?;
-        self.resources.insert(ScheduleManager::new())?;
-        self.resources.insert(StorageManager::new())?;
-        self.resources.insert(AssetServer::new())?;
-
-        Ok(())
     }
 
     pub(crate) fn execute(&mut self, schedule: impl ScheduleLabel) -> QPResult<()> {

@@ -1,17 +1,29 @@
 use crate::assets::Asset;
+use crate::assets::AssetServer;
 use crate::assets::Assets;
+use crate::core::main_loop::MainLoopPlugin;
+use crate::core::prelude::random::Random;
+use crate::core::prelude::Clock;
+use crate::core::prelude::StringInterner;
+use crate::input::InputPlugin;
 use crate::plugin::Plugin;
 use crate::plugin::Plugins;
+use crate::prelude::qp_gfx::WindowPlugin;
 use crate::prelude::IntoSystem;
+use crate::prelude::ResMut;
 use crate::prelude::StorageId;
+use crate::prelude::StorageManager;
 use crate::prelude::World;
 use crate::resources::Resource;
+use crate::schedule::Cleanup;
 use crate::schedule::ScheduleLabel;
+use crate::schedule::ScheduleManager;
 use crate::schedule::Startup;
 use crate::schedule::Update;
 use crate::QPResult;
 use egui::TextBuffer;
 use std::collections::HashSet;
+use std::time::Instant;
 
 pub struct App {
     pub world: World,
@@ -39,10 +51,6 @@ impl App {
 
     pub fn new() -> Self {
         let mut app = Self::empty();
-        // world must be build before adding the mandatory plugins
-        if let Err(e) = app.world.build() {
-            panic!("Failed to create the world: {}", e);
-        };
 
         app.add_plugins(Manadatory {});
 
@@ -165,13 +173,39 @@ fn run_once(mut app: App) -> QPResult<()> {
 struct Manadatory {}
 impl Plugin for Manadatory {
     fn build(&self, app: &mut App) -> QPResult<()> {
+        app.add_resource(Clock::new());
+        app.add_resource(StringInterner::new());
+        app.add_resource(ScheduleManager::new());
+        app.add_resource(StorageManager::new());
+        app.add_resource(AssetServer::new());
+        app.add_resource(Random::from_seed(Instant::now().elapsed().as_secs()));
+
         app.world
             .storage_manager_mut()
             .insert(StorageId::Entities)?;
 
         app.world.schedule_manager_mut().insert_schedule(Startup);
         app.world.schedule_manager_mut().insert_schedule(Update);
+        app.world.schedule_manager_mut().insert_schedule(Cleanup);
+
+        app.add_system(Cleanup, |storage: ResMut<StorageManager>| {
+            if let Some(storage) = storage {
+                storage.flush();
+            }
+        });
 
         Ok(())
     }
+}
+
+pub fn default_plugins(title: &str, width: u32, height: u32) -> impl Plugins {
+    (
+        WindowPlugin {
+            title: title.into(),
+            width,
+            height,
+        },
+        MainLoopPlugin,
+        InputPlugin,
+    )
 }

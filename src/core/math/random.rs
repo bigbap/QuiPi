@@ -1,5 +1,7 @@
+use crate::resources::{AsAny, Resource};
 use rand::{Rng, SeedableRng};
 
+#[derive(Resource, AsAny)]
 pub struct Random {
     rng: rand_chacha::ChaCha8Rng,
 }

@@ -5,6 +5,7 @@ use crate::{
     QPResult,
 };
 
+#[derive(Debug)]
 pub struct TextureCoords {
     pub top_left: glm::Vec2,
     pub top_right: glm::Vec2,
@@ -36,7 +37,7 @@ impl Texture {
         };
 
         let (x_dim, y_dim) = dims;
-        let (x_offset, y_offset) = ((loc.0 / x_dim) as f32, (loc.1 / y_dim) as f32);
+        let (x_offset, y_offset) = (loc.0 as f32 / x_dim as f32, loc.1 as f32 / y_dim as f32);
 
         TextureCoords {
             top_left: glm::vec2(

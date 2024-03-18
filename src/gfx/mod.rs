@@ -1,8 +1,8 @@
 // mod grid;
+pub mod render;
 mod shaders;
 mod sprite;
-
-pub mod render;
+pub mod window;
 
 pub mod prelude {
     use crate::{
@@ -20,6 +20,7 @@ pub mod prelude {
     pub use render::viewport::Viewport;
     pub use shaders::*;
     pub use sprite::*;
+    pub use window::*;
 
     pub fn init(window_api: &QPWindow) -> QPResult<()> {
         let _opengl = MyOpenGL::init(window_api)?;

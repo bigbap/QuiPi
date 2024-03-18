@@ -13,12 +13,14 @@ pub mod core;
 pub mod ecs;
 pub mod errors;
 pub mod gfx;
+pub mod input;
 pub mod physics;
 pub mod platform;
 pub mod plugin;
 pub mod resources;
 // pub mod schemas;
 pub mod assets;
+pub mod particle_system;
 pub mod schedule;
 
 // #[cfg(feature = "qp_editor")]
@@ -41,12 +43,16 @@ pub mod prelude {
     // pub use self::physics::prelude as qp_physics;
     // pub use self::schemas::prelude as qp_schemas;
 
+    pub use self::app::default_plugins;
     pub use self::app::App;
     pub use self::app::FrameResult;
+    pub use self::core::prelude::*;
     pub use self::errors::QPError;
+    pub use self::input::*;
     pub use self::qp_ecs::*;
     // pub use self::qp_gfx::Renderer;
     // pub use self::schemas::prelude::Schema;
+    pub use self::particle_system::*;
     pub use self::schedule::*;
 
     // #[cfg(feature = "qp_editor")]
@@ -57,9 +63,6 @@ pub mod prelude {
 
     // 3rd party - TODO: abstract this
     pub use sdl2::event::Event;
-
-    pub use qp_common::plugins::default_plugins;
-    pub use qp_common::resources::*;
 
     pub use plugin::*;
 }

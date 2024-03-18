@@ -101,3 +101,12 @@ impl ScheduleLabel for Render {
         Self::ID
     }
 }
+
+pub struct Cleanup;
+impl ScheduleLabel for Cleanup {
+    const ID: u64 = 0x4589090E7A6B3E03;
+
+    fn id(&self) -> u64 {
+        Self::ID
+    }
+}

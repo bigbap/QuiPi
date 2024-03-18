@@ -294,6 +294,10 @@ impl<T> IndexedArray<T> {
     pub fn iter_mut(&mut self) -> IterMut<'_, T> {
         IterMut::<T>::new(self.allocator.clone(), self.list.iter_mut().enumerate())
     }
+
+    pub fn len(&self) -> usize {
+        self.allocator.borrow().valid_count()
+    }
 }
 
 /// /////////////////////////////////

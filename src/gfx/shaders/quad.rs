@@ -1,6 +1,6 @@
 use crate::{
     assets::{AssetServer, Assets, Source},
-    common::resources::StringInterner,
+    core::prelude::StringInterner,
     gfx::render::assets::{Shader, ShaderLoader},
     plugin::Plugin,
     prelude::ResMut,
