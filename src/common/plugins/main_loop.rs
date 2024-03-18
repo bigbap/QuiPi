@@ -8,7 +8,7 @@ use crate::{
 
 use super::Plugin;
 
-pub struct MainLoopPlugin {}
+pub struct MainLoopPlugin;
 
 impl Plugin for MainLoopPlugin {
     fn build(&self, app: &mut crate::prelude::App) -> QPResult<()> {
@@ -22,7 +22,7 @@ impl Plugin for MainLoopPlugin {
                 .world
                 .resources
                 .get::<ClearColor>()
-                .unwrap_or(&ClearColor(0.5, 0.3, 0.3, 1.0));
+                .unwrap_or(&ClearColor(0.3, 0.3, 0.3, 1.0));
 
             clear_buffers(clr.as_tuple());
 

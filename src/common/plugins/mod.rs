@@ -13,7 +13,7 @@ pub fn default_plugins(title: &str, width: u32, height: u32) -> impl Plugins {
             width,
             height,
         },
-        MainLoopPlugin {},
-        InputPlugin {},
+        MainLoopPlugin,
+        InputPlugin,
     )
 }

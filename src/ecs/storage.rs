@@ -154,7 +154,7 @@ impl Storage {
     }
 
     // get a single component for a given entity
-    pub(crate) fn get<C: Component + PartialEq>(&self, entity: &Index) -> Option<&C> {
+    pub fn get<C: Component + PartialEq>(&self, entity: &Index) -> Option<&C> {
         if !self.allocator.borrow().validate(entity) {
             return None;
         }
@@ -169,7 +169,7 @@ impl Storage {
     }
 
     // get a single mutable component for a given entity
-    pub(crate) fn get_mut<C: Component + PartialEq + 'static>(
+    pub fn get_mut<C: Component + PartialEq + 'static>(
         &mut self,
         entity: &Index,
     ) -> Option<&mut C> {

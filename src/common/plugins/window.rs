@@ -1,4 +1,9 @@
-use crate::{common::resources::window::Window, prelude::qp_gfx::Viewport, QPResult};
+use crate::{
+    common::resources::window::Window,
+    prelude::{qp_gfx::Viewport, World},
+    schedule::Update,
+    QPResult,
+};
 
 use super::Plugin;
 

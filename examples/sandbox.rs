@@ -87,7 +87,7 @@ fn setup(
         })
         .unwrap();
 
-    asset_server.load(Quad).unwrap();
+    // asset_server.load(Quad).unwrap();
 
     let id = interner.intern(path);
     let texture_handle = textures.add(id, texture);
