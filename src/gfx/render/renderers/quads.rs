@@ -35,11 +35,9 @@ impl Plugin for RenderQuads {
 
         app.add_system(
             Render,
-            move |(storage, shaders, textures): (
-                Res<StorageManager>,
-                Res<Assets<Shader>>,
-                Res<Assets<Texture>>,
-            )| {
+            move |storage: Res<StorageManager>,
+                  shaders: Res<Assets<Shader>>,
+                  textures: Res<Assets<Texture>>| {
                 let (Some(storage), Some(shaders), Some(textures)) = (storage, shaders, textures)
                 else {
                     return;
@@ -123,11 +121,6 @@ pub fn vertices(
     let pos2 = mvp * positions[1];
     let pos3 = mvp * positions[2];
     let pos4 = mvp * positions[3];
-
-    // println!("pos1: {:?}", pos1);
-    // println!("pos2: {:?}", pos2);
-    // println!("pos3: {:?}", pos3);
-    // println!("pos4: {:?}", pos4);
 
     let coords = match texture {
         Some(tex) => tex.get_coords_at_loc((1, 1)),

@@ -38,62 +38,8 @@ struct MyPlugin;
 
 impl Plugin for MyPlugin {
     fn build(&self, app: &mut App) -> Result<(), QPError> {
-        app.add_system(
-            Startup,
-            |(asset_server, interner, storage_manager, textures): (
-                ResMut<'_, AssetServer>,
-                ResMut<'_, StringInterner>,
-                ResMut<'_, StorageManager>,
-                ResMut<'_, Assets<Texture>>,
-            )| {
-                let asset_server = asset_server.unwrap();
-                let interner = interner.unwrap();
-                let storage_manager = storage_manager.unwrap();
-                let textures = textures.unwrap();
-
-                let path = "assets/textures/Bubble.png";
-                let texture = asset_server
-                    .load(TextureLoader {
-                        source: Source::Path(path),
-                        dims: None,
-                    })
-                    .unwrap();
-
-                asset_server.load(Quad).unwrap();
-
-                let id = interner.intern(path);
-                let texture_handle = textures.add(id, texture);
-
-                storage_manager
-                    .get_mut(Entities)
-                    .unwrap()
-                    .spawn(sprite_bundle(SpriteMetadata {
-                        texture: Some(CTexture {
-                            handle: texture_handle,
-                            atlas_location: None,
-                        }),
-                        transform: CTransform2D {
-                            translate: glm::vec2(200.0, 100.0),
-                            ..CTransform2D::default()
-                        },
-                        color: Some(CColor(1.0, 0.1, 0.2, 1.0)),
-                        ..SpriteMetadata::default()
-                    }));
-            },
-        );
-
-        app.add_system(
-            Update,
-            move |(clock, input): (ResMut<'_, Clock>, Res<'_, Input>)| {
-                let clock = clock.unwrap();
-                let elapsed = clock.elapsed();
-
-                let input = input.unwrap();
-                if let Some(_) = input.peek(Keycode::W) {
-                    println!("pressing W at {}", elapsed);
-                }
-            },
-        );
+        app.add_system(Startup, setup);
+        app.add_system(Update, update);
 
         let viewport = app.world.resource::<Viewport>().unwrap();
         let viewport = viewport.get_dimensions();
@@ -121,3 +67,54 @@ impl Plugin for MyPlugin {
 
 #[derive(Debug, Component, PartialEq, Clone, Copy)]
 struct MyCamera;
+
+fn setup(
+    asset_server: ResMut<AssetServer>,
+    interner: ResMut<StringInterner>,
+    storage_manager: ResMut<StorageManager>,
+    textures: ResMut<Assets<Texture>>,
+) {
+    let asset_server = asset_server.unwrap();
+    let interner = interner.unwrap();
+    let storage_manager = storage_manager.unwrap();
+    let textures = textures.unwrap();
+
+    let path = "assets/textures/Bubble.png";
+    let texture = asset_server
+        .load(TextureLoader {
+            source: Source::Path(path),
+            dims: None,
+        })
+        .unwrap();
+
+    asset_server.load(Quad).unwrap();
+
+    let id = interner.intern(path);
+    let texture_handle = textures.add(id, texture);
+
+    storage_manager
+        .get_mut(Entities)
+        .unwrap()
+        .spawn(sprite_bundle(SpriteMetadata {
+            texture: Some(CTexture {
+                handle: texture_handle,
+                atlas_location: None,
+            }),
+            transform: CTransform2D {
+                translate: glm::vec2(200.0, 100.0),
+                ..CTransform2D::default()
+            },
+            color: Some(CColor(1.0, 0.1, 0.2, 1.0)),
+            ..SpriteMetadata::default()
+        }));
+}
+
+fn update(clock: ResMut<Clock>, input: Res<Input>) {
+    let clock = clock.unwrap();
+    let elapsed = clock.elapsed();
+
+    let input = input.unwrap();
+    if let Some(_) = input.peek(Keycode::W) {
+        println!("pressing W at {}", elapsed);
+    }
+}

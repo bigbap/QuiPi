@@ -52,56 +52,40 @@ pub trait SystemParamFunction<Marker>: 'static {
     fn run(&mut self, param_value: SystemParamItem<Self::Param>) -> Self::Out;
 }
 
-impl<Out, Func: 'static> SystemParamFunction<fn() -> Out> for Func
-where
-    for<'a> &'a mut Func: FnMut() -> Out + FnMut(SystemParamItem<()>) -> Out,
-    Out: 'static,
-{
-    type Out = Out;
-    type Param = ();
+macro_rules! tuple_impl {
+    ($($P: ident),*) => {
+        #[allow(non_snake_case)]
+        impl<Out, Func: 'static, $($P: SystemParam),*> SystemParamFunction<fn($($P,)*) -> Out> for Func
+        where
+            for<'a> &'a mut Func: FnMut($($P),*) -> Out + FnMut($(SystemParamItem<$P>),*) -> Out,
+            Out: 'static,
+        {
+            type Out = Out;
+            type Param = ($($P,)*);
 
-    fn run(&mut self, _param_value: SystemParamItem<Self::Param>) -> Self::Out {
-        fn call_inner<Out>(mut f: impl FnMut() -> Out, _: ()) -> Out {
-            f()
+            fn run(&mut self, param_value: SystemParamItem<($($P,)*)>) -> Self::Out {
+                fn call_inner<Out, $($P,)*>(mut f: impl FnMut($($P,)*) -> Out, $($P: $P,)*) -> Out {
+                    f($($P,)*)
+                }
+
+                let ($($P,)*) = param_value;
+                call_inner(self, $($P),*)
+            }
         }
-
-        call_inner(self, ())
     }
 }
 
-impl<Out, Func: 'static, P0: SystemParam> SystemParamFunction<fn(P0) -> Out> for Func
-where
-    for<'a> &'a mut Func: FnMut(P0) -> Out + FnMut(SystemParamItem<P0>) -> Out,
-    Out: 'static,
-{
-    type Out = Out;
-    type Param = P0;
-
-    fn run(&mut self, param_value: SystemParamItem<P0>) -> Self::Out {
-        fn call_inner<Out, P0>(mut f: impl FnMut(P0) -> Out, p0: P0) -> Out {
-            f(p0)
-        }
-
-        let p0 = param_value;
-        call_inner(self, p0)
-    }
-}
-
-// macro_rules! tuple_impl {
-//     ($Id: ident, $(($G: ident, $Res: ident)),*) => {
-//         #[allow(non_snake_case)]
-//         impl<$($G: Bundle),*> Bundle for ($($G,)*) {
-//             #[inline(always)]
-//             fn add_components(
-//                 self,
-//                 _component_map: &mut ComponentMap,
-//                 _allocator: Weak<RefCell<Allocator>>,
-//                 _entity: &Index
-//             ) {
-//                 let ($($G,)*) = self;
-
-//                 $($G.add_components(_component_map, _allocator.clone(), _entity);)*
-//             }
-//         }
-//     }
-// }
+tuple_impl!();
+tuple_impl!(P0);
+tuple_impl!(P0, P1);
+tuple_impl!(P0, P1, P2);
+tuple_impl!(P0, P1, P2, P3);
+tuple_impl!(P0, P1, P2, P3, P4);
+tuple_impl!(P0, P1, P2, P3, P4, P5);
+tuple_impl!(P0, P1, P2, P3, P4, P5, P6);
+tuple_impl!(P0, P1, P2, P3, P4, P5, P6, P7);
+tuple_impl!(P0, P1, P2, P3, P4, P5, P6, P7, P8);
+tuple_impl!(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9);
+tuple_impl!(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10);
+tuple_impl!(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11);
+tuple_impl!(P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12);

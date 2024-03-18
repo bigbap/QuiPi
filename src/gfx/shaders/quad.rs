@@ -16,11 +16,9 @@ impl Plugin for DefaultQuadShader {
     fn build(&self, app: &mut crate::prelude::App) -> crate::QPResult<()> {
         app.add_system(
             Startup,
-            |(asset_server, store, interner): (
-                ResMut<AssetServer>,
-                ResMut<Assets<Shader>>,
-                ResMut<StringInterner>,
-            )| {
+            |asset_server: ResMut<AssetServer>,
+             store: ResMut<Assets<Shader>>,
+             interner: ResMut<StringInterner>| {
                 if let (Some(server), Some(store), Some(interner)) = (asset_server, store, interner)
                 {
                     store.add(
