@@ -39,6 +39,7 @@ impl Timer {
     }
 }
 
+#[derive(Debug, PartialEq, Clone)]
 pub struct Interval {
     timer: Timer,
     interval: u128,

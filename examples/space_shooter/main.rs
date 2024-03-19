@@ -96,10 +96,11 @@ impl Plugin for SetupSpaceShooter {
 
         let game_state = GameState {
             texture_handle: None,
+            timer: Timer::new(),
+            delta: 0.0,
             score_interval: Interval::new(500),
             asteroid_spawn_interval: Interval::new(500),
             bullet_spawn_interval: Interval::new(500),
-            star_spawn_interval: Interval::new(500),
             game_over: false,
             firing: false,
         };
@@ -112,10 +113,11 @@ impl Plugin for SetupSpaceShooter {
 #[derive(Resource, AsAny)]
 struct GameState {
     pub texture_handle: Option<AssetHandle<Texture>>,
+    pub timer: Timer,
+    pub delta: f32,
     pub score_interval: Interval,
     pub asteroid_spawn_interval: Interval,
     pub bullet_spawn_interval: Interval,
-    pub star_spawn_interval: Interval,
     pub game_over: bool,
     pub firing: bool,
 }
@@ -143,7 +145,14 @@ fn setup(
     game_state.texture_handle = Some(textures.add(id, texture));
 }
 
-fn update() {}
+fn update(state: ResMut<GameState>) {
+    let Some(state) = state else {
+        return;
+    };
+
+    // ONLY UPDATE THE DELTA HERE
+    state.delta = state.timer.delta() as f32 / 1000.0;
+}
 
 // pub struct GameController {
 //     rand: Random,
@@ -403,185 +412,6 @@ fn update() {}
 //     }
 // }
 
-// pub struct Camera {
-//     ship: Index,
-//     id: u64,
-// }
-
-// impl Camera {
-//     pub fn new(world: &mut World, ship: Index) -> Result<Self, QPError> {
-//         let mut camera = RCamera2D::new(
-//             OrthographicCameraParams {
-//                 right: WIDTH as f32,
-//                 top: HEIGHT as f32,
-//                 ..OrthographicCameraParams::default()
-//             },
-//             1.0,
-//             CTransform2D::default(),
-//         );
-//         let transform = world
-//             .registry
-//             .entity_manager
-//             .get::<CTransform2D>(&ship)
-//             .unwrap();
-
-//         camera.follow(transform, 10.0, 0.6);
-
-//         let id = world.registry.asset_manager.load_asset("camera", camera)?;
-
-//         Ok(Self { ship, id })
-//     }
-// }
-
-// impl Controller for Camera {
-//     fn update(&mut self, world: &mut World) -> FrameResult {
-//         for event in world.events.iter() {
-//             match event {
-//                 Event::Window {
-//                     win_event: WindowEvent::Resized(w, h),
-//                     ..
-//                 } => {
-//                     world.viewport.set_dimensions(0, 0, *w, *h);
-
-//                     if let Some(camera) = world.registry.asset_manager.get_mut::<RCamera2D>(self.id)
-//                     {
-//                         camera.params.right = *w as f32;
-//                         camera.params.top = *h as f32;
-
-//                         camera.view = camera.calc_view_matrix();
-//                         camera.projection = camera.calc_projection_matrix();
-//                     }
-//                 }
-//                 _ => (),
-//             };
-//         }
-
-//         let Some(transform) = world
-//             .registry
-//             .entity_manager
-//             .get::<CTransform2D>(&self.ship)
-//         else {
-//             return FrameResult::None;
-//         };
-//         let Some(camera) = world.registry.asset_manager.get_mut::<RCamera2D>(self.id) else {
-//             return FrameResult::None;
-//         };
-
-//         camera.follow(transform, 50.0, 0.5);
-
-//         FrameResult::None
-//     }
-// }
-
-// pub struct Bullet {
-//     index: Index,
-//     countdown: Countdown,
-//     alive: bool,
-// }
-
-// impl Bullet {
-//     pub fn new(
-//         registry: &mut GlobalRegistry,
-//         position: glm::Vec2,
-//         direction: glm::Vec2,
-//         angle: f32,
-//     ) -> Result<Self, QPError> {
-//         let texture_id = registry
-//             .asset_manager
-//             .get_asset_id("space_tilesheet")
-//             .ok_or(QPError::SpriteTextureDoesntExist)?;
-
-//         let texture = registry
-//             .asset_manager
-//             .get::<qp_assets::RTexture>(texture_id)
-//             .ok_or(QPError::SpriteTextureDoesntExist)?;
-
-//         let quad = CQuad {
-//             width: 64.0,
-//             height: 64.0,
-//             center_x: 0.0,
-//             center_y: 0.0,
-//         };
-
-//         let speed = 700.0;
-
-//         let index = registry.entity_manager.create((
-//             CTag {
-//                 tag: "bullet".to_string(),
-//             },
-//             CTransform2D {
-//                 translate: position,
-//                 rotate: angle,
-//                 scale: glm::vec2(0.7, 0.7),
-//                 ..CTransform2D::default()
-//             },
-//             CVelocity2D {
-//                 x: speed * direction.x,
-//                 y: speed * direction.y,
-//             },
-//             CSprite::new(
-//                 &quad,
-//                 Some(glm::vec4(0.0, 0.7, 1.0, 1.0)),
-//                 Some(TextureAtlas {
-//                     texture: texture_id,
-//                     texture_dims: texture.texture_dims,
-//                     active_texture: glm::vec2(4.0, 2.0),
-//                 }),
-//             ),
-//         ));
-
-//         Ok(Self {
-//             index,
-//             countdown: Countdown::new(1.5),
-//             alive: true,
-//         })
-//     }
-
-//     pub fn destroy(&mut self, registry: &mut GlobalRegistry) {
-//         registry.entity_manager.set_to_delete(self.index);
-//         self.alive = false
-//     }
-
-//     pub fn update(&mut self, world: &mut World) -> bool {
-//         let time_left = self.countdown.check();
-
-//         if time_left == 0.0 {
-//             self.destroy(&mut world.registry);
-//             return false;
-//         }
-
-//         let Some(velocity) = world
-//             .registry
-//             .entity_manager
-//             .get::<CVelocity2D>(&self.index)
-//         else {
-//             return false;
-//         };
-
-//         let velocity = glm::vec2(velocity.x * world.delta, velocity.y * world.delta);
-
-//         if let Some(transform) = world
-//             .registry
-//             .entity_manager
-//             .get_mut::<CTransform2D>(&self.index)
-//         {
-//             transform.translate += velocity
-//         } else {
-//             return false;
-//         }
-
-//         let sprite = world
-//             .registry
-//             .entity_manager
-//             .get_mut::<CSprite>(&self.index)
-//             .unwrap();
-
-//         sprite.color.w = time_left;
-
-//         false
-//     }
-// }
-
 // struct Asteroid {
 //     index: Index,
 //     rotation_step: f32,
@@ -716,102 +546,6 @@ fn update() {}
 
 //         sprite.color.y = time_left / self.countdown.countdown;
 //         sprite.color.z = time_left / self.countdown.countdown;
-//         sprite.color.w = time_left / self.countdown.countdown;
-
-//         FrameResult::None
-//     }
-// }
-
-// struct Star {
-//     index: Index,
-//     alive: bool,
-//     countdown: Countdown,
-// }
-
-// impl Star {
-//     pub fn new(world: &mut World, ship_pos: glm::Vec2) -> Result<Self, QPError> {
-//         let (_x, _y, width, height) = world.viewport.get_dimensions();
-//         let x_pos = world
-//             .rand
-//             .range(ship_pos.x as i32 - width, ship_pos.x as i32 + width) as f32;
-
-//         let y_pos = world
-//             .rand
-//             .range(ship_pos.y as i32 - height, ship_pos.y as i32 + height)
-//             as f32;
-
-//         let texture_id = world
-//             .registry
-//             .asset_manager
-//             .get_asset_id("space_tilesheet")
-//             .ok_or(QPError::SpriteTextureDoesntExist)?;
-
-//         let texture = world
-//             .registry
-//             .asset_manager
-//             .get::<qp_assets::RTexture>(texture_id)
-//             .ok_or(QPError::SpriteTextureDoesntExist)?;
-
-//         let quad = CQuad {
-//             width: 32.0,
-//             height: 32.0,
-//             ..CQuad::default()
-//         };
-
-//         let index = world.registry.entity_manager.create((
-//             CTag {
-//                 tag: "asteroid".to_string(),
-//             },
-//             CTransform2D {
-//                 translate: glm::vec2(x_pos, y_pos),
-//                 scale: glm::vec2(1.0, 1.0),
-//                 ..CTransform2D::default()
-//             },
-//             CSprite::new(
-//                 &quad,
-//                 Some(glm::vec4(1.0, 1.0, 0.8, 1.0)),
-//                 Some(TextureAtlas {
-//                     texture: texture_id,
-//                     texture_dims: texture.texture_dims,
-//                     active_texture: glm::vec2(
-//                         match world.rand.binary(0.7) {
-//                             true => 7.0,
-//                             false => 6.0,
-//                         },
-//                         2.0,
-//                     ),
-//                 }),
-//             ),
-//         ));
-
-//         Ok(Self {
-//             index,
-//             countdown: Countdown::new(3.0),
-//             alive: true,
-//         })
-//     }
-// }
-
-// impl Controller for Star {
-//     fn update(&mut self, world: &mut World) -> FrameResult {
-//         if !self.alive {
-//             return FrameResult::None;
-//         }
-
-//         let time_left = self.countdown.check();
-
-//         if time_left == 0.0 {
-//             world.registry.entity_manager.set_to_delete(self.index);
-
-//             return FrameResult::None;
-//         }
-
-//         let sprite = world
-//             .registry
-//             .entity_manager
-//             .get_mut::<CSprite>(&self.index)
-//             .unwrap();
-
 //         sprite.color.w = time_left / self.countdown.countdown;
 
 //         FrameResult::None

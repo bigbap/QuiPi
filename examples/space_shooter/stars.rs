@@ -56,7 +56,7 @@ fn setup(world: &mut World, game_state: Res<GameState>) {
             interval: Interval::new(STAR_INTERVAL),
             texture_handle,
         })
-        .expect("failed to add ship resource");
+        .expect("failed to add stars resource");
 }
 
 fn spawn(
