@@ -19,8 +19,8 @@ const ACCELERATION: f32 = 100.0;
 const MAX_VELOCITY: f32 = 500.0;
 const EXHAUST_INTERVAL: u128 = 5;
 const PARTICLE_LIFETIME: u128 = 250;
-const BULLET_SPAWN_INTERVAL: u128 = 50;
-const BULLET_LIFETIME: u128 = 1000;
+const BULLET_SPAWN_INTERVAL: u128 = 500;
+const BULLET_LIFETIME: u128 = 1500;
 const BULLET_SPEED: f32 = 700.0;
 
 pub struct Ship;
@@ -29,8 +29,8 @@ impl Plugin for Ship {
         app.add_system(Startup, setup)
             .add_system(Update, handle_input)
             .add_system(Update, fly)
-            .add_plugins(Bullets)
-            .add_plugins(ExhaustSystem);
+            .add_plugins(Bullets);
+        // .add_plugins(ExhaustSystem);
 
         Ok(())
     }
@@ -312,7 +312,7 @@ fn single_spawn(
         sprite_bundle(SpriteMetadata {
             texture: Some(CTexture {
                 handle: state.texture_handle.clone(),
-                atlas_location: Some((4, 2)),
+                atlas_location: Some((1, 5)),
             }),
             transform: CTransform2D {
                 translate: position,
@@ -345,23 +345,29 @@ fn update_bullets(storage_manager: ResMut<StorageManager>, game_state: Res<GameS
         _ => return,
     };
 
-    let mut to_despawn: Vec<Index> = vec![];
+    println!("start");
+
+    let mut to_despawn: Vec<(Index, u128)> = vec![];
     let mut to_change: Vec<(Index, u128)> = vec![];
     for bullet in iterator {
         if bullet.is_none() {
             continue;
         }
 
+        println!("bullet");
+
         let (entity, bullet) = bullet.unwrap();
         let time_left = bullet.countdown.check();
 
         if time_left == 0 {
-            to_despawn.push(entity);
+            to_despawn.push((entity, time_left));
             continue;
         }
 
         to_change.push((entity, time_left));
     }
+
+    // println!("iterator: {}", to_despawn.len());
 
     for (entity, time_left) in to_change.iter() {
         let Some(velocity) = entities.get::<CVelocity2D>(&entity) else {
@@ -380,7 +386,8 @@ fn update_bullets(storage_manager: ResMut<StorageManager>, game_state: Res<GameS
             color.3 = *time_left as f32 / 1000.0;
         }
     }
-    for entity in to_despawn.iter() {
+    for (entity, time_left) in to_despawn.iter() {
+        // println!("{}", time_left);
         entities.despwan(*entity);
     }
 }

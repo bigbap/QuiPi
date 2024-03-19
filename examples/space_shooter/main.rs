@@ -145,13 +145,16 @@ fn setup(
     game_state.texture_handle = Some(textures.add(id, texture));
 }
 
-fn update(state: ResMut<GameState>) {
-    let Some(state) = state else {
+fn update(state: ResMut<GameState>, storage: Res<StorageManager>) {
+    let (Some(state), Some(storage)) = (state, storage) else {
         return;
     };
 
     // ONLY UPDATE THE DELTA HERE
     state.delta = state.timer.delta() as f32 / 1000.0;
+
+    let entities = storage.get(StorageId::Entities).unwrap().len();
+    // println!("entities: {}", entities);
 }
 
 // pub struct GameController {

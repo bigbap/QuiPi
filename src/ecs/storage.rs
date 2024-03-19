@@ -123,6 +123,7 @@ impl Storage {
     }
 
     pub fn despwan(&mut self, entity: Index) {
+        // println!("despawning {:?}", entity);
         self.to_delete.push(entity);
     }
 

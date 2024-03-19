@@ -1,5 +1,5 @@
 use core::fmt;
-use std::{cell::RefCell, iter, rc::Rc, slice};
+use std::{any::TypeId, cell::RefCell, iter, rc::Rc, slice};
 
 use serde::{Deserialize, Serialize};
 
@@ -191,22 +191,22 @@ impl Allocator {
 ///
 /// ///////////////////////////////
 #[derive(Debug)]
-pub struct IndexedArray<T> {
+pub struct IndexedArray {
     allocator: Rc<RefCell<Allocator>>,
     list: Vec<Option<Entry<T>>>,
 }
 
 #[derive(Debug, Default)]
-pub struct Entry<T> {
+pub struct Entry<T: Component> {
     value: T,
     version: u64,
 }
 
-impl<T> IndexedArray<T> {
-    pub(super) fn new(allocator: Rc<RefCell<Allocator>>) -> Self {
+impl IndexedArray {
+    pub(super) fn new<C: Component>(allocator: Rc<RefCell<Allocator>>) -> Self {
         Self {
             allocator,
-            list: Vec::<Option<Entry<T>>>::with_capacity(DEFAULT_CAPACITY),
+            list: Vec::<Option<Entry<C>>>::with_capacity(DEFAULT_CAPACITY),
         }
     }
 
@@ -306,13 +306,13 @@ impl<T> IndexedArray<T> {
 ///
 /// /////////////////////////////////
 /// #[derive(Debug)]
-pub struct Iter<'a, T: 'a> {
+pub struct Iter<'a, T: Component + 'a> {
     remaining: usize,
     allocator: Rc<RefCell<Allocator>>,
     inner: iter::Enumerate<slice::Iter<'a, Option<Entry<T>>>>,
 }
 
-impl<'a, T> Iter<'a, T> {
+impl<'a, T: Component> Iter<'a, T> {
     pub fn new(
         allocator: Rc<RefCell<Allocator>>,
         inner: iter::Enumerate<slice::Iter<'a, Option<Entry<T>>>>,
@@ -325,7 +325,7 @@ impl<'a, T> Iter<'a, T> {
     }
 }
 
-impl<'a, T> Iterator for Iter<'a, T> {
+impl<'a, T: Component> Iterator for Iter<'a, T> {
     type Item = Option<(Index, &'a T)>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -341,6 +341,10 @@ impl<'a, T> Iterator for Iter<'a, T> {
             return Some(None);
         };
 
+        if !self.allocator.borrow().is_allocated(&index) {
+            return Some(None);
+        }
+
         Some(match entry {
             Some(entry) => Some((index, &entry.value)),
             _ => None,
@@ -353,13 +357,13 @@ impl<'a, T> Iterator for Iter<'a, T> {
 /// mutable Iterator for indexed array
 ///
 /// /////////////////////////////////
-pub struct IterMut<'a, T: 'a> {
+pub struct IterMut<'a, T: Component + 'a> {
     remaining: usize,
     allocator: Rc<RefCell<Allocator>>,
     inner: iter::Enumerate<slice::IterMut<'a, Option<Entry<T>>>>,
 }
 
-impl<'a, T> IterMut<'a, T> {
+impl<'a, T: Component> IterMut<'a, T> {
     pub fn new(
         allocator: Rc<RefCell<Allocator>>,
         inner: iter::Enumerate<slice::IterMut<'a, Option<Entry<T>>>>,
@@ -387,6 +391,10 @@ impl<'a, T: Component> Iterator for IterMut<'a, T> {
         let Some(index) = self.allocator.borrow().index_at(i) else {
             return Some(None);
         };
+
+        if !self.allocator.borrow().is_allocated(&index) {
+            return Some(None);
+        }
 
         Some(match entry {
             Some(entry) => Some((index, &mut entry.value)),

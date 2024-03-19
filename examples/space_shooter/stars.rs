@@ -22,7 +22,8 @@ use quipi::{
 
 use crate::{ship::PlayerState, GameState};
 
-const STAR_INTERVAL: u128 = 1;
+const STAR_INTERVAL: u128 = 10;
+const STARS_TO_SPAWN: u32 = 1;
 const PARTICLE_LIFETIME: u128 = 1000;
 
 pub struct Stars;
@@ -90,7 +91,7 @@ fn spawn(
 
     let dims = viewport.get_dimensions();
 
-    for _ in 0..10 {
+    for _ in 0..STARS_TO_SPAWN {
         single_spawn(&state, &ship_pos, rand, &dims, storage);
     }
 }
