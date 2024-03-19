@@ -23,8 +23,8 @@ use quipi::{
 use crate::{ship::PlayerState, GameState};
 
 const STAR_INTERVAL: u128 = 10;
-const STARS_TO_SPAWN: u32 = 1;
-const PARTICLE_LIFETIME: u128 = 1000;
+const STARS_TO_SPAWN: u32 = 2;
+const PARTICLE_LIFETIME: u128 = 2000;
 
 pub struct Stars;
 
@@ -72,9 +72,6 @@ fn spawn(
     else {
         return;
     };
-
-    // let count = storage.get(StorageId::Entities).unwrap().len();
-    // println!("valid entity count: {}", count);
 
     if !state.interval.check() {
         return;

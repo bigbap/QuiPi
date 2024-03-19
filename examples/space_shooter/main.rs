@@ -2,10 +2,12 @@ extern crate nalgebra_glm as glm;
 extern crate quipi;
 
 // mod particle_system;
+mod asteroid;
 mod camera;
 mod ship;
 mod stars;
 
+use asteroid::Asteroids;
 use camera::Camera;
 pub use quipi::prelude::*;
 use quipi::{
@@ -30,8 +32,6 @@ use quipi::{
     QPResult,
 };
 
-use qp_common::components::*;
-use sdl2::{event::WindowEvent, keyboard::Keycode};
 use ship::Ship;
 use stars::Stars;
 
@@ -85,6 +85,7 @@ pub fn run() -> Result<(), QPError> {
         .add_plugins(Camera)
         .add_plugins(Ship)
         .add_plugins(Stars)
+        .add_plugins(Asteroids)
         .run()
 }
 

@@ -18,9 +18,9 @@ use crate::{camera::CameraState, GameState};
 const ACCELERATION: f32 = 100.0;
 const MAX_VELOCITY: f32 = 500.0;
 const EXHAUST_INTERVAL: u128 = 5;
-const PARTICLE_LIFETIME: u128 = 250;
-const BULLET_SPAWN_INTERVAL: u128 = 500;
-const BULLET_LIFETIME: u128 = 1500;
+const EXHAUST_PARTICLE_LIFETIME: u128 = 250;
+const BULLET_SPAWN_INTERVAL: u128 = 200;
+const BULLET_LIFETIME: u128 = 1300;
 const BULLET_SPEED: f32 = 700.0;
 
 pub struct Ship;
@@ -29,8 +29,8 @@ impl Plugin for Ship {
         app.add_system(Startup, setup)
             .add_system(Update, handle_input)
             .add_system(Update, fly)
-            .add_plugins(Bullets);
-        // .add_plugins(ExhaustSystem);
+            .add_plugins(Bullets)
+            .add_plugins(ExhaustSystem);
 
         Ok(())
     }
@@ -196,11 +196,11 @@ impl Plugin for ExhaustSystem {
                     };
 
                     let offset = transform.direction() * 28.0;
-                    let scale_factor = rand.random() * 0.8;
+                    let scale_factor = rand.random() * 0.6;
                     let translate = transform.translate - offset;
                     storage.get_mut(StorageId::Entities).unwrap().spawn((
                         CParticle {
-                            countdown: Countdown::new(PARTICLE_LIFETIME),
+                            countdown: Countdown::new(EXHAUST_PARTICLE_LIFETIME),
                         },
                         sprite_bundle(SpriteMetadata {
                             transform: CTransform2D {
@@ -245,9 +245,7 @@ struct BulletsState {
 }
 
 #[derive(Debug, Component, PartialEq, Clone)]
-struct CBullet {
-    pub countdown: Countdown,
-}
+struct CBullet;
 
 fn setup_bullets(world: &mut World, game_state: Res<GameState>) {
     let texture_handle = game_state
@@ -302,7 +300,8 @@ fn single_spawn(
     angle: f32,
 ) {
     storage.spawn((
-        CBullet {
+        CBullet,
+        CParticle {
             countdown: Countdown::new(BULLET_LIFETIME),
         },
         CVelocity2D {
@@ -317,7 +316,7 @@ fn single_spawn(
             transform: CTransform2D {
                 translate: position,
                 rotate: angle,
-                scale: glm::vec2(0.7, 0.7),
+                scale: glm::vec2(0.5, 0.5),
                 ..CTransform2D::default()
             },
             color: Some(CColor(0.0, 0.7, 1.0, 1.0)),
@@ -345,31 +344,18 @@ fn update_bullets(storage_manager: ResMut<StorageManager>, game_state: Res<GameS
         _ => return,
     };
 
-    println!("start");
-
-    let mut to_despawn: Vec<(Index, u128)> = vec![];
-    let mut to_change: Vec<(Index, u128)> = vec![];
+    let mut to_change: Vec<Index> = vec![];
     for bullet in iterator {
         if bullet.is_none() {
             continue;
         }
 
-        println!("bullet");
+        let (entity, _) = bullet.unwrap();
 
-        let (entity, bullet) = bullet.unwrap();
-        let time_left = bullet.countdown.check();
-
-        if time_left == 0 {
-            to_despawn.push((entity, time_left));
-            continue;
-        }
-
-        to_change.push((entity, time_left));
+        to_change.push(entity);
     }
 
-    // println!("iterator: {}", to_despawn.len());
-
-    for (entity, time_left) in to_change.iter() {
+    for entity in to_change.iter() {
         let Some(velocity) = entities.get::<CVelocity2D>(&entity) else {
             continue;
         };
@@ -381,13 +367,5 @@ fn update_bullets(storage_manager: ResMut<StorageManager>, game_state: Res<GameS
         } else {
             continue;
         }
-
-        if let Some(color) = entities.get_mut::<CColor>(&entity) {
-            color.3 = *time_left as f32 / 1000.0;
-        }
-    }
-    for (entity, time_left) in to_despawn.iter() {
-        // println!("{}", time_left);
-        entities.despwan(*entity);
     }
 }

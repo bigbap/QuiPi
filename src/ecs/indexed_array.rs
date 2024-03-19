@@ -191,26 +191,26 @@ impl Allocator {
 ///
 /// ///////////////////////////////
 #[derive(Debug)]
-pub struct IndexedArray {
+pub struct IndexedArray<C: Component> {
     allocator: Rc<RefCell<Allocator>>,
-    list: Vec<Option<Entry<T>>>,
+    list: Vec<Option<Entry<C>>>,
 }
 
 #[derive(Debug, Default)]
-pub struct Entry<T: Component> {
-    value: T,
+pub struct Entry<C: Component> {
+    value: C,
     version: u64,
 }
 
-impl IndexedArray {
-    pub(super) fn new<C: Component>(allocator: Rc<RefCell<Allocator>>) -> Self {
+impl<C: Component> IndexedArray<C> {
+    pub(super) fn new(allocator: Rc<RefCell<Allocator>>) -> Self {
         Self {
             allocator,
             list: Vec::<Option<Entry<C>>>::with_capacity(DEFAULT_CAPACITY),
         }
     }
 
-    pub(super) fn set(&mut self, index: &Index, value: T) {
+    pub(super) fn set(&mut self, index: &Index, value: C) {
         let i = index.index;
 
         if i >= self.list.capacity() {
@@ -238,7 +238,7 @@ impl IndexedArray {
         self.list[i] = None;
     }
 
-    pub(super) fn get(&self, index: &Index) -> Option<&T> {
+    pub(super) fn get(&self, index: &Index) -> Option<&C> {
         match self.list.get(index.index) {
             Some(Some(entry)) => {
                 if entry.version == index.version {
@@ -251,7 +251,7 @@ impl IndexedArray {
         }
     }
 
-    pub(super) fn get_mut(&mut self, index: &Index) -> Option<&mut T> {
+    pub(super) fn get_mut(&mut self, index: &Index) -> Option<&mut C> {
         match self.list.get_mut(index.index) {
             None => None,
             Some(None) => None,
@@ -287,12 +287,12 @@ impl IndexedArray {
             .collect()
     }
 
-    pub fn iter(&self) -> Iter<'_, T> {
-        Iter::<T>::new(self.allocator.clone(), self.list.iter().enumerate())
+    pub fn iter(&self) -> Iter<'_, C> {
+        Iter::<C>::new(self.allocator.clone(), self.list.iter().enumerate())
     }
 
-    pub fn iter_mut(&mut self) -> IterMut<'_, T> {
-        IterMut::<T>::new(self.allocator.clone(), self.list.iter_mut().enumerate())
+    pub fn iter_mut(&mut self) -> IterMut<'_, C> {
+        IterMut::<C>::new(self.allocator.clone(), self.list.iter_mut().enumerate())
     }
 
     pub fn len(&self) -> usize {
@@ -306,16 +306,16 @@ impl IndexedArray {
 ///
 /// /////////////////////////////////
 /// #[derive(Debug)]
-pub struct Iter<'a, T: Component + 'a> {
+pub struct Iter<'a, C: Component + 'a> {
     remaining: usize,
     allocator: Rc<RefCell<Allocator>>,
-    inner: iter::Enumerate<slice::Iter<'a, Option<Entry<T>>>>,
+    inner: iter::Enumerate<slice::Iter<'a, Option<Entry<C>>>>,
 }
 
-impl<'a, T: Component> Iter<'a, T> {
+impl<'a, C: Component> Iter<'a, C> {
     pub fn new(
         allocator: Rc<RefCell<Allocator>>,
-        inner: iter::Enumerate<slice::Iter<'a, Option<Entry<T>>>>,
+        inner: iter::Enumerate<slice::Iter<'a, Option<Entry<C>>>>,
     ) -> Self {
         Self {
             remaining: inner.len(),
@@ -325,8 +325,8 @@ impl<'a, T: Component> Iter<'a, T> {
     }
 }
 
-impl<'a, T: Component> Iterator for Iter<'a, T> {
-    type Item = Option<(Index, &'a T)>;
+impl<'a, C: Component> Iterator for Iter<'a, C> {
+    type Item = Option<(Index, &'a C)>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let Some((i, entry)) = self.inner.next() else {
@@ -346,7 +346,13 @@ impl<'a, T: Component> Iterator for Iter<'a, T> {
         }
 
         Some(match entry {
-            Some(entry) => Some((index, &entry.value)),
+            Some(entry) => {
+                if entry.version == index.version {
+                    Some((index, &entry.value))
+                } else {
+                    None
+                }
+            }
             _ => None,
         })
     }
@@ -357,16 +363,16 @@ impl<'a, T: Component> Iterator for Iter<'a, T> {
 /// mutable Iterator for indexed array
 ///
 /// /////////////////////////////////
-pub struct IterMut<'a, T: Component + 'a> {
+pub struct IterMut<'a, C: Component + 'a> {
     remaining: usize,
     allocator: Rc<RefCell<Allocator>>,
-    inner: iter::Enumerate<slice::IterMut<'a, Option<Entry<T>>>>,
+    inner: iter::Enumerate<slice::IterMut<'a, Option<Entry<C>>>>,
 }
 
-impl<'a, T: Component> IterMut<'a, T> {
+impl<'a, C: Component> IterMut<'a, C> {
     pub fn new(
         allocator: Rc<RefCell<Allocator>>,
-        inner: iter::Enumerate<slice::IterMut<'a, Option<Entry<T>>>>,
+        inner: iter::Enumerate<slice::IterMut<'a, Option<Entry<C>>>>,
     ) -> Self {
         Self {
             remaining: inner.len(),
@@ -376,8 +382,8 @@ impl<'a, T: Component> IterMut<'a, T> {
     }
 }
 
-impl<'a, T: Component> Iterator for IterMut<'a, T> {
-    type Item = Option<(Index, &'a mut T)>;
+impl<'a, C: Component> Iterator for IterMut<'a, C> {
+    type Item = Option<(Index, &'a mut C)>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let Some((i, entry)) = self.inner.next() else {
@@ -397,7 +403,13 @@ impl<'a, T: Component> Iterator for IterMut<'a, T> {
         }
 
         Some(match entry {
-            Some(entry) => Some((index, &mut entry.value)),
+            Some(entry) => {
+                if entry.version == index.version {
+                    Some((index, &mut entry.value))
+                } else {
+                    None
+                }
+            }
             _ => None,
         })
     }
