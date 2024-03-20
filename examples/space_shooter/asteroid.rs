@@ -2,7 +2,10 @@ use quipi::{
     assets::AssetHandle,
     common::components::components::{CColor, CQuad, CTexture, CTransform2D, CVelocity2D},
     core::{
-        math::{random::Random, trig::rotate2d},
+        math::{
+            random::Random,
+            trig::{magnitude2d_squared, rotate2d},
+        },
         time::{Countdown, Interval},
     },
     gfx::{
@@ -199,7 +202,11 @@ fn update(storage: ResMut<StorageManager>, game_state: Res<GameState>) {
     }
 }
 
-fn check_collision() {}
+fn check_collision(asteroid: CTransform2D, obj: CTransform2D, obj_radius: f32) -> bool {
+    let offset = 25.0;
+    let threshold = obj_radius + (asteroid.scale.x * 16.0) - offset;
+    magnitude2d_squared(&asteroid.translate, &obj.translate) < threshold.powf(2.0)
+}
 
 #[derive(Debug, Component, PartialEq, Clone)]
 struct CAsteroid {
