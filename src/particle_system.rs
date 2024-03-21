@@ -21,7 +21,7 @@ impl Plugin for ParticleSystem {
             };
 
             let mut to_despawn: Vec<Index> = vec![];
-            let mut to_change: Vec<(Index, u128)> = vec![];
+            let mut to_change: Vec<(Index, u128, u128)> = vec![];
             for particle in particles.iter_mut() {
                 if particle.is_none() {
                     continue;
@@ -29,6 +29,7 @@ impl Plugin for ParticleSystem {
 
                 let (entity, particle) = particle.unwrap();
                 let time_left = particle.countdown.check();
+                let total_time = particle.countdown.countdown;
 
                 if time_left == 0 {
                     to_despawn.push(entity);
@@ -36,12 +37,12 @@ impl Plugin for ParticleSystem {
                     continue;
                 }
 
-                to_change.push((entity, time_left));
+                to_change.push((entity, time_left, total_time));
             }
 
-            for (entity, time_left) in to_change.iter() {
+            for (entity, time_left, total_time) in to_change.iter() {
                 if let Some(color) = entities.get_mut::<CColor>(&entity) {
-                    color.3 = *time_left as f32 / 1000.0;
+                    color.3 = *time_left as f32 / *total_time as f32;
                 }
             }
             for entity in to_despawn.iter() {

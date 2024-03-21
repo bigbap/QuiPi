@@ -245,7 +245,7 @@ struct BulletsState {
 }
 
 #[derive(Debug, Component, PartialEq, Clone)]
-struct CBullet;
+pub struct CBullet;
 
 fn setup_bullets(world: &mut World, game_state: Res<GameState>) {
     let texture_handle = game_state

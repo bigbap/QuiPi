@@ -20,10 +20,13 @@ use quipi::{
     QPResult,
 };
 
-use crate::{ship::PlayerState, GameState};
+use crate::{
+    ship::{CBullet, PlayerState},
+    GameState,
+};
 
-const ASTEROID_INTERVAL: u128 = 50;
-const ASTEROIDS_TO_SPAWN: u32 = 2;
+const ASTEROID_INTERVAL: u128 = 300;
+const ASTEROIDS_TO_SPAWN: u32 = 1;
 const ASTEROID_LIFETIME: u128 = 5000;
 
 pub struct Asteroids;
@@ -167,23 +170,75 @@ fn update(storage: ResMut<StorageManager>, game_state: Res<GameState>) {
         _ => return,
     };
 
+    let bullets: Vec<(Index, &CBullet)> =
+        match storage.get(StorageId::Entities).unwrap().iter::<CBullet>() {
+            Some(iter) => iter.filter_map(|b| b).collect(),
+            _ => vec![],
+        };
+
+    let asteroids: Vec<(Index, &CVelocity2D)> = iterator.filter_map(|b| b).collect();
+
+    let mut to_delete: Vec<Index> = vec![];
     let mut to_change: Vec<(Index, f32, f32, f32)> = vec![];
-    for asteroid in iterator {
-        if asteroid.is_none() {
+    for asteroid in asteroids {
+        let (asteroid, velocity) = asteroid;
+
+        if storage
+            .get(StorageId::Entities)
+            .unwrap()
+            .get::<CAsteroid>(&asteroid)
+            .is_none()
+        {
             continue;
         }
 
-        let (entity, velocity) = asteroid.unwrap();
-
-        let Some(asteroid_cmp) = storage
+        let Some(asteroid_transform) = storage
             .get(StorageId::Entities)
             .unwrap()
-            .get::<CAsteroid>(&entity)
+            .get::<CTransform2D>(&asteroid)
         else {
             continue;
         };
 
-        to_change.push((entity, velocity.x, velocity.y, asteroid_cmp.rotation_step));
+        let mut deleting = false;
+        for (bullet, _) in bullets.iter() {
+            let Some(bullet_transform) = storage
+                .get(StorageId::Entities)
+                .unwrap()
+                .get::<CTransform2D>(&bullet)
+            else {
+                continue;
+            };
+
+            if check_collision(asteroid_transform, bullet_transform, 16.0) {
+                to_delete.push(bullet.clone());
+                to_delete.push(asteroid.clone());
+                deleting = true;
+
+                break;
+            }
+        }
+
+        if deleting {
+            continue;
+        }
+
+        let Some(asteroid_cmp) = storage
+            .get(StorageId::Entities)
+            .unwrap()
+            .get::<CAsteroid>(&asteroid)
+        else {
+            continue;
+        };
+
+        to_change.push((asteroid, velocity.x, velocity.y, asteroid_cmp.rotation_step));
+    }
+
+    for entity in to_delete {
+        storage
+            .get_mut(StorageId::Entities)
+            .unwrap()
+            .despwan(entity);
     }
 
     for (entity, x, y, rotation_step) in to_change.iter() {
@@ -202,7 +257,7 @@ fn update(storage: ResMut<StorageManager>, game_state: Res<GameState>) {
     }
 }
 
-fn check_collision(asteroid: CTransform2D, obj: CTransform2D, obj_radius: f32) -> bool {
+fn check_collision(asteroid: &CTransform2D, obj: &CTransform2D, obj_radius: f32) -> bool {
     let offset = 25.0;
     let threshold = obj_radius + (asteroid.scale.x * 16.0) - offset;
     magnitude2d_squared(&asteroid.translate, &obj.translate) < threshold.powf(2.0)
