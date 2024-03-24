@@ -156,8 +156,12 @@ fn single_spawn(
     ));
 }
 
-fn update(storage: ResMut<StorageManager>, game_state: Res<GameState>) {
-    let (Some(storage), Some(game_state)) = (storage, game_state) else {
+fn update(
+    storage: ResMut<StorageManager>,
+    game_state: ResMut<GameState>,
+    player_state: Res<PlayerState>,
+) {
+    let (Some(storage), Some(game_state), Some(ship)) = (storage, game_state, player_state) else {
         return;
     };
 
@@ -199,6 +203,23 @@ fn update(storage: ResMut<StorageManager>, game_state: Res<GameState>) {
         else {
             continue;
         };
+
+        let Some(ship_transform) = storage
+            .get(StorageId::Entities)
+            .unwrap()
+            .get::<CTransform2D>(&ship.id)
+        else {
+            continue;
+        };
+
+        if check_collision(asteroid_transform, ship_transform, 16.0) {
+            to_delete.push(ship.id.clone());
+            to_delete.push(asteroid.clone());
+
+            game_state.game_over = true;
+
+            continue;
+        }
 
         let mut deleting = false;
         for (bullet, _) in bullets.iter() {
