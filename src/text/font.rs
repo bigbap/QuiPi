@@ -1,18 +1,17 @@
+use crate::assets::Asset;
 use crate::core::prelude::to_abs_path;
-use crate::platform::opengl::textures::{ParameterName, ParameterValue};
+use crate::gfx::render::assets::Texture;
+use crate::platform::opengl::textures::{GlTexture, ParameterName, ParameterValue};
 use crate::platform::opengl::{
     pixel_store,
-    textures::{Format, Target, Texture},
+    textures::{Format, Target},
 };
-use crate::prelude::qp_storage::*;
 use crate::QPResult;
 use ft::{face::LoadFlag, Face};
 
-use super::RTexture;
-
 const CHARACTER_COUNT: usize = 128;
 
-#[derive(Debug, Component, PartialEq)]
+#[derive(Debug, Asset, PartialEq)]
 pub struct RFont {
     // pub texture: Texture,
     pub characters: Vec<Character>,
@@ -43,10 +42,12 @@ impl RFont {
             let left = face.glyph().bitmap_left();
             let top = face.glyph().bitmap_top();
 
-            let texture = RTexture {
-                texture: texture_from_font(&face, width, rows),
-                texture_dims: glm::vec2(width as f32, rows as f32),
-            };
+            // let texture = RTexture {
+            //     texture: texture_from_font(&face, width, rows),
+            //     texture_dims: glm::vec2(width as f32, rows as f32),
+            // };
+
+            let texture = texture_from_font(&face, width, rows);
 
             let m_char = Character {
                 texture,
@@ -67,7 +68,7 @@ impl RFont {
 
 #[derive(Debug, PartialEq)]
 pub struct Character {
-    pub texture: RTexture,
+    pub texture: GlTexture,
     pub size: glm::Vec2,
     pub bearing: glm::Vec2,
     pub advance_x: i32,
@@ -76,8 +77,8 @@ pub struct Character {
 
 // helpers
 
-fn texture_from_font(face: &Face, width: i32, height: i32) -> Texture {
-    let texture = Texture::new(width, height, Target::Texture2D);
+fn texture_from_font(face: &Face, width: i32, height: i32) -> GlTexture {
+    let texture = GlTexture::new(width, height, Target::Texture2D);
 
     texture
         .bind()

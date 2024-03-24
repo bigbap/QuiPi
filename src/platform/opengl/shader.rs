@@ -6,7 +6,7 @@ use crate::{
     QPResult,
 };
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Default)]
 pub struct ShaderProgram {
     pub id: gl::types::GLuint,
 

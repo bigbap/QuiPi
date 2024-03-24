@@ -1,12 +1,10 @@
 use crate::assets::{Asset, AssetLoader};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Asset, Clone, PartialEq, Default)]
 pub struct Mesh {
     pub indices: Vec<u32>,
     pub vertices: Vec<glm::Vec4>,
 }
-
-impl Asset for Mesh {}
 impl Mesh {
     pub fn new(indices: Vec<u32>, vertices: Vec<glm::Vec4>) -> Self {
         Self { indices, vertices }

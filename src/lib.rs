@@ -22,6 +22,7 @@ pub mod resources;
 pub mod assets;
 pub mod particle_system;
 pub mod schedule;
+pub mod text;
 
 // #[cfg(feature = "qp_editor")]
 // mod editor;

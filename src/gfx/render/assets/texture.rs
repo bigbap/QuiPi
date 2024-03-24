@@ -24,7 +24,7 @@ impl Default for TextureCoords {
     }
 }
 
-#[derive(Asset, Debug, Clone, PartialEq)]
+#[derive(Asset, Debug, Clone, PartialEq, Default)]
 pub struct Texture {
     pub texture: GlTexture,
     pub dims: Option<(u32, u32)>,

@@ -3,13 +3,11 @@ use crate::platform::opengl::shader::ShaderProgram;
 use crate::prelude::QPError;
 use crate::QPResult;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Asset, Default)]
 pub struct Shader {
     pub program: ShaderProgram,
     pub uniforms: Vec<Uniform>,
 }
-
-impl Asset for Shader {}
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Uniform {

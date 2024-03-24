@@ -46,7 +46,7 @@ pub enum ParameterValue {
     U32(u32),
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Default)]
 pub struct GlTexture {
     pub id: u32,
     target: gl::types::GLenum,
